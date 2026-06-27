@@ -2,7 +2,7 @@ class_name DialogueChoiceController
 extends RefCounted
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
-const TEST_TEXT := "皜祈岫皜祈岫皜祈岫皜祈岫皜祈岫皜祈岫皜祈岫皜祈岫皜祈岫皜祈岫"
+const TEST_TEXT := "\u6e2c\u8a66\u6e2c\u8a66\u6e2c\u8a66\u6e2c\u8a66\u6e2c\u8a66\u6e2c\u8a66\u6e2c\u8a66\u6e2c\u8a66"
 
 var phase_config = null
 var current_prompt: Dictionary = {}

@@ -56,7 +56,7 @@ var has_left_overall_init_visual: bool = false
 var phase_transition_in_progress: bool = false
 var phase_sequence: Array = []
 var active_phase_index: int = 0
-var active_phase_config = null
+var active_phase_config: PhaseConfig = null
 var active_character_profile = null
 
 func _ready() -> void:
@@ -254,8 +254,8 @@ func _get_character_visual_state_key(forced_ending_type: String = "") -> String:
 	if forced_ending_type == Config.EMOTIONAL_IMBALANCE_FAILURE_ENDING:
 		return "physic_low_mental_high_gameover"
 
-	var mismatch_low_threshold := _get_phase_value("minimum_active_threshold", 20.0)
-	var mismatch_high_threshold := _get_phase_value("feedback_emotional_high_threshold", 60.0)
+	var mismatch_low_threshold: float = float(_get_phase_value("minimum_active_threshold", 20.0))
+	var mismatch_high_threshold: float = float(_get_phase_value("feedback_emotional_high_threshold", 60.0))
 	if arousal_model.physical >= mismatch_high_threshold and arousal_model.emotional < mismatch_low_threshold:
 		return "physic_high_mental_low"
 	if arousal_model.emotional >= mismatch_high_threshold and arousal_model.physical < mismatch_low_threshold:

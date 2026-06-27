@@ -45,8 +45,8 @@ func apply_decay(delta: float) -> void:
 
 func update_peak(delta: float) -> void:
 	var difference := absf(physical - emotional)
-	var minimum_active_threshold := _get_config_value("minimum_active_threshold", 20.0)
-	var both_active := physical >= minimum_active_threshold and emotional >= minimum_active_threshold
+	var minimum_active_threshold: float = float(_get_config_value("minimum_active_threshold", 20.0))
+	var both_active: bool = physical >= minimum_active_threshold and emotional >= minimum_active_threshold
 	var zero_value_count := 0
 	if physical <= 0.0:
 		zero_value_count += 1
@@ -57,19 +57,19 @@ func update_peak(delta: float) -> void:
 	if not both_active and peak_rate > 0.0:
 		peak_rate = 0.0
 	if peak_rate < 0.0:
-		peak_rate -= _get_config_value("peak_zero_value_extra_loss_rate", 3.0) * zero_value_count
+		peak_rate -= float(_get_config_value("peak_zero_value_extra_loss_rate", 3.0)) * zero_value_count
 
 	peak = Config.clamp_value(peak + peak_rate * delta)
 	if peak > 0.0:
 		peak_has_activated = true
 
 func _get_peak_rate_from_difference(difference: float) -> float:
-	var peak_balance_best_diff := _get_config_value("peak_balance_best_diff", 5.0)
-	var peak_balance_ok_diff := _get_config_value("peak_balance_ok_diff", 15.0)
-	var peak_balance_fail_diff := _get_config_value("peak_balance_fail_diff", 30.0)
-	var peak_gain_rate_max := _get_config_value("peak_gain_rate_max", 5.0)
-	var peak_gain_rate_min := _get_config_value("peak_gain_rate_min", 1.0)
-	var peak_loss_rate_imbalanced := _get_config_value("peak_loss_rate_imbalanced", 2.0)
+	var peak_balance_best_diff: float = float(_get_config_value("peak_balance_best_diff", 5.0))
+	var peak_balance_ok_diff: float = float(_get_config_value("peak_balance_ok_diff", 15.0))
+	var peak_balance_fail_diff: float = float(_get_config_value("peak_balance_fail_diff", 30.0))
+	var peak_gain_rate_max: float = float(_get_config_value("peak_gain_rate_max", 5.0))
+	var peak_gain_rate_min: float = float(_get_config_value("peak_gain_rate_min", 1.0))
+	var peak_loss_rate_imbalanced: float = float(_get_config_value("peak_loss_rate_imbalanced", 2.0))
 
 	if difference <= peak_balance_best_diff:
 		var best_t := difference / maxf(peak_balance_best_diff, 0.001)
