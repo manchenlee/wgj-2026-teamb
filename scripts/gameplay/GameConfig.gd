@@ -43,13 +43,13 @@ const PEAK_BALANCE_BEST_DIFF: float = 5.0
 # 生理與心理差值超過最佳區後，整體興奮度仍可上升，但會一路趨近於 0。
 const PEAK_BALANCE_OK_DIFF: float = 15.0
 # 生理與心理差值超過這個範圍後，整體興奮度會進入明顯下降區。
-const PEAK_BALANCE_FAIL_DIFF: float = 25.0
+const PEAK_BALANCE_FAIL_DIFF: float = 30.0
 # 最平衡時的整體興奮度最大上升速度。
 const PEAK_GAIN_RATE_MAX: float = 5.0
 # 離開最佳平衡區後仍可維持的最低上升速度。
 const PEAK_GAIN_RATE_MIN: float = 1.0
 # 差值過大時的基礎下降速度。
-const PEAK_LOSS_RATE_IMBALANCED: float = 3.0
+const PEAK_LOSS_RATE_IMBALANCED: float = 2.0
 # 當生理或心理停在 0 時，每個歸零狀態額外增加的整體興奮度下降速度；調大會讓放置不管的懲罰更明顯。
 const PEAK_ZERO_VALUE_EXTRA_LOSS_RATE: float = 3.0
 
@@ -126,7 +126,7 @@ const CIRCLE_RADIUS_MAX: float = 500.0
 # 圓形描邊的最小粗細；調大會讓低狀態時也維持較強存在感，調小則更細緻。
 const CIRCLE_STROKE_MIN: float = 4.0
 # 圓形描邊的最大粗細；調大會強化高狀態時的視覺張力，調小則整體較輕。
-const CIRCLE_STROKE_MAX: float = 8.0
+const CIRCLE_STROKE_MAX: float = 4.0
 # 主圓在畫面中的中心比例位置；調整後會改變整體 HUD 佈局重心。
 const CIRCLE_CENTER_RATIO: Vector2 = Vector2(0.58, 0.46)
 # 高潮標籤相對圓心的垂直位移；調大會讓標籤更往下，調小則更貼近主圓。
