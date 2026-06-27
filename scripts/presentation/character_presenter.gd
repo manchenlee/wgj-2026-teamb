@@ -6,30 +6,32 @@ const Config := preload("res://scripts/gameplay/GameConfig.gd")
 @onready var character_placeholder: Panel = $CharacterVisualAnchor/CharacterPlaceholder
 @onready var emotion_state_label: Label = $TopLabelStack/EmotionStateLabel
 @onready var reaction_label: Label = $TopLabelStack/ReactionLabel
-@onready var direction_prompt_label: Label = $PromptLayer/DirectionPromptLabel
+@onready var prompt_layer: Control = $PromptLayer
 @onready var prompt_feedback_label: Label = $PromptLayer/PromptFeedbackLabel
 
 var _default_scale := Vector2.ONE
-var _current_prompt_offset := Vector2.ZERO
+var _prompt_nodes: Dictionary = {}
+var _prompt_offsets: Dictionary = {}
+var _current_prompt_id: int = -1
 var _prompt_time_progress: float = 1.0
 
 func _ready() -> void:
 	_default_scale = character_placeholder.scale
-	direction_prompt_label.add_theme_font_size_override("font_size", Config.ARROW_PROMPT_FONT_SIZE)
 	prompt_feedback_label.add_theme_font_size_override("font_size", 24)
 	update_emotion_state("CALM")
 	_set_reaction("...")
-	clear_direction_prompt()
+	clear_direction_prompts()
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready():
 		_refresh_prompt_layout()
 
 func _draw() -> void:
-	if not direction_prompt_label.visible:
+	var current_label := _get_current_prompt_label()
+	if current_label == null or not current_label.visible:
 		return
-	var prompt_size := direction_prompt_label.get_combined_minimum_size()
-	var prompt_center := direction_prompt_label.position + (prompt_size * 0.5)
+	var prompt_size := current_label.get_combined_minimum_size()
+	var prompt_center := current_label.position + (prompt_size * 0.5)
 	var radius: float = maxf(prompt_size.x, prompt_size.y) * 0.52
 	var start_angle := -PI * 0.5
 	var end_angle := start_angle + (TAU * _prompt_time_progress)
@@ -51,6 +53,10 @@ func show_correct_reaction() -> void:
 func show_mistake_reaction() -> void:
 	_set_reaction("?")
 	_pulse(Color(0.35, 0.45, 0.85, 1.0), 0.92)
+
+func show_ignored_reaction() -> void:
+	_set_reaction("...")
+	_pulse(Color(0.55, 0.55, 0.62, 1.0), 0.96)
 
 func show_choice_reaction(choice_quality: String) -> void:
 	match choice_quality:
@@ -80,29 +86,50 @@ func update_emotion_state(state: String) -> void:
 			color = Color(0.92, 0.22, 0.22, 1.0)
 	_apply_style(character_placeholder, color)
 
-func show_direction_prompt(direction: String, anchor_offset: Vector2) -> void:
-	_current_prompt_offset = anchor_offset
-	_prompt_time_progress = 1.0
-	direction_prompt_label.text = _to_arrow(direction)
-	direction_prompt_label.visible = true
-	direction_prompt_label.modulate = Color(1.0, 1.0, 1.0, 1.0)
-	direction_prompt_label.scale = Vector2(0.82, 0.82)
+func show_direction_prompt(prompt_id: int, direction: String, anchor_offset: Vector2) -> void:
+	_prompt_offsets[prompt_id] = anchor_offset
+	var prompt_label := _ensure_prompt_label(prompt_id)
+	prompt_label.text = _to_arrow(direction)
+	prompt_label.visible = true
+	prompt_label.modulate = Color(0.9, 0.9, 0.95, 0.46)
+	prompt_label.scale = Vector2(0.82, 0.82)
 	_refresh_prompt_layout()
-	queue_redraw()
 
 	var tween := create_tween()
-	tween.tween_property(direction_prompt_label, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(prompt_label, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func set_current_prompt(prompt_id: int) -> void:
+	_current_prompt_id = prompt_id
+	for key in _prompt_nodes.keys():
+		var prompt_label: Label = _prompt_nodes[key]
+		prompt_label.modulate.a = 1.0 if int(key) == _current_prompt_id else 0.46
+	_prompt_time_progress = 1.0
+	queue_redraw()
 
 func set_prompt_time_progress(progress: float) -> void:
 	_prompt_time_progress = clampf(progress, 0.0, 1.0)
-	if direction_prompt_label.visible:
-		direction_prompt_label.modulate.a = lerpf(0.22, 1.0, _prompt_time_progress)
+	var current_label := _get_current_prompt_label()
+	if current_label != null and current_label.visible:
+		current_label.modulate.a = lerpf(0.22, 1.0, _prompt_time_progress)
 	queue_redraw()
 
-func clear_direction_prompt() -> void:
-	direction_prompt_label.visible = false
-	direction_prompt_label.text = ""
-	_current_prompt_offset = Vector2.ZERO
+func remove_direction_prompt(prompt_id: int) -> void:
+	if not _prompt_nodes.has(prompt_id):
+		return
+	var prompt_label: Label = _prompt_nodes[prompt_id]
+	prompt_label.queue_free()
+	_prompt_nodes.erase(prompt_id)
+	_prompt_offsets.erase(prompt_id)
+	if _current_prompt_id == prompt_id:
+		_current_prompt_id = -1
+	queue_redraw()
+
+func clear_direction_prompts() -> void:
+	for prompt_label in _prompt_nodes.values():
+		prompt_label.queue_free()
+	_prompt_nodes.clear()
+	_prompt_offsets.clear()
+	_current_prompt_id = -1
 	_prompt_time_progress = 0.0
 	queue_redraw()
 
@@ -142,22 +169,47 @@ func _apply_style(panel: Panel, color: Color) -> void:
 	panel.add_theme_stylebox_override("panel", style)
 
 func _refresh_prompt_layout() -> void:
-	if direction_prompt_label == null or prompt_feedback_label == null:
+	if prompt_feedback_label == null:
 		return
-	if direction_prompt_label.visible:
-		var center := _get_character_center_local()
-		var prompt_size := direction_prompt_label.get_combined_minimum_size()
-		direction_prompt_label.position = center + _current_prompt_offset - (prompt_size * 0.5)
+	var center := _get_character_center_local()
+	for key in _prompt_nodes.keys():
+		var prompt_label: Label = _prompt_nodes[key]
+		var prompt_offset: Vector2 = _prompt_offsets.get(key, Vector2.ZERO)
+		var prompt_size := prompt_label.get_combined_minimum_size()
+		prompt_label.position = center + prompt_offset - (prompt_size * 0.5)
 	if prompt_feedback_label.visible:
 		_position_feedback_label()
 
 func _position_feedback_label() -> void:
-	var center := _get_character_center_local()
+	var center := _get_feedback_anchor_center()
 	var feedback_size := prompt_feedback_label.get_combined_minimum_size()
-	prompt_feedback_label.position = center + _current_prompt_offset + Vector2(0.0, -74.0) - (feedback_size * 0.5)
+	prompt_feedback_label.position = center + Vector2(0.0, -74.0) - (feedback_size * 0.5)
 
 func _get_character_center_local() -> Vector2:
 	return get_global_transform_with_canvas().affine_inverse() * character_placeholder.get_global_rect().get_center()
+
+func _get_feedback_anchor_center() -> Vector2:
+	var current_label := _get_current_prompt_label()
+	if current_label == null:
+		return _get_character_center_local()
+	return current_label.position + (current_label.get_combined_minimum_size() * 0.5)
+
+func _ensure_prompt_label(prompt_id: int) -> Label:
+	if _prompt_nodes.has(prompt_id):
+		return _prompt_nodes[prompt_id]
+	var prompt_label := Label.new()
+	prompt_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	prompt_label.visible = false
+	prompt_label.text = "↑"
+	prompt_label.add_theme_font_size_override("font_size", Config.ARROW_PROMPT_FONT_SIZE)
+	prompt_layer.add_child(prompt_label)
+	_prompt_nodes[prompt_id] = prompt_label
+	return prompt_label
+
+func _get_current_prompt_label() -> Label:
+	if not _prompt_nodes.has(_current_prompt_id):
+		return null
+	return _prompt_nodes[_current_prompt_id]
 
 func _to_arrow(direction: String) -> String:
 	match direction:

@@ -54,6 +54,7 @@ const ARROW_PROMPT_ANCHOR_OFFSETS := [
 const EMOTIONAL_GAIN_GOOD_CHOICE: float = 8.0
 const EMOTIONAL_GAIN_NEUTRAL_CHOICE: float = 2.0
 const EMOTIONAL_PENALTY_BAD_CHOICE: float = 6.0
+const CHOICE_TIMEOUT_SECONDS: float = 4.2
 const FEEDBACK_MESSAGE_INTERVAL_MIN: float = 1.8
 const FEEDBACK_MESSAGE_INTERVAL_MAX: float = 4.6
 
@@ -66,8 +67,11 @@ const PEAK_LABEL_OFFSET_Y: float = 228.0
 const DESKTOP_BREAKPOINT: float = 1080.0
 
 const SUCCESS_ENDING: String = "success"
-const PHYSICAL_FAILURE_ENDING: String = "physical_depletion_failure"
-const EMOTIONAL_FAILURE_ENDING: String = "emotional_depletion_failure"
+const PEAK_DEPLETION_FAILURE_ENDING: String = "peak_depletion_failure"
+const PHYSICAL_IMBALANCE_FAILURE_ENDING: String = "physical_imbalance_failure"
+const EMOTIONAL_IMBALANCE_FAILURE_ENDING: String = "emotional_imbalance_failure"
+const PHYSICAL_FAILURE_ENDING: String = PEAK_DEPLETION_FAILURE_ENDING
+const EMOTIONAL_FAILURE_ENDING: String = PEAK_DEPLETION_FAILURE_ENDING
 
 const SCREEN_TITLE: String = "title"
 const SCREEN_WARNING: String = "warning"

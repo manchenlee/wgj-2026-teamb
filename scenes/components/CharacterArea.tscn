@@ -35,11 +35,7 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
-
-[node name="DirectionPromptLabel" type="Label" parent="PromptLayer"]
-visible = false
-mouse_filter = 2
-text = "↑"
+z_index = 5
 
 [node name="PromptFeedbackLabel" type="Label" parent="PromptLayer"]
 visible = false

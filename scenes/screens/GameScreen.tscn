@@ -86,3 +86,7 @@ wait_time = 0.5
 [node name="ActivePromptTimer" type="Timer" parent="."]
 one_shot = true
 wait_time = 1.6
+
+[node name="ChoiceTimeoutTimer" type="Timer" parent="."]
+one_shot = true
+wait_time = 4.2

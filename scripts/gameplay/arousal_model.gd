@@ -8,6 +8,7 @@ var emotional: float = Config.INITIAL_EMOTIONAL
 var peak: float = Config.INITIAL_PEAK
 var physical_activity_grace_remaining: float = 0.0
 var emotional_activity_grace_remaining: float = 0.0
+var peak_has_activated: bool = false
 
 func reset() -> void:
 	physical = Config.INITIAL_PHYSICAL
@@ -15,6 +16,7 @@ func reset() -> void:
 	peak = Config.INITIAL_PEAK
 	physical_activity_grace_remaining = 0.0
 	emotional_activity_grace_remaining = 0.0
+	peak_has_activated = peak > 0.0
 
 func apply_physical(delta_value: float) -> void:
 	physical = Config.clamp_value(physical + delta_value)
@@ -48,6 +50,8 @@ func update_peak(delta: float) -> void:
 		peak = Config.clamp_value(peak + Config.PEAK_GAIN_RATE * balance_ratio * delta)
 	else:
 		peak = Config.clamp_value(peak - Config.PEAK_LOSS_RATE * delta)
+	if peak > 0.0:
+		peak_has_activated = true
 
 func get_emotion_state() -> String:
 	var average := (physical + emotional) * 0.5
