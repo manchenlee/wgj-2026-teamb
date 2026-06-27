@@ -7,9 +7,9 @@ extends PanelContainer
 @onready var combo_label: Label = $MarginContainer/LayoutRow/LeftStats/ComboLabel
 
 func update_values(physical: float, emotional: float, peak: float) -> void:
-	physical_value_display.text = "Physical: %d" % int(round(physical))
-	emotional_value_display.text = "Emotional: %d" % int(round(emotional))
-	peak_value_display.text = "Peak: %d" % int(round(peak))
+	physical_value_display.text = "生理: %d" % int(round(physical))
+	emotional_value_display.text = "心理: %d" % int(round(emotional))
+	peak_value_display.text = "整體興奮: %d" % int(round(peak))
 
 func update_combo(combo: int) -> void:
-	combo_label.text = "Combo: %d" % combo
+	combo_label.text = "連段: %d" % combo

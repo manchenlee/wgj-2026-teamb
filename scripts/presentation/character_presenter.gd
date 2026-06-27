@@ -11,6 +11,7 @@ const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
 var _default_scale := Vector2.ONE
 var _current_prompt_offset := Vector2.ZERO
+var _prompt_time_progress: float = 1.0
 
 func _ready() -> void:
 	_default_scale = character_placeholder.scale
@@ -23,6 +24,25 @@ func _ready() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready():
 		_refresh_prompt_layout()
+
+func _draw() -> void:
+	if not direction_prompt_label.visible:
+		return
+	var prompt_size := direction_prompt_label.get_combined_minimum_size()
+	var prompt_center := direction_prompt_label.position + (prompt_size * 0.5)
+	var radius: float = maxf(prompt_size.x, prompt_size.y) * 0.52
+	var start_angle := -PI * 0.5
+	var end_angle := start_angle + (TAU * _prompt_time_progress)
+	draw_arc(
+		prompt_center,
+		radius,
+		start_angle,
+		end_angle,
+		48,
+		Color(1.0, 0.94, 0.68, 0.72),
+		3.0,
+		true
+	)
 
 func show_correct_reaction() -> void:
 	_set_reaction("!")
@@ -62,21 +82,29 @@ func update_emotion_state(state: String) -> void:
 
 func show_direction_prompt(direction: String, anchor_offset: Vector2) -> void:
 	_current_prompt_offset = anchor_offset
+	_prompt_time_progress = 1.0
 	direction_prompt_label.text = _to_arrow(direction)
 	direction_prompt_label.visible = true
-	direction_prompt_label.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	direction_prompt_label.modulate = Color(1.0, 1.0, 1.0, 1.0)
 	direction_prompt_label.scale = Vector2(0.82, 0.82)
 	_refresh_prompt_layout()
+	queue_redraw()
 
 	var tween := create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(direction_prompt_label, "modulate:a", 1.0, 0.14)
 	tween.tween_property(direction_prompt_label, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func set_prompt_time_progress(progress: float) -> void:
+	_prompt_time_progress = clampf(progress, 0.0, 1.0)
+	if direction_prompt_label.visible:
+		direction_prompt_label.modulate.a = lerpf(0.22, 1.0, _prompt_time_progress)
+	queue_redraw()
 
 func clear_direction_prompt() -> void:
 	direction_prompt_label.visible = false
 	direction_prompt_label.text = ""
 	_current_prompt_offset = Vector2.ZERO
+	_prompt_time_progress = 0.0
+	queue_redraw()
 
 func show_prompt_feedback(text_value: String, color: Color, display_duration: float) -> void:
 	prompt_feedback_label.text = text_value

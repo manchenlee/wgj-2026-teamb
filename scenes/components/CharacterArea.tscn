@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/presentation/character_presenter.gd" id="1_char"]
 
 [node name="CharacterArea" type="Control"]
-custom_minimum_size = Vector2(660, 760)
+custom_minimum_size = Vector2(820, 820)
 script = ExtResource("1_char")
 
 [node name="CharacterVisualAnchor" type="CenterContainer" parent="."]
@@ -16,7 +16,7 @@ offset_right = 0.0
 offset_bottom = 0.0
 
 [node name="CharacterPlaceholder" type="Panel" parent="CharacterVisualAnchor"]
-custom_minimum_size = Vector2(320, 460)
+custom_minimum_size = Vector2(360, 520)
 
 [node name="TopLabelStack" type="VBoxContainer" parent="."]
 offset_left = 24.0

@@ -40,13 +40,15 @@ size_flags_vertical = 3
 [node name="UpperLayout" type="BoxContainer" parent="MarginContainer/ResponsiveLayout"]
 size_flags_horizontal = 3
 size_flags_vertical = 3
+theme_override_constants/separation = 20
 
 [node name="CenterColumn" type="VBoxContainer" parent="MarginContainer/ResponsiveLayout/UpperLayout"]
 size_flags_horizontal = 3
 size_flags_vertical = 3
+size_flags_stretch_ratio = 4.0
 
 [node name="CenterStage" type="Control" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn"]
-custom_minimum_size = Vector2(920, 820)
+custom_minimum_size = Vector2(1080, 820)
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
@@ -66,7 +68,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 
 [node name="RightSideDialoguePanel" parent="MarginContainer/ResponsiveLayout/UpperLayout" instance=ExtResource("3_dialogue")]
-custom_minimum_size = Vector2(600, 0)
+custom_minimum_size = Vector2(320, 0)
+size_flags_stretch_ratio = 1.0
 
 [node name="BottomHUD" parent="MarginContainer/ResponsiveLayout" instance=ExtResource("4_hud")]
 
@@ -79,3 +82,7 @@ wait_time = 2.0
 [node name="PromptSpawnTimer" type="Timer" parent="."]
 one_shot = true
 wait_time = 0.5
+
+[node name="ActivePromptTimer" type="Timer" parent="."]
+one_shot = true
+wait_time = 1.6

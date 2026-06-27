@@ -21,13 +21,13 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
 [node name="PhysicalValueDisplay" type="Label" parent="MarginContainer/LayoutRow/LeftStats"]
-text = "Physical: 50"
+text = "生理: 50"
 
 [node name="ComboLabel" type="Label" parent="MarginContainer/LayoutRow/LeftStats"]
-text = "Combo: 0"
+text = "連段: 0"
 
 [node name="PeakValueDisplay" type="Label" parent="MarginContainer/LayoutRow/LeftStats"]
-text = "Peak: 0"
+text = "整體興奮: 0"
 
 [node name="RightStats" type="VBoxContainer" parent="MarginContainer/LayoutRow"]
 size_flags_horizontal = 3
@@ -35,4 +35,4 @@ alignment = 2
 
 [node name="EmotionalValueDisplay" type="Label" parent="MarginContainer/LayoutRow/RightStats"]
 horizontal_alignment = 2
-text = "Emotional: 50"
+text = "心理: 50"

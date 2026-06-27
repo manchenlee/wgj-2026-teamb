@@ -15,6 +15,7 @@ signal ending_requested(ending_type: String)
 @onready var status_hud = $MarginContainer/ResponsiveLayout/BottomHUD
 @onready var feedback_timer: Timer = $FeedbackTimer
 @onready var prompt_spawn_timer: Timer = $PromptSpawnTimer
+@onready var active_prompt_timer: Timer = $ActivePromptTimer
 
 var arousal_model = ArousalModelClass.new()
 var sequence_controller = DirectionSequenceControllerClass.new()
@@ -25,13 +26,15 @@ var current_prompt: Dictionary = {}
 var debug_overlay
 var run_active: bool = true
 var waiting_for_choice: bool = false
+var pending_prompt_action: String = ""
 
 func _ready() -> void:
 	feedback_rng.randomize()
 	set_process_unhandled_input(true)
 	dialogue_panel.choice_selected.connect(_on_choice_selected)
 	feedback_timer.timeout.connect(_on_feedback_timer_timeout)
-	prompt_spawn_timer.timeout.connect(_spawn_direction_prompt)
+	prompt_spawn_timer.timeout.connect(_on_prompt_spawn_timer_timeout)
+	active_prompt_timer.timeout.connect(_on_active_prompt_timer_timeout)
 	reset_run()
 
 func _process(delta: float) -> void:
@@ -40,6 +43,7 @@ func _process(delta: float) -> void:
 
 	arousal_model.apply_decay(delta)
 	arousal_model.update_peak(delta)
+	_update_prompt_timer_visual()
 	_update_presentation()
 	_check_ending()
 
@@ -67,14 +71,16 @@ func reset_run() -> void:
 	combo = 0
 	prompt_spawn_timer.stop()
 	feedback_timer.stop()
-	sequence_controller.clear_prompt()
+	active_prompt_timer.stop()
+	pending_prompt_action = ""
+	sequence_controller.clear_sequence()
 	arousal_model.reset()
 	dialogue_controller.reset()
 	dialogue_panel.clear_history()
 	character_area.clear_direction_prompt()
 	waiting_for_choice = false
 	_push_next_dialogue_event()
-	_spawn_direction_prompt()
+	_start_new_sequence()
 	_update_presentation()
 
 func apply_debug_values(value: float) -> void:
@@ -98,15 +104,6 @@ func get_debug_state() -> Dictionary:
 		"prompt": sequence_controller.get_prompt_debug_state()
 	}
 
-func _spawn_direction_prompt() -> void:
-	var prompt := sequence_controller.spawn_prompt()
-	character_area.show_direction_prompt(
-		str(prompt.get("direction", "")),
-		prompt.get("anchor_offset", Vector2.ZERO)
-	)
-	print_debug("prompt spawn: %s" % sequence_controller.get_prompt_debug_state())
-	_update_presentation()
-
 func _on_feedback_timer_timeout() -> void:
 	if not run_active or waiting_for_choice:
 		return
@@ -129,16 +126,30 @@ func _on_direction_pressed(direction: String) -> void:
 	match str(result.get("result", "")):
 		"correct":
 			combo += 1
+			active_prompt_timer.stop()
 			arousal_model.apply_physical(Config.PHYSICAL_GAIN_ON_CORRECT_INPUT)
 			arousal_model.refresh_physical_activity()
-			character_area.clear_direction_prompt()
 			character_area.show_prompt_feedback(
 				"Correct +%d" % int(round(Config.PHYSICAL_GAIN_ON_CORRECT_INPUT)),
 				Color(0.45, 0.87, 0.56, 1.0),
 				Config.CORRECT_FEEDBACK_DISPLAY_DURATION
 			)
 			character_area.show_correct_reaction()
-			_schedule_next_prompt()
+			_reveal_next_prompt_after_delay()
+		"sequence_complete":
+			combo += 1
+			active_prompt_timer.stop()
+			arousal_model.apply_physical(Config.PHYSICAL_GAIN_ON_CORRECT_INPUT)
+			arousal_model.apply_physical(Config.PHYSICAL_SEQUENCE_COMPLETE_BONUS)
+			arousal_model.refresh_physical_activity()
+			character_area.clear_direction_prompt()
+			character_area.show_prompt_feedback(
+				"Sequence Complete +%d" % int(round(Config.PHYSICAL_SEQUENCE_COMPLETE_BONUS)),
+				Color(0.62, 0.95, 0.56, 1.0),
+				Config.CORRECT_FEEDBACK_DISPLAY_DURATION + 0.1
+			)
+			character_area.show_correct_reaction()
+			_schedule_new_sequence()
 		"wrong":
 			_handle_wrong_input()
 	_update_presentation()
@@ -157,9 +168,10 @@ func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 
 func _handle_wrong_input() -> void:
 	combo = 0
+	active_prompt_timer.stop()
 	arousal_model.apply_physical(-Config.PHYSICAL_PENALTY_ON_WRONG_INPUT)
 	arousal_model.refresh_physical_activity()
-	sequence_controller.clear_prompt()
+	sequence_controller.clear_sequence()
 	character_area.clear_direction_prompt()
 	character_area.show_prompt_feedback(
 		"Wrong -%d" % int(round(Config.PHYSICAL_PENALTY_ON_WRONG_INPUT)),
@@ -167,14 +179,7 @@ func _handle_wrong_input() -> void:
 		Config.WRONG_FEEDBACK_DISPLAY_DURATION
 	)
 	character_area.show_mistake_reaction()
-	_schedule_next_prompt()
-
-func _schedule_next_prompt() -> void:
-	var wait_time := feedback_rng.randf_range(
-		Config.PROMPT_SPAWN_DELAY_MIN,
-		Config.PROMPT_SPAWN_DELAY_MAX
-	)
-	prompt_spawn_timer.start(wait_time)
+	_schedule_new_sequence()
 
 func _check_ending() -> void:
 	var ending_type := EndingEvaluatorClass.evaluate(arousal_model)
@@ -200,6 +205,7 @@ func _update_layout_mode() -> void:
 func _stop_runtime_timers() -> void:
 	feedback_timer.stop()
 	prompt_spawn_timer.stop()
+	active_prompt_timer.stop()
 
 func _schedule_next_feedback_message() -> void:
 	var wait_time := feedback_rng.randf_range(
@@ -221,3 +227,54 @@ func _push_next_dialogue_event() -> void:
 		dialogue_panel.append_history(str(current_prompt.get("text", Config.FEEDBACK_MESSAGE_TEXT)), "companion")
 		dialogue_panel.hide_choices()
 		_schedule_next_feedback_message()
+
+func _start_new_sequence() -> void:
+	sequence_controller.start_sequence()
+	_show_current_prompt()
+
+func _show_current_prompt() -> void:
+	var prompt := sequence_controller.get_current_prompt()
+	if prompt.is_empty():
+		character_area.clear_direction_prompt()
+		return
+	character_area.show_direction_prompt(
+		str(prompt.get("direction", "")),
+		prompt.get("anchor_offset", Vector2.ZERO)
+	)
+	active_prompt_timer.start(Config.DIRECTION_PROMPT_TIME_LIMIT)
+	character_area.set_prompt_time_progress(1.0)
+	print_debug("prompt spawn: %s" % sequence_controller.get_prompt_debug_state())
+
+func _reveal_next_prompt_after_delay() -> void:
+	character_area.clear_direction_prompt()
+	pending_prompt_action = "next_step"
+	prompt_spawn_timer.start(Config.NEXT_PROMPT_REVEAL_DELAY)
+
+func _schedule_new_sequence() -> void:
+	pending_prompt_action = "new_sequence"
+	var wait_time := feedback_rng.randf_range(
+		Config.PROMPT_SPAWN_DELAY_MIN,
+		Config.PROMPT_SPAWN_DELAY_MAX
+	)
+	prompt_spawn_timer.start(wait_time)
+
+func _on_prompt_spawn_timer_timeout() -> void:
+	match pending_prompt_action:
+		"next_step":
+			_show_current_prompt()
+		"new_sequence":
+			_start_new_sequence()
+	pending_prompt_action = ""
+	_update_presentation()
+
+func _on_active_prompt_timer_timeout() -> void:
+	if not run_active:
+		return
+	_handle_wrong_input()
+	_update_presentation()
+
+func _update_prompt_timer_visual() -> void:
+	if active_prompt_timer.is_stopped():
+		return
+	var progress := active_prompt_timer.time_left / Config.DIRECTION_PROMPT_TIME_LIMIT
+	character_area.set_prompt_time_progress(progress)
