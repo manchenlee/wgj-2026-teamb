@@ -3,6 +3,7 @@ extends PanelContainer
 
 signal choice_selected(choice_quality: String, choice_text: String)
 
+const Config := preload("res://scripts/gameplay/GameConfig.gd")
 const HISTORY_BUBBLE_MAX_WIDTH := 232.0
 const HISTORY_BUBBLE_MIN_WIDTH := 180.0
 const SCROLL_BOTTOM_THRESHOLD := 24.0
@@ -97,6 +98,7 @@ func append_history(line: String, speaker_type: String = "companion") -> void:
 	message_label.text = line
 	message_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	message_label.custom_minimum_size = Vector2(_get_bubble_width(), 0.0)
+	message_label.add_theme_font_size_override("font_size", Config.DIALOGUE_BODY_FONT_SIZE)
 	bubble.add_child(message_label)
 	row.add_child(bubble)
 

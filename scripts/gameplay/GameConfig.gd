@@ -10,7 +10,12 @@ const RESPONSE_BUTTON_TEXT: String = "response response response"
 
 # UI scaling.
 # 整體 UI 字體縮放倍率；調大會讓介面文字更大、更容易閱讀，調小則會讓畫面更緊湊。
-const UI_FONT_SCALE: float = 2.0
+const UI_FONT_SCALE: float = 1.6
+const PROMPT_FEEDBACK_FONT_SIZE: int = 16
+const DIALOGUE_HEADER_FONT_SIZE: int = 18
+const DIALOGUE_BODY_FONT_SIZE: int = 16
+const DIALOGUE_CHOICE_FONT_SIZE: int = 16
+const HUD_FONT_SIZE: int = 16
 
 # Core arousal values.
 # 遊戲開始時的身體值；調大會讓玩家開局更接近安全區或目標區，調小則開局壓力更高。
@@ -33,10 +38,18 @@ const EMOTIONAL_DECAY_PER_SECOND: float = 0.1
 const PHYSICAL_ACTIVITY_GRACE_SECONDS: float = 1.4
 # 情感互動後暫停自然衰減的寬限時間；調大可讓選項成功的保護期更長，調小則維持難度更高。
 const EMOTIONAL_ACTIVITY_GRACE_SECONDS: float = 2.8
-# 高潮值上升速度；調大會更快進入成功結局，調小則需要更久的穩定表現。
-const PEAK_GAIN_RATE: float = 3.0
-# 高潮值下降速度；調大會更容易因狀態不佳而退步，調小則容錯更高。
-const PEAK_LOSS_RATE: float = 1.0
+# 生理與心理差值在這個範圍內時，整體興奮度以最快速度上升。
+const PEAK_BALANCE_BEST_DIFF: float = 5.0
+# 生理與心理差值超過最佳區後，整體興奮度仍可上升，但會一路趨近於 0。
+const PEAK_BALANCE_OK_DIFF: float = 15.0
+# 生理與心理差值超過這個範圍後，整體興奮度會進入明顯下降區。
+const PEAK_BALANCE_FAIL_DIFF: float = 30.0
+# 最平衡時的整體興奮度最大上升速度。
+const PEAK_GAIN_RATE_MAX: float = 6.0
+# 離開最佳平衡區後仍可維持的最低上升速度。
+const PEAK_GAIN_RATE_MIN: float = 1.0
+# 差值過大時的基礎下降速度。
+const PEAK_LOSS_RATE_IMBALANCED: float = 3.0
 # 當生理或心理停在 0 時，每個歸零狀態額外增加的整體興奮度下降速度；調大會讓放置不管的懲罰更明顯。
 const PEAK_ZERO_VALUE_EXTRA_LOSS_RATE: float = 3.0
 

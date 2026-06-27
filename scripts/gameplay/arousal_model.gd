@@ -42,22 +42,44 @@ func apply_decay(delta: float) -> void:
 func update_peak(delta: float) -> void:
 	var difference := absf(physical - emotional)
 	var both_active := physical >= Config.MINIMUM_ACTIVE_THRESHOLD and emotional >= Config.MINIMUM_ACTIVE_THRESHOLD
-	var is_balanced := difference <= Config.BALANCE_TOLERANCE
 	var zero_value_count := 0
 	if physical <= 0.0:
 		zero_value_count += 1
 	if emotional <= 0.0:
 		zero_value_count += 1
 
-	# Peak rises only when both values are active and close enough together.
-	if both_active and is_balanced:
-		var balance_ratio := 1.0 - (difference / maxf(Config.BALANCE_TOLERANCE, 1.0))
-		peak = Config.clamp_value(peak + Config.PEAK_GAIN_RATE * balance_ratio * delta)
+	var peak_rate := _get_peak_rate_from_difference(difference)
+	if not both_active and peak_rate > 0.0:
+		peak_rate = 0.0
+	if peak_rate < 0.0:
+		peak_rate -= Config.PEAK_ZERO_VALUE_EXTRA_LOSS_RATE * zero_value_count
+
+	if peak_rate >= 0.0:
+		peak = Config.clamp_value(peak + peak_rate * delta)
 	else:
-		var loss_rate := Config.PEAK_LOSS_RATE + (Config.PEAK_ZERO_VALUE_EXTRA_LOSS_RATE * zero_value_count)
-		peak = Config.clamp_value(peak - loss_rate * delta)
+		peak = Config.clamp_value(peak + peak_rate * delta)
 	if peak > 0.0:
 		peak_has_activated = true
+
+func _get_peak_rate_from_difference(difference: float) -> float:
+	if difference <= Config.PEAK_BALANCE_BEST_DIFF:
+		var best_t := difference / maxf(Config.PEAK_BALANCE_BEST_DIFF, 0.001)
+		return lerpf(Config.PEAK_GAIN_RATE_MAX, Config.PEAK_GAIN_RATE_MIN, best_t)
+	if difference <= Config.PEAK_BALANCE_OK_DIFF:
+		var ok_t := inverse_lerp(
+			Config.PEAK_BALANCE_BEST_DIFF,
+			Config.PEAK_BALANCE_OK_DIFF,
+			difference
+		)
+		return lerpf(Config.PEAK_GAIN_RATE_MIN, 0.0, ok_t)
+	if difference <= Config.PEAK_BALANCE_FAIL_DIFF:
+		var fail_t := inverse_lerp(
+			Config.PEAK_BALANCE_OK_DIFF,
+			Config.PEAK_BALANCE_FAIL_DIFF,
+			difference
+		)
+		return lerpf(0.0, -Config.PEAK_LOSS_RATE_IMBALANCED, fail_t)
+	return -Config.PEAK_LOSS_RATE_IMBALANCED
 
 func get_emotion_state() -> String:
 	var average := (physical + emotional) * 0.5

@@ -23,6 +23,7 @@ theme_override_constants/separation = 12
 
 [node name="HeaderLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 18
 text = "Feedback"
 
 [node name="ScrollableChatHistory" type="ScrollContainer" parent="MarginContainer/VBoxContainer"]
@@ -60,6 +61,7 @@ visible = false
 [node name="PromptLabel" type="Label" parent="MarginContainer/VBoxContainer/PromptPanel"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 56)
+theme_override_font_sizes/font_size = 16
 text = "choice choice choice"
 vertical_alignment = 1
 
@@ -71,17 +73,20 @@ visible = false
 [node name="GoodButton" type="Button" parent="MarginContainer/VBoxContainer/ChoiceButtons"]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
+theme_override_font_sizes/font_size = 16
 text = "response response response"
 focus_mode = 0
 
 [node name="NeutralButton" type="Button" parent="MarginContainer/VBoxContainer/ChoiceButtons"]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
+theme_override_font_sizes/font_size = 16
 text = "response response response"
 focus_mode = 0
 
 [node name="BadButton" type="Button" parent="MarginContainer/VBoxContainer/ChoiceButtons"]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
+theme_override_font_sizes/font_size = 16
 text = "response response response"
 focus_mode = 0
