@@ -25,9 +25,9 @@ const INITIAL_EMOTIONAL: float = 30.0
 # 遊戲開始時的高潮值；調大會縮短達成結局所需時間，調小會拉長累積過程。
 const INITIAL_PEAK: float = 0.0
 # 啟動高潮累積所需的最低活躍門檻；調大表示玩家需要把雙方狀態維持得更高才會開始累積。
-const MINIMUM_ACTIVE_THRESHOLD: float = 30.0
+const MINIMUM_ACTIVE_THRESHOLD: float = 20.0
 # 身體與情感可接受的差距範圍；調大會降低失衡失敗的機率，調小則更要求兩者保持同步。
-const BALANCE_TOLERANCE: float = 10.0
+const BALANCE_TOLERANCE: float = 15.0
 
 # Passive progression.
 # 身體值每秒自然下降量；調大會讓身體狀態掉得更快，玩家需要更頻繁操作。
@@ -41,7 +41,7 @@ const EMOTIONAL_ACTIVITY_GRACE_SECONDS: float = 2.8
 # 生理與心理差值在這個範圍內時，整體興奮度以最快速度上升。
 const PEAK_BALANCE_BEST_DIFF: float = 5.0
 # 生理與心理差值超過最佳區後，整體興奮度仍可上升，但會一路趨近於 0。
-const PEAK_BALANCE_OK_DIFF: float = 10.0
+const PEAK_BALANCE_OK_DIFF: float = 15.0
 # 生理與心理差值超過這個範圍後，整體興奮度會進入明顯下降區。
 const PEAK_BALANCE_FAIL_DIFF: float = 25.0
 # 最平衡時的整體興奮度最大上升速度。
