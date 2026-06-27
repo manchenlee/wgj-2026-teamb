@@ -1,7 +1,7 @@
 class_name DebugOverlayController
 extends CanvasLayer
 
-const Config := preload("res://scripts/core/game_config.gd")
+const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
 signal stage_jump_requested(stage: String)
 signal values_requested(value: float)

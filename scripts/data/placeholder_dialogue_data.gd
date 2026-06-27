@@ -1,7 +1,7 @@
 class_name PlaceholderDialogueData
 extends RefCounted
 
-const Config := preload("res://scripts/core/game_config.gd")
+const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
 const LOW_PROMPTS := [
 	{

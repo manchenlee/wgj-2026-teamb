@@ -1,33 +1,60 @@
 class_name CentralArousalVisualization
 extends Control
 
-const Config := preload("res://scripts/core/game_config.gd")
+const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
-@onready var physical_circle: Panel = $PhysicalCirclePlaceholder
-@onready var emotional_circle: Panel = $EmotionalCirclePlaceholder
+@export_node_path("Control") var character_placeholder_path: NodePath
+
 @onready var peak_indicator: Label = $PeakIndicator
 
+var physical_value: float = Config.INITIAL_PHYSICAL
+var emotional_value: float = Config.INITIAL_EMOTIONAL
+var peak_value: float = Config.INITIAL_PEAK
+var pulse_time: float = 0.0
+var character_placeholder: Control
+
 func _ready() -> void:
-	_apply_circle_style(physical_circle, Color(0.95, 0.18, 0.18, 0.42))
-	_apply_circle_style(emotional_circle, Color(0.95, 0.84, 0.18, 0.42))
+	if not character_placeholder_path.is_empty():
+		character_placeholder = get_node_or_null(character_placeholder_path)
 	set_values(Config.INITIAL_PHYSICAL, Config.INITIAL_EMOTIONAL, Config.INITIAL_PEAK)
 
+func _process(delta: float) -> void:
+	pulse_time += delta
+	queue_redraw()
+	_sync_peak_indicator()
+
 func set_values(physical: float, emotional: float, peak: float) -> void:
-	var physical_scale := lerpf(0.45, 1.0, physical / Config.MAX_VALUE)
-	var emotional_scale := lerpf(0.45, 1.0, emotional / Config.MAX_VALUE)
-
-	physical_circle.scale = Vector2.ONE * physical_scale
-	emotional_circle.scale = Vector2.ONE * emotional_scale
-	physical_circle.position = Vector2(110.0, 90.0)
-	emotional_circle.position = Vector2(190.0, 110.0)
+	physical_value = Config.clamp_value(physical)
+	emotional_value = Config.clamp_value(emotional)
+	peak_value = Config.clamp_value(peak)
 	peak_indicator.text = "Peak %d" % int(round(peak))
-	peak_indicator.modulate = Color(1.0, 1.0, 1.0, lerpf(0.45, 1.0, peak / Config.MAX_VALUE))
+	peak_indicator.modulate = Color(1.0, 1.0, 1.0, lerpf(0.45, 1.0, peak_value / Config.MAX_VALUE))
+	queue_redraw()
+	_sync_peak_indicator()
 
-func _apply_circle_style(panel: Panel, color: Color) -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = color
-	style.corner_radius_top_left = 220
-	style.corner_radius_top_right = 220
-	style.corner_radius_bottom_left = 220
-	style.corner_radius_bottom_right = 220
-	panel.add_theme_stylebox_override("panel", style)
+func _draw() -> void:
+	if character_placeholder == null:
+		return
+
+	var center := _get_character_center()
+	var pulse := sin(pulse_time * 2.6) * 2.0
+	var physical_ratio := physical_value / Config.MAX_VALUE
+	var emotional_ratio := emotional_value / Config.MAX_VALUE
+	var physical_radius := lerpf(Config.CIRCLE_RADIUS_MIN, Config.CIRCLE_RADIUS_MAX, physical_ratio) + pulse
+	var emotional_radius := lerpf(Config.CIRCLE_RADIUS_MIN, Config.CIRCLE_RADIUS_MAX, emotional_ratio) - pulse
+	var physical_width := lerpf(Config.CIRCLE_STROKE_MIN, Config.CIRCLE_STROKE_MAX, physical_ratio)
+	var emotional_width := lerpf(Config.CIRCLE_STROKE_MIN, Config.CIRCLE_STROKE_MAX, emotional_ratio)
+	var physical_color := Color(0.94, 0.18, 0.18, lerpf(0.5, 0.95, physical_ratio))
+	var emotional_color := Color(0.95, 0.84, 0.18, lerpf(0.45, 0.9, emotional_ratio))
+
+	draw_arc(center, physical_radius, 0.0, TAU, 96, physical_color, physical_width, true)
+	draw_arc(center, emotional_radius, 0.0, TAU, 96, emotional_color, emotional_width, true)
+
+func _get_character_center() -> Vector2:
+	return get_global_transform_with_canvas().affine_inverse() * character_placeholder.get_global_rect().get_center()
+
+func _sync_peak_indicator() -> void:
+	if character_placeholder == null:
+		return
+	var center := _get_character_center()
+	peak_indicator.position = center + Vector2(-40.0, Config.PEAK_LABEL_OFFSET_Y)

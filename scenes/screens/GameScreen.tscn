@@ -55,16 +55,9 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource("5_vis")
-
-[node name="PhysicalCirclePlaceholder" type="Panel" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn/CenterStage/CentralArousalVisualization"]
-custom_minimum_size = Vector2(220, 220)
-
-[node name="EmotionalCirclePlaceholder" type="Panel" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn/CenterStage/CentralArousalVisualization"]
-custom_minimum_size = Vector2(220, 220)
+character_placeholder_path = NodePath("../CharacterArea/CharacterVisualAnchor/CharacterPlaceholder")
 
 [node name="PeakIndicator" type="Label" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn/CenterStage/CentralArousalVisualization"]
-offset_left = 210.0
-offset_top = 260.0
 text = "Peak 0"
 
 [node name="CharacterArea" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn/CenterStage" instance=ExtResource("2_character")]
@@ -79,11 +72,10 @@ custom_minimum_size = Vector2(360, 0)
 
 [node name="AudioPlaceholders" type="Node" parent="."]
 
-[node name="DialogueTimer" type="Timer" parent="."]
-one_shot = false
-wait_time = 4.0
+[node name="FeedbackTimer" type="Timer" parent="."]
+one_shot = true
+wait_time = 2.0
 
 [node name="RoundRestartTimer" type="Timer" parent="."]
 one_shot = true
 wait_time = 0.8
-

@@ -1,6 +1,6 @@
 extends Control
 
-const Config := preload("res://scripts/core/game_config.gd")
+const Config := preload("res://scripts/gameplay/GameConfig.gd")
 const ArousalModelClass := preload("res://scripts/gameplay/arousal_model.gd")
 const DirectionSequenceControllerClass := preload("res://scripts/gameplay/direction_sequence_controller.gd")
 const DialogueChoiceControllerClass := preload("res://scripts/gameplay/dialogue_choice_controller.gd")
@@ -13,21 +13,23 @@ signal ending_requested(ending_type: String)
 @onready var arousal_visualization = $MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn/CenterStage/CentralArousalVisualization
 @onready var dialogue_panel = $MarginContainer/ResponsiveLayout/UpperLayout/RightSideDialoguePanel
 @onready var status_hud = $MarginContainer/ResponsiveLayout/BottomHUD
-@onready var dialogue_timer: Timer = $DialogueTimer
+@onready var feedback_timer: Timer = $FeedbackTimer
 @onready var round_restart_timer: Timer = $RoundRestartTimer
 
 var arousal_model = ArousalModelClass.new()
 var sequence_controller = DirectionSequenceControllerClass.new()
 var dialogue_controller = DialogueChoiceControllerClass.new()
+var feedback_rng := RandomNumberGenerator.new()
 var combo: int = 0
 var current_prompt: Dictionary = {}
 var debug_overlay
 var run_active: bool = true
 
 func _ready() -> void:
+	feedback_rng.randomize()
 	status_hud.direction_pressed.connect(_on_direction_pressed)
 	dialogue_panel.choice_selected.connect(_on_choice_selected)
-	dialogue_timer.timeout.connect(_spawn_dialogue_prompt)
+	feedback_timer.timeout.connect(_on_feedback_timer_timeout)
 	round_restart_timer.timeout.connect(_start_round)
 	reset_run()
 
@@ -69,10 +71,11 @@ func reset_run() -> void:
 	round_restart_timer.stop()
 	arousal_model.reset()
 	dialogue_panel.clear_history()
-	dialogue_panel.append_history("System: New placeholder run started.")
-	dialogue_timer.start(Config.DIALOGUE_PROMPT_INTERVAL)
+	current_prompt = dialogue_controller.next_prompt(arousal_model.physical, arousal_model.emotional)
+	dialogue_panel.set_prompt(current_prompt)
+	dialogue_panel.append_history(Config.TEST_FEEDBACK_TEXT)
+	_schedule_next_feedback_message()
 	_start_round()
-	_spawn_dialogue_prompt()
 	_update_presentation()
 
 func apply_debug_values(value: float) -> void:
@@ -102,13 +105,12 @@ func _start_round() -> void:
 	print_debug("round start: %s" % [str(sequence_controller.current_sequence)])
 	_update_presentation()
 
-func _spawn_dialogue_prompt() -> void:
+func _on_feedback_timer_timeout() -> void:
 	if not run_active:
 		return
-	current_prompt = dialogue_controller.next_prompt(arousal_model.physical, arousal_model.emotional)
-	dialogue_panel.set_prompt(current_prompt)
-	dialogue_panel.append_history("%s: %s" % [current_prompt.get("speaker", "Companion"), current_prompt.get("text", "...")])
-	print_debug("dialogue prompt")
+	dialogue_panel.append_history(Config.TEST_FEEDBACK_TEXT)
+	print_debug("feedback message")
+	_schedule_next_feedback_message()
 
 func _on_direction_pressed(direction: String) -> void:
 	if not run_active:
@@ -136,7 +138,8 @@ func _on_choice_selected(choice_quality: String) -> void:
 	var outcome := dialogue_controller.apply_choice(choice_quality, arousal_model)
 	dialogue_panel.append_history(str(outcome.get("reply", "Companion: ...")))
 	character_area.show_choice_reaction(choice_quality)
-	_spawn_dialogue_prompt()
+	current_prompt = dialogue_controller.next_prompt(arousal_model.physical, arousal_model.emotional)
+	dialogue_panel.set_prompt(current_prompt)
 	_update_presentation()
 
 func _handle_wrong_input() -> void:
@@ -175,5 +178,12 @@ func _update_layout_mode() -> void:
 	upper_layout.vertical = size.x < Config.DESKTOP_BREAKPOINT
 
 func _stop_runtime_timers() -> void:
-	dialogue_timer.stop()
+	feedback_timer.stop()
 	round_restart_timer.stop()
+
+func _schedule_next_feedback_message() -> void:
+	var wait_time := feedback_rng.randf_range(
+		Config.FEEDBACK_MESSAGE_INTERVAL_MIN,
+		Config.FEEDBACK_MESSAGE_INTERVAL_MAX
+	)
+	feedback_timer.start(wait_time)

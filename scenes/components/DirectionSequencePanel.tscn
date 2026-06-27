@@ -4,6 +4,7 @@
 
 [node name="DirectionSequencePanel" type="PanelContainer"]
 script = ExtResource("1_seq")
+size_flags_horizontal = 3
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 theme_override_constants/margin_left = 8
@@ -16,7 +17,9 @@ theme_override_constants/margin_bottom = 8
 [node name="HeaderLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 text = "Direction Sequence"
 
-[node name="SequenceLabel" type="Label" parent="MarginContainer/VBoxContainer"]
-text = "Waiting for round..."
-autowrap_mode = 2
-
+[node name="SequenceLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 44)
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+text = "[center][color=#7d7d87]Waiting for round...[/color][/center]"

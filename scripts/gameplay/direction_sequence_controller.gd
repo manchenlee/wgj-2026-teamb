@@ -1,7 +1,7 @@
 class_name DirectionSequenceController
 extends RefCounted
 
-const Config := preload("res://scripts/core/game_config.gd")
+const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
 var rng := RandomNumberGenerator.new()
 var current_sequence: Array[String] = []
@@ -56,10 +56,26 @@ func submit_input(direction: String) -> Dictionary:
 func get_sequence_text() -> String:
 	var parts: Array[String] = []
 	for index in current_sequence.size():
-		var prefix := ">"
+		var arrow := _to_arrow(current_sequence[index])
 		if index < current_index:
-			prefix = "OK"
-		elif index > current_index:
-			prefix = ".."
-		parts.append("%s %s" % [prefix, current_sequence[index]])
-	return "   ".join(parts)
+			parts.append("[color=#71d99e]%s[/color]" % arrow)
+		elif index == current_index and round_active:
+			parts.append("[b][color=#fff1a8]%s[/color][/b]" % arrow)
+		else:
+			parts.append("[color=#7d7d87]%s[/color]" % arrow)
+	if parts.is_empty():
+		return "[color=#7d7d87]Waiting for round...[/color]"
+	return "[center]%s[/center]" % "  ".join(parts)
+
+func _to_arrow(direction: String) -> String:
+	match direction:
+		"Left":
+			return "←"
+		"Right":
+			return "→"
+		"Up":
+			return "↑"
+		"Down":
+			return "↓"
+		_:
+			return "?"

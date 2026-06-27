@@ -16,6 +16,8 @@ theme_override_constants/margin_bottom = 12
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 size_flags_horizontal = 3
 
+[node name="DirectionSequencePanel" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_seq")]
+
 [node name="StatsRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 alignment = 1
 
@@ -44,8 +46,6 @@ max_value = 3.0
 value = 3.0
 show_percentage = false
 
-[node name="DirectionSequencePanel" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_seq")]
-
 [node name="MobileDirectionButtons" type="GridContainer" parent="MarginContainer/VBoxContainer"]
 columns = 4
 
@@ -60,4 +60,3 @@ text = "Down"
 
 [node name="RightButton" type="Button" parent="MarginContainer/VBoxContainer/MobileDirectionButtons"]
 text = "Right"
-

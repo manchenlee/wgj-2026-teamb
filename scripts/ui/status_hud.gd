@@ -1,7 +1,7 @@
 class_name StatusHUD
 extends PanelContainer
 
-const Config := preload("res://scripts/core/game_config.gd")
+const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
 signal direction_pressed(direction: String)
 

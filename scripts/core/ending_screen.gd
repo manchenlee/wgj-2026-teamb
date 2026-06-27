@@ -1,6 +1,6 @@
 extends Control
 
-const Config := preload("res://scripts/core/game_config.gd")
+const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
 signal restart_pressed
 

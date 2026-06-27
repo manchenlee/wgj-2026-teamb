@@ -1,7 +1,7 @@
 class_name EndingEvaluator
 extends RefCounted
 
-const Config := preload("res://scripts/core/game_config.gd")
+const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
 static func evaluate(model) -> String:
 	if model.peak >= Config.MAX_VALUE:

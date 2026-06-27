@@ -1,7 +1,7 @@
 class_name ArousalModel
 extends RefCounted
 
-const Config := preload("res://scripts/core/game_config.gd")
+const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
 var physical: float = Config.INITIAL_PHYSICAL
 var emotional: float = Config.INITIAL_EMOTIONAL

@@ -1,6 +1,6 @@
 extends Control
 
-const Config := preload("res://scripts/core/game_config.gd")
+const Config := preload("res://scripts/gameplay/GameConfig.gd")
 const TITLE_SCENE := preload("res://scenes/screens/TitleScreen.tscn")
 const WARNING_SCENE := preload("res://scenes/screens/WarningScreen.tscn")
 const OPENING_SCENE := preload("res://scenes/screens/OpeningScreen.tscn")

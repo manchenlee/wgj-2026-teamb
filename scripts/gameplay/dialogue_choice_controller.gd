@@ -1,7 +1,7 @@
 class_name DialogueChoiceController
 extends RefCounted
 
-const Config := preload("res://scripts/core/game_config.gd")
+const Config := preload("res://scripts/gameplay/GameConfig.gd")
 const PlaceholderDialogueDataClass := preload("res://scripts/data/placeholder_dialogue_data.gd")
 
 var data_source = PlaceholderDialogueDataClass.new()
