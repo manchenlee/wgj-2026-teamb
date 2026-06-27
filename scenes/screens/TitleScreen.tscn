@@ -1,56 +1,67 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://b5b0dwoyk3nlh"]
 
-[ext_resource type="Script" path="res://scripts/core/title_screen.gd" id="1_title"]
+[ext_resource type="Script" uid="uid://bm325q3w8fibw" path="res://scripts/core/title_screen.gd" id="1_title"]
+[ext_resource type="Texture2D" uid="uid://bmy2w2x3um4hw" path="res://assets/btn.png" id="2_btn"]
+[ext_resource type="Texture2D" uid="uid://dc7csqq8gypo5" path="res://assets/curtain.jpg" id="3_curtain"]
 
-[node name="TitleScreen" type="Control"]
+[node name="TitleScreen" type="Control" unique_id=1861360168]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_title")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="TextureRect" parent="." unique_id=695992564]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -576.0
+offset_top = -324.0
+offset_right = 576.0
+offset_bottom = 324.0
+texture = ExtResource("3_curtain")
+expand_mode = 3
+stretch_mode = 6
+
+[node name="StartButton" type="TextureButton" parent="." unique_id=1262390766]
+layout_mode = 0
+texture_normal = ExtResource("2_btn")
+
+[node name="ButtonLabel" type="Label" parent="StartButton" unique_id=348086113]
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(1, 1, 1, 1)
+offset_top = 60.0
+offset_right = -70.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.55, 0, 0.05, 1)
+theme_override_colors/font_shadow_color = Color(1, 0.8, 0.8, 0.5)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 28
+text = "遊戲開始"
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
-anchors_preset = 15
+[node name="BottomBar" type="HBoxContainer" parent="." unique_id=256785983]
+layout_mode = 0
+anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-theme_override_constants/margin_left = 48
-theme_override_constants/margin_top = 48
-theme_override_constants/margin_right = 48
-theme_override_constants/margin_bottom = 48
+offset_top = -48.0
+mouse_filter = 2
+theme_override_constants/separation = 0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
-alignment = 1
-
-[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
-text = "GRAYBOX MVP"
-horizontal_alignment = 1
-theme_override_colors/font_color = Color(0.12, 0.12, 0.16, 1)
-
-[node name="SubtitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
-text = "Placeholder title screen for keyboard-and-mouse interaction prototype."
-horizontal_alignment = 1
-autowrap_mode = 2
-theme_override_colors/font_color = Color(0.2, 0.2, 0.24, 1)
-
-[node name="StartButton" type="Button" parent="MarginContainer/VBoxContainer"]
-text = "Start"
-
-[node name="DebugHintLabel" type="Label" parent="MarginContainer/VBoxContainer"]
-text = "F1 opens debug overlay."
-horizontal_alignment = 1
-theme_override_colors/font_color = Color(0.2, 0.2, 0.24, 1)
-
-[node name="DebugHotspot" type="Button" parent="."]
-offset_left = 8.0
-offset_top = 8.0
-offset_right = 36.0
-offset_bottom = 36.0
-text = ""
+[node name="DebugHotspot" type="Button" parent="BottomBar" unique_id=1755760099]
+modulate = Color(1, 1, 1, 0.06)
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
 flat = true
-modulate = Color(1, 1, 1, 0.08)
