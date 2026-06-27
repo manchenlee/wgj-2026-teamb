@@ -12,6 +12,7 @@ const TITLE_SCENE := preload("res://scenes/screens/TitleScreen.tscn")
 const CHARACTER_VISUAL_PATHS := {
 	"draft": "res://assets/art/character/draft.png",
 	"overall_init": "res://assets/art/character/phase1/overall_init.png",
+	"overall_low": "res://assets/art/character/phase1/overall_low.png",
 	"overall_medium": "res://assets/art/character/phase1/overall_medium.png",
 	"overall_high": "res://assets/art/character/phase1/overall_high.png",
 	"physic_high_mental_low": "res://assets/art/character/phase1/physic_high_mental_low.png.png",
@@ -76,6 +77,7 @@ var character_visual_textures: Dictionary = {}
 var character_visual_warnings_printed: Dictionary = {}
 var overlay_motion_set: Dictionary = {}
 var ending_transition_started: bool = false
+var has_left_overall_init_visual: bool = false
 
 func _ready() -> void:
 	_cache_character_visual_textures()
@@ -123,13 +125,7 @@ func _cache_character_visual_textures() -> void:
 	for state_name_variant in CHARACTER_VISUAL_PATHS.keys():
 		var state_name := String(state_name_variant)
 		var asset_path := String(CHARACTER_VISUAL_PATHS[state_name])
-		if not ResourceLoader.exists(asset_path):
-			_warn_character_visual_once(
-				"missing:%s" % asset_path,
-				"Character visual asset missing: %s" % asset_path
-			)
-			continue
-		var texture := load(asset_path) as Texture2D
+		var texture := _load_texture_from_asset_path(asset_path)
 		if texture == null:
 			_warn_character_visual_once(
 				"load_failed:%s" % asset_path,
@@ -140,6 +136,21 @@ func _cache_character_visual_textures() -> void:
 
 	if not character_visual_textures.has("draft") and character_background != null:
 		character_visual_textures["draft"] = character_background
+
+func _load_texture_from_asset_path(asset_path: String) -> Texture2D:
+	if ResourceLoader.exists(asset_path):
+		var resource_texture := load(asset_path) as Texture2D
+		if resource_texture != null:
+			return resource_texture
+
+	var absolute_asset_path := ProjectSettings.globalize_path(asset_path)
+	if not FileAccess.file_exists(absolute_asset_path):
+		return null
+
+	var image := Image.load_from_file(absolute_asset_path)
+	if image == null or image.is_empty():
+		return null
+	return ImageTexture.create_from_image(image)
 
 func _build_overlay_motion_set() -> Dictionary:
 	var motion_set: Dictionary = {}
@@ -163,14 +174,7 @@ func _build_overlay_motion_set() -> Dictionary:
 		var missing_frame := false
 		for frame_path_variant in frame_paths:
 			var frame_path := String(frame_path_variant)
-			if not ResourceLoader.exists(frame_path):
-				_warn_character_visual_once(
-					"overlay_missing:%s" % frame_path,
-					"Overlay motion asset missing: %s" % frame_path
-				)
-				missing_frame = true
-				break
-			var frame_texture := load(frame_path) as Texture2D
+			var frame_texture := _load_texture_from_asset_path(frame_path)
 			if frame_texture == null:
 				_warn_character_visual_once(
 					"overlay_load_failed:%s" % frame_path,
@@ -204,6 +208,8 @@ func _update_character_visual_state(forced_ending_type: String = "") -> void:
 	var next_texture := _get_character_visual_texture(visual_state)
 	if next_texture == null:
 		return
+	if visual_state != "overall_init":
+		has_left_overall_init_visual = true
 	if background_placeholder.texture == next_texture:
 		return
 	background_placeholder.texture = next_texture
@@ -230,6 +236,8 @@ func _get_character_visual_state_key(forced_ending_type: String = "") -> String:
 		return "overall_high"
 	if arousal_model.peak >= mismatch_low_threshold:
 		return "overall_medium"
+	if has_left_overall_init_visual:
+		return "overall_low"
 	return "overall_init"
 
 func _get_character_visual_texture(visual_state: String) -> Texture2D:
@@ -295,6 +303,7 @@ func reset_run() -> void:
 	print_debug("reset run")
 	run_active = true
 	ending_transition_started = false
+	has_left_overall_init_visual = false
 	combo = 0
 	prompt_spawn_timer.stop()
 	feedback_timer.stop()

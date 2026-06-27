@@ -61,6 +61,9 @@ func bind_targets(base_target: TextureRect, overlay_targets: Array) -> void:
 			_overlay_targets.append(overlay_target)
 	_apply_materials()
 
+func is_debug_breathing_enabled() -> bool:
+	return debug_breathing
+
 func start_breathing() -> void:
 	if _get_targets().is_empty():
 		return
