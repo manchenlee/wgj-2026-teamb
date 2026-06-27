@@ -1,3 +1,6 @@
+# LEGACY – superseded by InteractionSpotManager / InteractionSpot.
+# Not instantiated at runtime. Retained on disk for reference only.
+# Stage 2 migration complete: safe to delete in a future cleanup pass.
 class_name DirectionSequenceController
 extends RefCounted
 

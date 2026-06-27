@@ -7,9 +7,13 @@ signal stage_jump_requested(stage: String)
 signal values_requested(value: float)
 signal force_ending_requested(ending_type: String)
 signal reset_run_requested()
+signal force_spawn_spot_requested()
+signal force_complete_spot_requested()
+signal force_expire_spot_requested()
 
 @onready var panel: PanelContainer = $RootPanel
 @onready var live_label: Label = $RootPanel/MarginContainer/VBoxContainer/LiveReadout
+@onready var spot_telemetry_label: Label = $RootPanel/MarginContainer/VBoxContainer/SpotTelemetryLabel
 
 func _ready() -> void:
 	visible = false
@@ -37,29 +41,52 @@ func _ready() -> void:
 	$RootPanel/MarginContainer/VBoxContainer/ActionButtons/ResetRunButton.pressed.connect(
 		func() -> void: reset_run_requested.emit()
 	)
+	$RootPanel/MarginContainer/VBoxContainer/SpotButtons/ForceSpawnSpotButton.pressed.connect(
+		func() -> void: force_spawn_spot_requested.emit()
+	)
+	$RootPanel/MarginContainer/VBoxContainer/SpotButtons/ForceCompleteSpotButton.pressed.connect(
+		func() -> void: force_complete_spot_requested.emit()
+	)
+	$RootPanel/MarginContainer/VBoxContainer/SpotButtons/ForceExpireSpotButton.pressed.connect(
+		func() -> void: force_expire_spot_requested.emit()
+	)
+
 
 func toggle() -> void:
 	visible = not visible
 
+
 func sync_live_readout(state: Dictionary) -> void:
-	live_label.text = "Screen: %s | Phase: %s | Physical: %s | Emotional: %s | Peak: %s | Combo: %s | Prompt: %s" % [
-		str(state.get("screen", "-")),
-		str(state.get("phase", "-")),
-		str(state.get("physical", "-")),
-		str(state.get("emotional", "-")),
-		str(state.get("peak", "-")),
-		str(state.get("combo", "-")),
-		str(state.get("prompt", "-"))
-	]
+	live_label.text = (
+		"Screen: %s | Phase: %s | Phys: %s | Emot: %s | Peak: %s | Spot: %s" % [
+			str(state.get("screen", "-")),
+			str(state.get("phase", "-")),
+			str(state.get("physical", "-")),
+			str(state.get("emotional", "-")),
+			str(state.get("peak", "-")),
+			str(state.get("spot", "-"))
+		]
+	)
+	spot_telemetry_label.text = (
+		"Spot telemetry — incr: +%s  bonus: +%s  penalty: -%s  net: %s" % [
+			str(state.get("spot_incr", "-")),
+			str(state.get("spot_bonus", "-")),
+			str(state.get("spot_penalty", "-")),
+			str(state.get("spot_net", "-"))
+		]
+	)
+
 
 func _bind_stage_button(path: String, stage: String) -> void:
 	var button: Button = $RootPanel/MarginContainer/VBoxContainer.get_node(path)
 	button.pressed.connect(func() -> void:
-		if stage == Config.SUCCESS_ENDING or stage == Config.PHYSICAL_FAILURE_ENDING or stage == Config.EMOTIONAL_FAILURE_ENDING:
+		if stage == Config.SUCCESS_ENDING or stage == Config.PHYSICAL_FAILURE_ENDING \
+				or stage == Config.EMOTIONAL_FAILURE_ENDING:
 			force_ending_requested.emit(stage)
 		else:
 			stage_jump_requested.emit(stage)
 	)
+
 
 func _bind_value_button(path: String, value: float) -> void:
 	var button: Button = $RootPanel/MarginContainer/VBoxContainer.get_node(path)

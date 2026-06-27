@@ -21,6 +21,9 @@ func _ready() -> void:
 	debug_overlay.values_requested.connect(_apply_debug_values)
 	debug_overlay.force_ending_requested.connect(_force_ending)
 	debug_overlay.reset_run_requested.connect(_reset_run)
+	debug_overlay.force_spawn_spot_requested.connect(_force_spawn_spot)
+	debug_overlay.force_complete_spot_requested.connect(_force_complete_spot)
+	debug_overlay.force_expire_spot_requested.connect(_force_expire_spot)
 	UiThemeScaler.apply_to_tree(debug_overlay)
 	_show_title()
 
@@ -75,8 +78,11 @@ func _show_ending(ending_type: String) -> void:
 		"physical": "-",
 		"emotional": "-",
 		"peak": "-",
-		"combo": "-",
-		"prompt": "-"
+		"spot": "-",
+		"spot_incr": "-",
+		"spot_bonus": "-",
+		"spot_penalty": "-",
+		"spot_net": "-"
 	})
 
 func _swap_screen(next_screen: Control) -> void:
@@ -110,3 +116,18 @@ func _force_ending(ending_type: String) -> void:
 func _reset_run() -> void:
 	if current_screen_id == Config.SCREEN_GAME and current_screen.has_method("reset_run"):
 		current_screen.reset_run()
+
+
+func _force_spawn_spot() -> void:
+	if current_screen_id == Config.SCREEN_GAME and current_screen.has_method("force_spawn_spot"):
+		current_screen.force_spawn_spot()
+
+
+func _force_complete_spot() -> void:
+	if current_screen_id == Config.SCREEN_GAME and current_screen.has_method("force_complete_spot"):
+		current_screen.force_complete_spot()
+
+
+func _force_expire_spot() -> void:
+	if current_screen_id == Config.SCREEN_GAME and current_screen.has_method("force_expire_spot"):
+		current_screen.force_expire_spot()

@@ -10,12 +10,6 @@ const Config := preload("res://scripts/gameplay/GameConfig.gd")
 @onready var prompt_feedback_label: Label = $PromptLayer/PromptFeedbackLabel
 
 var _default_scale := Vector2.ONE
-var _prompt_nodes: Dictionary = {}
-var _prompt_positions: Dictionary = {}
-var _prompt_timer_lines: Dictionary = {}
-var _prompt_time_progresses: Dictionary = {}
-var _current_prompt_id: int = -1
-var _prompt_bounds_rect := Rect2()
 
 func _ready() -> void:
 	_default_scale = character_placeholder.scale
@@ -25,23 +19,39 @@ func _ready() -> void:
 	prompt_feedback_label.add_theme_font_size_override("font_size", Config.PROMPT_FEEDBACK_FONT_SIZE)
 	update_emotion_state("CALM")
 	_set_reaction("...")
-	clear_direction_prompts()
 
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED and is_node_ready():
-		_refresh_prompt_layout()
+
+# ---------------------------------------------------------------------------
+# Reactions
+# ---------------------------------------------------------------------------
 
 func show_correct_reaction() -> void:
 	_set_reaction("!")
 	_pulse(Color(0.85, 0.24, 0.24, 1.0), 1.08)
 
+
 func show_mistake_reaction() -> void:
 	_set_reaction("?")
 	_pulse(Color(0.35, 0.45, 0.85, 1.0), 0.92)
 
+
 func show_ignored_reaction() -> void:
 	_set_reaction("...")
 	_pulse(Color(0.55, 0.55, 0.62, 1.0), 0.96)
+
+
+func show_spot_reaction(strength: String) -> void:
+	match strength:
+		"strong":
+			_set_reaction("~♥")
+			_pulse(Color(0.95, 0.45, 0.2, 1.0), 1.1)
+		"mild":
+			_set_reaction("...")
+			_pulse(Color(0.55, 0.55, 0.62, 1.0), 0.95)
+		_:
+			_set_reaction("~")
+			_pulse(Color(0.85, 0.65, 0.3, 1.0), 1.02)
+
 
 func show_choice_reaction(choice_quality: String) -> void:
 	match choice_quality:
@@ -54,6 +64,11 @@ func show_choice_reaction(choice_quality: String) -> void:
 		"bad":
 			_set_reaction("Hm.")
 			_pulse(Color(0.45, 0.45, 0.55, 1.0), 0.95)
+
+
+# ---------------------------------------------------------------------------
+# Emotion state
+# ---------------------------------------------------------------------------
 
 func update_emotion_state(state: String) -> void:
 	emotion_state_label.text = "State: %s" % state
@@ -71,68 +86,10 @@ func update_emotion_state(state: String) -> void:
 			color = Color(0.92, 0.22, 0.22, 1.0)
 	_apply_style(character_placeholder, color)
 
-func set_prompt_bounds(bounds_rect: Rect2) -> void:
-	_prompt_bounds_rect = bounds_rect
-	_refresh_prompt_layout()
 
-func show_direction_prompt(prompt_id: int, direction: String, anchor_position: Vector2) -> void:
-	_prompt_positions[prompt_id] = anchor_position
-	var prompt_label := _ensure_prompt_label(prompt_id)
-	prompt_label.text = _to_arrow(direction)
-	prompt_label.visible = true
-	prompt_label.scale = Vector2.ONE
-	prompt_label.modulate = Color(0.9, 0.9, 0.95, 0.0)
-	_prompt_time_progresses[prompt_id] = 1.0
-	_refresh_prompt_layout()
-
-	var tween := create_tween()
-	tween.tween_property(prompt_label, "modulate:a", 0.46, 0.14).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-
-func set_current_prompt(prompt_id: int) -> void:
-	_current_prompt_id = prompt_id
-	for key in _prompt_nodes.keys():
-		var prompt_label: Label = _prompt_nodes[key]
-		prompt_label.modulate.a = 1.0 if int(key) == _current_prompt_id else 0.46
-
-func set_prompt_time_progresses(progress_by_prompt_id: Dictionary) -> void:
-	_prompt_time_progresses.clear()
-	for prompt_id_variant in progress_by_prompt_id.keys():
-		var prompt_id := int(prompt_id_variant)
-		_prompt_time_progresses[prompt_id] = clampf(float(progress_by_prompt_id[prompt_id_variant]), 0.0, 1.0)
-	for key in _prompt_nodes.keys():
-		var prompt_label: Label = _prompt_nodes[key]
-		var prompt_id := int(key)
-		var progress := float(_prompt_time_progresses.get(prompt_id, 0.0))
-		prompt_label.modulate.a = lerpf(0.22, 1.0, progress) if prompt_id == _current_prompt_id else 0.46
-	_update_prompt_timer_rings()
-
-func remove_direction_prompt(prompt_id: int) -> void:
-	if not _prompt_nodes.has(prompt_id):
-		return
-	var prompt_label: Label = _prompt_nodes[prompt_id]
-	prompt_label.queue_free()
-	_prompt_nodes.erase(prompt_id)
-	_prompt_positions.erase(prompt_id)
-	if _prompt_timer_lines.has(prompt_id):
-		var prompt_timer_line: Line2D = _prompt_timer_lines[prompt_id]
-		prompt_timer_line.queue_free()
-		_prompt_timer_lines.erase(prompt_id)
-	_prompt_time_progresses.erase(prompt_id)
-	if _current_prompt_id == prompt_id:
-		_current_prompt_id = -1
-	_update_prompt_timer_rings()
-
-func clear_direction_prompts() -> void:
-	for prompt_label in _prompt_nodes.values():
-		prompt_label.queue_free()
-	for prompt_timer_line in _prompt_timer_lines.values():
-		prompt_timer_line.queue_free()
-	_prompt_nodes.clear()
-	_prompt_positions.clear()
-	_prompt_timer_lines.clear()
-	_prompt_time_progresses.clear()
-	_current_prompt_id = -1
-	_update_prompt_timer_rings()
+# ---------------------------------------------------------------------------
+# Feedback label (used for spot gain/penalty floating text)
+# ---------------------------------------------------------------------------
 
 func show_prompt_feedback(text_value: String, color: Color, display_duration: float) -> void:
 	prompt_feedback_label.text = text_value
@@ -151,8 +108,14 @@ func show_prompt_feedback(text_value: String, color: Color, display_duration: fl
 	tween.tween_property(prompt_feedback_label, "position:y", start_y - 22.0, 0.18).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.chain().tween_callback(func() -> void: prompt_feedback_label.visible = false)
 
+
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
+
 func _set_reaction(text_value: String) -> void:
 	reaction_label.text = "Reaction: %s" % text_value
+
 
 func _pulse(color: Color, scale_multiplier: float) -> void:
 	_apply_style(character_placeholder, color)
@@ -160,125 +123,22 @@ func _pulse(color: Color, scale_multiplier: float) -> void:
 	tween.tween_property(character_placeholder, "scale", _default_scale * scale_multiplier, 0.12)
 	tween.tween_property(character_placeholder, "scale", _default_scale, 0.18)
 
+
 func _apply_style(_texture_rect: TextureRect, _color: Color) -> void:
 	return
 
-func _refresh_prompt_layout() -> void:
-	if prompt_feedback_label == null:
-		return
-	var bounds_rect := _get_prompt_bounds_rect()
-	for key in _prompt_nodes.keys():
-		var prompt_label: Label = _prompt_nodes[key]
-		var prompt_position: Vector2 = _prompt_positions.get(key, bounds_rect.get_center())
-		var prompt_size := prompt_label.size
-		var desired_center := prompt_position
-		var half_size := prompt_size * 0.5
-		var min_x := bounds_rect.position.x + half_size.x + Config.ARROW_PROMPT_EDGE_MARGIN
-		var max_x := bounds_rect.end.x - half_size.x - Config.ARROW_PROMPT_EDGE_MARGIN
-		var min_y := bounds_rect.position.y + half_size.y + Config.ARROW_PROMPT_EDGE_MARGIN
-		var max_y := bounds_rect.end.y - half_size.y - Config.ARROW_PROMPT_EDGE_MARGIN
-		var clamped_center := Vector2(
-			clampf(desired_center.x, min_x, max_x),
-			clampf(desired_center.y, min_y, max_y)
-		)
-		prompt_label.position = clamped_center - half_size
-	_update_prompt_timer_rings()
-	if prompt_feedback_label.visible:
-		_position_feedback_label()
 
 func _position_feedback_label() -> void:
-	var center := _get_feedback_anchor_center()
+	var center := _get_character_center_local()
 	var feedback_size := prompt_feedback_label.get_combined_minimum_size()
 	prompt_feedback_label.position = center + Vector2(0.0, -74.0) - (feedback_size * 0.5)
 
+
 func _get_character_center_local() -> Vector2:
 	return get_global_transform_with_canvas().affine_inverse() * character_placeholder.get_global_rect().get_center()
+
 
 func _get_character_rect_local() -> Rect2:
 	var global_rect := character_placeholder.get_global_rect()
 	var local_position := get_global_transform_with_canvas().affine_inverse() * global_rect.position
 	return Rect2(local_position, global_rect.size)
-
-func _get_feedback_anchor_center() -> Vector2:
-	var current_label := _get_current_prompt_label()
-	if current_label == null:
-		return _get_character_center_local()
-	return current_label.position + (current_label.get_combined_minimum_size() * 0.5)
-
-func _get_prompt_bounds_rect() -> Rect2:
-	if _prompt_bounds_rect.size.length_squared() > 0.0:
-		return _prompt_bounds_rect
-	return _get_character_rect_local()
-
-func _ensure_prompt_label(prompt_id: int) -> Label:
-	if _prompt_nodes.has(prompt_id):
-		return _prompt_nodes[prompt_id]
-	var prompt_label := Label.new()
-	prompt_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	prompt_label.visible = false
-	prompt_label.text = "↑"
-	prompt_label.custom_minimum_size = Config.ARROW_PROMPT_BOX_SIZE
-	prompt_label.size = Config.ARROW_PROMPT_BOX_SIZE
-	prompt_label.pivot_offset = Config.ARROW_PROMPT_BOX_SIZE * 0.5
-	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	prompt_label.add_theme_font_size_override("font_size", Config.ARROW_PROMPT_FONT_SIZE)
-	prompt_label.add_theme_color_override("font_color", Color(0.1, 0.1, 0.14, 1.0))
-	prompt_layer.add_child(prompt_label)
-	_prompt_nodes[prompt_id] = prompt_label
-	_ensure_prompt_timer_line(prompt_id)
-	return prompt_label
-
-func _get_current_prompt_label() -> Label:
-	if not _prompt_nodes.has(_current_prompt_id):
-		return null
-	return _prompt_nodes[_current_prompt_id]
-
-func _ensure_prompt_timer_line(prompt_id: int) -> Line2D:
-	if _prompt_timer_lines.has(prompt_id):
-		return _prompt_timer_lines[prompt_id]
-	var timer_line := Line2D.new()
-	timer_line.width = Config.ARROW_PROMPT_RING_WIDTH
-	timer_line.default_color = Color(0.24, 0.24, 0.28, 0.82)
-	timer_line.closed = false
-	timer_line.visible = false
-	timer_line.z_index = 0
-	prompt_layer.add_child(timer_line)
-	_prompt_timer_lines[prompt_id] = timer_line
-	return timer_line
-
-func _update_prompt_timer_rings() -> void:
-	for prompt_id_variant in _prompt_nodes.keys():
-		var prompt_id := int(prompt_id_variant)
-		var prompt_label: Label = _prompt_nodes[prompt_id]
-		var timer_line := _ensure_prompt_timer_line(prompt_id)
-		var progress := float(_prompt_time_progresses.get(prompt_id, 0.0))
-		if not prompt_label.visible or progress <= 0.0:
-			timer_line.visible = false
-			timer_line.clear_points()
-			continue
-		var center := prompt_label.position + (prompt_label.size * 0.5)
-		var radius := Config.ARROW_PROMPT_RING_RADIUS
-		var steps := 48
-		var points: Array[Vector2] = []
-		var start_angle := -PI * 0.5
-		var end_angle := start_angle + (TAU * progress)
-		for step in range(steps + 1):
-			var t := float(step) / float(steps)
-			var angle := lerpf(start_angle, end_angle, t)
-			points.append(center + Vector2.RIGHT.rotated(angle) * radius)
-		timer_line.points = points
-		timer_line.visible = points.size() >= 2
-
-func _to_arrow(direction: String) -> String:
-	match direction:
-		"Left":
-			return "←"
-		"Right":
-			return "→"
-		"Up":
-			return "↑"
-		"Down":
-			return "↓"
-		_:
-			return "?"

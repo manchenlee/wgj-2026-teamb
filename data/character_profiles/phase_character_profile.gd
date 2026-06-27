@@ -42,6 +42,11 @@ func get_anchor_layout_ids() -> Array[String]:
 	ids.sort()
 	return ids
 
+# Override in subclasses to return the list of InteractionSpotAnchorLayer node names
+# that this phase is allowed to use. Only names — no pixel coordinates.
+func get_interaction_spot_anchor_ids() -> Array[String]:
+	return []
+
 func get_layer_texture_paths() -> Dictionary:
 	return {}
 

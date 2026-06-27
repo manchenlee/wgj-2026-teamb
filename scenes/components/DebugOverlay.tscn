@@ -24,7 +24,7 @@ text = "Debug Overlay (F1)"
 
 [node name="LiveReadout" type="Label" parent="RootPanel/MarginContainer/VBoxContainer"]
 autowrap_mode = 2
-text = "Screen: - | Physical: - | Emotional: - | Peak: - | Combo: - | Round: - | Sequence: -"
+text = "Screen: - | Physical: - | Emotional: - | Peak: - | Spot: -"
 
 [node name="StageButtons" type="GridContainer" parent="RootPanel/MarginContainer/VBoxContainer"]
 columns = 2
@@ -74,3 +74,18 @@ text = "Force Emotional Failure"
 
 [node name="ResetRunButton" type="Button" parent="RootPanel/MarginContainer/VBoxContainer/ActionButtons"]
 text = "Reset Current Run"
+
+[node name="SpotTelemetryLabel" type="Label" parent="RootPanel/MarginContainer/VBoxContainer"]
+autowrap_mode = 2
+text = "Spot: incr=- bonus=- penalty=- net=-"
+
+[node name="SpotButtons" type="HBoxContainer" parent="RootPanel/MarginContainer/VBoxContainer"]
+
+[node name="ForceSpawnSpotButton" type="Button" parent="RootPanel/MarginContainer/VBoxContainer/SpotButtons"]
+text = "Spawn Spot"
+
+[node name="ForceCompleteSpotButton" type="Button" parent="RootPanel/MarginContainer/VBoxContainer/SpotButtons"]
+text = "Complete Spot"
+
+[node name="ForceExpireSpotButton" type="Button" parent="RootPanel/MarginContainer/VBoxContainer/SpotButtons"]
+text = "Expire Spot"

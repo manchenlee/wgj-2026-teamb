@@ -9,6 +9,22 @@ var physical_decay_rate: float
 var emotional_decay_rate: float
 var physical_activity_grace_seconds: float
 var emotional_activity_grace_seconds: float
+
+# Interaction Spot (Physical Arousal) — new system
+var spot_lifetime: float
+var spot_required_scrub_distance: float
+var spot_valid_motion_threshold: float
+var spot_max_delta_per_event: float
+var spot_physical_gain_per_px: float
+var spot_completion_bonus: float
+var spot_expiry_penalty_ignored: float
+var spot_expiry_penalty_partial: float
+var spot_radius: float
+var spot_spawn_delay_min: float
+var spot_spawn_delay_max: float
+var spot_max_active_count: int
+
+# LEGACY: Direction-sequence physical interaction (disabled, retained for rollback)
 var direction_sequence_length_min: int
 var direction_sequence_length_max: int
 var direction_prompt_time_limit: float
@@ -53,6 +69,22 @@ func _init(values: Dictionary = {}) -> void:
 	emotional_decay_rate = float(values.get("emotional_decay_rate", 0.5))
 	physical_activity_grace_seconds = float(values.get("physical_activity_grace_seconds", 1.4))
 	emotional_activity_grace_seconds = float(values.get("emotional_activity_grace_seconds", 2.8))
+
+	# Interaction Spot (Physical Arousal) — new system
+	spot_lifetime = float(values.get("spot_lifetime", 7.0))
+	spot_required_scrub_distance = float(values.get("spot_required_scrub_distance", 400.0))
+	spot_valid_motion_threshold = float(values.get("spot_valid_motion_threshold", 3.0))
+	spot_max_delta_per_event = float(values.get("spot_max_delta_per_event", 24.0))
+	spot_physical_gain_per_px = float(values.get("spot_physical_gain_per_px", 0.04))
+	spot_completion_bonus = float(values.get("spot_completion_bonus", 12.0))
+	spot_expiry_penalty_ignored = float(values.get("spot_expiry_penalty_ignored", 5.0))
+	spot_expiry_penalty_partial = float(values.get("spot_expiry_penalty_partial", 2.0))
+	spot_radius = float(values.get("spot_radius", 52.0))
+	spot_spawn_delay_min = float(values.get("spot_spawn_delay_min", 1.8))
+	spot_spawn_delay_max = float(values.get("spot_spawn_delay_max", 3.2))
+	spot_max_active_count = int(values.get("spot_max_active_count", 3))
+
+	# LEGACY: direction-sequence fields — disabled, retained for rollback
 	direction_sequence_length_min = int(values.get("direction_sequence_length_min", 3))
 	direction_sequence_length_max = int(values.get("direction_sequence_length_max", 4))
 	direction_prompt_time_limit = float(values.get("direction_prompt_time_limit", 2.4))

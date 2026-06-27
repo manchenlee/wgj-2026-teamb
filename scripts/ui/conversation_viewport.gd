@@ -95,6 +95,14 @@ func append_history(line: String, speaker_type: String = "companion") -> void:
 func set_choice_timeout_progress(_progress: float) -> void:
 	pass
 
+
+func emit_choice_by_index(index: int) -> void:
+	## Called by GameSessionController to trigger a choice via keyboard input.
+	## ConversationViewport does not process keyboard events directly.
+	if not choice_area.visible:
+		return
+	_emit_choice(index)
+
 func _sync_content_rect() -> void:
 	conversation_content.position = Vector2.ZERO
 

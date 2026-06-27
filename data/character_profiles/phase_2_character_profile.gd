@@ -62,6 +62,19 @@ func _init() -> void:
 	)
 
 
+func get_interaction_spot_anchor_ids() -> Array[String]:
+	return [
+		"HeadAnchor",
+		"ShoulderLeftAnchor",
+		"ShoulderRightAnchor",
+		"ArmLeftAnchor",
+		"ArmRightAnchor",
+		"HandLeftAnchor",
+		"HandRightAnchor",
+		"KneeAnchor"
+	]
+
+
 func get_layer_texture_paths() -> Dictionary:
 	return {
 		"phase_2_background": "%sperson_bgc.png" % PHASE_2_ROOT,

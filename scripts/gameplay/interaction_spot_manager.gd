@@ -1,0 +1,337 @@
+class_name InteractionSpotManager
+extends RefCounted
+
+# ---------------------------------------------------------------------------
+# InteractionSpotManager
+#
+# Supports multiple simultaneous active spots. Each spot is tracked
+# independently. Arousal changes fire per-spot via signal callbacks.
+# The spawn timer fires continuously; spots spawn up to SPOT_MAX_ACTIVE_COUNT
+# at a time. Each anchor is used at most once across all live spots.
+# ---------------------------------------------------------------------------
+
+const InteractionSpotScene := preload("uid://dq3kxvpyb6nj7")
+
+signal spot_scrub_started()
+signal spot_scrub_ended()
+signal spot_telemetry_updated(telemetry: Dictionary)
+
+# Set by GameSessionController before activation.
+var _arousal_model = null
+var _character_presenter = null
+var _prompt_layer: Control = null
+var _anchor_layer: Control = null
+var _spawn_timer: Timer = null
+var _phase_config = null
+var _rng := RandomNumberGenerator.new()
+
+var _available_anchor_ids: Array[String] = []
+var _last_anchor_id: String = ""
+# All currently live spots
+var _active_spots: Array[InteractionSpot] = []
+var _active: bool = false
+
+# Per-session rolling telemetry (accumulated across spots)
+var _telemetry_incremental_gain: float = 0.0
+var _telemetry_completion_bonus: float = 0.0
+var _telemetry_physical_at_session_start: float = 0.0
+var _telemetry_penalty: float = 0.0
+
+
+func _init() -> void:
+	_rng.randomize()
+
+
+func setup(
+	arousal_model,
+	character_presenter,
+	prompt_layer: Control,
+	anchor_layer: Control,
+	spawn_timer: Timer
+) -> void:
+	_arousal_model = arousal_model
+	_character_presenter = character_presenter
+	_prompt_layer = prompt_layer
+	_anchor_layer = anchor_layer
+	_spawn_timer = spawn_timer
+	_spawn_timer.timeout.connect(_on_spawn_timer_timeout)
+
+
+func set_phase_config(phase_config) -> void:
+	_phase_config = phase_config
+
+
+func set_available_anchor_ids(ids: Array[String]) -> void:
+	_available_anchor_ids = ids.duplicate()
+
+
+func start() -> void:
+	_active = true
+	_telemetry_reset()
+	_telemetry_physical_at_session_start = _arousal_model.physical if _arousal_model != null else 0.0
+	_schedule_next_spot(0.5)  # brief initial delay before first spawn
+
+
+func stop() -> void:
+	_active = false
+	_spawn_timer.stop()
+	for spot in _active_spots:
+		if is_instance_valid(spot):
+			_disconnect_spot(spot)
+			spot.queue_free()
+	_active_spots.clear()
+
+
+func force_spawn_spot() -> void:
+	_spawn_spot()
+
+
+func force_complete_spot() -> void:
+	if _active_spots.is_empty():
+		return
+	# Force-complete the most recently spawned live spot.
+	for i in range(_active_spots.size() - 1, -1, -1):
+		if is_instance_valid(_active_spots[i]):
+			_on_spot_completed(_active_spots[i])
+			return
+
+
+func force_expire_spot() -> void:
+	if _active_spots.is_empty():
+		return
+	for i in range(_active_spots.size() - 1, -1, -1):
+		if is_instance_valid(_active_spots[i]):
+			_on_spot_expired(0.0, _active_spots[i])
+			return
+
+
+# ---------------------------------------------------------------------------
+# Spawn scheduling
+# ---------------------------------------------------------------------------
+
+func _on_spawn_timer_timeout() -> void:
+	if not _active:
+		return
+	_spawn_spot()
+	# Keep scheduling: timer fires repeatedly until max active count is reached.
+	# If already at max, schedule a check after the minimum delay.
+	_schedule_next_spot()
+
+
+func _schedule_next_spot(override_delay: float = -1.0) -> void:
+	if not _active:
+		return
+	var delay: float
+	if override_delay >= 0.0:
+		delay = override_delay
+	else:
+		var min_d: float = _get_config_value("spot_spawn_delay_min", 1.8)
+		var max_d: float = _get_config_value("spot_spawn_delay_max", 3.2)
+		delay = _rng.randf_range(min_d, max_d)
+	_spawn_timer.start(delay)
+
+
+func _get_max_active_spots() -> int:
+	return int(_get_config_value("spot_max_active_count", 3))
+
+
+func _get_occupied_anchor_ids() -> Array[String]:
+	var occupied: Array[String] = []
+	for spot in _active_spots:
+		if is_instance_valid(spot) and spot.has_meta("anchor_id"):
+			occupied.append(str(spot.get_meta("anchor_id")))
+	return occupied
+
+
+func _spawn_spot() -> void:
+	# Prune any stale references first.
+	_active_spots = _active_spots.filter(func(s): return is_instance_valid(s))
+
+	if _active_spots.size() >= _get_max_active_spots():
+		return  # already at cap
+
+	if _available_anchor_ids.is_empty():
+		push_warning("InteractionSpotManager: no anchor IDs available. Cannot spawn spot.")
+		return
+
+	# Pick an anchor not already occupied by a live spot.
+	var occupied := _get_occupied_anchor_ids()
+	var available_now: Array[String] = []
+	for id in _available_anchor_ids:
+		if not occupied.has(id):
+			available_now.append(id)
+
+	if available_now.is_empty():
+		return  # all anchors occupied
+
+	var anchor_id := _pick_anchor_id_from(available_now)
+	var anchor_node := _anchor_layer.get_node_or_null(anchor_id) as Control
+	if anchor_node == null:
+		push_warning("InteractionSpotManager: anchor node '%s' not found in anchor layer." % anchor_id)
+		return
+
+	var global_center := anchor_node.get_global_rect().get_center()
+	# Convert to PromptLayer local coordinates.
+	var local_center: Vector2 = _prompt_layer.get_global_transform_with_canvas().affine_inverse() * global_center
+
+	var radius: float = _get_config_value("spot_radius", 52.0)
+	var diameter := radius * 2.0
+
+	var spot := InteractionSpotScene.instantiate() as InteractionSpot
+	spot.setup(_build_spot_config())
+	spot.custom_minimum_size = Vector2(diameter, diameter)
+	spot.size = Vector2(diameter, diameter)
+	spot.pivot_offset = Vector2(radius, radius)
+	spot.position = local_center - Vector2(radius, radius)
+	# Tag the spot with its anchor so we can avoid re-using it while live.
+	spot.set_meta("anchor_id", anchor_id)
+
+	spot.scrub_started.connect(_on_spot_scrub_started)
+	spot.scrub_ended.connect(_on_spot_scrub_ended)
+	spot.scrubbed.connect(_on_spot_scrubbed.bind(spot))
+	spot.completed.connect(_on_spot_completed.bind(spot))
+	spot.expired.connect(_on_spot_expired.bind(spot))
+
+	_prompt_layer.add_child(spot)
+	_active_spots.append(spot)
+	_last_anchor_id = anchor_id
+
+	print_debug("InteractionSpotManager: spawned spot at anchor '%s' pos=%s (active=%d)" % [anchor_id, str(local_center), _active_spots.size()])
+
+
+func _pick_anchor_id_from(candidates: Array[String]) -> String:
+	if candidates.size() == 1:
+		return candidates[0]
+	var pick := candidates[_rng.randi_range(0, candidates.size() - 1)]
+	# Avoid repeating last anchor if possible.
+	if pick == _last_anchor_id and candidates.size() > 1:
+		pick = candidates[_rng.randi_range(0, candidates.size() - 1)]
+	return pick
+
+
+# ---------------------------------------------------------------------------
+# Signal handlers — all arousal changes happen here, never inside InteractionSpot
+# ---------------------------------------------------------------------------
+
+func _on_spot_scrub_started() -> void:
+	emit_signal("spot_scrub_started")
+
+
+func _on_spot_scrub_ended() -> void:
+	emit_signal("spot_scrub_ended")
+
+
+func _on_spot_scrubbed(distance: float, _spot: InteractionSpot) -> void:
+	if _arousal_model == null:
+		return
+	var gain_per_px: float = _get_config_value("spot_physical_gain_per_px", 0.04)
+	var gain := distance * gain_per_px
+	_arousal_model.apply_physical(gain)
+	_arousal_model.refresh_physical_activity()
+	_telemetry_incremental_gain += gain
+	_emit_telemetry()
+
+
+func _on_spot_completed(spot: InteractionSpot) -> void:
+	_active_spots = _active_spots.filter(func(s): return is_instance_valid(s) and s != spot)
+	var bonus: float = _get_config_value("spot_completion_bonus", 12.0)
+	if _arousal_model != null:
+		_arousal_model.apply_physical(bonus)
+		_arousal_model.refresh_physical_activity()
+	_telemetry_completion_bonus += bonus
+	if _character_presenter != null:
+		_character_presenter.show_spot_reaction("strong")
+	print_debug(
+		"InteractionSpotManager telemetry [completed]: incremental=+%.2f bonus=+%.2f penalty=-%.2f net=%.2f active=%d" % [
+			_telemetry_incremental_gain, _telemetry_completion_bonus,
+			_telemetry_penalty,
+			_telemetry_incremental_gain + _telemetry_completion_bonus - _telemetry_penalty,
+			_active_spots.size()
+		]
+	)
+	_emit_telemetry()
+
+
+func _on_spot_expired(progress_ratio: float, spot: InteractionSpot) -> void:
+	_active_spots = _active_spots.filter(func(s): return is_instance_valid(s) and s != spot)
+	var penalty := 0.0
+	if progress_ratio < 0.1:
+		penalty = _get_config_value("spot_expiry_penalty_ignored", 5.0)
+	elif progress_ratio < 0.5:
+		penalty = _get_config_value("spot_expiry_penalty_partial", 2.0)
+	if penalty > 0.0 and _arousal_model != null:
+		_arousal_model.apply_physical(-penalty)
+	_telemetry_penalty += penalty
+	if _character_presenter != null:
+		_character_presenter.show_spot_reaction("mild")
+	print_debug(
+		"InteractionSpotManager telemetry [expired_%.2f]: incremental=+%.2f penalty=-%.2f net=%.2f active=%d" % [
+			progress_ratio, _telemetry_incremental_gain,
+			_telemetry_penalty,
+			_telemetry_incremental_gain + _telemetry_completion_bonus - _telemetry_penalty,
+			_active_spots.size()
+		]
+	)
+	_emit_telemetry()
+
+
+func _disconnect_spot(spot: InteractionSpot) -> void:
+	if spot.scrub_started.is_connected(_on_spot_scrub_started):
+		spot.scrub_started.disconnect(_on_spot_scrub_started)
+	if spot.scrub_ended.is_connected(_on_spot_scrub_ended):
+		spot.scrub_ended.disconnect(_on_spot_scrub_ended)
+
+
+# ---------------------------------------------------------------------------
+# Telemetry
+# ---------------------------------------------------------------------------
+
+func _telemetry_reset() -> void:
+	_telemetry_incremental_gain = 0.0
+	_telemetry_completion_bonus = 0.0
+	_telemetry_physical_at_session_start = 0.0
+	_telemetry_penalty = 0.0
+
+
+func _emit_telemetry() -> void:
+	emit_signal("spot_telemetry_updated", _build_telemetry_dict("active"))
+
+
+func _build_telemetry_dict(outcome: String) -> Dictionary:
+	var physical_now: float = _arousal_model.physical if _arousal_model != null else 0.0
+	return {
+		"outcome": outcome,
+		"incremental_gain": _telemetry_incremental_gain,
+		"completion_bonus": _telemetry_completion_bonus,
+		"penalty": _telemetry_penalty,
+		"physical_now": physical_now,
+		"net_physical_change": _telemetry_incremental_gain + _telemetry_completion_bonus - _telemetry_penalty,
+		"active_spots": _active_spots.size()
+	}
+
+
+func get_debug_spot_state() -> String:
+	_active_spots = _active_spots.filter(func(s): return is_instance_valid(s))
+	if _active_spots.is_empty():
+		return "none"
+	return "active=%d" % _active_spots.size()
+
+
+# ---------------------------------------------------------------------------
+# Config helpers
+# ---------------------------------------------------------------------------
+
+func _build_spot_config() -> Dictionary:
+	return {
+		"spot_lifetime": _get_config_value("spot_lifetime", 7.0),
+		"required_scrub_distance": _get_config_value("spot_required_scrub_distance", 400.0),
+		"valid_motion_threshold": _get_config_value("spot_valid_motion_threshold", 3.0),
+		"max_delta_per_event": _get_config_value("spot_max_delta_per_event", 24.0),
+		"spot_radius": _get_config_value("spot_radius", 52.0)
+	}
+
+
+func _get_config_value(key: String, fallback: Variant) -> Variant:
+	if _phase_config != null:
+		return _phase_config.get(key)
+	return fallback
