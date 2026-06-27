@@ -74,7 +74,7 @@ const SPOT_MAX_DELTA_PER_EVENT: float = 24.0
 # Physical Arousal gained per valid scrub pixel.
 # Applied by InteractionSpotManager on each scrubbed() signal — never inside InteractionSpot.
 # 400 px × 0.04 = +16 incremental from a full completion.
-const SPOT_PHYSICAL_GAIN_PER_PX: float = 0.02
+const SPOT_PHYSICAL_GAIN_PER_PX: float = 0.01
 
 # Extra Physical Arousal bonus on spot completion (applied by InteractionSpotManager).
 # Full completion total: +16 incremental + +12 bonus = +28.

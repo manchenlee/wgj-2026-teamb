@@ -12,6 +12,8 @@ extends RefCounted
 
 const InteractionSpotScene := preload("uid://dq3kxvpyb6nj7")
 
+const Config := preload("res://scripts/gameplay/GameConfig.gd")
+
 signal spot_scrub_started()
 signal spot_scrub_ended()
 signal spot_telemetry_updated(telemetry: Dictionary)
@@ -125,14 +127,14 @@ func _schedule_next_spot(override_delay: float = -1.0) -> void:
 	if override_delay >= 0.0:
 		delay = override_delay
 	else:
-		var min_d: float = _get_config_value("spot_spawn_delay_min", 1.8)
-		var max_d: float = _get_config_value("spot_spawn_delay_max", 3.2)
+		var min_d: float = _get_config_value("spot_spawn_delay_min", Config.SPOT_SPAWN_DELAY_MIN)
+		var max_d: float = _get_config_value("spot_spawn_delay_max", Config.SPOT_SPAWN_DELAY_MAX)
 		delay = _rng.randf_range(min_d, max_d)
 	_spawn_timer.start(delay)
 
 
 func _get_max_active_spots() -> int:
-	return int(_get_config_value("spot_max_active_count", 3))
+	return int(_get_config_value("spot_max_active_count", Config.SPOT_MAX_ACTIVE_COUNT))
 
 
 func _get_occupied_anchor_ids() -> Array[String]:
@@ -174,7 +176,7 @@ func _spawn_spot() -> void:
 	# Convert to PromptLayer local coordinates.
 	var local_center: Vector2 = _prompt_layer.get_global_transform_with_canvas().affine_inverse() * global_center
 
-	var radius: float = _get_config_value("spot_radius", 52.0)
+	var radius: float = _get_config_value("spot_radius", Config.SPOT_RADIUS)
 	var diameter := radius * 2.0
 
 	var spot := InteractionSpotScene.instantiate() as InteractionSpot
@@ -196,7 +198,17 @@ func _spawn_spot() -> void:
 	_active_spots.append(spot)
 	_last_anchor_id = anchor_id
 
-	print_debug("InteractionSpotManager: spawned spot at anchor '%s' pos=%s (active=%d)" % [anchor_id, str(local_center), _active_spots.size()])
+	print_debug(
+		"InteractionSpotManager: spawned spot anchor='%s' anchor_global=%s prompt_layer_global=%s local_center=%s spot_pos=%s radius=%.0f active=%d" % [
+			anchor_id,
+			str(anchor_node.get_global_rect().get_center()),
+			str(_prompt_layer.get_global_rect().position),
+			str(local_center),
+			str(spot.position),
+			radius,
+			_active_spots.size()
+		]
+	)
 
 
 func _pick_anchor_id_from(candidates: Array[String]) -> String:
@@ -224,7 +236,7 @@ func _on_spot_scrub_ended() -> void:
 func _on_spot_scrubbed(distance: float, _spot: InteractionSpot) -> void:
 	if _arousal_model == null:
 		return
-	var gain_per_px: float = _get_config_value("spot_physical_gain_per_px", 0.04)
+	var gain_per_px: float = _get_config_value("spot_physical_gain_per_px", Config.SPOT_PHYSICAL_GAIN_PER_PX)
 	var gain := distance * gain_per_px
 	_arousal_model.apply_physical(gain)
 	_arousal_model.refresh_physical_activity()
@@ -234,7 +246,7 @@ func _on_spot_scrubbed(distance: float, _spot: InteractionSpot) -> void:
 
 func _on_spot_completed(spot: InteractionSpot) -> void:
 	_active_spots = _active_spots.filter(func(s): return is_instance_valid(s) and s != spot)
-	var bonus: float = _get_config_value("spot_completion_bonus", 12.0)
+	var bonus: float = _get_config_value("spot_completion_bonus", Config.SPOT_COMPLETION_BONUS)
 	if _arousal_model != null:
 		_arousal_model.apply_physical(bonus)
 		_arousal_model.refresh_physical_activity()
@@ -256,9 +268,9 @@ func _on_spot_expired(progress_ratio: float, spot: InteractionSpot) -> void:
 	_active_spots = _active_spots.filter(func(s): return is_instance_valid(s) and s != spot)
 	var penalty := 0.0
 	if progress_ratio < 0.1:
-		penalty = _get_config_value("spot_expiry_penalty_ignored", 5.0)
+		penalty = _get_config_value("spot_expiry_penalty_ignored", Config.SPOT_EXPIRY_PENALTY_IGNORED)
 	elif progress_ratio < 0.5:
-		penalty = _get_config_value("spot_expiry_penalty_partial", 2.0)
+		penalty = _get_config_value("spot_expiry_penalty_partial", Config.SPOT_EXPIRY_PENALTY_PARTIAL)
 	if penalty > 0.0 and _arousal_model != null:
 		_arousal_model.apply_physical(-penalty)
 	_telemetry_penalty += penalty
@@ -323,15 +335,20 @@ func get_debug_spot_state() -> String:
 
 func _build_spot_config() -> Dictionary:
 	return {
-		"spot_lifetime": _get_config_value("spot_lifetime", 7.0),
-		"required_scrub_distance": _get_config_value("spot_required_scrub_distance", 400.0),
-		"valid_motion_threshold": _get_config_value("spot_valid_motion_threshold", 3.0),
-		"max_delta_per_event": _get_config_value("spot_max_delta_per_event", 24.0),
-		"spot_radius": _get_config_value("spot_radius", 52.0)
+		"spot_lifetime":          _get_config_value("spot_lifetime",          Config.SPOT_LIFETIME),
+		"required_scrub_distance":_get_config_value("spot_required_scrub_distance", Config.SPOT_REQUIRED_SCRUB_DISTANCE),
+		"valid_motion_threshold": _get_config_value("spot_valid_motion_threshold",  Config.SPOT_VALID_MOTION_THRESHOLD),
+		"max_delta_per_event":    _get_config_value("spot_max_delta_per_event",     Config.SPOT_MAX_DELTA_PER_EVENT),
+		"spot_radius":            _get_config_value("spot_radius",            Config.SPOT_RADIUS)
 	}
 
 
 func _get_config_value(key: String, fallback: Variant) -> Variant:
-	if _phase_config != null:
-		return _phase_config.get(key)
-	return fallback
+	if _phase_config == null:
+		return fallback
+	# PhaseConfig is a plain RefCounted class. GDScript Object.get() works for
+	# declared 'var' properties on RefCounted subclasses.
+	var value = _phase_config.get(key)
+	if value == null:
+		return fallback
+	return value

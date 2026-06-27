@@ -4,6 +4,7 @@
 
 [node name="CharacterArea" type="Control"]
 custom_minimum_size = Vector2(820, 820)
+mouse_filter = 1
 script = ExtResource("1_char")
 
 [node name="CharacterVisualAnchor" type="CenterContainer" parent="."]

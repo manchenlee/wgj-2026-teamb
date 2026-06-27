@@ -1,6 +1,8 @@
 class_name PhaseConfig
 extends RefCounted
 
+const Config := preload("res://scripts/gameplay/GameConfig.gd")
+
 var phase_id: String
 var starting_physical_value: float
 var starting_emotional_value: float
@@ -71,18 +73,19 @@ func _init(values: Dictionary = {}) -> void:
 	emotional_activity_grace_seconds = float(values.get("emotional_activity_grace_seconds", 2.8))
 
 	# Interaction Spot (Physical Arousal) — new system
-	spot_lifetime = float(values.get("spot_lifetime", 7.0))
-	spot_required_scrub_distance = float(values.get("spot_required_scrub_distance", 400.0))
-	spot_valid_motion_threshold = float(values.get("spot_valid_motion_threshold", 3.0))
-	spot_max_delta_per_event = float(values.get("spot_max_delta_per_event", 24.0))
-	spot_physical_gain_per_px = float(values.get("spot_physical_gain_per_px", 0.04))
-	spot_completion_bonus = float(values.get("spot_completion_bonus", 12.0))
-	spot_expiry_penalty_ignored = float(values.get("spot_expiry_penalty_ignored", 5.0))
-	spot_expiry_penalty_partial = float(values.get("spot_expiry_penalty_partial", 2.0))
-	spot_radius = float(values.get("spot_radius", 52.0))
-	spot_spawn_delay_min = float(values.get("spot_spawn_delay_min", 1.8))
-	spot_spawn_delay_max = float(values.get("spot_spawn_delay_max", 3.2))
-	spot_max_active_count = int(values.get("spot_max_active_count", 3))
+	# Defaults reference GameConfig constants so changing GameConfig.gd takes effect immediately.
+	spot_lifetime = float(values.get("spot_lifetime", Config.SPOT_LIFETIME))
+	spot_required_scrub_distance = float(values.get("spot_required_scrub_distance", Config.SPOT_REQUIRED_SCRUB_DISTANCE))
+	spot_valid_motion_threshold = float(values.get("spot_valid_motion_threshold", Config.SPOT_VALID_MOTION_THRESHOLD))
+	spot_max_delta_per_event = float(values.get("spot_max_delta_per_event", Config.SPOT_MAX_DELTA_PER_EVENT))
+	spot_physical_gain_per_px = float(values.get("spot_physical_gain_per_px", Config.SPOT_PHYSICAL_GAIN_PER_PX))
+	spot_completion_bonus = float(values.get("spot_completion_bonus", Config.SPOT_COMPLETION_BONUS))
+	spot_expiry_penalty_ignored = float(values.get("spot_expiry_penalty_ignored", Config.SPOT_EXPIRY_PENALTY_IGNORED))
+	spot_expiry_penalty_partial = float(values.get("spot_expiry_penalty_partial", Config.SPOT_EXPIRY_PENALTY_PARTIAL))
+	spot_radius = float(values.get("spot_radius", Config.SPOT_RADIUS))
+	spot_spawn_delay_min = float(values.get("spot_spawn_delay_min", Config.SPOT_SPAWN_DELAY_MIN))
+	spot_spawn_delay_max = float(values.get("spot_spawn_delay_max", Config.SPOT_SPAWN_DELAY_MAX))
+	spot_max_active_count = int(values.get("spot_max_active_count", Config.SPOT_MAX_ACTIVE_COUNT))
 
 	# LEGACY: direction-sequence fields — disabled, retained for rollback
 	direction_sequence_length_min = int(values.get("direction_sequence_length_min", 3))
