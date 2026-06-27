@@ -8,20 +8,21 @@ const PLAYER_BUBBLE_PATH := "res://assets/art/ui/text.png"
 const CHARACTER_BUBBLE_PATH := "res://assets/art/ui/text2.png"
 const CHOICE_BUBBLE_PATH := "res://assets/art/ui/text bubble.png"
 
+const BUBBLE_SCALE := 0.5
 const VIEWPORT_PADDING := Vector2(22.0, 22.0)
-const MESSAGE_GAP := 18.0
+const MESSAGE_GAP := 10.0
 const MESSAGE_TEXT_MARGIN_LEFT := 52.0
 const MESSAGE_TEXT_MARGIN_TOP := 38.0
 const MESSAGE_TEXT_MARGIN_RIGHT := 56.0
 const MESSAGE_TEXT_MARGIN_BOTTOM := 34.0
-const MESSAGE_TEXT_MAX_CHARS := 92
+const MESSAGE_TEXT_MAX_CHARS := 44
 const CHOICE_TEXT_MARGIN_LEFT := 28.0
 const CHOICE_TEXT_MARGIN_TOP := 24.0
 const CHOICE_TEXT_MARGIN_RIGHT := 28.0
 const CHOICE_TEXT_MARGIN_BOTTOM := 20.0
-const CHOICE_TEXT_MAX_CHARS := 30
-const MESSAGE_FONT_SIZE := 21
-const CHOICE_FONT_SIZE := 18
+const CHOICE_TEXT_MAX_CHARS := 18
+const MESSAGE_FONT_SIZE := 12
+const CHOICE_FONT_SIZE := 11
 const FALLBACK_MESSAGE_SIZE := Vector2(520.0, 132.0)
 const FALLBACK_CHOICE_SIZE := Vector2(300.0, 146.0)
 const MAX_VISIBLE_MESSAGES := 5
@@ -115,7 +116,8 @@ func _warn_once(warning_key: String, message: String) -> void:
 func _create_message_bubble(line: String, speaker_type: String) -> Control:
 	var is_player := speaker_type == "player"
 	var texture := _player_bubble_texture if is_player else _character_bubble_texture
-	var bubble_size := _get_texture_size(texture, FALLBACK_MESSAGE_SIZE)
+	var source_bubble_size := _get_texture_size(texture, FALLBACK_MESSAGE_SIZE)
+	var bubble_size := source_bubble_size * BUBBLE_SCALE
 	var root := Control.new()
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.custom_minimum_size = bubble_size
@@ -127,7 +129,8 @@ func _create_message_bubble(line: String, speaker_type: String) -> Control:
 		bubble_texture.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		bubble_texture.texture = texture
 		bubble_texture.position = Vector2.ZERO
-		bubble_texture.size = bubble_size
+		bubble_texture.size = source_bubble_size
+		bubble_texture.scale = Vector2.ONE * BUBBLE_SCALE
 		root.add_child(bubble_texture)
 	else:
 		var fallback_panel := ColorRect.new()
@@ -145,17 +148,18 @@ func _create_message_bubble(line: String, speaker_type: String) -> Control:
 	label.add_theme_font_size_override("font_size", MESSAGE_FONT_SIZE)
 	label.add_theme_color_override("font_color", Color(0.19, 0.12, 0.12, 1.0))
 	label.text = _clamp_text(line, MESSAGE_TEXT_MAX_CHARS)
-	label.position = Vector2(MESSAGE_TEXT_MARGIN_LEFT, MESSAGE_TEXT_MARGIN_TOP)
+	label.position = Vector2(MESSAGE_TEXT_MARGIN_LEFT, MESSAGE_TEXT_MARGIN_TOP) * BUBBLE_SCALE
 	label.size = Vector2(
-		bubble_size.x - MESSAGE_TEXT_MARGIN_LEFT - MESSAGE_TEXT_MARGIN_RIGHT,
-		bubble_size.y - MESSAGE_TEXT_MARGIN_TOP - MESSAGE_TEXT_MARGIN_BOTTOM
+		bubble_size.x - (MESSAGE_TEXT_MARGIN_LEFT + MESSAGE_TEXT_MARGIN_RIGHT) * BUBBLE_SCALE,
+		bubble_size.y - (MESSAGE_TEXT_MARGIN_TOP + MESSAGE_TEXT_MARGIN_BOTTOM) * BUBBLE_SCALE
 	)
 	root.add_child(label)
 
 	return root
 
 func _configure_choice_button(button: TextureButton, label: Label) -> void:
-	var bubble_size := _get_texture_size(_choice_bubble_texture, FALLBACK_CHOICE_SIZE)
+	var source_bubble_size := _get_texture_size(_choice_bubble_texture, FALLBACK_CHOICE_SIZE)
+	var bubble_size := source_bubble_size * BUBBLE_SCALE
 	button.focus_mode = Control.FOCUS_NONE
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.ignore_texture_size = true
@@ -189,10 +193,10 @@ func _configure_choice_button(button: TextureButton, label: Label) -> void:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.add_theme_font_size_override("font_size", CHOICE_FONT_SIZE)
 	label.add_theme_color_override("font_color", Color(0.99, 0.94, 0.94, 1.0))
-	label.position = Vector2(CHOICE_TEXT_MARGIN_LEFT, CHOICE_TEXT_MARGIN_TOP)
+	label.position = Vector2(CHOICE_TEXT_MARGIN_LEFT, CHOICE_TEXT_MARGIN_TOP) * BUBBLE_SCALE
 	label.size = Vector2(
-		bubble_size.x - CHOICE_TEXT_MARGIN_LEFT - CHOICE_TEXT_MARGIN_RIGHT,
-		bubble_size.y - CHOICE_TEXT_MARGIN_TOP - CHOICE_TEXT_MARGIN_BOTTOM
+		bubble_size.x - (CHOICE_TEXT_MARGIN_LEFT + CHOICE_TEXT_MARGIN_RIGHT) * BUBBLE_SCALE,
+		bubble_size.y - (CHOICE_TEXT_MARGIN_TOP + CHOICE_TEXT_MARGIN_BOTTOM) * BUBBLE_SCALE
 	)
 
 func _apply_choice_to_button(button: TextureButton, label: Label, choices: Array[Dictionary], index: int) -> void:

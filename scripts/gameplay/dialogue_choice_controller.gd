@@ -103,8 +103,8 @@ func _build_choice_prompt(entry: Dictionary, physical: float, emotional: float) 
 		return {
 			"text": _build_test_prompt_text(physical, emotional),
 			"choices": [
-				{"id": "good", "text": "[皜祈岫] good"},
-				{"id": "neutral", "text": "[皜祈岫] neutral"}
+				{"id": "good", "text": "[choice] good"},
+				{"id": "neutral", "text": "[choice] neutral"}
 			]
 		}
 
@@ -133,7 +133,7 @@ func _get_feedback_line(entry: Dictionary, physical: float, emotional: float) ->
 
 func _get_choice_response(choice_quality: String, entry: Dictionary) -> String:
 	if entry.is_empty():
-		return "[皜祈岫??] ?桀??舀撖虫?????嗅?賊?嚗?s" % choice_quality
+		return "[choice] " + choice_quality
 
 	var response_map := entry.get("response", {}) as Dictionary
 	var reply_list: Variant = response_map.get(choice_quality, [])
@@ -160,7 +160,7 @@ func _classify_emotional_state(emotional: float) -> String:
 	return ""
 
 func _build_test_feedback_text(physical: float, emotional: float) -> String:
-	return "[皜祈岫] feedback ?芸祕雿?physical=%.1f emotional=%.1f" % [physical, emotional]
+	return "[feedback] physical=%.1f emotional=%.1f" % [physical, emotional]
 
 func _build_test_prompt_text(physical: float, emotional: float) -> String:
-	return "[皜祈岫] choice ?芸祕雿?physical=%.1f emotional=%.1f" % [physical, emotional]
+	return "[choice] physical=%.1f emotional=%.1f" % [physical, emotional]
