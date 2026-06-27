@@ -12,7 +12,7 @@ const STAFF_SCALE := 0.8
 const NOTE_SCALE := 0.3
 const BAR_HEIGHT_SCALE := 0.3
 const STAFF_CENTER_FROM_LEFT_RATIO := 0.34
-const NOTE_CENTER_FROM_LEFT_RATIO := 0.5
+const NOTE_CENTER_FROM_LEFT_RATIO := 0.6
 const NOTE_CENTER_FROM_TOP_RATIO := 0.5
 
 @export var bottom_hud_height: float = 184.0:
@@ -156,9 +156,12 @@ func _apply_layout() -> void:
 	musical_staff.scale = Vector2.ONE * STAFF_SCALE
 
 	arousal_fill_bar.z_index = 1
+	arousal_fill_bar.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	arousal_fill_bar.stretch_mode = TextureRect.STRETCH_SCALE
 	arousal_fill_bar.scale = Vector2(1.0, BAR_HEIGHT_SCALE)
 
-	treble_clef.z_index = 4
+	treble_clef.z_index = 2
+	treble_clef.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	treble_clef.size = note_size
 	treble_clef.scale = Vector2.ONE * NOTE_SCALE
 
@@ -199,16 +202,17 @@ func _apply_meter_fill(peak: float) -> void:
 		heart_icon.position.x + (scaled_heart_size.x * 0.5) + bar_left_offset.x,
 		musical_staff.position.y + (scaled_staff_size.y * 0.5) - ((bar_texture_size.y * BAR_HEIGHT_SCALE) * 0.5) + bar_left_offset.y
 	)
-	var note_center_min_x := bar_left.x
-	var note_center_x := note_center_min_x + (maximum_bar_width * fill_ratio)
+	var fixed_bar_left_x := bar_left.x
+	var note_center_x := fixed_bar_left_x + (maximum_bar_width * fill_ratio)
 	var note_center_y := heart_icon.position.y + (scaled_heart_size.y * 0.5) + note_center_offset.y
 	treble_clef.position = Vector2(
 		note_center_x - (scaled_note_size.x * NOTE_CENTER_FROM_LEFT_RATIO),
 		note_center_y - (scaled_note_size.y * NOTE_CENTER_FROM_TOP_RATIO)
 	)
 	arousal_fill_bar.position = bar_left
+	var note_horizontal_center := treble_clef.position.x + (scaled_note_size.x * NOTE_CENTER_FROM_LEFT_RATIO)
 	arousal_fill_bar.size = Vector2(
-		maxf(note_center_x - bar_left.x, 0.0),
+		maxf(note_horizontal_center - fixed_bar_left_x, 0.0),
 		bar_texture_size.y
 	)
 

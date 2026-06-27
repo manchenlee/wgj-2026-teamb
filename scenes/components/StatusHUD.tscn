@@ -46,12 +46,14 @@ texture = ExtResource("3_staff")
 layout_mode = 0
 mouse_filter = 2
 texture = ExtResource("4_bar")
-stretch_mode = 1
+expand_mode = 1
+stretch_mode = 0
 
 [node name="TrebleClef" type="TextureRect" parent="ArousalMeter"]
 layout_mode = 0
 mouse_filter = 2
 texture = ExtResource("5_note")
+expand_mode = 1
 
 [node name="ChoiceArea" type="Control" parent="."]
 layout_mode = 0
