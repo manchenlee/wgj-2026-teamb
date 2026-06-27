@@ -1,0 +1,63 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/status_hud.gd" id="1_hud"]
+[ext_resource type="PackedScene" path="res://scenes/components/DirectionSequencePanel.tscn" id="2_seq"]
+
+[node name="StatusHUD" type="PanelContainer"]
+script = ExtResource("1_hud")
+size_flags_horizontal = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+size_flags_horizontal = 3
+
+[node name="StatsRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+alignment = 1
+
+[node name="PhysicalValueDisplay" type="Label" parent="MarginContainer/VBoxContainer/StatsRow"]
+size_flags_horizontal = 3
+text = "Physical: 50"
+
+[node name="EmotionalValueDisplay" type="Label" parent="MarginContainer/VBoxContainer/StatsRow"]
+size_flags_horizontal = 3
+text = "Emotional: 50"
+
+[node name="PeakValueDisplay" type="Label" parent="MarginContainer/VBoxContainer/StatsRow"]
+size_flags_horizontal = 3
+text = "Peak: 0"
+
+[node name="MetaRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+alignment = 1
+
+[node name="ComboLabel" type="Label" parent="MarginContainer/VBoxContainer/MetaRow"]
+custom_minimum_size = Vector2(140, 0)
+text = "Combo: 0"
+
+[node name="TimerBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/MetaRow"]
+size_flags_horizontal = 3
+max_value = 3.0
+value = 3.0
+show_percentage = false
+
+[node name="DirectionSequencePanel" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_seq")]
+
+[node name="MobileDirectionButtons" type="GridContainer" parent="MarginContainer/VBoxContainer"]
+columns = 4
+
+[node name="LeftButton" type="Button" parent="MarginContainer/VBoxContainer/MobileDirectionButtons"]
+text = "Left"
+
+[node name="UpButton" type="Button" parent="MarginContainer/VBoxContainer/MobileDirectionButtons"]
+text = "Up"
+
+[node name="DownButton" type="Button" parent="MarginContainer/VBoxContainer/MobileDirectionButtons"]
+text = "Down"
+
+[node name="RightButton" type="Button" parent="MarginContainer/VBoxContainer/MobileDirectionButtons"]
+text = "Right"
+

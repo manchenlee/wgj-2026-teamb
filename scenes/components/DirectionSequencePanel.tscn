@@ -1,0 +1,22 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/direction_sequence_panel.gd" id="1_seq"]
+
+[node name="DirectionSequencePanel" type="PanelContainer"]
+script = ExtResource("1_seq")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+
+[node name="HeaderLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+text = "Direction Sequence"
+
+[node name="SequenceLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+text = "Waiting for round..."
+autowrap_mode = 2
+

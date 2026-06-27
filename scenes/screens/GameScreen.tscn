@@ -1,0 +1,89 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/game_session_controller.gd" id="1_game"]
+[ext_resource type="PackedScene" path="res://scenes/components/CharacterArea.tscn" id="2_character"]
+[ext_resource type="PackedScene" path="res://scenes/components/DialoguePanel.tscn" id="3_dialogue"]
+[ext_resource type="PackedScene" path="res://scenes/components/StatusHUD.tscn" id="4_hud"]
+[ext_resource type="Script" path="res://scripts/presentation/central_arousal_visualization.gd" id="5_vis"]
+
+[node name="GameScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_game")
+
+[node name="BackgroundAnchor" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="BackgroundPlaceholder" type="ColorRect" parent="BackgroundAnchor"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.08, 0.08, 0.09, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="ResponsiveLayout" type="VBoxContainer" parent="MarginContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="UpperLayout" type="BoxContainer" parent="MarginContainer/ResponsiveLayout"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CenterColumn" type="VBoxContainer" parent="MarginContainer/ResponsiveLayout/UpperLayout"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CenterStage" type="Control" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn"]
+custom_minimum_size = Vector2(640, 560)
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CentralArousalVisualization" type="Control" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn/CenterStage"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("5_vis")
+
+[node name="PhysicalCirclePlaceholder" type="Panel" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn/CenterStage/CentralArousalVisualization"]
+custom_minimum_size = Vector2(220, 220)
+
+[node name="EmotionalCirclePlaceholder" type="Panel" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn/CenterStage/CentralArousalVisualization"]
+custom_minimum_size = Vector2(220, 220)
+
+[node name="PeakIndicator" type="Label" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn/CenterStage/CentralArousalVisualization"]
+offset_left = 210.0
+offset_top = 260.0
+text = "Peak 0"
+
+[node name="CharacterArea" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn/CenterStage" instance=ExtResource("2_character")]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="RightSideDialoguePanel" parent="MarginContainer/ResponsiveLayout/UpperLayout" instance=ExtResource("3_dialogue")]
+custom_minimum_size = Vector2(360, 0)
+
+[node name="BottomHUD" parent="MarginContainer/ResponsiveLayout" instance=ExtResource("4_hud")]
+
+[node name="AudioPlaceholders" type="Node" parent="."]
+
+[node name="DialogueTimer" type="Timer" parent="."]
+one_shot = false
+wait_time = 4.0
+
+[node name="RoundRestartTimer" type="Timer" parent="."]
+one_shot = true
+wait_time = 0.8
+

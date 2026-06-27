@@ -1,0 +1,51 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/dialogue_panel.gd" id="1_dialogue"]
+
+[node name="DialoguePanel" type="PanelContainer"]
+script = ExtResource("1_dialogue")
+size_flags_horizontal = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HeaderLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+text = "Feedback"
+
+[node name="ScrollableChatHistory" type="ScrollContainer" parent="MarginContainer/VBoxContainer"]
+size_flags_vertical = 3
+custom_minimum_size = Vector2(320, 320)
+
+[node name="ChatHistory" type="RichTextLabel" parent="MarginContainer/VBoxContainer/ScrollableChatHistory"]
+bbcode_enabled = false
+fit_content = true
+scroll_active = false
+text = "Companion: Placeholder chat will appear here."
+
+[node name="CurrentDialoguePrompt" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+
+[node name="SpeakerLabel" type="Label" parent="MarginContainer/VBoxContainer/CurrentDialoguePrompt"]
+text = "Companion"
+
+[node name="PromptText" type="Label" parent="MarginContainer/VBoxContainer/CurrentDialoguePrompt"]
+text = "Prompt"
+autowrap_mode = 2
+
+[node name="ChoiceButtons" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+
+[node name="GoodButton" type="Button" parent="MarginContainer/VBoxContainer/ChoiceButtons"]
+text = "Supportive"
+
+[node name="NeutralButton" type="Button" parent="MarginContainer/VBoxContainer/ChoiceButtons"]
+text = "Neutral"
+
+[node name="BadButton" type="Button" parent="MarginContainer/VBoxContainer/ChoiceButtons"]
+text = "Dismissive"
+

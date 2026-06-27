@@ -1,0 +1,76 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/debug/debug_overlay_controller.gd" id="1_debug"]
+
+[node name="DebugOverlay" type="CanvasLayer"]
+script = ExtResource("1_debug")
+
+[node name="RootPanel" type="PanelContainer" parent="."]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 460.0
+offset_bottom = 520.0
+
+[node name="MarginContainer" type="MarginContainer" parent="RootPanel"]
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RootPanel/MarginContainer"]
+
+[node name="HeaderLabel" type="Label" parent="RootPanel/MarginContainer/VBoxContainer"]
+text = "Debug Overlay (F1)"
+
+[node name="LiveReadout" type="Label" parent="RootPanel/MarginContainer/VBoxContainer"]
+autowrap_mode = 2
+text = "Screen: - | Physical: - | Emotional: - | Peak: - | Combo: - | Round: - | Sequence: -"
+
+[node name="StageButtons" type="GridContainer" parent="RootPanel/MarginContainer/VBoxContainer"]
+columns = 2
+
+[node name="TitleButton" type="Button" parent="RootPanel/MarginContainer/VBoxContainer/StageButtons"]
+text = "Title"
+
+[node name="WarningButton" type="Button" parent="RootPanel/MarginContainer/VBoxContainer/StageButtons"]
+text = "Warning"
+
+[node name="OpeningButton" type="Button" parent="RootPanel/MarginContainer/VBoxContainer/StageButtons"]
+text = "Opening"
+
+[node name="GameButton" type="Button" parent="RootPanel/MarginContainer/VBoxContainer/StageButtons"]
+text = "Game"
+
+[node name="SuccessButton" type="Button" parent="RootPanel/MarginContainer/VBoxContainer/StageButtons"]
+text = "Success Ending"
+
+[node name="PhysicalFailButton" type="Button" parent="RootPanel/MarginContainer/VBoxContainer/StageButtons"]
+text = "Physical Fail"
+
+[node name="EmotionalFailButton" type="Button" parent="RootPanel/MarginContainer/VBoxContainer/StageButtons"]
+text = "Emotional Fail"
+
+[node name="ValueButtons" type="HBoxContainer" parent="RootPanel/MarginContainer/VBoxContainer"]
+
+[node name="ZeroButton" type="Button" parent="RootPanel/MarginContainer/VBoxContainer/ValueButtons"]
+text = "Set 0"
+
+[node name="FiftyButton" type="Button" parent="RootPanel/MarginContainer/VBoxContainer/ValueButtons"]
+text = "Set 50"
+
+[node name="HundredButton" type="Button" parent="RootPanel/MarginContainer/VBoxContainer/ValueButtons"]
+text = "Set 100"
+
+[node name="ActionButtons" type="VBoxContainer" parent="RootPanel/MarginContainer/VBoxContainer"]
+
+[node name="ForceSuccessButton" type="Button" parent="RootPanel/MarginContainer/VBoxContainer/ActionButtons"]
+text = "Force Success"
+
+[node name="ForcePhysicalFailButton" type="Button" parent="RootPanel/MarginContainer/VBoxContainer/ActionButtons"]
+text = "Force Physical Failure"
+
+[node name="ForceEmotionalFailButton" type="Button" parent="RootPanel/MarginContainer/VBoxContainer/ActionButtons"]
+text = "Force Emotional Failure"
+
+[node name="ResetRunButton" type="Button" parent="RootPanel/MarginContainer/VBoxContainer/ActionButtons"]
+text = "Reset Current Run"

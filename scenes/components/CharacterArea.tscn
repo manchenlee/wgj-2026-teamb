@@ -1,0 +1,32 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/presentation/character_presenter.gd" id="1_char"]
+
+[node name="CharacterArea" type="Control"]
+custom_minimum_size = Vector2(360, 360)
+script = ExtResource("1_char")
+
+[node name="CharacterVisualAnchor" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+
+[node name="CharacterPlaceholder" type="Panel" parent="CharacterVisualAnchor"]
+custom_minimum_size = Vector2(160, 220)
+
+[node name="EmotionStateLabel" type="Label" parent="."]
+offset_left = 12.0
+offset_top = 12.0
+text = "State: CALM"
+
+[node name="ReactionLabel" type="Label" parent="."]
+offset_left = 12.0
+offset_top = 40.0
+text = "Reaction: ..."
+
+[node name="CharacterAnimationAnchor" type="Node2D" parent="."]
+

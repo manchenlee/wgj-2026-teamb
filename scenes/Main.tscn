@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/screen_router.gd" id="1_router"]
+[ext_resource type="PackedScene" path="res://scenes/components/DebugOverlay.tscn" id="2_debug"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_router")
+
+[node name="ScreenContainer" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="DebugOverlay" parent="." instance=ExtResource("2_debug")]
