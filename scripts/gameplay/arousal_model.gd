@@ -43,13 +43,19 @@ func update_peak(delta: float) -> void:
 	var difference := absf(physical - emotional)
 	var both_active := physical >= Config.MINIMUM_ACTIVE_THRESHOLD and emotional >= Config.MINIMUM_ACTIVE_THRESHOLD
 	var is_balanced := difference <= Config.BALANCE_TOLERANCE
+	var zero_value_count := 0
+	if physical <= 0.0:
+		zero_value_count += 1
+	if emotional <= 0.0:
+		zero_value_count += 1
 
 	# Peak rises only when both values are active and close enough together.
 	if both_active and is_balanced:
 		var balance_ratio := 1.0 - (difference / maxf(Config.BALANCE_TOLERANCE, 1.0))
 		peak = Config.clamp_value(peak + Config.PEAK_GAIN_RATE * balance_ratio * delta)
 	else:
-		peak = Config.clamp_value(peak - Config.PEAK_LOSS_RATE * delta)
+		var loss_rate := Config.PEAK_LOSS_RATE + (Config.PEAK_ZERO_VALUE_EXTRA_LOSS_RATE * zero_value_count)
+		peak = Config.clamp_value(peak - loss_rate * delta)
 	if peak > 0.0:
 		peak_has_activated = true
 

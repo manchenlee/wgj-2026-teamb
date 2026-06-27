@@ -37,6 +37,8 @@ const EMOTIONAL_ACTIVITY_GRACE_SECONDS: float = 2.8
 const PEAK_GAIN_RATE: float = 3.0
 # 高潮值下降速度；調大會更容易因狀態不佳而退步，調小則容錯更高。
 const PEAK_LOSS_RATE: float = 1.0
+# 當生理或心理停在 0 時，每個歸零狀態額外增加的整體興奮度下降速度；調大會讓放置不管的懲罰更明顯。
+const PEAK_ZERO_VALUE_EXTRA_LOSS_RATE: float = 3.0
 
 # Physical interaction tuning.
 # 每次方向輸入序列的最短長度；調大會讓最低挑戰變長，調小則單次任務更簡短。
