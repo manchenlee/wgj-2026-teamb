@@ -245,6 +245,18 @@ offset_bottom = 52.0
 theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
 text = "Phase: phase_1"
 
+[node name="Phase2SkipButton" type="Button" parent="." unique_id=341192804]
+visible = false
+z_index = 8
+layout_mode = 0
+offset_left = 1268.0
+offset_top = 20.0
+offset_right = 1408.0
+offset_bottom = 56.0
+focus_mode = 0
+theme_override_font_sizes/font_size = 14
+text = "Skip to Phase 2"
+
 [node name="BottomHUD" parent="." unique_id=564354284 instance=ExtResource("4_hud")]
 z_index = 4
 layout_mode = 1

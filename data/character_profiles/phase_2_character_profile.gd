@@ -1,21 +1,23 @@
 extends PhaseCharacterProfile
 
 func _init() -> void:
-	# TODO: Replace the placeholder Phase 1 art reuse below with dedicated Phase 2 assets.
+	# TODO: Replace the shared placeholder states below with dedicated Phase 2 state art
+	# once separate low/medium/high and gameover variants are exported.
+	var phase_2_base_portrait := "res://assets/art/character/phase2/person.png"
 	super._init(
 		"phase_2_profile",
 		{
-			"draft": "res://assets/art/character/draft.png",
-			"overall_init": "res://assets/art/character/phase1/overall_low.png",
-			"overall_low": "res://assets/art/character/phase1/overall_medium.png",
-			"overall_medium": "res://assets/art/character/phase1/overall_high.png",
-			"overall_high": "res://assets/art/character/phase1/overall_high.png",
-			"physic_high_mental_low": "res://assets/art/character/phase1/physic_high_mental_low.png.png",
-			"physic_low_mental_high": "res://assets/art/character/phase1/physic_low_mental_high.png"
+			"draft": phase_2_base_portrait,
+			"overall_init": phase_2_base_portrait,
+			"overall_low": phase_2_base_portrait,
+			"overall_medium": phase_2_base_portrait,
+			"overall_high": phase_2_base_portrait,
+			"physic_high_mental_low": phase_2_base_portrait,
+			"physic_low_mental_high": phase_2_base_portrait
 		},
 		{
-			"physic_high_mental_low_gameover": "res://assets/art/character/phase1/physic_high_mental_low_gameover.png",
-			"physic_low_mental_high_gameover": "res://assets/art/character/phase1/physic_low_mental_high_gameover.png"
+			"physic_high_mental_low_gameover": phase_2_base_portrait,
+			"physic_low_mental_high_gameover": phase_2_base_portrait
 		},
 		{
 			"tentacle4": [

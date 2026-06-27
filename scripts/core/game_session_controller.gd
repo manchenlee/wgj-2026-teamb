@@ -26,6 +26,7 @@ signal ending_requested(ending_type: String)
 @onready var dialogue_panel = $ConversationViewport
 @onready var status_hud = $BottomHUD
 @onready var phase_debug_label: Label = $PhaseDebugLabel
+@onready var phase_skip_button: Button = $Phase2SkipButton
 @onready var layout_debug_regions := [
 	$MainCharacterArea/DebugRegionTint,
 	$ConversationViewport/DebugRegionTint,
@@ -75,6 +76,7 @@ func _ready() -> void:
 	feedback_rng.randomize()
 	set_process_unhandled_input(true)
 	dialogue_panel.choice_selected.connect(_on_choice_selected)
+	phase_skip_button.pressed.connect(_on_phase_2_skip_pressed)
 	feedback_timer.timeout.connect(_on_feedback_timer_timeout)
 	prompt_spawn_timer.timeout.connect(_on_prompt_spawn_timer_timeout)
 	active_prompt_timer.timeout.connect(_on_active_prompt_timer_timeout)
@@ -549,6 +551,10 @@ func _update_phase_debug_label() -> void:
 		return
 	phase_debug_label.text = "Phase: %s" % _get_active_phase_id()
 	phase_debug_label.visible = debug_overlay != null and debug_overlay.visible
+	if phase_skip_button != null:
+		var can_skip_to_phase_2 := _get_active_phase_id() != "phase_2" and not phase_transition_in_progress
+		phase_skip_button.visible = debug_overlay != null and debug_overlay.visible and can_skip_to_phase_2
+		phase_skip_button.disabled = not can_skip_to_phase_2
 
 func _update_layout_debug_regions() -> void:
 	var debug_visible := show_layout_debug_bounds
@@ -816,3 +822,9 @@ func _get_active_phase_id() -> String:
 
 func _has_next_phase() -> bool:
 	return active_phase_index + 1 < phase_sequence.size()
+
+func _on_phase_2_skip_pressed() -> void:
+	if _get_active_phase_id() == "phase_2" or phase_transition_in_progress:
+		return
+	dialogue_panel.append_history("Debug: skip to phase_2", "system")
+	_reset_run_for_phase_id("phase_2")
