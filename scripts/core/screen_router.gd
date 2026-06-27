@@ -11,6 +11,7 @@ const ENDING_SCENE := preload("res://scenes/screens/EndingScreen.tscn")
 
 @onready var screen_container: Control = $ScreenContainer
 @onready var debug_overlay = $DebugOverlay
+@onready var bg_music: AudioStreamPlayer = $BgMusic
 
 var current_screen: Control
 var current_screen_id: String = ""
@@ -53,6 +54,7 @@ func _show_rule() -> void:
 	_swap_screen(screen)
 
 func _show_game() -> void:
+	bg_music.stop()
 	current_screen_id = Config.SCREEN_GAME
 	var screen := GAME_SCENE.instantiate()
 	screen.ending_requested.connect(_show_ending)
