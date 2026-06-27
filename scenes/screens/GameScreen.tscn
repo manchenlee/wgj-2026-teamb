@@ -8,6 +8,8 @@
 [ext_resource type="Script" uid="uid://d3bshm1tk5r8n" path="res://scripts/ui/TwoFrameOverlayAnimator.gd" id="6_overlay"]
 [ext_resource type="Script" uid="uid://7lsklnfonwr6" path="res://scripts/ui/LocalizedMeshBreathing.gd" id="7_breathing"]
 [ext_resource type="Script" uid="uid://d24toufu83pxy" path="res://scripts/ui/conversation_viewport.gd" id="8_conversation"]
+[ext_resource type="Script" uid="uid://x3cgbulqxokf" path="res://scripts/editor/phase_2_editor_preview_controller.gd" id="9_phase2_preview"]
+[ext_resource type="Texture2D" uid="uid://b3obdm5nxmqui" path="res://assets/art/character/phase2/person.png" id="10_phase2_person"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_alg88"]
 load_path = "res://.godot/imported/draft.png-80a3863fe83a454b531da103f3e5f42e.ctex"
@@ -21,6 +23,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_game")
+show_layout_debug_bounds = true
 character_background = SubResource("CompressedTexture2D_alg88")
 
 [node name="BackgroundAnchor" type="Control" parent="." unique_id=1801418674]
@@ -53,6 +56,24 @@ offset_bottom = -140.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_pbayp")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Phase2EditorReference" type="TextureRect" parent="BackgroundAnchor" unique_id=1066310849]
+z_index = 2
+z_as_relative = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -140.0
+offset_right = -40.0
+offset_bottom = -140.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("10_phase2_person")
 expand_mode = 1
 stretch_mode = 6
 
@@ -95,7 +116,6 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="DebugRegionTint" type="ColorRect" parent="MainCharacterArea" unique_id=2121463475]
-visible = false
 z_index = -1
 layout_mode = 1
 anchors_preset = 15
@@ -149,6 +169,312 @@ offset_bottom = 439.0
 grow_horizontal = 2
 grow_vertical = 2
 
+[node name="Phase2AnchorPreviewLayer" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=822463575]
+z_index = 20
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("9_phase2_preview")
+
+[node name="HeadLeft" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=769787432]
+layout_mode = 0
+offset_left = 160.0
+offset_top = 100.0
+offset_right = 240.0
+offset_bottom = 180.0
+mouse_filter = 2
+color = Color(0.96, 0.34, 0.34, 0.28)
+
+[node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadLeft" unique_id=1612576474]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0.45, 0.45, 0.95)
+
+[node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadLeft" unique_id=1338285697]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+
+[node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadLeft/Fill" unique_id=1236387391]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.96)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 13
+text = "HeadLeft"
+
+[node name="HeadRight" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=1414477306]
+layout_mode = 0
+offset_left = 280.0
+offset_top = 130.0
+offset_right = 360.0
+offset_bottom = 210.0
+mouse_filter = 2
+color = Color(0.96, 0.62, 0.24, 0.28)
+
+[node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadRight" unique_id=1966341748]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0.74, 0.35, 0.95)
+
+[node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadRight" unique_id=217540671]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+
+[node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadRight/Fill" unique_id=455605048]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.96)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 13
+text = "HeadRight"
+
+[node name="Chest" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=2030241764]
+layout_mode = 0
+offset_left = 110.0
+offset_top = 250.0
+offset_right = 360.0
+offset_bottom = 520.0
+mouse_filter = 2
+color = Color(0.96, 0.86, 0.24, 0.28)
+
+[node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Chest" unique_id=1030862194]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0.95, 0.4, 0.95)
+
+[node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Chest" unique_id=651244542]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+
+[node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Chest/Fill" unique_id=1377685524]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.96)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 13
+text = "Chest"
+
+[node name="LeftArm" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=731899806]
+layout_mode = 0
+offset_left = 80.0
+offset_right = 150.0
+offset_bottom = 182.0
+mouse_filter = 2
+color = Color(0.38, 0.84, 0.42, 0.28)
+
+[node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftArm" unique_id=408641511]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.5, 0.95, 0.56, 0.95)
+
+[node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftArm" unique_id=393835266]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+
+[node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftArm/Fill" unique_id=1399358342]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.96)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 13
+text = "LeftArm"
+
+[node name="RightArm" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=1712614215]
+layout_mode = 0
+offset_left = 400.0
+offset_top = 150.0
+offset_right = 650.0
+offset_bottom = 290.0
+mouse_filter = 2
+color = Color(0.24, 0.78, 0.9, 0.28)
+
+[node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightArm" unique_id=585527879]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.38, 0.9, 1, 0.95)
+
+[node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightArm" unique_id=1002417178]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+
+[node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightArm/Fill" unique_id=364209913]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.96)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 13
+text = "RightArm"
+
+[node name="Waist" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=477406248]
+layout_mode = 0
+offset_left = 220.0
+offset_top = 530.0
+offset_right = 340.0
+offset_bottom = 750.0
+mouse_filter = 2
+color = Color(0.44, 0.56, 0.96, 0.28)
+
+[node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Waist" unique_id=1087089047]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.58, 0.68, 1, 0.95)
+
+[node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Waist" unique_id=606426074]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+
+[node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Waist/Fill" unique_id=2029806096]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.96)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 13
+text = "Waist"
+
+[node name="LeftLeg" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=1925705489]
+layout_mode = 0
+offset_left = -100.0
+offset_top = 350.0
+offset_right = 82.0
+offset_bottom = 700.0
+mouse_filter = 2
+color = Color(0.72, 0.44, 0.96, 0.28)
+
+[node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftLeg" unique_id=1356289345]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.82, 0.58, 1, 0.95)
+
+[node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftLeg" unique_id=14751947]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+
+[node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftLeg/Fill" unique_id=13063830]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.96)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 13
+text = "LeftLeg"
+
+[node name="RightLeg" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=1232166577]
+layout_mode = 0
+offset_left = 370.0
+offset_top = 370.0
+offset_right = 552.0
+offset_bottom = 720.0
+mouse_filter = 2
+color = Color(0.94, 0.4, 0.7, 0.28)
+
+[node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightLeg" unique_id=1419699542]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0.56, 0.82, 0.95)
+
+[node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightLeg" unique_id=953627161]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+
+[node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightLeg/Fill" unique_id=1857229350]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.96)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 13
+text = "RightLeg"
+
 [node name="LeftArm" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=1000469115]
 anchors_preset = 0
 offset_left = 14.0
@@ -179,7 +505,6 @@ offset_bottom = 850.0
 
 [node name="LeftLeg" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=1314564178]
 anchors_preset = 0
-offset_left = 0.0
 offset_top = 756.0
 offset_right = 232.0
 offset_bottom = 854.0
@@ -218,7 +543,6 @@ mouse_filter = 2
 script = ExtResource("8_conversation")
 
 [node name="DebugRegionTint" type="ColorRect" parent="ConversationViewport" unique_id=476863550]
-visible = false
 z_index = -1
 layout_mode = 0
 mouse_filter = 2
@@ -269,9 +593,8 @@ grow_horizontal = 2
 grow_vertical = 0
 
 [node name="DebugRegionTint" type="ColorRect" parent="BottomHUD" unique_id=74340883]
-visible = false
 z_index = -1
-layout_mode = 2
+layout_mode = 0
 mouse_filter = 2
 color = Color(0.25, 0.76, 0.44, 0.18)
 

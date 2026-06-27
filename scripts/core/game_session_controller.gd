@@ -14,6 +14,7 @@ const TITLE_SCENE := preload("res://scenes/screens/TitleScreen.tscn")
 signal ending_requested(ending_type: String)
 
 @export var show_layout_debug_bounds: bool = false
+@export var show_phase2_editor_reference: bool = true
 @export var debug_start_phase_id: String = ""
 
 @onready var background_placeholder: TextureRect = $BackgroundAnchor/BackgroundPlaceholder
@@ -219,6 +220,8 @@ func _build_overlay_motion_set() -> Dictionary:
 	return motion_set
 
 func _apply_overlay_motion_set() -> void:
+	if Engine.is_editor_hint():
+		return
 	if overlay_animator == null:
 		return
 	overlay_animator.set_motion_set(overlay_motion_set)
@@ -245,6 +248,8 @@ func _update_character_visual_state(forced_ending_type: String = "") -> void:
 	background_placeholder.texture = next_texture
 
 func _bind_breathing_targets() -> void:
+	if Engine.is_editor_hint():
+		return
 	if breathing_controller == null or background_placeholder == null:
 		return
 	if breathing_controller.has_method("bind_targets"):
@@ -291,9 +296,9 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready() and not Engine.is_editor_hint():
 		_sync_prompt_anchor_layout()
 	elif what == NOTIFICATION_PREDELETE:
-		if overlay_animator != null:
+		if not Engine.is_editor_hint() and overlay_animator != null:
 			overlay_animator.stop()
-		if breathing_controller != null and breathing_controller.has_method("stop_breathing"):
+		if not Engine.is_editor_hint() and breathing_controller != null and breathing_controller.has_method("stop_breathing"):
 			breathing_controller.stop_breathing()
 
 func _process(delta: float) -> void:
@@ -727,6 +732,8 @@ func _on_choice_timeout() -> void:
 	_update_presentation()
 
 func _sync_prompt_anchor_layout() -> void:
+	if Engine.is_editor_hint():
+		return
 	var region_rect := _get_prompt_region_rect_in_character_area()
 	character_area.set_prompt_bounds(region_rect)
 	sequence_controller.set_prompt_anchor_ids(_get_prompt_anchor_ids())
