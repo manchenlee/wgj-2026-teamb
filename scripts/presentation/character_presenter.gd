@@ -8,13 +8,13 @@ const Config := preload("res://scripts/gameplay/GameConfig.gd")
 @onready var reaction_label: Label = $TopLabelStack/ReactionLabel
 @onready var prompt_layer: Control = $PromptLayer
 @onready var prompt_feedback_label: Label = $PromptLayer/PromptFeedbackLabel
-@onready var prompt_timer_line: Line2D = $PromptLayer/PromptTimerLine
 
 var _default_scale := Vector2.ONE
 var _prompt_nodes: Dictionary = {}
 var _prompt_positions: Dictionary = {}
+var _prompt_timer_lines: Dictionary = {}
+var _prompt_time_progresses: Dictionary = {}
 var _current_prompt_id: int = -1
-var _prompt_time_progress: float = 1.0
 var _prompt_bounds_rect := Rect2()
 
 func _ready() -> void:
@@ -23,10 +23,6 @@ func _ready() -> void:
 	reaction_label.add_theme_color_override("font_color", Color(0.12, 0.12, 0.16, 1.0))
 	prompt_feedback_label.add_theme_color_override("font_color", Color(0.12, 0.12, 0.16, 1.0))
 	prompt_feedback_label.add_theme_font_size_override("font_size", Config.PROMPT_FEEDBACK_FONT_SIZE)
-	prompt_timer_line.width = Config.ARROW_PROMPT_RING_WIDTH
-	prompt_timer_line.default_color = Color(0.24, 0.24, 0.28, 0.82)
-	prompt_timer_line.closed = false
-	prompt_timer_line.visible = false
 	update_emotion_state("CALM")
 	_set_reaction("...")
 	clear_direction_prompts()
@@ -86,6 +82,7 @@ func show_direction_prompt(prompt_id: int, direction: String, anchor_position: V
 	prompt_label.visible = true
 	prompt_label.scale = Vector2.ONE
 	prompt_label.modulate = Color(0.9, 0.9, 0.95, 0.0)
+	_prompt_time_progresses[prompt_id] = 1.0
 	_refresh_prompt_layout()
 
 	var tween := create_tween()
@@ -96,15 +93,18 @@ func set_current_prompt(prompt_id: int) -> void:
 	for key in _prompt_nodes.keys():
 		var prompt_label: Label = _prompt_nodes[key]
 		prompt_label.modulate.a = 1.0 if int(key) == _current_prompt_id else 0.46
-	_prompt_time_progress = 1.0
-	_update_prompt_timer_ring()
 
-func set_prompt_time_progress(progress: float) -> void:
-	_prompt_time_progress = clampf(progress, 0.0, 1.0)
-	var current_label := _get_current_prompt_label()
-	if current_label != null and current_label.visible:
-		current_label.modulate.a = lerpf(0.22, 1.0, _prompt_time_progress)
-	_update_prompt_timer_ring()
+func set_prompt_time_progresses(progress_by_prompt_id: Dictionary) -> void:
+	_prompt_time_progresses.clear()
+	for prompt_id_variant in progress_by_prompt_id.keys():
+		var prompt_id := int(prompt_id_variant)
+		_prompt_time_progresses[prompt_id] = clampf(float(progress_by_prompt_id[prompt_id_variant]), 0.0, 1.0)
+	for key in _prompt_nodes.keys():
+		var prompt_label: Label = _prompt_nodes[key]
+		var prompt_id := int(key)
+		var progress := float(_prompt_time_progresses.get(prompt_id, 0.0))
+		prompt_label.modulate.a = lerpf(0.22, 1.0, progress) if prompt_id == _current_prompt_id else 0.46
+	_update_prompt_timer_rings()
 
 func remove_direction_prompt(prompt_id: int) -> void:
 	if not _prompt_nodes.has(prompt_id):
@@ -113,18 +113,26 @@ func remove_direction_prompt(prompt_id: int) -> void:
 	prompt_label.queue_free()
 	_prompt_nodes.erase(prompt_id)
 	_prompt_positions.erase(prompt_id)
+	if _prompt_timer_lines.has(prompt_id):
+		var prompt_timer_line: Line2D = _prompt_timer_lines[prompt_id]
+		prompt_timer_line.queue_free()
+		_prompt_timer_lines.erase(prompt_id)
+	_prompt_time_progresses.erase(prompt_id)
 	if _current_prompt_id == prompt_id:
 		_current_prompt_id = -1
-	_update_prompt_timer_ring()
+	_update_prompt_timer_rings()
 
 func clear_direction_prompts() -> void:
 	for prompt_label in _prompt_nodes.values():
 		prompt_label.queue_free()
+	for prompt_timer_line in _prompt_timer_lines.values():
+		prompt_timer_line.queue_free()
 	_prompt_nodes.clear()
 	_prompt_positions.clear()
+	_prompt_timer_lines.clear()
+	_prompt_time_progresses.clear()
 	_current_prompt_id = -1
-	_prompt_time_progress = 0.0
-	_update_prompt_timer_ring()
+	_update_prompt_timer_rings()
 
 func show_prompt_feedback(text_value: String, color: Color, display_duration: float) -> void:
 	prompt_feedback_label.text = text_value
@@ -174,7 +182,7 @@ func _refresh_prompt_layout() -> void:
 			clampf(desired_center.y, min_y, max_y)
 		)
 		prompt_label.position = clamped_center - half_size
-	_update_prompt_timer_ring()
+	_update_prompt_timer_rings()
 	if prompt_feedback_label.visible:
 		_position_feedback_label()
 
@@ -218,6 +226,7 @@ func _ensure_prompt_label(prompt_id: int) -> Label:
 	prompt_label.add_theme_color_override("font_color", Color(0.1, 0.1, 0.14, 1.0))
 	prompt_layer.add_child(prompt_label)
 	_prompt_nodes[prompt_id] = prompt_label
+	_ensure_prompt_timer_line(prompt_id)
 	return prompt_label
 
 func _get_current_prompt_label() -> Label:
@@ -225,25 +234,41 @@ func _get_current_prompt_label() -> Label:
 		return null
 	return _prompt_nodes[_current_prompt_id]
 
-func _update_prompt_timer_ring() -> void:
-	var current_label := _get_current_prompt_label()
-	if current_label == null or not current_label.visible:
-		prompt_timer_line.visible = false
-		prompt_timer_line.clear_points()
-		return
+func _ensure_prompt_timer_line(prompt_id: int) -> Line2D:
+	if _prompt_timer_lines.has(prompt_id):
+		return _prompt_timer_lines[prompt_id]
+	var timer_line := Line2D.new()
+	timer_line.width = Config.ARROW_PROMPT_RING_WIDTH
+	timer_line.default_color = Color(0.24, 0.24, 0.28, 0.82)
+	timer_line.closed = false
+	timer_line.visible = false
+	timer_line.z_index = 0
+	prompt_layer.add_child(timer_line)
+	_prompt_timer_lines[prompt_id] = timer_line
+	return timer_line
 
-	var center := current_label.position + (current_label.size * 0.5)
-	var radius := Config.ARROW_PROMPT_RING_RADIUS
-	var steps := 48
-	var points: Array[Vector2] = []
-	var start_angle := -PI * 0.5
-	var end_angle := start_angle + (TAU * _prompt_time_progress)
-	for step in range(steps + 1):
-		var t := float(step) / float(steps)
-		var angle := lerpf(start_angle, end_angle, t)
-		points.append(center + Vector2.RIGHT.rotated(angle) * radius)
-	prompt_timer_line.points = points
-	prompt_timer_line.visible = points.size() >= 2 and _prompt_time_progress > 0.0
+func _update_prompt_timer_rings() -> void:
+	for prompt_id_variant in _prompt_nodes.keys():
+		var prompt_id := int(prompt_id_variant)
+		var prompt_label: Label = _prompt_nodes[prompt_id]
+		var timer_line := _ensure_prompt_timer_line(prompt_id)
+		var progress := float(_prompt_time_progresses.get(prompt_id, 0.0))
+		if not prompt_label.visible or progress <= 0.0:
+			timer_line.visible = false
+			timer_line.clear_points()
+			continue
+		var center := prompt_label.position + (prompt_label.size * 0.5)
+		var radius := Config.ARROW_PROMPT_RING_RADIUS
+		var steps := 48
+		var points: Array[Vector2] = []
+		var start_angle := -PI * 0.5
+		var end_angle := start_angle + (TAU * progress)
+		for step in range(steps + 1):
+			var t := float(step) / float(steps)
+			var angle := lerpf(start_angle, end_angle, t)
+			points.append(center + Vector2.RIGHT.rotated(angle) * radius)
+		timer_line.points = points
+		timer_line.visible = points.size() >= 2
 
 func _to_arrow(direction: String) -> String:
 	match direction:

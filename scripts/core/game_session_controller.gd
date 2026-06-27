@@ -38,6 +38,7 @@ var debug_overlay
 var run_active: bool = true
 var waiting_for_choice: bool = false
 var pending_prompt_action: String = ""
+var prompt_expiration_times: Dictionary = {}
 
 func _ready() -> void:
 	_apply_character_background()
@@ -84,6 +85,8 @@ func _process(delta: float) -> void:
 
 	arousal_model.apply_decay(delta)
 	arousal_model.update_peak(delta)
+	if _check_prompt_timeouts():
+		return
 	_update_prompt_timer_visual()
 	_update_choice_timer_visual()
 	_update_presentation()
@@ -122,6 +125,7 @@ func reset_run() -> void:
 	arousal_model.reset()
 	dialogue_controller.reset()
 	dialogue_panel.clear_history()
+	prompt_expiration_times.clear()
 	character_area.clear_direction_prompts()
 	waiting_for_choice = false
 	_push_next_dialogue_event()
@@ -171,10 +175,9 @@ func _on_direction_pressed(direction: String) -> void:
 	match str(result.get("result", "")):
 		"correct":
 			combo += 1
-			active_prompt_timer.stop()
 			arousal_model.apply_physical(Config.PHYSICAL_GAIN_ON_CORRECT_INPUT)
 			arousal_model.refresh_physical_activity()
-			character_area.remove_direction_prompt(int(result.get("consumed_prompt_id", -1)))
+			_remove_prompt(int(result.get("consumed_prompt_id", -1)))
 			var auto_revealed_prompt: Dictionary = result.get("auto_revealed_prompt", {})
 			if not auto_revealed_prompt.is_empty():
 				_show_visible_prompt(auto_revealed_prompt)
@@ -188,11 +191,10 @@ func _on_direction_pressed(direction: String) -> void:
 			_schedule_extra_prompt_reveal()
 		"sequence_complete":
 			combo += 1
-			active_prompt_timer.stop()
 			arousal_model.apply_physical(Config.PHYSICAL_GAIN_ON_CORRECT_INPUT)
 			arousal_model.apply_physical(Config.PHYSICAL_SEQUENCE_COMPLETE_BONUS)
 			arousal_model.refresh_physical_activity()
-			character_area.remove_direction_prompt(int(result.get("consumed_prompt_id", -1)))
+			_remove_prompt(int(result.get("consumed_prompt_id", -1)))
 			character_area.show_prompt_feedback(
 				"Sequence Complete +%d" % int(round(Config.PHYSICAL_SEQUENCE_COMPLETE_BONUS)),
 				Color(0.62, 0.95, 0.56, 1.0),
@@ -223,6 +225,7 @@ func _handle_wrong_input() -> void:
 	arousal_model.apply_physical(-Config.PHYSICAL_PENALTY_ON_WRONG_INPUT)
 	arousal_model.refresh_physical_activity()
 	sequence_controller.clear_sequence()
+	prompt_expiration_times.clear()
 	character_area.clear_direction_prompts()
 	character_area.show_prompt_feedback(
 		"Wrong -%d" % int(round(Config.PHYSICAL_PENALTY_ON_WRONG_INPUT)),
@@ -287,6 +290,7 @@ func _push_next_dialogue_event() -> void:
 
 func _start_new_sequence() -> void:
 	prompt_spawn_timer.stop()
+	prompt_expiration_times.clear()
 	character_area.clear_direction_prompts()
 	var first_prompt := sequence_controller.start_sequence()
 	if not first_prompt.is_empty():
@@ -322,10 +326,13 @@ func _on_active_prompt_timer_timeout() -> void:
 	_update_presentation()
 
 func _update_prompt_timer_visual() -> void:
-	if active_prompt_timer.is_stopped():
-		return
-	var progress := active_prompt_timer.time_left / Config.DIRECTION_PROMPT_TIME_LIMIT
-	character_area.set_prompt_time_progress(progress)
+	var progress_by_prompt_id: Dictionary = {}
+	var now := _get_now_seconds()
+	for prompt_id_variant in prompt_expiration_times.keys():
+		var prompt_id := int(prompt_id_variant)
+		var remaining_time := float(prompt_expiration_times[prompt_id]) - now
+		progress_by_prompt_id[prompt_id] = clampf(remaining_time / Config.DIRECTION_PROMPT_TIME_LIMIT, 0.0, 1.0)
+	character_area.set_prompt_time_progresses(progress_by_prompt_id)
 
 func _update_choice_timer_visual() -> void:
 	if waiting_for_choice and not choice_timeout_timer.is_stopped():
@@ -335,8 +342,10 @@ func _update_choice_timer_visual() -> void:
 	dialogue_panel.set_choice_timeout_progress(0.0)
 
 func _show_visible_prompt(prompt: Dictionary) -> void:
+	var prompt_id := int(prompt.get("prompt_id", -1))
+	prompt_expiration_times[prompt_id] = _get_now_seconds() + Config.DIRECTION_PROMPT_TIME_LIMIT
 	character_area.show_direction_prompt(
-		int(prompt.get("prompt_id", -1)),
+		prompt_id,
 		str(prompt.get("direction", "")),
 		prompt.get("anchor_position", Vector2.ZERO)
 	)
@@ -348,8 +357,7 @@ func _activate_current_prompt() -> void:
 		active_prompt_timer.stop()
 		return
 	character_area.set_current_prompt(int(prompt.get("step_index", -1)))
-	character_area.set_prompt_time_progress(1.0)
-	active_prompt_timer.start(Config.DIRECTION_PROMPT_TIME_LIMIT)
+	_update_prompt_timer_visual()
 
 func _schedule_extra_prompt_reveal() -> void:
 	if not sequence_controller.has_more_hidden_prompts():
@@ -396,3 +404,27 @@ func _get_prompt_anchor_centers_in_character_area() -> Array[Vector2]:
 	for anchor_node in anchor_nodes:
 		centers.append(inverse * anchor_node.get_global_rect().get_center())
 	return centers
+
+func _check_prompt_timeouts() -> bool:
+	if prompt_expiration_times.is_empty():
+		return false
+	var now := _get_now_seconds()
+	var expired_prompt_id := -1
+	for prompt_id_variant in prompt_expiration_times.keys():
+		var prompt_id := int(prompt_id_variant)
+		if now >= float(prompt_expiration_times[prompt_id]):
+			expired_prompt_id = prompt_id
+			break
+	if expired_prompt_id < 0:
+		return false
+	print_debug("prompt timeout: id=%d state=%s" % [expired_prompt_id, sequence_controller.get_prompt_debug_state()])
+	_handle_wrong_input()
+	_update_presentation()
+	return true
+
+func _remove_prompt(prompt_id: int) -> void:
+	prompt_expiration_times.erase(prompt_id)
+	character_area.remove_direction_prompt(prompt_id)
+
+func _get_now_seconds() -> float:
+	return float(Time.get_ticks_msec()) / 1000.0

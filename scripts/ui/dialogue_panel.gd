@@ -6,11 +6,9 @@ signal choice_selected(choice_quality: String, choice_text: String)
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 const HISTORY_BUBBLE_MAX_WIDTH := 232.0
 const HISTORY_BUBBLE_MIN_WIDTH := 180.0
-const SCROLL_BOTTOM_THRESHOLD := 24.0
 
 @onready var history_scroll: ScrollContainer = $MarginContainer/VBoxContainer/ScrollableChatHistory
 @onready var history_list: VBoxContainer = $MarginContainer/VBoxContainer/ScrollableChatHistory/ChatHistoryList
-@onready var jump_to_latest_button: Button = $MarginContainer/VBoxContainer/ScrollableChatHistory/JumpToLatestButton
 @onready var choice_countdown_bar: ProgressBar = $MarginContainer/VBoxContainer/ChoiceCountdownBar
 @onready var prompt_panel: PanelContainer = $MarginContainer/VBoxContainer/PromptPanel
 @onready var prompt_label: Label = $MarginContainer/VBoxContainer/PromptPanel/PromptLabel
@@ -19,35 +17,16 @@ const SCROLL_BOTTOM_THRESHOLD := 24.0
 @onready var neutral_button: Button = $MarginContainer/VBoxContainer/ChoiceButtons/NeutralButton
 @onready var bad_button: Button = $MarginContainer/VBoxContainer/ChoiceButtons/BadButton
 
-var _pending_unread_messages: int = 0
-
 func _ready() -> void:
 	good_button.focus_mode = Control.FOCUS_NONE
 	neutral_button.focus_mode = Control.FOCUS_NONE
 	bad_button.focus_mode = Control.FOCUS_NONE
-	jump_to_latest_button.focus_mode = Control.FOCUS_NONE
-	jump_to_latest_button.custom_minimum_size = Vector2(44.0, 44.0)
-	jump_to_latest_button.size = Vector2(44.0, 44.0)
-	jump_to_latest_button.add_theme_color_override("font_color", Color(0.98, 0.98, 1.0, 1.0))
-	var jump_button_style := StyleBoxFlat.new()
-	jump_button_style.bg_color = Color(0.16, 0.16, 0.2, 0.92)
-	jump_button_style.corner_radius_top_left = 22
-	jump_button_style.corner_radius_top_right = 22
-	jump_button_style.corner_radius_bottom_left = 22
-	jump_button_style.corner_radius_bottom_right = 22
-	jump_button_style.content_margin_left = 0.0
-	jump_button_style.content_margin_top = 0.0
-	jump_button_style.content_margin_right = 0.0
-	jump_button_style.content_margin_bottom = 0.0
-	jump_to_latest_button.add_theme_stylebox_override("normal", jump_button_style)
-	jump_to_latest_button.add_theme_stylebox_override("hover", jump_button_style)
-	jump_to_latest_button.add_theme_stylebox_override("pressed", jump_button_style)
-	jump_to_latest_button.add_theme_stylebox_override("focus", jump_button_style)
 	good_button.pressed.connect(func() -> void: choice_selected.emit("good", good_button.text))
 	neutral_button.pressed.connect(func() -> void: choice_selected.emit("neutral", neutral_button.text))
 	bad_button.pressed.connect(func() -> void: choice_selected.emit("bad", bad_button.text))
-	jump_to_latest_button.pressed.connect(_on_jump_to_latest_pressed)
-	history_scroll.get_v_scroll_bar().value_changed.connect(_on_history_scrolled)
+	history_scroll.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	history_scroll.get_v_scroll_bar().visible = false
+	history_scroll.get_v_scroll_bar().mouse_filter = Control.MOUSE_FILTER_IGNORE
 	resized.connect(_on_panel_resized)
 	_on_panel_resized()
 
@@ -74,13 +53,10 @@ func hide_prompt() -> void:
 func clear_history() -> void:
 	for child in history_list.get_children():
 		child.queue_free()
-	_pending_unread_messages = 0
-	_update_jump_to_latest_button()
 	hide_prompt()
 	hide_choices()
 
 func append_history(line: String, speaker_type: String = "companion") -> void:
-	var should_follow_latest := _is_near_latest()
 	var row := HBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -132,32 +108,19 @@ func append_history(line: String, speaker_type: String = "companion") -> void:
 	tween.set_parallel(true)
 	tween.tween_property(bubble, "modulate:a", 1.0, 0.22)
 	tween.tween_property(bubble, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	if should_follow_latest:
-		call_deferred("_scroll_to_latest")
-	else:
-		_pending_unread_messages += 1
-		_update_jump_to_latest_button()
+	call_deferred("_scroll_to_latest")
 
 func _scroll_to_latest() -> void:
 	history_scroll.scroll_vertical = int(history_scroll.get_v_scroll_bar().max_value)
-	_pending_unread_messages = 0
-	_update_jump_to_latest_button()
 
 func set_choice_timeout_progress(progress: float) -> void:
 	if not choice_countdown_bar.visible:
 		return
 	choice_countdown_bar.value = clampf(progress, 0.0, 1.0) * choice_countdown_bar.max_value
 
-func _on_jump_to_latest_pressed() -> void:
-	_scroll_to_latest()
-
-func _on_history_scrolled(_value: float) -> void:
-	if _is_near_latest():
-		_pending_unread_messages = 0
-	_update_jump_to_latest_button()
-
 func _on_panel_resized() -> void:
 	var bubble_width := _get_bubble_width()
+	history_list.custom_minimum_size.x = bubble_width
 	for row in history_list.get_children():
 		if row.get_child_count() == 0:
 			continue
@@ -167,13 +130,8 @@ func _on_panel_resized() -> void:
 				if child.get_child_count() > 0 and child.get_child(0) is Label:
 					child.get_child(0).custom_minimum_size.x = bubble_width
 
-func _update_jump_to_latest_button() -> void:
-	var should_show := _pending_unread_messages > 0 and not _is_near_latest()
-	jump_to_latest_button.visible = should_show
-
-func _is_near_latest() -> bool:
-	var scrollbar := history_scroll.get_v_scroll_bar()
-	return scrollbar.max_value - scrollbar.value <= SCROLL_BOTTOM_THRESHOLD
-
 func _get_bubble_width() -> float:
-	return clampf(size.x - 88.0, HISTORY_BUBBLE_MIN_WIDTH, HISTORY_BUBBLE_MAX_WIDTH)
+	var available_width := history_scroll.size.x
+	if available_width <= 0.0:
+		available_width = size.x - 24.0
+	return clampf(available_width - 28.0, HISTORY_BUBBLE_MIN_WIDTH, HISTORY_BUBBLE_MAX_WIDTH)
