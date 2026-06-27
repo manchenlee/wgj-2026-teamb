@@ -20,23 +20,23 @@ const INITIAL_EMOTIONAL: float = 30.0
 # 遊戲開始時的高潮值；調大會縮短達成結局所需時間，調小會拉長累積過程。
 const INITIAL_PEAK: float = 0.0
 # 啟動高潮累積所需的最低活躍門檻；調大表示玩家需要把雙方狀態維持得更高才會開始累積。
-const MINIMUM_ACTIVE_THRESHOLD: float = 15.0
+const MINIMUM_ACTIVE_THRESHOLD: float = 20.0
 # 身體與情感可接受的差距範圍；調大會降低失衡失敗的機率，調小則更要求兩者保持同步。
-const BALANCE_TOLERANCE: float = 15.0
+const BALANCE_TOLERANCE: float = 10.0
 
 # Passive progression.
 # 身體值每秒自然下降量；調大會讓身體狀態掉得更快，玩家需要更頻繁操作。
 const PHYSICAL_DECAY_PER_SECOND: float = 2.0
 # 情感值每秒自然下降量；調大會讓情感更難維持，玩家需要更常做出正確選擇。
-const EMOTIONAL_DECAY_PER_SECOND: float = 2.0
+const EMOTIONAL_DECAY_PER_SECOND: float = 0.1
 # 身體互動後暫停自然衰減的寬限時間；調大會讓連續輸入壓力變小，調小則更吃節奏。
 const PHYSICAL_ACTIVITY_GRACE_SECONDS: float = 1.4
 # 情感互動後暫停自然衰減的寬限時間；調大可讓選項成功的保護期更長，調小則維持難度更高。
 const EMOTIONAL_ACTIVITY_GRACE_SECONDS: float = 2.8
 # 高潮值上升速度；調大會更快進入成功結局，調小則需要更久的穩定表現。
-const PEAK_GAIN_RATE: float = 12.0
+const PEAK_GAIN_RATE: float = 2.0
 # 高潮值下降速度；調大會更容易因狀態不佳而退步，調小則容錯更高。
-const PEAK_LOSS_RATE: float = 8.0
+const PEAK_LOSS_RATE: float = 1.0
 
 # Physical interaction tuning.
 # 每次方向輸入序列的最短長度；調大會讓最低挑戰變長，調小則單次任務更簡短。
@@ -52,11 +52,11 @@ const PROMPT_SPAWN_DELAY_MIN: float = 1.1
 # 方向提示生成的最長間隔；調大會讓節奏波動更大，調小則整體更緊湊一致。
 const PROMPT_SPAWN_DELAY_MAX: float = 1.5
 # 正確輸入時增加的身體值；調大會讓操作回饋更明顯，調小則需要更多正確輸入才能維持狀態。
-const PHYSICAL_GAIN_ON_CORRECT_INPUT: float = 4.0
+const PHYSICAL_GAIN_ON_CORRECT_INPUT: float = 1.0
 # 輸入錯誤時扣除的身體值；調大會放大失誤代價，調小則容錯更高。
-const PHYSICAL_PENALTY_ON_WRONG_INPUT: float = 3.0
+const PHYSICAL_PENALTY_ON_WRONG_INPUT: float = 2.0
 # 完成整段方向序列時的額外身體獎勵；調大會更鼓勵完整連段，調小則單次正確輸入的重要性相對提高。
-const PHYSICAL_SEQUENCE_COMPLETE_BONUS: float = 7.0
+const PHYSICAL_SEQUENCE_COMPLETE_BONUS: float = 5.0
 # 顯示正確回饋訊息的時間；調大會讓成功提示更明顯，但也可能拖慢視覺節奏。
 const CORRECT_FEEDBACK_DISPLAY_DURATION: float = 0.45
 # 顯示錯誤回饋訊息的時間；調大會讓失誤提示停留更久，調小則畫面恢復更快。
