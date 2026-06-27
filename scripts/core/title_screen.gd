@@ -26,11 +26,11 @@ func _process(_delta: float) -> void:
 	var s := target_width / img_width
 	_start_button.scale = Vector2(s, s)
 
-	# 置中偏下（畫面 62% 高）
+	# 右側中央偏下（水平 58%，垂直 80%）
 	var btn_size := Vector2(992.0, 498.0) * _start_button.scale
 	_start_button.position = Vector2(
-		(size.x - btn_size.x) * 0.5,
-		size.y * 0.62 - btn_size.y * 0.5
+		size.x * 0.58,
+		size.y * 0.60 - btn_size.y * 0.5
 	)
 
 func _animate_in() -> void:
