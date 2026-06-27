@@ -24,6 +24,7 @@ var combo: int = 0
 var current_prompt: Dictionary = {}
 var debug_overlay
 var run_active: bool = true
+var waiting_for_choice: bool = false
 
 func _ready() -> void:
 	feedback_rng.randomize()
@@ -72,11 +73,10 @@ func reset_run() -> void:
 	combo = 0
 	round_restart_timer.stop()
 	arousal_model.reset()
+	dialogue_controller.reset()
 	dialogue_panel.clear_history()
-	current_prompt = dialogue_controller.next_prompt(arousal_model.physical, arousal_model.emotional)
-	dialogue_panel.set_prompt(current_prompt)
-	dialogue_panel.append_history(Config.TEST_FEEDBACK_TEXT, "companion")
-	_schedule_next_feedback_message()
+	waiting_for_choice = false
+	_push_next_dialogue_event()
 	_start_round()
 	_update_presentation()
 
@@ -108,11 +108,10 @@ func _start_round() -> void:
 	_update_presentation()
 
 func _on_feedback_timer_timeout() -> void:
-	if not run_active:
+	if not run_active or waiting_for_choice:
 		return
-	dialogue_panel.append_history(Config.TEST_FEEDBACK_TEXT, "companion")
+	_push_next_dialogue_event()
 	print_debug("feedback message")
-	_schedule_next_feedback_message()
 
 func _on_direction_pressed(direction: String) -> void:
 	if not run_active:
@@ -155,12 +154,13 @@ func _on_direction_pressed(direction: String) -> void:
 
 func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	dialogue_panel.append_history(choice_text, "player")
+	dialogue_panel.hide_choices()
+	waiting_for_choice = false
 	var outcome := dialogue_controller.apply_choice(choice_quality, arousal_model)
 	arousal_model.refresh_emotional_activity()
-	dialogue_panel.append_history(str(outcome.get("reply", Config.TEST_FEEDBACK_TEXT)), "companion")
+	dialogue_panel.append_history(str(outcome.get("reply", "...")), "companion")
 	character_area.show_choice_reaction(choice_quality)
-	current_prompt = dialogue_controller.next_prompt(arousal_model.physical, arousal_model.emotional)
-	dialogue_panel.set_prompt(current_prompt)
+	_schedule_next_feedback_message()
 	_update_presentation()
 
 func _handle_wrong_input() -> void:
@@ -215,3 +215,15 @@ func _schedule_next_feedback_message() -> void:
 		Config.FEEDBACK_MESSAGE_INTERVAL_MAX
 	)
 	feedback_timer.start(wait_time)
+
+func _push_next_dialogue_event() -> void:
+	current_prompt = dialogue_controller.next_event(arousal_model.physical, arousal_model.emotional)
+	dialogue_panel.append_history(str(current_prompt.get("text", "...")), "companion")
+	if current_prompt.has("choices"):
+		waiting_for_choice = true
+		dialogue_panel.show_choices(current_prompt.get("choices", {}))
+		feedback_timer.stop()
+	else:
+		waiting_for_choice = false
+		dialogue_panel.hide_choices()
+		_schedule_next_feedback_message()

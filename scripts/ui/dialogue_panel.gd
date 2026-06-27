@@ -3,13 +3,11 @@ extends PanelContainer
 
 signal choice_selected(choice_quality: String, choice_text: String)
 
-const Config := preload("res://scripts/gameplay/GameConfig.gd")
 const UiThemeScaler := preload("res://scripts/ui/ui_theme_scaler.gd")
 
 @onready var history_scroll: ScrollContainer = $MarginContainer/VBoxContainer/ScrollableChatHistory
 @onready var history_list: VBoxContainer = $MarginContainer/VBoxContainer/ScrollableChatHistory/ChatHistoryList
-@onready var speaker_label: Label = $MarginContainer/VBoxContainer/CurrentDialoguePrompt/SpeakerLabel
-@onready var prompt_label: Label = $MarginContainer/VBoxContainer/CurrentDialoguePrompt/PromptText
+@onready var choice_buttons: VBoxContainer = $MarginContainer/VBoxContainer/ChoiceButtons
 @onready var good_button: Button = $MarginContainer/VBoxContainer/ChoiceButtons/GoodButton
 @onready var neutral_button: Button = $MarginContainer/VBoxContainer/ChoiceButtons/NeutralButton
 @onready var bad_button: Button = $MarginContainer/VBoxContainer/ChoiceButtons/BadButton
@@ -22,16 +20,19 @@ func _ready() -> void:
 	neutral_button.pressed.connect(func() -> void: choice_selected.emit("neutral", neutral_button.text))
 	bad_button.pressed.connect(func() -> void: choice_selected.emit("bad", bad_button.text))
 
-func set_prompt(prompt: Dictionary) -> void:
-	speaker_label.text = str(prompt.get("speaker", "Companion"))
-	prompt_label.text = Config.TEST_FEEDBACK_TEXT
-	good_button.text = Config.TEST_RESPONSE_TEXT
-	neutral_button.text = Config.TEST_RESPONSE_TEXT
-	bad_button.text = Config.TEST_RESPONSE_TEXT
+func show_choices(choices: Dictionary) -> void:
+	good_button.text = str(choices.get("good", ""))
+	neutral_button.text = str(choices.get("neutral", ""))
+	bad_button.text = str(choices.get("bad", ""))
+	choice_buttons.visible = true
+
+func hide_choices() -> void:
+	choice_buttons.visible = false
 
 func clear_history() -> void:
 	for child in history_list.get_children():
 		child.queue_free()
+	hide_choices()
 
 func append_history(line: String, speaker_type: String = "companion") -> void:
 	var row := HBoxContainer.new()
