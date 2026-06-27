@@ -9,6 +9,16 @@ const EndingEvaluatorClass := preload("res://scripts/gameplay/ending_evaluator.g
 const ENDING_SCENE := preload("res://scenes/screens/EndingScreen.tscn")
 const GAME_SCENE := preload("res://scenes/screens/GameScreen.tscn")
 const TITLE_SCENE := preload("res://scenes/screens/TitleScreen.tscn")
+const CHARACTER_VISUAL_PATHS := {
+	"draft": "res://assets/art/character/draft.png",
+	"overall_init": "res://assets/art/character/phase1/overall_init.png",
+	"overall_medium": "res://assets/art/character/phase1/overall_medium.png",
+	"overall_high": "res://assets/art/character/phase1/overall_high.png",
+	"physic_high_mental_low": "res://assets/art/character/phase1/physic_high_mental_low.png.png",
+	"physic_high_mental_low_gameover": "res://assets/art/character/phase1/physic_high_mental_low_gameover.png",
+	"physic_low_mental_high": "res://assets/art/character/phase1/physic_low_mental_high.png",
+	"physic_low_mental_high_gameover": "res://assets/art/character/phase1/physic_low_mental_high_gameover.png"
+}
 
 signal ending_requested(ending_type: String)
 
@@ -42,9 +52,14 @@ var run_active: bool = true
 var waiting_for_choice: bool = false
 var pending_prompt_action: String = ""
 var prompt_expiration_times: Dictionary = {}
+var character_visual_textures: Dictionary = {}
+var character_visual_warnings_printed: Dictionary = {}
+var ending_transition_started: bool = false
 
 func _ready() -> void:
+	_cache_character_visual_textures()
 	_apply_character_background()
+	_update_character_visual_state()
 	_update_layout_debug_regions()
 
 	# In editor, only apply the preview texture.
@@ -69,12 +84,87 @@ func _ready() -> void:
 		character_background = value
 		if is_inside_tree():
 			_apply_character_background()
+			_update_character_visual_state()
 
 func _apply_character_background() -> void:
 	if background_placeholder == null:
 		return
 
 	background_placeholder.texture = character_background
+
+func _cache_character_visual_textures() -> void:
+	character_visual_textures.clear()
+	for state_name_variant in CHARACTER_VISUAL_PATHS.keys():
+		var state_name := String(state_name_variant)
+		var asset_path := String(CHARACTER_VISUAL_PATHS[state_name])
+		if not ResourceLoader.exists(asset_path):
+			_warn_character_visual_once(
+				"missing:%s" % asset_path,
+				"Character visual asset missing: %s" % asset_path
+			)
+			continue
+		var texture := load(asset_path) as Texture2D
+		if texture == null:
+			_warn_character_visual_once(
+				"load_failed:%s" % asset_path,
+				"Character visual asset failed to load: %s" % asset_path
+			)
+			continue
+		character_visual_textures[state_name] = texture
+
+	if not character_visual_textures.has("draft") and character_background != null:
+		character_visual_textures["draft"] = character_background
+
+func _warn_character_visual_once(warning_key: String, message: String) -> void:
+	if character_visual_warnings_printed.has(warning_key):
+		return
+	character_visual_warnings_printed[warning_key] = true
+	push_warning(message)
+
+func _update_character_visual_state(forced_ending_type: String = "") -> void:
+	if background_placeholder == null:
+		return
+
+	var visual_state := _get_character_visual_state_key(forced_ending_type)
+	var next_texture := _get_character_visual_texture(visual_state)
+	if next_texture == null:
+		return
+	if background_placeholder.texture == next_texture:
+		return
+	background_placeholder.texture = next_texture
+
+func _get_character_visual_state_key(forced_ending_type: String = "") -> String:
+	if forced_ending_type == Config.PHYSICAL_IMBALANCE_FAILURE_ENDING:
+		return "physic_high_mental_low_gameover"
+	if forced_ending_type == Config.EMOTIONAL_IMBALANCE_FAILURE_ENDING:
+		return "physic_low_mental_high_gameover"
+
+	var mismatch_low_threshold := Config.MINIMUM_ACTIVE_THRESHOLD
+	var mismatch_high_threshold := Config.FEEDBACK_EMOTIONAL_HIGH_THRESHOLD
+	if arousal_model.physical >= mismatch_high_threshold and arousal_model.emotional < mismatch_low_threshold:
+		return "physic_high_mental_low"
+	if arousal_model.emotional >= mismatch_high_threshold and arousal_model.physical < mismatch_low_threshold:
+		return "physic_low_mental_high"
+	if arousal_model.peak >= mismatch_high_threshold:
+		return "overall_high"
+	if arousal_model.peak >= mismatch_low_threshold:
+		return "overall_medium"
+	return "overall_init"
+
+func _get_character_visual_texture(visual_state: String) -> Texture2D:
+	if character_visual_textures.has(visual_state):
+		return character_visual_textures[visual_state] as Texture2D
+
+	var missing_path := String(CHARACTER_VISUAL_PATHS.get(visual_state, "unknown"))
+	_warn_character_visual_once(
+		"fallback:%s" % visual_state,
+		"Character visual state '%s' missing, falling back. Expected asset: %s" % [visual_state, missing_path]
+	)
+	if visual_state != "overall_init" and character_visual_textures.has("overall_init"):
+		return character_visual_textures["overall_init"] as Texture2D
+	if character_visual_textures.has("draft"):
+		return character_visual_textures["draft"] as Texture2D
+	return character_background
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready() and not Engine.is_editor_hint():
@@ -118,6 +208,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func reset_run() -> void:
 	print_debug("reset run")
 	run_active = true
+	ending_transition_started = false
 	combo = 0
 	prompt_spawn_timer.stop()
 	feedback_timer.stop()
@@ -142,9 +233,7 @@ func apply_debug_values(value: float) -> void:
 	_update_presentation()
 
 func force_ending(ending_type: String) -> void:
-	_stop_runtime_timers()
-	run_active = false
-	_request_ending_transition(ending_type)
+	_begin_ending_transition(ending_type)
 
 func get_debug_state() -> Dictionary:
 	return {
@@ -239,17 +328,33 @@ func _handle_wrong_input() -> void:
 	_schedule_new_sequence()
 
 func _check_ending() -> void:
+	if ending_transition_started:
+		return
 	var ending_type := EndingEvaluatorClass.evaluate(arousal_model)
 	if ending_type.is_empty():
 		return
 	print_debug("ending: %s" % ending_type)
+	_begin_ending_transition(ending_type)
+
+func _begin_ending_transition(ending_type: String) -> void:
+	if ending_transition_started:
+		return
+	ending_transition_started = true
 	_stop_runtime_timers()
 	run_active = false
+	_update_character_visual_state(ending_type)
+	_complete_ending_transition_after_frame(ending_type)
+
+func _complete_ending_transition_after_frame(ending_type: String) -> void:
+	await get_tree().process_frame
+	if not is_inside_tree():
+		return
 	_request_ending_transition(ending_type)
 
 func _update_presentation() -> void:
 	if Engine.is_editor_hint():
 		return
+	_update_character_visual_state()
 	character_area.update_emotion_state(arousal_model.get_emotion_state())
 	arousal_visualization.set_values(arousal_model.physical, arousal_model.emotional, arousal_model.peak)
 	status_hud.update_values(arousal_model.physical, arousal_model.emotional, arousal_model.peak)

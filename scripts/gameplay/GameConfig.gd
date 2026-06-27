@@ -25,7 +25,7 @@ const INITIAL_EMOTIONAL: float = 30.0
 # 遊戲開始時的高潮值；調大會縮短達成結局所需時間，調小會拉長累積過程。
 const INITIAL_PEAK: float = 0.0
 # 啟動高潮累積所需的最低活躍門檻；調大表示玩家需要把雙方狀態維持得更高才會開始累積。
-const MINIMUM_ACTIVE_THRESHOLD: float = 20.0
+const MINIMUM_ACTIVE_THRESHOLD: float = 30.0
 # 身體與情感可接受的差距範圍；調大會降低失衡失敗的機率，調小則更要求兩者保持同步。
 const BALANCE_TOLERANCE: float = 10.0
 
@@ -104,7 +104,7 @@ const FEEDBACK_PHYSICAL_LOW_THRESHOLD: float = 25.0
 # 對話事件中，心理低於這個值時視為「低心理」。
 const FEEDBACK_EMOTIONAL_LOW_THRESHOLD: float = 25.0
 # 對話事件中，心理高於這個值時視為「高心理」。
-const FEEDBACK_EMOTIONAL_HIGH_THRESHOLD: float = 75.0
+const FEEDBACK_EMOTIONAL_HIGH_THRESHOLD: float = 70.0
 # 選到最佳選項時增加的情感值；調大會讓正確判斷更容易穩住情感，調小則成長較慢。
 const EMOTIONAL_GAIN_GOOD_CHOICE: float = 10.0
 # 選到中性選項時增加的情感值；調大會降低判斷失誤的成本，調小則更需要選到最佳答案。
