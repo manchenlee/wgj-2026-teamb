@@ -37,6 +37,9 @@ anchor_bottom = 1.0
 mouse_filter = 2
 z_index = 5
 
+[node name="PromptTimerLine" type="Line2D" parent="PromptLayer"]
+z_index = 1
+
 [node name="PromptFeedbackLabel" type="Label" parent="PromptLayer"]
 visible = false
 mouse_filter = 2
