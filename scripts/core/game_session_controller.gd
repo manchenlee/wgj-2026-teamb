@@ -305,7 +305,7 @@ func _push_next_dialogue_event() -> void:
 	current_prompt = dialogue_controller.next_event(arousal_model.physical, arousal_model.emotional)
 	if current_prompt.has("choices"):
 		waiting_for_choice = true
-		dialogue_panel.show_prompt(str(current_prompt.get("text", Config.CHOICE_PROMPT_TEXT)))
+		dialogue_panel.hide_prompt()
 		dialogue_panel.show_choices(current_prompt.get("choices", {}))
 		feedback_timer.stop()
 		choice_timeout_timer.start(Config.CHOICE_TIMEOUT_SECONDS)

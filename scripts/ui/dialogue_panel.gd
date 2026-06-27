@@ -22,9 +22,16 @@ const SCROLL_BOTTOM_THRESHOLD := 24.0
 var _pending_unread_messages: int = 0
 
 func _ready() -> void:
+	prompt_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	prompt_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	prompt_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	choice_buttons.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	good_button.focus_mode = Control.FOCUS_NONE
 	neutral_button.focus_mode = Control.FOCUS_NONE
 	bad_button.focus_mode = Control.FOCUS_NONE
+	_configure_choice_button(good_button)
+	_configure_choice_button(neutral_button)
+	_configure_choice_button(bad_button)
 	jump_to_latest_button.focus_mode = Control.FOCUS_NONE
 	jump_to_latest_button.custom_minimum_size = Vector2(44.0, 44.0)
 	jump_to_latest_button.size = Vector2(44.0, 44.0)
@@ -177,3 +184,12 @@ func _is_near_latest() -> bool:
 
 func _get_bubble_width() -> float:
 	return clampf(size.x - 88.0, HISTORY_BUBBLE_MIN_WIDTH, HISTORY_BUBBLE_MAX_WIDTH)
+
+func _configure_choice_button(button: Button) -> void:
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.custom_minimum_size.x = 0.0
+	button.clip_text = true
+	button.add_theme_font_size_override(
+		"font_size",
+		int(round(Config.DIALOGUE_BODY_FONT_SIZE * Config.UI_FONT_SCALE))
+	)

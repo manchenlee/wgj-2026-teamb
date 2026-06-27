@@ -63,17 +63,18 @@ func _load_feedback_entries() -> void:
 		push_warning("Feedback dialogue file is empty: %s" % FEEDBACK_DATA_PATH)
 		return
 
-	var parsed = JSON.parse_string(raw_text)
+	var parsed: Variant = JSON.parse_string(raw_text)
 	if typeof(parsed) != TYPE_DICTIONARY:
 		push_warning("Feedback dialogue file has invalid JSON structure: %s" % FEEDBACK_DATA_PATH)
 		return
+	var parsed_dict := parsed as Dictionary
 
-	var parsed_entries := parsed.get("entries", [])
+	var parsed_entries: Variant = parsed_dict.get("entries", [])
 	if typeof(parsed_entries) != TYPE_ARRAY:
 		push_warning("Feedback dialogue entries field is not an array: %s" % FEEDBACK_DATA_PATH)
 		return
 
-	for entry_variant in parsed_entries:
+	for entry_variant in parsed_entries as Array:
 		if typeof(entry_variant) == TYPE_DICTIONARY:
 			entries.append(entry_variant)
 
@@ -131,7 +132,7 @@ func _get_choice_response(choice_quality: String, entry: Dictionary) -> String:
 		return "[測試回應] 目前是未實作狀態，收到選項：%s" % choice_quality
 
 	var response_map := entry.get("response", {}) as Dictionary
-	var reply_list := response_map.get(choice_quality, [])
+	var reply_list: Variant = response_map.get(choice_quality, [])
 	return _pick_random_text(reply_list, Config.FEEDBACK_MESSAGE_TEXT)
 
 func _pick_random_text(source: Variant, fallback: String) -> String:
