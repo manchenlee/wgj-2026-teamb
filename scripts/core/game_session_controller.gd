@@ -63,7 +63,7 @@ func _ready() -> void:
 	choice_timeout_timer.timeout.connect(_on_choice_timeout)
 	reset_run()
 
-@export var character_background: Texture2D = preload("res://assets/art/character/draft.png"):
+@export var character_background: Texture2D:
 	set(value):
 		character_background = value
 		if is_inside_tree():
