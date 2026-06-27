@@ -8,18 +8,21 @@ size_flags_horizontal = 3
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
+theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_bottom = 12
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+alignment = 1
 
 [node name="HeaderLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 text = "Direction Sequence"
+horizontal_alignment = 1
 
 [node name="SequenceLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 88)
 bbcode_enabled = true
-fit_content = true
+fit_content = false
 scroll_active = false
+size_flags_horizontal = 3
 text = "[center][color=#7d7d87]Waiting for round...[/color][/center]"

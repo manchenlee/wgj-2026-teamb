@@ -38,8 +38,8 @@ const FEEDBACK_MESSAGE_INTERVAL_MAX: float = 4.6
 # Presentation tuning.
 const CIRCLE_RADIUS_MIN: float = 104.0
 const CIRCLE_RADIUS_MAX: float = 192.0
-const CIRCLE_STROKE_MIN: float = 8.0
-const CIRCLE_STROKE_MAX: float = 18.0
+const CIRCLE_STROKE_MIN: float = 4.0
+const CIRCLE_STROKE_MAX: float = 8.0
 const PEAK_LABEL_OFFSET_Y: float = 156.0
 const DESKTOP_BREAKPOINT: float = 1080.0
 

@@ -27,6 +27,7 @@ var run_active: bool = true
 
 func _ready() -> void:
 	feedback_rng.randomize()
+	set_process_unhandled_input(true)
 	status_hud.direction_pressed.connect(_on_direction_pressed)
 	dialogue_panel.choice_selected.connect(_on_choice_selected)
 	feedback_timer.timeout.connect(_on_feedback_timer_timeout)
@@ -47,7 +48,7 @@ func _process(delta: float) -> void:
 	_update_presentation()
 	_check_ending()
 
-func _input(event: InputEvent) -> void:
+func _unhandled_input(event: InputEvent) -> void:
 	if not run_active:
 		return
 	if event is InputEventKey and event.is_pressed() and not event.is_echo():
@@ -62,6 +63,7 @@ func _input(event: InputEvent) -> void:
 			KEY_DOWN, KEY_S:
 				direction = "Down"
 		if not direction.is_empty():
+			get_viewport().set_input_as_handled()
 			_on_direction_pressed(direction)
 
 func reset_run() -> void:
@@ -116,6 +118,15 @@ func _on_direction_pressed(direction: String) -> void:
 	if not run_active:
 		return
 	var result: Dictionary = sequence_controller.submit_input(direction)
+	print_debug(
+		"direction input: %s -> %s (combo=%d physical=%.1f current_index=%d)" % [
+			direction,
+			str(result.get("result", "unknown")),
+			combo,
+			arousal_model.physical,
+			sequence_controller.current_index
+		]
+	)
 	match str(result.get("result", "")):
 		"correct":
 			combo += 1
@@ -136,7 +147,7 @@ func _on_direction_pressed(direction: String) -> void:
 
 func _on_choice_selected(choice_quality: String) -> void:
 	var outcome := dialogue_controller.apply_choice(choice_quality, arousal_model)
-	dialogue_panel.append_history(str(outcome.get("reply", "Companion: ...")))
+	dialogue_panel.append_history(str(outcome.get("reply", Config.TEST_FEEDBACK_TEXT)))
 	character_area.show_choice_reaction(choice_quality)
 	current_prompt = dialogue_controller.next_prompt(arousal_model.physical, arousal_model.emotional)
 	dialogue_panel.set_prompt(current_prompt)

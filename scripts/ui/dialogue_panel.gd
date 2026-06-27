@@ -14,13 +14,16 @@ const Config := preload("res://scripts/gameplay/GameConfig.gd")
 @onready var bad_button: Button = $MarginContainer/VBoxContainer/ChoiceButtons/BadButton
 
 func _ready() -> void:
+	good_button.focus_mode = Control.FOCUS_NONE
+	neutral_button.focus_mode = Control.FOCUS_NONE
+	bad_button.focus_mode = Control.FOCUS_NONE
 	good_button.pressed.connect(func() -> void: choice_selected.emit("good"))
 	neutral_button.pressed.connect(func() -> void: choice_selected.emit("neutral"))
 	bad_button.pressed.connect(func() -> void: choice_selected.emit("bad"))
 
 func set_prompt(prompt: Dictionary) -> void:
 	speaker_label.text = str(prompt.get("speaker", "Companion"))
-	prompt_label.text = str(prompt.get("text", "..."))
+	prompt_label.text = Config.TEST_FEEDBACK_TEXT
 	good_button.text = Config.TEST_RESPONSE_TEXT
 	neutral_button.text = Config.TEST_RESPONSE_TEXT
 	bad_button.text = Config.TEST_RESPONSE_TEXT
@@ -30,17 +33,36 @@ func clear_history() -> void:
 		child.queue_free()
 
 func append_history(line: String) -> void:
+	var bubble := PanelContainer.new()
+	bubble.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bubble.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bubble.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	bubble.scale = Vector2(0.96, 0.96)
+
+	var bubble_style := StyleBoxFlat.new()
+	bubble_style.bg_color = Color(0.15, 0.15, 0.17, 0.92)
+	bubble_style.corner_radius_top_left = 14
+	bubble_style.corner_radius_top_right = 14
+	bubble_style.corner_radius_bottom_left = 14
+	bubble_style.corner_radius_bottom_right = 14
+	bubble_style.content_margin_left = 12.0
+	bubble_style.content_margin_top = 10.0
+	bubble_style.content_margin_right = 12.0
+	bubble_style.content_margin_bottom = 10.0
+	bubble.set("theme_override_styles/panel", bubble_style)
+
 	var message_label := Label.new()
 	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	message_label.text = line
-	message_label.modulate = Color(1.0, 1.0, 1.0, 0.0)
-	message_label.scale = Vector2(0.94, 0.94)
-	history_list.add_child(message_label)
+	message_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	message_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bubble.add_child(message_label)
+	history_list.add_child(bubble)
 
 	var tween := create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(message_label, "modulate:a", 1.0, 0.22)
-	tween.tween_property(message_label, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(bubble, "modulate:a", 1.0, 0.22)
+	tween.tween_property(bubble, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	call_deferred("_scroll_to_latest")
 
 func _scroll_to_latest() -> void:

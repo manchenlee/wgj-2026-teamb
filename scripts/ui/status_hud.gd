@@ -17,6 +17,10 @@ signal direction_pressed(direction: String)
 @onready var right_button: Button = $MarginContainer/VBoxContainer/MobileDirectionButtons/RightButton
 
 func _ready() -> void:
+	left_button.focus_mode = Control.FOCUS_NONE
+	up_button.focus_mode = Control.FOCUS_NONE
+	down_button.focus_mode = Control.FOCUS_NONE
+	right_button.focus_mode = Control.FOCUS_NONE
 	left_button.pressed.connect(func() -> void: direction_pressed.emit("Left"))
 	up_button.pressed.connect(func() -> void: direction_pressed.emit("Up"))
 	down_button.pressed.connect(func() -> void: direction_pressed.emit("Down"))

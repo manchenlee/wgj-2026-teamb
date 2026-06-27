@@ -15,6 +15,7 @@ theme_override_constants/margin_bottom = 12
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 size_flags_horizontal = 3
+theme_override_constants/separation = 14
 
 [node name="DirectionSequencePanel" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_seq")]
 
@@ -47,6 +48,7 @@ value = 3.0
 show_percentage = false
 
 [node name="MobileDirectionButtons" type="GridContainer" parent="MarginContainer/VBoxContainer"]
+visible = false
 columns = 4
 
 [node name="LeftButton" type="Button" parent="MarginContainer/VBoxContainer/MobileDirectionButtons"]
