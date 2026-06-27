@@ -42,6 +42,7 @@ signal ending_requested(ending_type: String)
 @onready var prompt_spawn_timer: Timer = $PromptSpawnTimer
 @onready var active_prompt_timer: Timer = $ActivePromptTimer
 @onready var choice_timeout_timer: Timer = $ChoiceTimeoutTimer
+@onready var phase_transition_overlay: ColorRect = $PhaseTransitionOverlay
 
 var arousal_model = ArousalModelClass.new()
 var sequence_controller = DirectionSequenceControllerClass.new()
@@ -671,10 +672,9 @@ func _begin_phase_transition() -> void:
 	var transition_text := active_phase_config.transition_feedback_text
 	if not transition_text.is_empty():
 		dialogue_panel.append_history(transition_text, "system")
-	call_deferred("_complete_phase_transition")
+	_play_phase_transition_fade(Color(1, 1, 1, 0), true)
 
 func _complete_phase_transition() -> void:
-	await get_tree().create_timer(0.9).timeout
 	if not is_inside_tree():
 		return
 	_reset_run_for_phase_index(active_phase_index + 1)
@@ -686,13 +686,46 @@ func _begin_ending_transition(ending_type: String) -> void:
 	_stop_runtime_timers()
 	run_active = false
 	_update_character_visual_state(ending_type)
-	_complete_ending_transition_after_frame(ending_type)
+	_play_phase_transition_fade(Color(0, 0, 0, 0), false, ending_type)
 
 func _complete_ending_transition_after_frame(ending_type: String) -> void:
 	await get_tree().process_frame
 	if not is_inside_tree():
 		return
 	_request_ending_transition(ending_type)
+
+## Plays a full-screen colour fade: 2s fade out → 1s hold → 1s fade in.
+## overlay_start_color — the starting (transparent) colour of the overlay (black or white, alpha 0).
+## is_phase_transition — if true, calls _complete_phase_transition() after the hold;
+##                       if false, triggers the ending request (passes ending_type).
+func _play_phase_transition_fade(overlay_start_color: Color, is_phase_transition: bool, ending_type: String = "") -> void:
+	if phase_transition_overlay == null:
+		# Fallback: no overlay node, just proceed immediately.
+		if is_phase_transition:
+			_complete_phase_transition()
+		else:
+			_request_ending_transition(ending_type)
+		return
+
+	var opaque_color := Color(overlay_start_color.r, overlay_start_color.g, overlay_start_color.b, 1.0)
+	phase_transition_overlay.color = overlay_start_color
+	phase_transition_overlay.visible = true
+
+	var tween := create_tween()
+	# 1 s fade to opaque
+	tween.tween_property(phase_transition_overlay, "color", opaque_color, 1.0)
+	# 1 s hold (fully opaque)
+	tween.tween_interval(1.0)
+
+	if is_phase_transition:
+		# Kick off next phase reset while still opaque, then fade back in
+		tween.tween_callback(_complete_phase_transition)
+		# 1 s fade back to transparent
+		tween.tween_property(phase_transition_overlay, "color", overlay_start_color, 1.0)
+		tween.tween_callback(func() -> void: phase_transition_overlay.visible = false)
+	else:
+		# For ending: request transition while screen is black, then let the new screen handle its own reveal.
+		tween.tween_callback(func() -> void: _request_ending_transition(ending_type))
 
 func _update_presentation() -> void:
 	if Engine.is_editor_hint():

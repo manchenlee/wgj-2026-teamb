@@ -727,3 +727,16 @@ one_shot = true
 [node name="ChoiceTimeoutTimer" type="Timer" parent="." unique_id=292030748]
 wait_time = 4.2
 one_shot = true
+
+[node name="PhaseTransitionOverlay" type="ColorRect" parent="." unique_id=112358132134]
+visible = false
+z_index = 100
+z_as_relative = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
