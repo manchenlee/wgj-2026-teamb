@@ -59,7 +59,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 20.0
 offset_top = 20.0
-offset_right = -388.0
+offset_right = -360.0
 offset_bottom = -164.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -177,16 +177,16 @@ offset_bottom = 644.0
 
 [node name="RightSideDialoguePanel" parent="." unique_id=1454768142 instance=ExtResource("3_dialogue")]
 z_index = 4
-custom_minimum_size = Vector2(360, 0)
+custom_minimum_size = Vector2(320, 0)
 layout_mode = 1
 anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -380.0
-offset_top = 88.0
+offset_left = -340.0
+offset_top = 20.0
 offset_right = -20.0
-offset_bottom = -24.0
+offset_bottom = -164.0
 grow_horizontal = 0
 grow_vertical = 2
 
@@ -201,17 +201,16 @@ color = Color(0.98, 0.66, 0.2, 0.18)
 z_index = 4
 custom_minimum_size = Vector2(0, 120)
 layout_mode = 1
-anchors_preset = -1
+anchors_preset = 12
 anchor_top = 1.0
-anchor_right = 0.5
+anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 20.0
 offset_top = -140.0
-offset_right = -10.0
+offset_right = -20.0
 offset_bottom = -20.0
-grow_horizontal = 0
+grow_horizontal = 2
 grow_vertical = 0
-size_flags_horizontal = 3
 
 [node name="DebugRegionTint" type="ColorRect" parent="BottomHUD" unique_id=74340883]
 visible = false

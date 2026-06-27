@@ -5,8 +5,8 @@ const MAX_VALUE: float = 100.0
 
 # Shared placeholder copy.
 const FEEDBACK_MESSAGE_TEXT: String = "feedback feedback feedback"
-const CHOICE_PROMPT_TEXT: String = "choice"
-const RESPONSE_BUTTON_TEXT: String = "response"
+const CHOICE_PROMPT_TEXT: String = "choice choice choice"
+const RESPONSE_BUTTON_TEXT: String = "response response response"
 
 # UI scaling.
 # 整體 UI 字體縮放倍率；調大會讓介面文字更大、更容易閱讀，調小則會讓畫面更緊湊。
