@@ -100,11 +100,11 @@ const ARROW_PROMPT_ANCHOR_OFFSETS := [
 
 # Emotional interaction tuning.
 # 對話事件中，生理低於這個值時視為「低生理」。
-const FEEDBACK_PHYSICAL_LOW_THRESHOLD: float = 35.0
+const FEEDBACK_PHYSICAL_LOW_THRESHOLD: float = 25.0
 # 對話事件中，心理低於這個值時視為「低心理」。
-const FEEDBACK_EMOTIONAL_LOW_THRESHOLD: float = 35.0
+const FEEDBACK_EMOTIONAL_LOW_THRESHOLD: float = 25.0
 # 對話事件中，心理高於這個值時視為「高心理」。
-const FEEDBACK_EMOTIONAL_HIGH_THRESHOLD: float = 65.0
+const FEEDBACK_EMOTIONAL_HIGH_THRESHOLD: float = 75.0
 # 選到最佳選項時增加的情感值；調大會讓正確判斷更容易穩住情感，調小則成長較慢。
 const EMOTIONAL_GAIN_GOOD_CHOICE: float = 10.0
 # 選到中性選項時增加的情感值；調大會降低判斷失誤的成本，調小則更需要選到最佳答案。
@@ -112,11 +112,11 @@ const EMOTIONAL_GAIN_NEUTRAL_CHOICE: float = 3.0
 # 選到不佳選項時扣除的情感值；調大會讓錯選更傷，調小則玩家較能承受試錯。
 const EMOTIONAL_PENALTY_BAD_CHOICE: float = 5.0
 # 情感選項的作答時限；調大會給玩家更多閱讀與思考時間，調小則節奏更急迫。
-const CHOICE_TIMEOUT_SECONDS: float = 4.2
+const CHOICE_TIMEOUT_SECONDS: float = 5.0
 # 回饋訊息出現的最短間隔；調大會讓情感事件較不密集，調小則更頻繁打斷玩家。
-const FEEDBACK_MESSAGE_INTERVAL_MIN: float = 1.5
+const FEEDBACK_MESSAGE_INTERVAL_MIN: float = 2.0
 # 回饋訊息出現的最長間隔；調大會拉大事件間距波動，調小則情感互動節奏更固定。
-const FEEDBACK_MESSAGE_INTERVAL_MAX: float = 3.0
+const FEEDBACK_MESSAGE_INTERVAL_MAX: float = 4.0
 
 # Presentation tuning.
 # 圓形 UI 的最小半徑；調大會讓小尺寸狀態下也較醒目，調小則更節省空間。

@@ -189,7 +189,4 @@ func _configure_choice_button(button: Button) -> void:
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.custom_minimum_size.x = 0.0
 	button.clip_text = true
-	button.add_theme_font_size_override(
-		"font_size",
-		int(round(Config.DIALOGUE_BODY_FONT_SIZE * Config.UI_FONT_SCALE))
-	)
+	button.add_theme_font_size_override("font_size", Config.DIALOGUE_BODY_FONT_SIZE)

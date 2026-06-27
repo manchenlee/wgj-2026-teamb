@@ -3,6 +3,7 @@ extends Control
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
 signal restart_pressed
+signal back_to_title_pressed
 
 @onready var result_label: Label = get_node_or_null(
 	"MarginContainer/VBoxContainer/ResultSubtypeLabel"
@@ -13,7 +14,11 @@ signal restart_pressed
 )
 
 @onready var restart_button: Button = get_node_or_null(
-	"MarginContainer/VBoxContainer/RestartButton"
+	"MarginContainer/VBoxContainer/RestartButtons/RestartButton"
+)
+
+@onready var back_to_title_button: Button = get_node_or_null(
+	"MarginContainer/VBoxContainer/RestartButtons/BackToTitleButton"
 )
 
 var pending_result_type: String = ""
@@ -25,6 +30,14 @@ func _ready() -> void:
 		restart_button.pressed.connect(
 			func() -> void:
 				restart_pressed.emit()
+		)
+
+	if back_to_title_button == null:
+		push_error("EndingScreen: BackToTitleButton node not found.")
+	else:
+		back_to_title_button.pressed.connect(
+			func() -> void:
+				back_to_title_pressed.emit()
 		)
 
 	if not pending_result_type.is_empty():

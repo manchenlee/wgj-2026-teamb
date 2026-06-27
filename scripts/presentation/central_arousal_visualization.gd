@@ -4,6 +4,9 @@ extends Control
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 const PHYSICAL_RING_TEXTURE := preload("res://assets/art/ui/circle_red.png")
 const EMOTIONAL_RING_TEXTURE := preload("res://assets/art/ui/circle_yellow.png")
+const MAX_RING_OUTLINE_COLOR := Color(0.55, 0.55, 0.55, 0.55)
+const MAX_RING_DASH_COUNT := 48
+const MAX_RING_DASH_RATIO := 0.55
 
 @export_node_path("Control") var character_placeholder_path: NodePath
 
@@ -29,6 +32,7 @@ func _process(delta: float) -> void:
 	pulse_time += delta
 	_sync_circle_sprites()
 	_sync_peak_indicator()
+	queue_redraw()
 
 func set_values(physical: float, emotional: float, peak: float) -> void:
 	physical_value = Config.clamp_value(physical)
@@ -38,9 +42,10 @@ func set_values(physical: float, emotional: float, peak: float) -> void:
 	peak_indicator.modulate = Color(0.12, 0.12, 0.16, lerpf(0.55, 1.0, peak_value / Config.MAX_VALUE))
 	_sync_circle_sprites()
 	_sync_peak_indicator()
+	queue_redraw()
 
 func _draw() -> void:
-	return
+	_draw_max_ring_outline()
 
 func _get_character_center() -> Vector2:
 	if character_placeholder != null and character_placeholder.visible:
@@ -50,6 +55,18 @@ func _get_character_center() -> Vector2:
 func _sync_peak_indicator() -> void:
 	var center := _get_character_center()
 	peak_indicator.position = center + Vector2(-40.0, Config.PEAK_LABEL_OFFSET_Y)
+
+func _draw_max_ring_outline() -> void:
+	var center := _get_character_center()
+	var radius := Config.CIRCLE_RADIUS_MAX
+	var line_width := Config.CIRCLE_STROKE_MAX
+	var full_turn := TAU
+	var dash_angle := full_turn / float(MAX_RING_DASH_COUNT)
+	var visible_angle := dash_angle * MAX_RING_DASH_RATIO
+
+	for index in range(MAX_RING_DASH_COUNT):
+		var start_angle := dash_angle * index
+		draw_arc(center, radius, start_angle, start_angle + visible_angle, 8, MAX_RING_OUTLINE_COLOR, line_width, true)
 
 func _ensure_ring_sprite(node_name: String, texture: Texture2D, z_order: int) -> TextureRect:
 	var ring := get_node_or_null(node_name) as TextureRect

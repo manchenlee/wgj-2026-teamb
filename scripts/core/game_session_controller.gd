@@ -8,6 +8,7 @@ const DialogueChoiceControllerClass := preload("res://scripts/gameplay/dialogue_
 const EndingEvaluatorClass := preload("res://scripts/gameplay/ending_evaluator.gd")
 const ENDING_SCENE := preload("res://scenes/screens/EndingScreen.tscn")
 const GAME_SCENE := preload("res://scenes/screens/GameScreen.tscn")
+const TITLE_SCENE := preload("res://scenes/screens/TitleScreen.tscn")
 
 signal ending_requested(ending_type: String)
 
@@ -276,6 +277,7 @@ func _show_standalone_ending(ending_type: String) -> void:
 	var ending_screen := ENDING_SCENE.instantiate()
 	ending_screen.set_result(ending_type)
 	ending_screen.restart_pressed.connect(_restart_standalone_run)
+	ending_screen.back_to_title_pressed.connect(_return_to_title_standalone)
 	var sibling_index := get_index()
 	parent.add_child(ending_screen)
 	parent.move_child(ending_screen, sibling_index)
@@ -287,6 +289,9 @@ func _restart_standalone_run() -> void:
 		get_tree().reload_current_scene()
 		return
 	get_tree().change_scene_to_packed(GAME_SCENE)
+
+func _return_to_title_standalone() -> void:
+	get_tree().change_scene_to_packed(TITLE_SCENE)
 
 func _stop_runtime_timers() -> void:
 	feedback_timer.stop()

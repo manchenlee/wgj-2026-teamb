@@ -57,7 +57,8 @@ func _show_ending(ending_type: String) -> void:
 	current_screen_id = Config.SCREEN_ENDING
 	var screen := ENDING_SCENE.instantiate()
 	screen.set_result(ending_type)
-	screen.restart_pressed.connect(_show_title)
+	screen.restart_pressed.connect(_show_game)
+	screen.back_to_title_pressed.connect(_show_title)
 	_swap_screen(screen)
 	debug_overlay.sync_live_readout({
 		"screen": "%s:%s" % [Config.SCREEN_ENDING, ending_type],
