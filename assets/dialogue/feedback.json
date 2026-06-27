@@ -1,0 +1,89 @@
+{
+  "usage": "畫面右側，角色長時跳出的心理活動",
+  "entries": [
+    {
+      "id": "physical_low_emotional_high_01",
+      "condition": {
+        "physical": "low",
+        "emotional": "high"
+      },
+      "feedback": [
+        "……我餓了。",
+        "喂，我們別做了好不好？我餓了。"
+      ],
+      "choice": [
+        {
+          "id": "good",
+          "text": "我看不懂小提琴要吃飯的原理，但，好喔。",
+          "effect": "large_positive"
+        },
+        {
+          "id": "neutral",
+          "text": "小提琴也要吃飯嗎？",
+          "effect": "small_positive"
+        },
+        {
+          "id": "bad",
+          "text": "吃甚麼吃？吃我的大觸手啦！！",
+          "effect": "negative"
+        }
+      ],
+      "response": {
+        "good": [
+          "好喔？……噗，噗哈哈哈！！\n你什麼都不知道，就先答應了嗎？",
+          "其實是我騙你的，小提琴怎麼可能肚子餓呢？",
+          "不過……你這樣，總覺得……奇怪的地方，有點餓了……"
+        ],
+        "neutral": [
+          "不用啊，我開玩笑的。",
+          "……哈哈哈！對不起！對不起嘛！"
+        ],
+        "bad": [
+          "……",
+          "……我看錯你了。"
+        ]
+      }
+    },
+    {
+      "id": "physical_low_emotional_low_01",
+      "condition": {
+        "physical": "low",
+        "emotional": "low"
+      },
+      "feedback": [
+        "……唔！",
+        "你弄痛我了！"
+      ],
+      "choice": [
+        {
+          "id": "good",
+          "text": "抱歉，那要休息一下嗎？",
+          "effect": "large_positive"
+        },
+        {
+          "id": "neutral",
+          "text": "你、你再讓我努力一下！",
+          "effect": "small_positive"
+        },
+        {
+          "id": "bad",
+          "text": "……",
+          "effect": "negative"
+        }
+      ],
+      "response": {
+        "good": [
+          "……算你識相。",
+          "……算了，也不是……不行啦，你還可以再努力一下。"
+        ],
+        "neutral": [
+          "努力什麼？努力弄痛我嗎？",
+          "……好啦好啦，看在你這麼努力的份上，再給你一點機會好了。"
+        ],
+        "bad": [
+            "……我！說！你！弄！痛！我！了！"
+        ]
+      }
+    }
+  ]
+}

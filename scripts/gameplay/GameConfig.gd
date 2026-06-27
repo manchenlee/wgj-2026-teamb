@@ -4,9 +4,9 @@ extends RefCounted
 const MAX_VALUE: float = 100.0
 
 # Shared placeholder copy.
-const FEEDBACK_MESSAGE_TEXT: String = "feedback feedback feedback"
-const CHOICE_PROMPT_TEXT: String = "choice choice choice"
-const RESPONSE_BUTTON_TEXT: String = "response response response"
+const FEEDBACK_MESSAGE_TEXT: String = "[測試] 目前這個狀態的回饋對話尚未實作。"
+const CHOICE_PROMPT_TEXT: String = "[測試] 目前這個狀態的選項對話尚未實作。"
+const RESPONSE_BUTTON_TEXT: String = "[測試選項]"
 
 # UI scaling.
 # 整體 UI 字體縮放倍率；調大會讓介面文字更大、更容易閱讀，調小則會讓畫面更緊湊。
@@ -99,6 +99,12 @@ const ARROW_PROMPT_ANCHOR_OFFSETS := [
 ]
 
 # Emotional interaction tuning.
+# 對話事件中，生理低於這個值時視為「低生理」。
+const FEEDBACK_PHYSICAL_LOW_THRESHOLD: float = 35.0
+# 對話事件中，心理低於這個值時視為「低心理」。
+const FEEDBACK_EMOTIONAL_LOW_THRESHOLD: float = 35.0
+# 對話事件中，心理高於這個值時視為「高心理」。
+const FEEDBACK_EMOTIONAL_HIGH_THRESHOLD: float = 65.0
 # 選到最佳選項時增加的情感值；調大會讓正確判斷更容易穩住情感，調小則成長較慢。
 const EMOTIONAL_GAIN_GOOD_CHOICE: float = 10.0
 # 選到中性選項時增加的情感值；調大會降低判斷失誤的成本，調小則更需要選到最佳答案。

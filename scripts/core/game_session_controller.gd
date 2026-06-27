@@ -407,7 +407,7 @@ func _on_choice_timeout() -> void:
 	dialogue_panel.hide_prompt()
 	dialogue_panel.hide_choices()
 	character_area.show_ignored_reaction()
-	dialogue_panel.append_history(Config.FEEDBACK_MESSAGE_TEXT, "companion")
+	dialogue_panel.append_history(dialogue_controller.get_timeout_reply(), "companion")
 	_schedule_next_feedback_message()
 	_update_presentation()
 
