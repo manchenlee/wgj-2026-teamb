@@ -58,11 +58,14 @@ func _apply_result(result_type: String) -> void:
 		Config.SUCCESS_ENDING:
 			body_label.text = "SUCCESS\nPeak Arousal reached 100."
 
-		Config.PHYSICAL_FAILURE_ENDING:
-			body_label.text = "FAILURE\nPhysical Arousal reached 0."
+		Config.PEAK_DEPLETION_FAILURE_ENDING:
+			body_label.text = "FAILURE\nPeak Arousal dropped to 0."
 
-		Config.EMOTIONAL_FAILURE_ENDING:
-			body_label.text = "FAILURE\nEmotional Arousal reached 0."
+		Config.PHYSICAL_IMBALANCE_FAILURE_ENDING:
+			body_label.text = "FAILURE\nPhysical reached 100 while Emotional stayed too low."
+
+		Config.EMOTIONAL_IMBALANCE_FAILURE_ENDING:
+			body_label.text = "FAILURE\nEmotional reached 100 while Physical stayed too low."
 
 		_:
 			body_label.text = "FAILURE\nUnknown ending reason."

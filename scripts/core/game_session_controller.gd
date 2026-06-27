@@ -6,6 +6,8 @@ const ArousalModelClass := preload("res://scripts/gameplay/arousal_model.gd")
 const DirectionSequenceControllerClass := preload("res://scripts/gameplay/direction_sequence_controller.gd")
 const DialogueChoiceControllerClass := preload("res://scripts/gameplay/dialogue_choice_controller.gd")
 const EndingEvaluatorClass := preload("res://scripts/gameplay/ending_evaluator.gd")
+const ENDING_SCENE := preload("res://scenes/screens/EndingScreen.tscn")
+const GAME_SCENE := preload("res://scenes/screens/GameScreen.tscn")
 
 signal ending_requested(ending_type: String)
 
@@ -141,7 +143,7 @@ func apply_debug_values(value: float) -> void:
 func force_ending(ending_type: String) -> void:
 	_stop_runtime_timers()
 	run_active = false
-	ending_requested.emit(ending_type)
+	_request_ending_transition(ending_type)
 
 func get_debug_state() -> Dictionary:
 	return {
@@ -242,7 +244,7 @@ func _check_ending() -> void:
 	print_debug("ending: %s" % ending_type)
 	_stop_runtime_timers()
 	run_active = false
-	ending_requested.emit(ending_type)
+	_request_ending_transition(ending_type)
 
 func _update_presentation() -> void:
 	if Engine.is_editor_hint():
@@ -258,6 +260,33 @@ func _update_layout_debug_regions() -> void:
 	var debug_visible := show_layout_debug_bounds
 	for region in layout_debug_regions:
 		region.visible = debug_visible
+
+func _request_ending_transition(ending_type: String) -> void:
+	if ending_requested.get_connections().size() > 0:
+		ending_requested.emit(ending_type)
+		return
+	call_deferred("_show_standalone_ending", ending_type)
+
+func _show_standalone_ending(ending_type: String) -> void:
+	if not is_inside_tree():
+		return
+	var parent := get_parent()
+	if parent == null:
+		return
+	var ending_screen := ENDING_SCENE.instantiate()
+	ending_screen.set_result(ending_type)
+	ending_screen.restart_pressed.connect(_restart_standalone_run)
+	var sibling_index := get_index()
+	parent.add_child(ending_screen)
+	parent.move_child(ending_screen, sibling_index)
+	queue_free()
+
+func _restart_standalone_run() -> void:
+	var current_screen := get_tree().current_scene
+	if current_screen != null and current_screen.scene_file_path == GAME_SCENE.resource_path:
+		get_tree().reload_current_scene()
+		return
+	get_tree().change_scene_to_packed(GAME_SCENE)
 
 func _stop_runtime_timers() -> void:
 	feedback_timer.stop()
