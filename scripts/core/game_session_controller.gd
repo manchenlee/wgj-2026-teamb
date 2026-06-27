@@ -14,7 +14,7 @@ signal ending_requested(ending_type: String)
 @onready var dialogue_panel = $MarginContainer/ResponsiveLayout/UpperLayout/RightSideDialoguePanel
 @onready var status_hud = $MarginContainer/ResponsiveLayout/BottomHUD
 @onready var feedback_timer: Timer = $FeedbackTimer
-@onready var round_restart_timer: Timer = $RoundRestartTimer
+@onready var prompt_spawn_timer: Timer = $PromptSpawnTimer
 
 var arousal_model = ArousalModelClass.new()
 var sequence_controller = DirectionSequenceControllerClass.new()
@@ -29,10 +29,9 @@ var waiting_for_choice: bool = false
 func _ready() -> void:
 	feedback_rng.randomize()
 	set_process_unhandled_input(true)
-	status_hud.direction_pressed.connect(_on_direction_pressed)
 	dialogue_panel.choice_selected.connect(_on_choice_selected)
 	feedback_timer.timeout.connect(_on_feedback_timer_timeout)
-	round_restart_timer.timeout.connect(_start_round)
+	prompt_spawn_timer.timeout.connect(_spawn_direction_prompt)
 	reset_run()
 
 func _process(delta: float) -> void:
@@ -41,11 +40,6 @@ func _process(delta: float) -> void:
 
 	arousal_model.apply_decay(delta)
 	arousal_model.update_peak(delta)
-
-	if sequence_controller.tick(delta):
-		print_debug("round timeout")
-		_handle_round_failure()
-
 	_update_presentation()
 	_check_ending()
 
@@ -71,13 +65,16 @@ func reset_run() -> void:
 	print_debug("reset run")
 	run_active = true
 	combo = 0
-	round_restart_timer.stop()
+	prompt_spawn_timer.stop()
+	feedback_timer.stop()
+	sequence_controller.clear_prompt()
 	arousal_model.reset()
 	dialogue_controller.reset()
 	dialogue_panel.clear_history()
+	character_area.clear_direction_prompt()
 	waiting_for_choice = false
 	_push_next_dialogue_event()
-	_start_round()
+	_spawn_direction_prompt()
 	_update_presentation()
 
 func apply_debug_values(value: float) -> void:
@@ -98,13 +95,16 @@ func get_debug_state() -> Dictionary:
 		"emotional": int(round(arousal_model.emotional)),
 		"peak": int(round(arousal_model.peak)),
 		"combo": combo,
-		"round": "active" if sequence_controller.round_active else "waiting",
-		"sequence": sequence_controller.get_sequence_text()
+		"prompt": sequence_controller.get_prompt_debug_state()
 	}
 
-func _start_round() -> void:
-	sequence_controller.start_round()
-	print_debug("round start: %s" % [str(sequence_controller.current_sequence)])
+func _spawn_direction_prompt() -> void:
+	var prompt := sequence_controller.spawn_prompt()
+	character_area.show_direction_prompt(
+		str(prompt.get("direction", "")),
+		prompt.get("anchor_offset", Vector2.ZERO)
+	)
+	print_debug("prompt spawn: %s" % sequence_controller.get_prompt_debug_state())
 	_update_presentation()
 
 func _on_feedback_timer_timeout() -> void:
@@ -118,69 +118,63 @@ func _on_direction_pressed(direction: String) -> void:
 		return
 	var result: Dictionary = sequence_controller.submit_input(direction)
 	print_debug(
-		"direction input: %s -> %s (combo=%d physical=%.1f current_index=%d)" % [
+		"direction input: %s -> %s (combo=%d physical=%.1f prompt=%s)" % [
 			direction,
 			str(result.get("result", "unknown")),
 			combo,
 			arousal_model.physical,
-			sequence_controller.current_index
+			sequence_controller.get_prompt_debug_state()
 		]
 	)
 	match str(result.get("result", "")):
 		"correct":
 			combo += 1
-			arousal_model.apply_physical(Config.PHYSICAL_GAIN_PER_CORRECT_INPUT)
+			arousal_model.apply_physical(Config.PHYSICAL_GAIN_ON_CORRECT_INPUT)
 			arousal_model.refresh_physical_activity()
-			status_hud.show_sequence_feedback(
-				"Correct +%d" % int(round(Config.PHYSICAL_GAIN_PER_CORRECT_INPUT)),
-				Color(0.45, 0.87, 0.56, 1.0)
+			character_area.clear_direction_prompt()
+			character_area.show_prompt_feedback(
+				"Correct +%d" % int(round(Config.PHYSICAL_GAIN_ON_CORRECT_INPUT)),
+				Color(0.45, 0.87, 0.56, 1.0),
+				Config.CORRECT_FEEDBACK_DISPLAY_DURATION
 			)
 			character_area.show_correct_reaction()
-		"round_success":
-			combo += 1
-			arousal_model.apply_physical(Config.PHYSICAL_GAIN_PER_CORRECT_INPUT)
-			arousal_model.apply_physical(Config.PHYSICAL_SEQUENCE_COMPLETE_BONUS)
-			arousal_model.refresh_physical_activity()
-			status_hud.show_sequence_feedback(
-				"Sequence Complete +%d" % int(round(Config.PHYSICAL_SEQUENCE_COMPLETE_BONUS)),
-				Color(0.58, 0.95, 0.67, 1.0)
-			)
-			character_area.show_correct_reaction()
-			print_debug("round success")
-			_schedule_next_round()
+			_schedule_next_prompt()
 		"wrong":
 			_handle_wrong_input()
 	_update_presentation()
 
 func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	dialogue_panel.append_history(choice_text, "player")
+	dialogue_panel.hide_prompt()
 	dialogue_panel.hide_choices()
 	waiting_for_choice = false
 	var outcome := dialogue_controller.apply_choice(choice_quality, arousal_model)
 	arousal_model.refresh_emotional_activity()
-	dialogue_panel.append_history(str(outcome.get("reply", "...")), "companion")
+	dialogue_panel.append_history(str(outcome.get("reply", Config.FEEDBACK_MESSAGE_TEXT)), "companion")
 	character_area.show_choice_reaction(choice_quality)
 	_schedule_next_feedback_message()
 	_update_presentation()
 
 func _handle_wrong_input() -> void:
 	combo = 0
-	arousal_model.apply_physical(-Config.PHYSICAL_PENALTY_PER_WRONG_INPUT)
+	arousal_model.apply_physical(-Config.PHYSICAL_PENALTY_ON_WRONG_INPUT)
 	arousal_model.refresh_physical_activity()
-	sequence_controller.clear_round()
-	status_hud.show_sequence_feedback(
-		"Wrong -%d" % int(round(Config.PHYSICAL_PENALTY_PER_WRONG_INPUT)),
-		Color(0.95, 0.35, 0.35, 1.0)
+	sequence_controller.clear_prompt()
+	character_area.clear_direction_prompt()
+	character_area.show_prompt_feedback(
+		"Wrong -%d" % int(round(Config.PHYSICAL_PENALTY_ON_WRONG_INPUT)),
+		Color(0.95, 0.35, 0.35, 1.0),
+		Config.WRONG_FEEDBACK_DISPLAY_DURATION
 	)
 	character_area.show_mistake_reaction()
-	_schedule_next_round()
+	_schedule_next_prompt()
 
-func _handle_round_failure() -> void:
-	print_debug("round failure")
-	_handle_wrong_input()
-
-func _schedule_next_round() -> void:
-	round_restart_timer.start(Config.ROUND_RESTART_DELAY)
+func _schedule_next_prompt() -> void:
+	var wait_time := feedback_rng.randf_range(
+		Config.PROMPT_SPAWN_DELAY_MIN,
+		Config.PROMPT_SPAWN_DELAY_MAX
+	)
+	prompt_spawn_timer.start(wait_time)
 
 func _check_ending() -> void:
 	var ending_type := EndingEvaluatorClass.evaluate(arousal_model)
@@ -196,8 +190,6 @@ func _update_presentation() -> void:
 	arousal_visualization.set_values(arousal_model.physical, arousal_model.emotional, arousal_model.peak)
 	status_hud.update_values(arousal_model.physical, arousal_model.emotional, arousal_model.peak)
 	status_hud.update_combo(combo)
-	status_hud.update_timer(sequence_controller.time_left)
-	status_hud.update_sequence_text(sequence_controller.get_sequence_text())
 	_update_layout_mode()
 	if debug_overlay != null:
 		debug_overlay.sync_live_readout(get_debug_state())
@@ -207,7 +199,7 @@ func _update_layout_mode() -> void:
 
 func _stop_runtime_timers() -> void:
 	feedback_timer.stop()
-	round_restart_timer.stop()
+	prompt_spawn_timer.stop()
 
 func _schedule_next_feedback_message() -> void:
 	var wait_time := feedback_rng.randf_range(
@@ -218,12 +210,14 @@ func _schedule_next_feedback_message() -> void:
 
 func _push_next_dialogue_event() -> void:
 	current_prompt = dialogue_controller.next_event(arousal_model.physical, arousal_model.emotional)
-	dialogue_panel.append_history(str(current_prompt.get("text", "...")), "companion")
 	if current_prompt.has("choices"):
 		waiting_for_choice = true
+		dialogue_panel.show_prompt(str(current_prompt.get("text", Config.CHOICE_PROMPT_TEXT)))
 		dialogue_panel.show_choices(current_prompt.get("choices", {}))
 		feedback_timer.stop()
 	else:
 		waiting_for_choice = false
+		dialogue_panel.hide_prompt()
+		dialogue_panel.append_history(str(current_prompt.get("text", Config.FEEDBACK_MESSAGE_TEXT)), "companion")
 		dialogue_panel.hide_choices()
 		_schedule_next_feedback_message()

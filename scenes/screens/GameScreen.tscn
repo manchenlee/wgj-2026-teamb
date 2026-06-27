@@ -46,7 +46,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="CenterStage" type="Control" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn"]
-custom_minimum_size = Vector2(720, 620)
+custom_minimum_size = Vector2(920, 820)
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
@@ -76,6 +76,6 @@ custom_minimum_size = Vector2(600, 0)
 one_shot = true
 wait_time = 2.0
 
-[node name="RoundRestartTimer" type="Timer" parent="."]
+[node name="PromptSpawnTimer" type="Timer" parent="."]
 one_shot = true
-wait_time = 0.8
+wait_time = 0.5

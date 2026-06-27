@@ -28,6 +28,14 @@ custom_minimum_size = Vector2(320, 320)
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
+[node name="PromptPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
+visible = false
+
+[node name="PromptLabel" type="Label" parent="MarginContainer/VBoxContainer/PromptPanel"]
+custom_minimum_size = Vector2(0, 56)
+text = "choice choice choice"
+vertical_alignment = 1
+
 [node name="ChoiceButtons" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
 alignment = 2
 visible = false

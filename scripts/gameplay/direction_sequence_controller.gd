@@ -4,73 +4,55 @@ extends RefCounted
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
 var rng := RandomNumberGenerator.new()
-var current_sequence: Array[String] = []
-var current_index: int = 0
-var wrong_inputs: int = 0
-var time_left: float = 0.0
-var round_active: bool = false
+var current_direction: String = ""
+var current_anchor_offset: Vector2 = Vector2.ZERO
+var prompt_active: bool = false
 
 func _init() -> void:
 	rng.randomize()
 
-func start_round() -> void:
-	current_sequence.clear()
-	current_index = 0
-	wrong_inputs = 0
-	time_left = Config.DIRECTION_SEQUENCE_TIME_LIMIT
-	round_active = true
-
-	var count := rng.randi_range(Config.DIRECTION_SEQUENCE_LENGTH_MIN, Config.DIRECTION_SEQUENCE_LENGTH_MAX)
+func spawn_prompt() -> Dictionary:
 	var directions := ["Left", "Right", "Up", "Down"]
-	for _i in count:
-		current_sequence.append(directions[rng.randi_range(0, directions.size() - 1)])
-
-func tick(delta: float) -> bool:
-	if not round_active:
-		return false
-	time_left = maxf(time_left - delta, 0.0)
-	if time_left <= 0.0:
-		round_active = false
-		return true
-	return false
+	current_direction = directions[rng.randi_range(0, directions.size() - 1)]
+	var anchor_offsets: Array = Config.ARROW_PROMPT_ANCHOR_OFFSETS
+	current_anchor_offset = anchor_offsets[rng.randi_range(0, anchor_offsets.size() - 1)]
+	prompt_active = true
+	return {
+		"direction": current_direction,
+		"anchor_offset": current_anchor_offset,
+		"arrow": _to_arrow(current_direction)
+	}
 
 func submit_input(direction: String) -> Dictionary:
-	if not round_active:
+	if not prompt_active or current_direction.is_empty():
 		return {"result": "inactive"}
 
-	var expected := current_sequence[current_index]
-	if direction == expected:
-		current_index += 1
-		var finished := current_index >= current_sequence.size()
-		if finished:
-			round_active = false
-			return {"result": "round_success"}
-		return {"result": "correct"}
+	if direction == current_direction:
+		prompt_active = false
+		return {
+			"result": "correct",
+			"direction": current_direction,
+			"anchor_offset": current_anchor_offset
+		}
 
-	wrong_inputs += 1
-	round_active = false
-	return {"result": "wrong"}
+	var expected := current_direction
+	prompt_active = false
+	return {
+		"result": "wrong",
+		"expected": expected,
+		"direction": direction,
+		"anchor_offset": current_anchor_offset
+	}
 
-func clear_round() -> void:
-	current_sequence.clear()
-	current_index = 0
-	wrong_inputs = 0
-	time_left = 0.0
-	round_active = false
+func clear_prompt() -> void:
+	current_direction = ""
+	current_anchor_offset = Vector2.ZERO
+	prompt_active = false
 
-func get_sequence_text() -> String:
-	var parts: Array[String] = []
-	for index in current_sequence.size():
-		var arrow := _to_arrow(current_sequence[index])
-		if index < current_index:
-			parts.append("[font_size=60][color=#71d99e]%s[/color][/font_size]" % arrow)
-		elif index == current_index and round_active:
-			parts.append("[b][font_size=72][color=#fff1a8]%s[/color][/font_size][/b]" % arrow)
-		else:
-			parts.append("[font_size=60][color=#7d7d87]%s[/color][/font_size]" % arrow)
-	if parts.is_empty():
-		return "[center][font_size=44][color=#7d7d87]Waiting for round...[/color][/font_size][/center]"
-	return "[center]%s[/center]" % "     ".join(parts)
+func get_prompt_debug_state() -> String:
+	if not prompt_active:
+		return "waiting"
+	return "%s @ (%.0f, %.0f)" % [current_direction, current_anchor_offset.x, current_anchor_offset.y]
 
 func _to_arrow(direction: String) -> String:
 	match direction:

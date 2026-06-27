@@ -7,6 +7,8 @@ const UiThemeScaler := preload("res://scripts/ui/ui_theme_scaler.gd")
 
 @onready var history_scroll: ScrollContainer = $MarginContainer/VBoxContainer/ScrollableChatHistory
 @onready var history_list: VBoxContainer = $MarginContainer/VBoxContainer/ScrollableChatHistory/ChatHistoryList
+@onready var prompt_panel: PanelContainer = $MarginContainer/VBoxContainer/PromptPanel
+@onready var prompt_label: Label = $MarginContainer/VBoxContainer/PromptPanel/PromptLabel
 @onready var choice_buttons: VBoxContainer = $MarginContainer/VBoxContainer/ChoiceButtons
 @onready var good_button: Button = $MarginContainer/VBoxContainer/ChoiceButtons/GoodButton
 @onready var neutral_button: Button = $MarginContainer/VBoxContainer/ChoiceButtons/NeutralButton
@@ -29,9 +31,17 @@ func show_choices(choices: Dictionary) -> void:
 func hide_choices() -> void:
 	choice_buttons.visible = false
 
+func show_prompt(text_value: String) -> void:
+	prompt_label.text = text_value
+	prompt_panel.visible = true
+
+func hide_prompt() -> void:
+	prompt_panel.visible = false
+
 func clear_history() -> void:
 	for child in history_list.get_children():
 		child.queue_free()
+	hide_prompt()
 	hide_choices()
 
 func append_history(line: String, speaker_type: String = "companion") -> void:

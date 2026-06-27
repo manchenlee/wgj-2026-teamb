@@ -1,16 +1,28 @@
 class_name CharacterPresenter
 extends Control
 
+const Config := preload("res://scripts/gameplay/GameConfig.gd")
+
 @onready var character_placeholder: Panel = $CharacterVisualAnchor/CharacterPlaceholder
-@onready var emotion_state_label: Label = $EmotionStateLabel
-@onready var reaction_label: Label = $ReactionLabel
+@onready var emotion_state_label: Label = $TopLabelStack/EmotionStateLabel
+@onready var reaction_label: Label = $TopLabelStack/ReactionLabel
+@onready var direction_prompt_label: Label = $PromptLayer/DirectionPromptLabel
+@onready var prompt_feedback_label: Label = $PromptLayer/PromptFeedbackLabel
 
 var _default_scale := Vector2.ONE
+var _current_prompt_offset := Vector2.ZERO
 
 func _ready() -> void:
 	_default_scale = character_placeholder.scale
+	direction_prompt_label.add_theme_font_size_override("font_size", Config.ARROW_PROMPT_FONT_SIZE)
+	prompt_feedback_label.add_theme_font_size_override("font_size", 24)
 	update_emotion_state("CALM")
 	_set_reaction("...")
+	clear_direction_prompt()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED and is_node_ready():
+		_refresh_prompt_layout()
 
 func show_correct_reaction() -> void:
 	_set_reaction("!")
@@ -48,6 +60,41 @@ func update_emotion_state(state: String) -> void:
 			color = Color(0.92, 0.22, 0.22, 1.0)
 	_apply_style(character_placeholder, color)
 
+func show_direction_prompt(direction: String, anchor_offset: Vector2) -> void:
+	_current_prompt_offset = anchor_offset
+	direction_prompt_label.text = _to_arrow(direction)
+	direction_prompt_label.visible = true
+	direction_prompt_label.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	direction_prompt_label.scale = Vector2(0.82, 0.82)
+	_refresh_prompt_layout()
+
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(direction_prompt_label, "modulate:a", 1.0, 0.14)
+	tween.tween_property(direction_prompt_label, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func clear_direction_prompt() -> void:
+	direction_prompt_label.visible = false
+	direction_prompt_label.text = ""
+	_current_prompt_offset = Vector2.ZERO
+
+func show_prompt_feedback(text_value: String, color: Color, display_duration: float) -> void:
+	prompt_feedback_label.text = text_value
+	prompt_feedback_label.visible = true
+	prompt_feedback_label.modulate = Color(color.r, color.g, color.b, 0.0)
+	_position_feedback_label()
+	var start_y := prompt_feedback_label.position.y
+
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(prompt_feedback_label, "modulate:a", 1.0, 0.1)
+	tween.tween_property(prompt_feedback_label, "position:y", start_y - 12.0, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.chain().tween_interval(display_duration)
+	tween.set_parallel(true)
+	tween.tween_property(prompt_feedback_label, "modulate:a", 0.0, 0.18)
+	tween.tween_property(prompt_feedback_label, "position:y", start_y - 22.0, 0.18).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tween.chain().tween_callback(func() -> void: prompt_feedback_label.visible = false)
+
 func _set_reaction(text_value: String) -> void:
 	reaction_label.text = "Reaction: %s" % text_value
 
@@ -66,3 +113,33 @@ func _apply_style(panel: Panel, color: Color) -> void:
 	style.corner_radius_bottom_right = 24
 	panel.add_theme_stylebox_override("panel", style)
 
+func _refresh_prompt_layout() -> void:
+	if direction_prompt_label == null or prompt_feedback_label == null:
+		return
+	if direction_prompt_label.visible:
+		var center := _get_character_center_local()
+		var prompt_size := direction_prompt_label.get_combined_minimum_size()
+		direction_prompt_label.position = center + _current_prompt_offset - (prompt_size * 0.5)
+	if prompt_feedback_label.visible:
+		_position_feedback_label()
+
+func _position_feedback_label() -> void:
+	var center := _get_character_center_local()
+	var feedback_size := prompt_feedback_label.get_combined_minimum_size()
+	prompt_feedback_label.position = center + _current_prompt_offset + Vector2(0.0, -74.0) - (feedback_size * 0.5)
+
+func _get_character_center_local() -> Vector2:
+	return get_global_transform_with_canvas().affine_inverse() * character_placeholder.get_global_rect().get_center()
+
+func _to_arrow(direction: String) -> String:
+	match direction:
+		"Left":
+			return "←"
+		"Right":
+			return "→"
+		"Up":
+			return "↑"
+		"Down":
+			return "↓"
+		_:
+			return "?"

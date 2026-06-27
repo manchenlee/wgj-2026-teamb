@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/presentation/character_presenter.gd" id="1_char"]
 
 [node name="CharacterArea" type="Control"]
-custom_minimum_size = Vector2(460, 500)
+custom_minimum_size = Vector2(660, 760)
 script = ExtResource("1_char")
 
 [node name="CharacterVisualAnchor" type="CenterContainer" parent="."]
@@ -16,16 +16,34 @@ offset_right = 0.0
 offset_bottom = 0.0
 
 [node name="CharacterPlaceholder" type="Panel" parent="CharacterVisualAnchor"]
-custom_minimum_size = Vector2(220, 320)
+custom_minimum_size = Vector2(320, 460)
 
-[node name="EmotionStateLabel" type="Label" parent="."]
-offset_left = 12.0
-offset_top = 12.0
+[node name="TopLabelStack" type="VBoxContainer" parent="."]
+offset_left = 24.0
+offset_top = 24.0
+theme_override_constants/separation = 6
+
+[node name="EmotionStateLabel" type="Label" parent="TopLabelStack"]
 text = "State: CALM"
 
-[node name="ReactionLabel" type="Label" parent="."]
-offset_left = 12.0
-offset_top = 40.0
+[node name="ReactionLabel" type="Label" parent="TopLabelStack"]
 text = "Reaction: ..."
+
+[node name="PromptLayer" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="DirectionPromptLabel" type="Label" parent="PromptLayer"]
+visible = false
+mouse_filter = 2
+text = "↑"
+
+[node name="PromptFeedbackLabel" type="Label" parent="PromptLayer"]
+visible = false
+mouse_filter = 2
+text = "Correct +4"
 
 [node name="CharacterAnimationAnchor" type="Node2D" parent="."]

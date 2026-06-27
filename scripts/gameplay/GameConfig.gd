@@ -4,8 +4,9 @@ extends RefCounted
 const MAX_VALUE: float = 100.0
 
 # Shared placeholder copy.
-const TEST_FEEDBACK_TEXT: String = "test test test test test"
-const TEST_RESPONSE_TEXT: String = "response response response"
+const FEEDBACK_MESSAGE_TEXT: String = "feedback feedback feedback"
+const CHOICE_PROMPT_TEXT: String = "choice choice choice"
+const RESPONSE_BUTTON_TEXT: String = "response response response"
 
 # UI scaling.
 const UI_FONT_SCALE: float = 2.0
@@ -26,14 +27,23 @@ const PEAK_GAIN_RATE: float = 12.0
 const PEAK_LOSS_RATE: float = 8.0
 
 # Physical interaction tuning.
-const PHYSICAL_GAIN_PER_CORRECT_INPUT: float = 4.0
-const PHYSICAL_PENALTY_PER_WRONG_INPUT: float = 3.0
-const PHYSICAL_SEQUENCE_COMPLETE_BONUS: float = 6.0
-const DIRECTION_SEQUENCE_LENGTH_MIN: int = 3
-const DIRECTION_SEQUENCE_LENGTH_MAX: int = 5
-const DIRECTION_SEQUENCE_TIME_LIMIT: float = 3.0
-const MAX_WRONG_INPUTS_PER_ROUND: int = 3
-const ROUND_RESTART_DELAY: float = 0.8
+const PROMPT_SPAWN_DELAY_MIN: float = 0.3
+const PROMPT_SPAWN_DELAY_MAX: float = 0.6
+const PHYSICAL_GAIN_ON_CORRECT_INPUT: float = 4.0
+const PHYSICAL_PENALTY_ON_WRONG_INPUT: float = 3.0
+const CORRECT_FEEDBACK_DISPLAY_DURATION: float = 0.45
+const WRONG_FEEDBACK_DISPLAY_DURATION: float = 0.55
+const ARROW_PROMPT_FONT_SIZE: int = 104
+const ARROW_PROMPT_ANCHOR_OFFSETS := [
+	Vector2(-128.0, -164.0),
+	Vector2(0.0, -188.0),
+	Vector2(126.0, -148.0),
+	Vector2(-156.0, -26.0),
+	Vector2(156.0, -18.0),
+	Vector2(-120.0, 132.0),
+	Vector2(0.0, 164.0),
+	Vector2(122.0, 126.0)
+]
 
 # Emotional interaction tuning.
 const EMOTIONAL_GAIN_GOOD_CHOICE: float = 8.0
@@ -43,11 +53,11 @@ const FEEDBACK_MESSAGE_INTERVAL_MIN: float = 1.8
 const FEEDBACK_MESSAGE_INTERVAL_MAX: float = 4.6
 
 # Presentation tuning.
-const CIRCLE_RADIUS_MIN: float = 104.0
-const CIRCLE_RADIUS_MAX: float = 192.0
+const CIRCLE_RADIUS_MIN: float = 164.0
+const CIRCLE_RADIUS_MAX: float = 252.0
 const CIRCLE_STROKE_MIN: float = 4.0
 const CIRCLE_STROKE_MAX: float = 8.0
-const PEAK_LABEL_OFFSET_Y: float = 156.0
+const PEAK_LABEL_OFFSET_Y: float = 228.0
 const DESKTOP_BREAKPOINT: float = 1080.0
 
 const SUCCESS_ENDING: String = "success"
