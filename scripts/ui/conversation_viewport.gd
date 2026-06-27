@@ -9,6 +9,7 @@ const CHARACTER_BUBBLE_PATH := "res://assets/art/ui/text2.png"
 const CHOICE_BUBBLE_PATH := "res://assets/art/ui/text bubble.png"
 
 const BUBBLE_SCALE := 0.5
+const CHOICE_BUBBLE_SCALE := 1.0
 const VIEWPORT_PADDING_LEFT := 12.0
 const VIEWPORT_PADDING_RIGHT := 0.0
 const VIEWPORT_PADDING_VERTICAL := 14.0
@@ -23,7 +24,7 @@ const CHOICE_TEXT_MARGIN_LEFT := 14.0
 const CHOICE_TEXT_MARGIN_TOP := 12.0
 const CHOICE_TEXT_MARGIN_RIGHT := 14.0
 const CHOICE_TEXT_MARGIN_BOTTOM := 10.0
-const CHOICE_TEXT_MAX_CHARS := 10
+const CHOICE_TEXT_MAX_CHARS := 64
 const MESSAGE_FONT_SIZE := 24
 const CHOICE_FONT_SIZE := 24
 const FALLBACK_MESSAGE_SIZE := Vector2(520.0, 132.0)
@@ -31,11 +32,11 @@ const FALLBACK_CHOICE_SIZE := Vector2(300.0, 146.0)
 const MAX_VISIBLE_MESSAGES := 5
 
 @onready var conversation_content: Control = $ConversationContent
-@onready var choice_area: Control = $"../ChoiceArea"
-@onready var choice_button_1: TextureButton = $"../ChoiceArea/ChoiceButton1"
-@onready var choice_button_2: TextureButton = $"../ChoiceArea/ChoiceButton2"
-@onready var choice_label_1: Label = $"../ChoiceArea/ChoiceButton1/Label"
-@onready var choice_label_2: Label = $"../ChoiceArea/ChoiceButton2/Label"
+@onready var choice_area: Control = $"../BottomHUD/ChoiceArea"
+@onready var choice_button_1: TextureButton = $"../BottomHUD/ChoiceArea/ChoiceButton1"
+@onready var choice_button_2: TextureButton = $"../BottomHUD/ChoiceArea/ChoiceButton2"
+@onready var choice_label_1: Label = $"../BottomHUD/ChoiceArea/ChoiceButton1/Label"
+@onready var choice_label_2: Label = $"../BottomHUD/ChoiceArea/ChoiceButton2/Label"
 
 var _message_nodes: Array[Control] = []
 var _warning_keys: Dictionary = {}
@@ -163,7 +164,7 @@ func _create_message_bubble(line: String, speaker_type: String) -> Control:
 
 func _configure_choice_button(button: TextureButton, label: Label) -> void:
 	var source_bubble_size := _get_texture_size(_choice_bubble_texture, FALLBACK_CHOICE_SIZE)
-	var bubble_size := source_bubble_size * BUBBLE_SCALE
+	var bubble_size := source_bubble_size * CHOICE_BUBBLE_SCALE
 	button.focus_mode = Control.FOCUS_NONE
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.ignore_texture_size = true
@@ -197,10 +198,10 @@ func _configure_choice_button(button: TextureButton, label: Label) -> void:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.add_theme_font_size_override("font_size", CHOICE_FONT_SIZE)
 	label.add_theme_color_override("font_color", Color(0.99, 0.94, 0.94, 1.0))
-	label.position = Vector2(CHOICE_TEXT_MARGIN_LEFT, CHOICE_TEXT_MARGIN_TOP) * BUBBLE_SCALE
+	label.position = Vector2(CHOICE_TEXT_MARGIN_LEFT, CHOICE_TEXT_MARGIN_TOP) * CHOICE_BUBBLE_SCALE
 	label.size = Vector2(
-		bubble_size.x - (CHOICE_TEXT_MARGIN_LEFT + CHOICE_TEXT_MARGIN_RIGHT) * BUBBLE_SCALE,
-		bubble_size.y - (CHOICE_TEXT_MARGIN_TOP + CHOICE_TEXT_MARGIN_BOTTOM) * BUBBLE_SCALE
+		bubble_size.x - (CHOICE_TEXT_MARGIN_LEFT + CHOICE_TEXT_MARGIN_RIGHT) * CHOICE_BUBBLE_SCALE,
+		bubble_size.y - (CHOICE_TEXT_MARGIN_TOP + CHOICE_TEXT_MARGIN_BOTTOM) * CHOICE_BUBBLE_SCALE
 	)
 
 func _apply_choice_to_button(button: TextureButton, label: Label, choices: Array[Dictionary], index: int) -> void:
@@ -232,21 +233,19 @@ func _normalize_choices(choices: Variant) -> Array[Dictionary]:
 			var choice := choice_variant as Dictionary
 			var choice_id := str(choice.get("id", ""))
 			var choice_text := str(choice.get("text", ""))
-			if choice_id.is_empty() or choice_text.is_empty():
+			if choice_id.is_empty() or choice_text.is_empty() or choice_id == "neutral":
 				continue
 			normalized.append({"id": choice_id, "text": choice_text})
 			if normalized.size() == 2:
 				break
 	elif typeof(choices) == TYPE_DICTIONARY:
-		for choice_id_variant in ["good", "neutral", "bad"]:
+		for choice_id_variant in ["good", "bad"]:
 			if not choices.has(choice_id_variant):
 				continue
 			var choice_text := str(choices.get(choice_id_variant, ""))
 			if choice_text.is_empty():
 				continue
 			normalized.append({"id": String(choice_id_variant), "text": choice_text})
-			if normalized.size() == 2:
-				break
 	return normalized
 
 func _relayout_messages(animated: bool) -> void:

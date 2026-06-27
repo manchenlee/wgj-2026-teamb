@@ -1,51 +1,98 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/status_hud.gd" id="1_hud"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/heart.png" id="2_heart"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/musical.png" id="3_staff"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/Rectangle 7.png" id="4_bar"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/musical note.png" id="5_note"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/text bubble.png" id="6_bubble"]
 
-[node name="StatusHUD" type="PanelContainer"]
+[node name="StatusHUD" type="Control"]
+clip_contents = false
 script = ExtResource("1_hud")
-size_flags_horizontal = 3
-size_flags_vertical = 0
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
-layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 12
+[node name="HUDBackground" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 
-[node name="LayoutRow" type="HBoxContainer" parent="MarginContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 24
+[node name="ArousalMeter" type="Control" parent="."]
+layout_mode = 0
+mouse_filter = 2
 
-[node name="LeftStats" type="VBoxContainer" parent="MarginContainer/LayoutRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 8
+[node name="HeartIcon" type="TextureRect" parent="ArousalMeter"]
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("2_heart")
 
-[node name="PhysicalValueDisplay" type="Label" parent="MarginContainer/LayoutRow/LeftStats"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "生理: 50"
+[node name="HeartValueLabel" type="Label" parent="ArousalMeter"]
+layout_mode = 0
+theme_override_font_sizes/font_size = 34
+horizontal_alignment = 1
+vertical_alignment = 1
+mouse_filter = 2
+text = "0"
 
-[node name="ComboLabel" type="Label" parent="MarginContainer/LayoutRow/LeftStats"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "連段: 0"
+[node name="MusicalStaff" type="TextureRect" parent="ArousalMeter"]
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("3_staff")
 
-[node name="PeakValueDisplay" type="Label" parent="MarginContainer/LayoutRow/LeftStats"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "整體興奮: 0"
+[node name="ArousalFillBar" type="TextureRect" parent="ArousalMeter"]
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("4_bar")
+stretch_mode = 1
 
-[node name="RightStats" type="VBoxContainer" parent="MarginContainer/LayoutRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-alignment = 2
+[node name="TrebleClef" type="TextureRect" parent="ArousalMeter"]
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("5_note")
 
-[node name="EmotionalValueDisplay" type="Label" parent="MarginContainer/LayoutRow/RightStats"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 16
-horizontal_alignment = 2
-text = "心理: 50"
+[node name="ChoiceArea" type="Control" parent="."]
+layout_mode = 0
+
+[node name="DebugRegionTint" type="ColorRect" parent="ChoiceArea"]
+visible = false
+z_index = -1
+layout_mode = 0
+mouse_filter = 2
+color = Color(0.98, 0.36, 0.62, 0.18)
+
+[node name="ChoiceButton1" type="TextureButton" parent="ChoiceArea"]
+layout_mode = 0
+focus_mode = 0
+ignore_texture_size = true
+stretch_mode = 0
+texture_normal = ExtResource("6_bubble")
+texture_hover = ExtResource("6_bubble")
+texture_pressed = ExtResource("6_bubble")
+texture_disabled = ExtResource("6_bubble")
+
+[node name="Label" type="Label" parent="ChoiceArea/ChoiceButton1"]
+layout_mode = 0
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+mouse_filter = 2
+
+[node name="ChoiceButton2" type="TextureButton" parent="ChoiceArea"]
+layout_mode = 0
+focus_mode = 0
+ignore_texture_size = true
+stretch_mode = 0
+texture_normal = ExtResource("6_bubble")
+texture_hover = ExtResource("6_bubble")
+texture_pressed = ExtResource("6_bubble")
+texture_disabled = ExtResource("6_bubble")
+
+[node name="Label" type="Label" parent="ChoiceArea/ChoiceButton2"]
+layout_mode = 0
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+mouse_filter = 2

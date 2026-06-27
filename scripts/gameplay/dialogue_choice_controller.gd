@@ -105,22 +105,38 @@ func _build_choice_prompt(entry: Dictionary, physical: float, emotional: float) 
 			"text": _build_test_prompt_text(physical, emotional),
 			"choices": [
 				{"id": "good", "text": TEST_TEXT},
-				{"id": "neutral", "text": TEST_TEXT}
+				{"id": "bad", "text": TEST_TEXT}
 			]
 		}
 
 	var choices: Array[Dictionary] = []
-	for choice_variant in entry.get("choice", []):
-		var choice := choice_variant as Dictionary
-		var choice_id := str(choice.get("id", ""))
-		if choice_id.is_empty():
-			continue
-		choices.append({
-			"id": choice_id,
-			"text": str(choice.get("text", Config.RESPONSE_BUTTON_TEXT))
-		})
+	var preferred_choice_ids := ["good", "bad"]
+	for preferred_choice_id in preferred_choice_ids:
+		for choice_variant in entry.get("choice", []):
+			var choice := choice_variant as Dictionary
+			var choice_id := str(choice.get("id", ""))
+			if choice_id != preferred_choice_id:
+				continue
+			choices.append({
+				"id": choice_id,
+				"text": str(choice.get("text", Config.RESPONSE_BUTTON_TEXT))
+			})
+			break
 		if choices.size() == 2:
 			break
+
+	if choices.is_empty():
+		for choice_variant in entry.get("choice", []):
+			var choice := choice_variant as Dictionary
+			var choice_id := str(choice.get("id", ""))
+			if choice_id.is_empty() or choice_id == "neutral":
+				continue
+			choices.append({
+				"id": choice_id,
+				"text": str(choice.get("text", Config.RESPONSE_BUTTON_TEXT))
+			})
+			if choices.size() == 2:
+				break
 
 	return {
 		"text": _get_feedback_line(entry, physical, emotional),

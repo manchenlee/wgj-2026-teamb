@@ -56,7 +56,7 @@ signal ending_requested(ending_type: String)
 	$MainCharacterArea/DebugRegionTint,
 	$ConversationViewport/DebugRegionTint,
 	$BottomHUD/DebugRegionTint,
-	$ChoiceArea/DebugRegionTint
+	$BottomHUD/ChoiceArea/DebugRegionTint
 ]
 @onready var feedback_timer: Timer = $FeedbackTimer
 @onready var prompt_spawn_timer: Timer = $PromptSpawnTimer
