@@ -239,7 +239,95 @@ func _apply_overlay_motion_set() -> void:
 		active_character_profile.get_overlay_idle_playback_config() if active_character_profile != null else {}
 	)
 	overlay_animator.set_motion_set(overlay_motion_set)
+	_apply_phase2_extended_overlay_profile()
 	_bind_breathing_targets()
+
+func _apply_phase2_extended_overlay_profile() -> void:
+	if overlay_animator == null or active_character_profile == null:
+		return
+	var raw_config: Dictionary = active_character_profile.get_phase2_overlay_profile_config()
+	if raw_config.is_empty():
+		# Phase 1 or any profile without a Phase 2 extended config — clear any leftover
+		overlay_animator.apply_phase2_overlay_profile({})
+		return
+
+	# Resolve texture paths to Texture2D objects before passing to the animator.
+	var resolved: Dictionary = {}
+
+	# Static overlays
+	var raw_statics = raw_config.get("static_overlays", [])
+	var resolved_statics: Array = []
+	for entry_variant in raw_statics:
+		var entry: Dictionary = entry_variant
+		var tex_path := String(entry.get("texture_path", ""))
+		if tex_path.is_empty():
+			continue
+		var tex := _load_texture_from_asset_path(tex_path)
+		if tex == null:
+			_warn_character_visual_once(
+				"static_overlay_load_failed:%s" % tex_path,
+				"Phase2 static overlay failed to load: %s" % tex_path
+			)
+			continue
+		resolved_statics.append({
+			"texture": tex,
+			"z_index": int(entry.get("z_index", 0))
+		})
+	if not resolved_statics.is_empty():
+		resolved["static_overlays"] = resolved_statics
+
+	# Companion overlay
+	var raw_companion = raw_config.get("companion", {})
+	if not raw_companion.is_empty():
+		var resolved_companion: Dictionary = {}
+		resolved_companion["linked_motion_id"] = String(raw_companion.get("linked_motion_id", ""))
+		resolved_companion["z_index"] = int(raw_companion.get("z_index", 6))
+
+		# frame_1_idle: null means transparent (no texture)
+		var f1_idle_path = raw_companion.get("frame_1_idle_path", null)
+		if f1_idle_path != null and not String(f1_idle_path).is_empty():
+			resolved_companion["frame_1_idle"] = _load_texture_from_asset_path(String(f1_idle_path))
+		else:
+			resolved_companion["frame_1_idle"] = null
+
+		# frame_2_idle
+		var f2_idle_path := String(raw_companion.get("frame_2_idle_path", ""))
+		if not f2_idle_path.is_empty():
+			var tex := _load_texture_from_asset_path(f2_idle_path)
+			if tex == null:
+				_warn_character_visual_once(
+					"companion_load_failed:%s" % f2_idle_path,
+					"Phase2 companion frame_2_idle failed to load: %s" % f2_idle_path
+				)
+			resolved_companion["frame_2_idle"] = tex
+
+		# frame_1_active: null means transparent
+		var f1_active_path = raw_companion.get("frame_1_active_path", null)
+		if f1_active_path != null and not String(f1_active_path).is_empty():
+			var tex := _load_texture_from_asset_path(String(f1_active_path))
+			if tex == null:
+				_warn_character_visual_once(
+					"companion_load_failed:%s" % String(f1_active_path),
+					"Phase2 companion frame_1_active failed to load: %s" % String(f1_active_path)
+				)
+			resolved_companion["frame_1_active"] = tex
+		else:
+			resolved_companion["frame_1_active"] = null
+
+		# frame_2_active
+		var f2_active_path := String(raw_companion.get("frame_2_active_path", ""))
+		if not f2_active_path.is_empty():
+			var tex := _load_texture_from_asset_path(f2_active_path)
+			if tex == null:
+				_warn_character_visual_once(
+					"companion_load_failed:%s" % f2_active_path,
+					"Phase2 companion frame_2_active failed to load: %s" % f2_active_path
+				)
+			resolved_companion["frame_2_active"] = tex
+
+		resolved["companion"] = resolved_companion
+
+	overlay_animator.apply_phase2_overlay_profile(resolved)
 
 func _warn_character_visual_once(warning_key: String, message: String) -> void:
 	if character_visual_warnings_printed.has(warning_key):

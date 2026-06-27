@@ -23,7 +23,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_game")
-show_layout_debug_bounds = true
+show_phase2_editor_reference = false
 character_background = SubResource("CompressedTexture2D_alg88")
 
 [node name="BackgroundAnchor" type="Control" parent="." unique_id=1801418674]
@@ -43,6 +43,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Phase2BackgroundLayer" type="TextureRect" parent="BackgroundAnchor" unique_id=208204111]
+visible = false
 z_index = 1
 z_as_relative = false
 layout_mode = 1
@@ -77,6 +78,7 @@ expand_mode = 1
 stretch_mode = 6
 
 [node name="Phase2EditorReference" type="TextureRect" parent="BackgroundAnchor" unique_id=1066310849]
+visible = false
 z_index = 2
 z_as_relative = false
 layout_mode = 1
@@ -97,8 +99,6 @@ stretch_mode = 6
 [node name="BreathingController" type="Node" parent="BackgroundAnchor" unique_id=51132587]
 script = ExtResource("7_breathing")
 chest_region_rect = Rect2(0.34, 0.5, 0.28, 0.35)
-debug_breathing = false
-debug_inhale_multiplier = 5.0
 debug_cycle_duration = 2.1
 
 [node name="OverlayAnimator" type="TextureRect" parent="BackgroundAnchor" unique_id=2024183291]
@@ -120,6 +120,7 @@ stretch_mode = 6
 script = ExtResource("6_overlay")
 
 [node name="Phase2FlushLayer" type="TextureRect" parent="BackgroundAnchor" unique_id=160112433]
+visible = false
 z_index = 4
 z_as_relative = false
 layout_mode = 1
@@ -137,6 +138,7 @@ expand_mode = 1
 stretch_mode = 6
 
 [node name="Phase2FaceLayer" type="TextureRect" parent="BackgroundAnchor" unique_id=145221887]
+visible = false
 z_index = 5
 z_as_relative = false
 layout_mode = 1
@@ -154,6 +156,7 @@ expand_mode = 1
 stretch_mode = 6
 
 [node name="Phase2GameoverOverlay" type="TextureRect" parent="BackgroundAnchor" unique_id=190000112]
+visible = false
 z_index = 6
 z_as_relative = false
 layout_mode = 1
@@ -238,6 +241,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Phase2AnchorPreviewLayer" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=822463575]
+visible = false
 z_index = 20
 layout_mode = 1
 anchors_preset = 15
@@ -259,13 +263,14 @@ mouse_filter = 2
 color = Color(0.96, 0.34, 0.34, 0.28)
 
 [node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadLeft" unique_id=1612576474]
+visible = false
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(1, 0.45, 0.45, 0.95)
+color = Color(0.96599996, 0.439, 0.439, 0.28)
 
 [node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadLeft" unique_id=1338285697]
 layout_mode = 1
@@ -278,6 +283,7 @@ theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
 
 [node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadLeft/Fill" unique_id=1236387391]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.96)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
@@ -297,13 +303,14 @@ mouse_filter = 2
 color = Color(0.96, 0.62, 0.24, 0.28)
 
 [node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadRight" unique_id=1966341748]
+visible = false
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(1, 0.74, 0.35, 0.95)
+color = Color(0.96599996, 0.677, 0.354, 0.28)
 
 [node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadRight" unique_id=217540671]
 layout_mode = 1
@@ -316,6 +323,7 @@ theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
 
 [node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadRight/Fill" unique_id=455605048]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.96)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
@@ -335,13 +343,14 @@ mouse_filter = 2
 color = Color(0.96, 0.86, 0.24, 0.28)
 
 [node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Chest" unique_id=1030862194]
+visible = false
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(1, 0.95, 0.4, 0.95)
+color = Color(0.96599996, 0.88100004, 0.354, 0.28)
 
 [node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Chest" unique_id=651244542]
 layout_mode = 1
@@ -354,6 +363,7 @@ theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
 
 [node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Chest/Fill" unique_id=1377685524]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.96)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
@@ -372,13 +382,14 @@ mouse_filter = 2
 color = Color(0.38, 0.84, 0.42, 0.28)
 
 [node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftArm" unique_id=408641511]
+visible = false
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.5, 0.95, 0.56, 0.95)
+color = Color(0.473, 0.86399996, 0.50699997, 0.28)
 
 [node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftArm" unique_id=393835266]
 layout_mode = 1
@@ -391,6 +402,7 @@ theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
 
 [node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftArm/Fill" unique_id=1399358342]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.96)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
@@ -410,13 +422,14 @@ mouse_filter = 2
 color = Color(0.24, 0.78, 0.9, 0.28)
 
 [node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightArm" unique_id=585527879]
+visible = false
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.38, 0.9, 1, 0.95)
+color = Color(0.354, 0.81299996, 0.91499996, 0.28)
 
 [node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightArm" unique_id=1002417178]
 layout_mode = 1
@@ -429,6 +442,7 @@ theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
 
 [node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightArm/Fill" unique_id=364209913]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.96)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
@@ -448,13 +462,14 @@ mouse_filter = 2
 color = Color(0.44, 0.56, 0.96, 0.28)
 
 [node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Waist" unique_id=1087089047]
+visible = false
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.58, 0.68, 1, 0.95)
+color = Color(0.524, 0.626, 0.96599996, 0.28)
 
 [node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Waist" unique_id=606426074]
 layout_mode = 1
@@ -467,6 +482,7 @@ theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
 
 [node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Waist/Fill" unique_id=2029806096]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.96)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
@@ -486,13 +502,14 @@ mouse_filter = 2
 color = Color(0.72, 0.44, 0.96, 0.28)
 
 [node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftLeg" unique_id=1356289345]
+visible = false
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.82, 0.58, 1, 0.95)
+color = Color(0.762, 0.524, 0.96599996, 0.28)
 
 [node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftLeg" unique_id=14751947]
 layout_mode = 1
@@ -505,6 +522,7 @@ theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
 
 [node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftLeg/Fill" unique_id=13063830]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.96)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
@@ -524,13 +542,14 @@ mouse_filter = 2
 color = Color(0.94, 0.4, 0.7, 0.28)
 
 [node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightLeg" unique_id=1419699542]
+visible = false
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(1, 0.56, 0.82, 0.95)
+color = Color(0.949, 0.49, 0.745, 0.28)
 
 [node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightLeg" unique_id=953627161]
 layout_mode = 1
@@ -543,6 +562,7 @@ theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
 
 [node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightLeg/Fill" unique_id=1857229350]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.96)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
@@ -552,59 +572,67 @@ theme_override_font_sizes/font_size = 13
 text = "RightLeg"
 
 [node name="LeftArm" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=1000469115]
+visible = false
 anchors_preset = 0
-offset_left = 14.0
-offset_top = 407.0
-offset_right = 173.0
-offset_bottom = 549.0
+offset_left = 80.0
+offset_right = 150.0
+offset_bottom = 182.0
 
 [node name="HeadLeft" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=1990332631]
+visible = false
 anchors_preset = 0
-offset_left = 140.0
-offset_top = 10.0
-offset_right = 280.0
-offset_bottom = 144.0
+offset_left = 160.0
+offset_top = 100.0
+offset_right = 240.0
+offset_bottom = 180.0
 
 [node name="HeadRight" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=1355790063]
+visible = false
 anchors_preset = 0
 offset_left = 280.0
-offset_top = 10.0
-offset_right = 420.0
-offset_bottom = 144.0
+offset_top = 130.0
+offset_right = 360.0
+offset_bottom = 210.0
 
 [node name="RightLeg" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=913773421]
+visible = false
 anchors_preset = 0
-offset_left = 287.0
-offset_top = 752.0
-offset_right = 490.0
-offset_bottom = 850.0
+offset_left = 370.0
+offset_top = 370.0
+offset_right = 552.0
+offset_bottom = 720.0
 
 [node name="LeftLeg" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=1314564178]
+visible = false
 anchors_preset = 0
-offset_top = 756.0
-offset_right = 232.0
-offset_bottom = 854.0
+offset_left = -100.0
+offset_top = 350.0
+offset_right = 82.0
+offset_bottom = 700.0
 
 [node name="Chest" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=931439333]
+visible = false
 anchors_preset = 0
-offset_left = 180.0
-offset_top = 351.0
-offset_right = 394.0
-offset_bottom = 571.0
+offset_left = 110.0
+offset_top = 250.0
+offset_right = 360.0
+offset_bottom = 520.0
 
 [node name="Waist" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=2090603079]
+visible = false
 anchors_preset = 0
-offset_left = 205.0
-offset_top = 618.0
-offset_right = 335.0
-offset_bottom = 792.0
+offset_left = 220.0
+offset_top = 530.0
+offset_right = 340.0
+offset_bottom = 750.0
 
 [node name="RightArm" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=239886867]
+visible = false
 anchors_preset = 0
-offset_left = 406.0
-offset_top = 407.0
-offset_right = 515.0
-offset_bottom = 644.0
+offset_left = 400.0
+offset_top = 150.0
+offset_right = 650.0
+offset_bottom = 290.0
 
 [node name="ConversationViewport" type="Control" parent="." unique_id=1454768142]
 z_index = 4

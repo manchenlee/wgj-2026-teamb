@@ -59,3 +59,11 @@ func get_breathing_target_layer_id() -> String:
 
 func get_gameover_overlay_texture_path(_ending_type: String = "") -> String:
 	return ""
+
+# Override in subclasses to supply Phase 2 extended overlay profile.
+# Returns a Dictionary with optional keys:
+#   "static_overlays" : Array of { "texture_path": String, "z_index": int }
+#   "companion"       : Dictionary (hole companion config — see phase_2_character_profile.gd)
+# Returns an empty dict by default (no Phase 2 extended overlays).
+func get_phase2_overlay_profile_config() -> Dictionary:
+	return {}
