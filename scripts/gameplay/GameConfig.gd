@@ -114,7 +114,7 @@ const FEEDBACK_MESSAGE_INTERVAL_MAX: float = 3.0
 
 # Presentation tuning.
 # 圓形 UI 的最小半徑；調大會讓小尺寸狀態下也較醒目，調小則更節省空間。
-const CIRCLE_RADIUS_MIN: float = 200.0
+const CIRCLE_RADIUS_MIN: float = 100.0
 # 圓形 UI 的最大半徑；調大會讓高狀態時的視覺膨脹更誇張，調小則變化較收斂。
 const CIRCLE_RADIUS_MAX: float = 500.0
 # 圓形描邊的最小粗細；調大會讓低狀態時也維持較強存在感，調小則更細緻。

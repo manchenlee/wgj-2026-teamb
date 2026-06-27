@@ -26,6 +26,23 @@ func _ready() -> void:
 	neutral_button.focus_mode = Control.FOCUS_NONE
 	bad_button.focus_mode = Control.FOCUS_NONE
 	jump_to_latest_button.focus_mode = Control.FOCUS_NONE
+	jump_to_latest_button.custom_minimum_size = Vector2(44.0, 44.0)
+	jump_to_latest_button.size = Vector2(44.0, 44.0)
+	jump_to_latest_button.add_theme_color_override("font_color", Color(0.98, 0.98, 1.0, 1.0))
+	var jump_button_style := StyleBoxFlat.new()
+	jump_button_style.bg_color = Color(0.16, 0.16, 0.2, 0.92)
+	jump_button_style.corner_radius_top_left = 22
+	jump_button_style.corner_radius_top_right = 22
+	jump_button_style.corner_radius_bottom_left = 22
+	jump_button_style.corner_radius_bottom_right = 22
+	jump_button_style.content_margin_left = 0.0
+	jump_button_style.content_margin_top = 0.0
+	jump_button_style.content_margin_right = 0.0
+	jump_button_style.content_margin_bottom = 0.0
+	jump_to_latest_button.add_theme_stylebox_override("normal", jump_button_style)
+	jump_to_latest_button.add_theme_stylebox_override("hover", jump_button_style)
+	jump_to_latest_button.add_theme_stylebox_override("pressed", jump_button_style)
+	jump_to_latest_button.add_theme_stylebox_override("focus", jump_button_style)
 	good_button.pressed.connect(func() -> void: choice_selected.emit("good", good_button.text))
 	neutral_button.pressed.connect(func() -> void: choice_selected.emit("neutral", neutral_button.text))
 	bad_button.pressed.connect(func() -> void: choice_selected.emit("bad", bad_button.text))
@@ -41,6 +58,7 @@ func show_choices(choices: Dictionary) -> void:
 	choice_buttons.visible = true
 	choice_countdown_bar.visible = true
 	choice_countdown_bar.value = choice_countdown_bar.max_value
+	call_deferred("_scroll_to_latest")
 
 func hide_choices() -> void:
 	choice_buttons.visible = false
@@ -152,8 +170,6 @@ func _on_panel_resized() -> void:
 func _update_jump_to_latest_button() -> void:
 	var should_show := _pending_unread_messages > 0 and not _is_near_latest()
 	jump_to_latest_button.visible = should_show
-	if should_show:
-		jump_to_latest_button.text = "New message (%d)" % _pending_unread_messages
 
 func _is_near_latest() -> bool:
 	var scrollbar := history_scroll.get_v_scroll_bar()
