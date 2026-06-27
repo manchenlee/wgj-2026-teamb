@@ -33,9 +33,6 @@ func set_values(physical: float, emotional: float, peak: float) -> void:
 	_sync_peak_indicator()
 
 func _draw() -> void:
-	if character_placeholder == null:
-		return
-
 	var center := _get_character_center()
 	var pulse := sin(pulse_time * 2.6) * 2.0
 	var physical_ratio := physical_value / Config.MAX_VALUE
@@ -51,10 +48,10 @@ func _draw() -> void:
 	draw_arc(center, emotional_radius, 0.0, TAU, 96, emotional_color, emotional_width, true)
 
 func _get_character_center() -> Vector2:
-	return get_global_transform_with_canvas().affine_inverse() * character_placeholder.get_global_rect().get_center()
+	if character_placeholder != null and character_placeholder.visible:
+		return get_global_transform_with_canvas().affine_inverse() * character_placeholder.get_global_rect().get_center()
+	return size * Config.CIRCLE_CENTER_RATIO
 
 func _sync_peak_indicator() -> void:
-	if character_placeholder == null:
-		return
 	var center := _get_character_center()
 	peak_indicator.position = center + Vector2(-40.0, Config.PEAK_LABEL_OFFSET_Y)
