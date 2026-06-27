@@ -6,7 +6,8 @@
 [ext_resource type="PackedScene" path="res://scenes/components/DialoguePanel.tscn" id="3_dialogue"]
 [ext_resource type="PackedScene" path="res://scenes/components/StatusHUD.tscn" id="4_hud"]
 [ext_resource type="Script" uid="uid://y4sw51emkoug" path="res://scripts/presentation/central_arousal_visualization.gd" id="5_vis"]
-[ext_resource type="Script" path="res://scripts/ui/TwoFrameOverlayAnimator.gd" id="6_overlay"]
+[ext_resource type="Script" uid="uid://d3bshm1tk5r8n" path="res://scripts/ui/TwoFrameOverlayAnimator.gd" id="6_overlay"]
+[ext_resource type="Script" uid="uid://7lsklnfonwr6" path="res://scripts/ui/LocalizedMeshBreathing.gd" id="7_breathing"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_alg88"]
 load_path = "res://.godot/imported/draft.png-80a3863fe83a454b531da103f3e5f42e.ctex"
@@ -53,7 +54,14 @@ texture = ExtResource("2_pbayp")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="OverlayAnimator" type="TextureRect" parent="BackgroundAnchor"]
+[node name="BreathingController" type="Node" parent="BackgroundAnchor" unique_id=51132587]
+script = ExtResource("7_breathing")
+chest_region_rect = Rect2(0.34, 0.5, 0.28, 0.35)
+debug_breathing = true
+debug_inhale_multiplier = 2.0
+debug_cycle_duration = 2.1
+
+[node name="OverlayAnimator" type="TextureRect" parent="BackgroundAnchor" unique_id=2024183291]
 z_index = 3
 z_as_relative = false
 layout_mode = 1

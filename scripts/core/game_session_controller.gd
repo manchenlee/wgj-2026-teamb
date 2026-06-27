@@ -44,6 +44,7 @@ signal ending_requested(ending_type: String)
 
 @onready var background_placeholder: TextureRect = $BackgroundAnchor/BackgroundPlaceholder
 @onready var overlay_animator = $BackgroundAnchor/OverlayAnimator
+@onready var breathing_controller = $BackgroundAnchor/BreathingController
 @onready var main_character_area: Control = $MainCharacterArea
 @onready var character_area = $MainCharacterArea/CharacterArea
 @onready var character_prompt_region: Control = $MainCharacterArea/CharacterPromptRegion
@@ -82,6 +83,7 @@ func _ready() -> void:
 	_apply_character_background()
 	_update_character_visual_state()
 	_apply_overlay_motion_set()
+	_bind_breathing_targets()
 	_update_layout_debug_regions()
 
 	# In editor, only apply the preview texture.
@@ -100,6 +102,8 @@ func _ready() -> void:
 	active_prompt_timer.timeout.connect(_on_active_prompt_timer_timeout)
 	choice_timeout_timer.timeout.connect(_on_choice_timeout)
 	reset_run()
+	if breathing_controller != null and breathing_controller.has_method("is_debug_breathing_enabled") and breathing_controller.is_debug_breathing_enabled():
+		_capture_debug_breathing_frames()
 
 @export var character_background: Texture2D:
 	set(value):
@@ -184,6 +188,7 @@ func _apply_overlay_motion_set() -> void:
 	if overlay_animator == null:
 		return
 	overlay_animator.set_motion_set(overlay_motion_set)
+	_bind_breathing_targets()
 
 func _warn_character_visual_once(warning_key: String, message: String) -> void:
 	if character_visual_warnings_printed.has(warning_key):
@@ -202,6 +207,12 @@ func _update_character_visual_state(forced_ending_type: String = "") -> void:
 	if background_placeholder.texture == next_texture:
 		return
 	background_placeholder.texture = next_texture
+
+func _bind_breathing_targets() -> void:
+	if breathing_controller == null or background_placeholder == null:
+		return
+	if breathing_controller.has_method("bind_targets"):
+		breathing_controller.bind_targets(background_placeholder, overlay_animator.get_overlay_layers())
 
 func _get_character_visual_state_key(forced_ending_type: String = "") -> String:
 	if forced_ending_type == Config.PHYSICAL_IMBALANCE_FAILURE_ENDING:
@@ -239,8 +250,11 @@ func _get_character_visual_texture(visual_state: String) -> Texture2D:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready() and not Engine.is_editor_hint():
 		_sync_prompt_anchor_layout()
-	elif what == NOTIFICATION_PREDELETE and overlay_animator != null:
-		overlay_animator.stop()
+	elif what == NOTIFICATION_PREDELETE:
+		if overlay_animator != null:
+			overlay_animator.stop()
+		if breathing_controller != null and breathing_controller.has_method("stop_breathing"):
+			breathing_controller.stop_breathing()
 
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
@@ -297,6 +311,8 @@ func reset_run() -> void:
 	_apply_overlay_motion_set()
 	if overlay_animator != null:
 		overlay_animator.play_idle()
+	if breathing_controller != null and breathing_controller.has_method("start_breathing"):
+		breathing_controller.start_breathing()
 	_push_next_dialogue_event()
 	_start_new_sequence()
 	_update_presentation()
@@ -482,6 +498,8 @@ func _stop_runtime_timers() -> void:
 	choice_timeout_timer.stop()
 	if overlay_animator != null:
 		overlay_animator.stop()
+	if breathing_controller != null and breathing_controller.has_method("stop_breathing"):
+		breathing_controller.stop_breathing()
 
 func _schedule_next_feedback_message() -> void:
 	var wait_time := feedback_rng.randf_range(
@@ -646,3 +664,19 @@ func _remove_prompt(prompt_id: int) -> void:
 
 func _get_now_seconds() -> float:
 	return float(Time.get_ticks_msec()) / 1000.0
+
+func _capture_debug_breathing_frames() -> void:
+	call_deferred("_capture_debug_breathing_frames_async")
+
+func _capture_debug_breathing_frames_async() -> void:
+	await get_tree().process_frame
+	var capture_delays := [0.15, 0.55, 0.95]
+	for index in range(capture_delays.size()):
+		await get_tree().create_timer(capture_delays[index]).timeout
+		var image := get_viewport().get_texture().get_image()
+		if image == null:
+			continue
+		var save_path := "C:/tmp/godot_breathing_debug_%d.png" % [index + 1]
+		var save_result := image.save_png(save_path)
+		if save_result != OK:
+			push_warning("Failed to save breathing debug capture: %s (%s)" % [save_path, error_string(save_result)])

@@ -93,6 +93,16 @@ func _clear_tracks() -> void:
 			layer.queue_free()
 	_tracks.clear()
 
+func get_overlay_layers() -> Array[TextureRect]:
+	var overlay_layers: Array[TextureRect] = []
+	for motion_id_variant in _tracks.keys():
+		var motion_id := String(motion_id_variant)
+		var track: Dictionary = _tracks[motion_id]
+		var layer := track.get("layer") as TextureRect
+		if layer != null:
+			overlay_layers.append(layer)
+	return overlay_layers
+
 func _create_track(motion_id: String, frame_1: Texture2D, frame_2: Texture2D) -> void:
 	var layer := TextureRect.new()
 	layer.name = "%sOverlay" % motion_id
