@@ -1,7 +1,7 @@
 class_name DialoguePanel
 extends PanelContainer
 
-signal choice_selected(choice_quality: String)
+signal choice_selected(choice_quality: String, choice_text: String)
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
@@ -17,9 +17,9 @@ func _ready() -> void:
 	good_button.focus_mode = Control.FOCUS_NONE
 	neutral_button.focus_mode = Control.FOCUS_NONE
 	bad_button.focus_mode = Control.FOCUS_NONE
-	good_button.pressed.connect(func() -> void: choice_selected.emit("good"))
-	neutral_button.pressed.connect(func() -> void: choice_selected.emit("neutral"))
-	bad_button.pressed.connect(func() -> void: choice_selected.emit("bad"))
+	good_button.pressed.connect(func() -> void: choice_selected.emit("good", good_button.text))
+	neutral_button.pressed.connect(func() -> void: choice_selected.emit("neutral", neutral_button.text))
+	bad_button.pressed.connect(func() -> void: choice_selected.emit("bad", bad_button.text))
 
 func set_prompt(prompt: Dictionary) -> void:
 	speaker_label.text = str(prompt.get("speaker", "Companion"))
@@ -32,15 +32,26 @@ func clear_history() -> void:
 	for child in history_list.get_children():
 		child.queue_free()
 
-func append_history(line: String) -> void:
+func append_history(line: String, speaker_type: String = "companion") -> void:
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_theme_constant_override("separation", 12)
+
+	var companion_message := speaker_type != "player"
+	if not companion_message:
+		var left_spacer := Control.new()
+		left_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(left_spacer)
+
 	var bubble := PanelContainer.new()
-	bubble.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bubble.custom_minimum_size = Vector2(220.0, 46.0)
 	bubble.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bubble.modulate = Color(1.0, 1.0, 1.0, 0.0)
-	bubble.scale = Vector2(0.96, 0.96)
+	bubble.scale = Vector2(0.94, 0.94)
 
 	var bubble_style := StyleBoxFlat.new()
-	bubble_style.bg_color = Color(0.15, 0.15, 0.17, 0.92)
+	bubble_style.bg_color = Color(0.15, 0.15, 0.17, 0.92) if companion_message else Color(0.24, 0.24, 0.3, 0.96)
 	bubble_style.corner_radius_top_left = 14
 	bubble_style.corner_radius_top_right = 14
 	bubble_style.corner_radius_bottom_left = 14
@@ -55,9 +66,16 @@ func append_history(line: String) -> void:
 	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	message_label.text = line
 	message_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	message_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	message_label.custom_minimum_size = Vector2(220.0, 0.0)
 	bubble.add_child(message_label)
-	history_list.add_child(bubble)
+	row.add_child(bubble)
+
+	if companion_message:
+		var right_spacer := Control.new()
+		right_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(right_spacer)
+
+	history_list.add_child(row)
 
 	var tween := create_tween()
 	tween.set_parallel(true)

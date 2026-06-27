@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/presentation/character_presenter.gd" id="1_char"]
 
 [node name="CharacterArea" type="Control"]
-custom_minimum_size = Vector2(360, 360)
+custom_minimum_size = Vector2(460, 500)
 script = ExtResource("1_char")
 
 [node name="CharacterVisualAnchor" type="CenterContainer" parent="."]
@@ -16,7 +16,7 @@ offset_right = 0.0
 offset_bottom = 0.0
 
 [node name="CharacterPlaceholder" type="Panel" parent="CharacterVisualAnchor"]
-custom_minimum_size = Vector2(160, 220)
+custom_minimum_size = Vector2(220, 320)
 
 [node name="EmotionStateLabel" type="Label" parent="."]
 offset_left = 12.0
@@ -29,4 +29,3 @@ offset_top = 40.0
 text = "Reaction: ..."
 
 [node name="CharacterAnimationAnchor" type="Node2D" parent="."]
-

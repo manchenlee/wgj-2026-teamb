@@ -46,7 +46,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="CenterStage" type="Control" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn"]
-custom_minimum_size = Vector2(640, 560)
+custom_minimum_size = Vector2(720, 620)
 size_flags_horizontal = 3
 size_flags_vertical = 3
 

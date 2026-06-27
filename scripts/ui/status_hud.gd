@@ -40,3 +40,6 @@ func update_timer(time_left: float) -> void:
 
 func update_sequence_text(text_value: String) -> void:
 	direction_panel.set_sequence_text(text_value)
+
+func show_sequence_feedback(text_value: String, color: Color) -> void:
+	direction_panel.show_feedback(text_value, color)

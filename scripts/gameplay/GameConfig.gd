@@ -8,20 +8,24 @@ const TEST_FEEDBACK_TEXT: String = "test test test test test"
 const TEST_RESPONSE_TEXT: String = "response response response"
 
 # Core arousal values.
-const INITIAL_PHYSICAL: float = 50.0
-const INITIAL_EMOTIONAL: float = 50.0
+const INITIAL_PHYSICAL: float = 30.0
+const INITIAL_EMOTIONAL: float = 30.0
 const INITIAL_PEAK: float = 0.0
 const MINIMUM_ACTIVE_THRESHOLD: float = 15.0
 const BALANCE_TOLERANCE: float = 15.0
 
 # Passive progression.
-const NATURAL_DECAY_PER_SECOND: float = 2.0
+const PHYSICAL_DECAY_PER_SECOND: float = 2.0
+const EMOTIONAL_DECAY_PER_SECOND: float = 2.0
+const PHYSICAL_ACTIVITY_GRACE_SECONDS: float = 1.4
+const EMOTIONAL_ACTIVITY_GRACE_SECONDS: float = 2.8
 const PEAK_GAIN_RATE: float = 12.0
 const PEAK_LOSS_RATE: float = 8.0
 
 # Physical interaction tuning.
 const PHYSICAL_GAIN_PER_CORRECT_INPUT: float = 4.0
 const PHYSICAL_PENALTY_PER_WRONG_INPUT: float = 3.0
+const PHYSICAL_SEQUENCE_COMPLETE_BONUS: float = 6.0
 const DIRECTION_SEQUENCE_LENGTH_MIN: int = 3
 const DIRECTION_SEQUENCE_LENGTH_MAX: int = 5
 const DIRECTION_SEQUENCE_TIME_LIMIT: float = 3.0

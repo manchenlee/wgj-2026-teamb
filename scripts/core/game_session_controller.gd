@@ -75,7 +75,7 @@ func reset_run() -> void:
 	dialogue_panel.clear_history()
 	current_prompt = dialogue_controller.next_prompt(arousal_model.physical, arousal_model.emotional)
 	dialogue_panel.set_prompt(current_prompt)
-	dialogue_panel.append_history(Config.TEST_FEEDBACK_TEXT)
+	dialogue_panel.append_history(Config.TEST_FEEDBACK_TEXT, "companion")
 	_schedule_next_feedback_message()
 	_start_round()
 	_update_presentation()
@@ -110,7 +110,7 @@ func _start_round() -> void:
 func _on_feedback_timer_timeout() -> void:
 	if not run_active:
 		return
-	dialogue_panel.append_history(Config.TEST_FEEDBACK_TEXT)
+	dialogue_panel.append_history(Config.TEST_FEEDBACK_TEXT, "companion")
 	print_debug("feedback message")
 	_schedule_next_feedback_message()
 
@@ -131,23 +131,33 @@ func _on_direction_pressed(direction: String) -> void:
 		"correct":
 			combo += 1
 			arousal_model.apply_physical(Config.PHYSICAL_GAIN_PER_CORRECT_INPUT)
+			arousal_model.refresh_physical_activity()
+			status_hud.show_sequence_feedback(
+				"Correct +%d" % int(round(Config.PHYSICAL_GAIN_PER_CORRECT_INPUT)),
+				Color(0.45, 0.87, 0.56, 1.0)
+			)
 			character_area.show_correct_reaction()
 		"round_success":
 			combo += 1
 			arousal_model.apply_physical(Config.PHYSICAL_GAIN_PER_CORRECT_INPUT)
+			arousal_model.apply_physical(Config.PHYSICAL_SEQUENCE_COMPLETE_BONUS)
+			arousal_model.refresh_physical_activity()
+			status_hud.show_sequence_feedback(
+				"Sequence Complete +%d" % int(round(Config.PHYSICAL_SEQUENCE_COMPLETE_BONUS)),
+				Color(0.58, 0.95, 0.67, 1.0)
+			)
 			character_area.show_correct_reaction()
 			print_debug("round success")
 			_schedule_next_round()
 		"wrong":
 			_handle_wrong_input()
-		"round_failure":
-			print_debug("round failure")
-			_handle_round_failure()
 	_update_presentation()
 
-func _on_choice_selected(choice_quality: String) -> void:
+func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
+	dialogue_panel.append_history(choice_text, "player")
 	var outcome := dialogue_controller.apply_choice(choice_quality, arousal_model)
-	dialogue_panel.append_history(str(outcome.get("reply", Config.TEST_FEEDBACK_TEXT)))
+	arousal_model.refresh_emotional_activity()
+	dialogue_panel.append_history(str(outcome.get("reply", Config.TEST_FEEDBACK_TEXT)), "companion")
 	character_area.show_choice_reaction(choice_quality)
 	current_prompt = dialogue_controller.next_prompt(arousal_model.physical, arousal_model.emotional)
 	dialogue_panel.set_prompt(current_prompt)
@@ -156,11 +166,18 @@ func _on_choice_selected(choice_quality: String) -> void:
 func _handle_wrong_input() -> void:
 	combo = 0
 	arousal_model.apply_physical(-Config.PHYSICAL_PENALTY_PER_WRONG_INPUT)
+	arousal_model.refresh_physical_activity()
+	sequence_controller.clear_round()
+	status_hud.show_sequence_feedback(
+		"Wrong -%d" % int(round(Config.PHYSICAL_PENALTY_PER_WRONG_INPUT)),
+		Color(0.95, 0.35, 0.35, 1.0)
+	)
 	character_area.show_mistake_reaction()
+	_schedule_next_round()
 
 func _handle_round_failure() -> void:
+	print_debug("round failure")
 	_handle_wrong_input()
-	_schedule_next_round()
 
 func _schedule_next_round() -> void:
 	round_restart_timer.start(Config.ROUND_RESTART_DELAY)

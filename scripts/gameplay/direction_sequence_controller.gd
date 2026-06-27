@@ -48,10 +48,15 @@ func submit_input(direction: String) -> Dictionary:
 		return {"result": "correct"}
 
 	wrong_inputs += 1
-	if wrong_inputs >= Config.MAX_WRONG_INPUTS_PER_ROUND:
-		round_active = false
-		return {"result": "round_failure"}
+	round_active = false
 	return {"result": "wrong"}
+
+func clear_round() -> void:
+	current_sequence.clear()
+	current_index = 0
+	wrong_inputs = 0
+	time_left = 0.0
+	round_active = false
 
 func get_sequence_text() -> String:
 	var parts: Array[String] = []
