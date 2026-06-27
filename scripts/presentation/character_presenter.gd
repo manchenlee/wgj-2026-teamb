@@ -12,9 +12,10 @@ const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
 var _default_scale := Vector2.ONE
 var _prompt_nodes: Dictionary = {}
-var _prompt_offsets: Dictionary = {}
+var _prompt_positions: Dictionary = {}
 var _current_prompt_id: int = -1
 var _prompt_time_progress: float = 1.0
+var _prompt_bounds_rect := Rect2()
 
 func _ready() -> void:
 	_default_scale = character_placeholder.scale
@@ -74,8 +75,12 @@ func update_emotion_state(state: String) -> void:
 			color = Color(0.92, 0.22, 0.22, 1.0)
 	_apply_style(character_placeholder, color)
 
-func show_direction_prompt(prompt_id: int, direction: String, anchor_offset: Vector2) -> void:
-	_prompt_offsets[prompt_id] = anchor_offset
+func set_prompt_bounds(bounds_rect: Rect2) -> void:
+	_prompt_bounds_rect = bounds_rect
+	_refresh_prompt_layout()
+
+func show_direction_prompt(prompt_id: int, direction: String, anchor_position: Vector2) -> void:
+	_prompt_positions[prompt_id] = anchor_position
 	var prompt_label := _ensure_prompt_label(prompt_id)
 	prompt_label.text = _to_arrow(direction)
 	prompt_label.visible = true
@@ -107,7 +112,7 @@ func remove_direction_prompt(prompt_id: int) -> void:
 	var prompt_label: Label = _prompt_nodes[prompt_id]
 	prompt_label.queue_free()
 	_prompt_nodes.erase(prompt_id)
-	_prompt_offsets.erase(prompt_id)
+	_prompt_positions.erase(prompt_id)
 	if _current_prompt_id == prompt_id:
 		_current_prompt_id = -1
 	_update_prompt_timer_ring()
@@ -116,7 +121,7 @@ func clear_direction_prompts() -> void:
 	for prompt_label in _prompt_nodes.values():
 		prompt_label.queue_free()
 	_prompt_nodes.clear()
-	_prompt_offsets.clear()
+	_prompt_positions.clear()
 	_current_prompt_id = -1
 	_prompt_time_progress = 0.0
 	_update_prompt_timer_ring()
@@ -153,17 +158,17 @@ func _apply_style(_texture_rect: TextureRect, _color: Color) -> void:
 func _refresh_prompt_layout() -> void:
 	if prompt_feedback_label == null:
 		return
-	var character_rect := _get_character_rect_local()
+	var bounds_rect := _get_prompt_bounds_rect()
 	for key in _prompt_nodes.keys():
 		var prompt_label: Label = _prompt_nodes[key]
-		var prompt_offset: Vector2 = _prompt_offsets.get(key, Vector2.ZERO)
+		var prompt_position: Vector2 = _prompt_positions.get(key, bounds_rect.get_center())
 		var prompt_size := prompt_label.size
-		var desired_center := character_rect.get_center() + prompt_offset
+		var desired_center := prompt_position
 		var half_size := prompt_size * 0.5
-		var min_x := character_rect.position.x + half_size.x + Config.ARROW_PROMPT_EDGE_MARGIN
-		var max_x := character_rect.end.x - half_size.x - Config.ARROW_PROMPT_EDGE_MARGIN
-		var min_y := character_rect.position.y + half_size.y + Config.ARROW_PROMPT_EDGE_MARGIN
-		var max_y := character_rect.end.y - half_size.y - Config.ARROW_PROMPT_EDGE_MARGIN
+		var min_x := bounds_rect.position.x + half_size.x + Config.ARROW_PROMPT_EDGE_MARGIN
+		var max_x := bounds_rect.end.x - half_size.x - Config.ARROW_PROMPT_EDGE_MARGIN
+		var min_y := bounds_rect.position.y + half_size.y + Config.ARROW_PROMPT_EDGE_MARGIN
+		var max_y := bounds_rect.end.y - half_size.y - Config.ARROW_PROMPT_EDGE_MARGIN
 		var clamped_center := Vector2(
 			clampf(desired_center.x, min_x, max_x),
 			clampf(desired_center.y, min_y, max_y)
@@ -191,6 +196,11 @@ func _get_feedback_anchor_center() -> Vector2:
 	if current_label == null:
 		return _get_character_center_local()
 	return current_label.position + (current_label.get_combined_minimum_size() * 0.5)
+
+func _get_prompt_bounds_rect() -> Rect2:
+	if _prompt_bounds_rect.size.length_squared() > 0.0:
+		return _prompt_bounds_rect
+	return _get_character_rect_local()
 
 func _ensure_prompt_label(prompt_id: int) -> Label:
 	if _prompt_nodes.has(prompt_id):

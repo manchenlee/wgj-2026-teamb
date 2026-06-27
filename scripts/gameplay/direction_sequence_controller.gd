@@ -5,13 +5,17 @@ const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
 var rng := RandomNumberGenerator.new()
 var directions: Array[String] = []
-var anchor_offsets: Array[Vector2] = []
+var anchor_positions: Array[Vector2] = []
+var available_anchor_positions: Array[Vector2] = []
 var current_index: int = -1
 var visible_count: int = 0
 var prompt_active: bool = false
 
 func _init() -> void:
 	rng.randomize()
+
+func set_prompt_anchor_positions(positions: Array[Vector2]) -> void:
+	available_anchor_positions = positions.duplicate()
 
 func start_sequence() -> Dictionary:
 	clear_sequence()
@@ -24,7 +28,7 @@ func start_sequence() -> Dictionary:
 	for step_index in range(sequence_length):
 		directions.append(directions_pool[step_index])
 		var next_anchor := _pick_anchor(last_anchor)
-		anchor_offsets.append(next_anchor)
+		anchor_positions.append(next_anchor)
 		last_anchor = next_anchor
 	current_index = 0
 	visible_count = 0
@@ -36,7 +40,7 @@ func get_current_prompt() -> Dictionary:
 		return {}
 	return {
 		"direction": directions[current_index],
-		"anchor_offset": anchor_offsets[current_index],
+		"anchor_position": anchor_positions[current_index],
 		"arrow": _to_arrow(directions[current_index]),
 		"step_index": current_index,
 		"step_count": directions.size()
@@ -50,7 +54,7 @@ func reveal_next_prompt() -> Dictionary:
 	return {
 		"prompt_id": prompt_index,
 		"direction": directions[prompt_index],
-		"anchor_offset": anchor_offsets[prompt_index],
+		"anchor_position": anchor_positions[prompt_index],
 		"arrow": _to_arrow(directions[prompt_index]),
 		"step_index": prompt_index,
 		"step_count": directions.size()
@@ -64,7 +68,7 @@ func submit_input(direction: String) -> Dictionary:
 		return {"result": "inactive"}
 
 	var expected := directions[current_index]
-	var current_anchor := anchor_offsets[current_index]
+	var current_anchor := anchor_positions[current_index]
 	var consumed_index := current_index
 	if direction == expected:
 		current_index += 1
@@ -74,7 +78,7 @@ func submit_input(direction: String) -> Dictionary:
 				"result": "sequence_complete",
 				"consumed_prompt_id": consumed_index,
 				"direction": expected,
-				"anchor_offset": current_anchor
+				"anchor_position": current_anchor
 			}
 		var auto_revealed_prompt := {}
 		if current_index >= visible_count:
@@ -83,7 +87,7 @@ func submit_input(direction: String) -> Dictionary:
 			"result": "correct",
 			"consumed_prompt_id": consumed_index,
 			"direction": expected,
-			"anchor_offset": current_anchor,
+			"anchor_position": current_anchor,
 			"next_prompt": get_current_prompt(),
 			"auto_revealed_prompt": auto_revealed_prompt
 		}
@@ -94,12 +98,12 @@ func submit_input(direction: String) -> Dictionary:
 		"consumed_prompt_id": consumed_index,
 		"expected": expected,
 		"direction": direction,
-		"anchor_offset": current_anchor
+		"anchor_position": current_anchor
 	}
 
 func clear_sequence() -> void:
 	directions.clear()
-	anchor_offsets.clear()
+	anchor_positions.clear()
 	current_index = -1
 	visible_count = 0
 	prompt_active = false
@@ -112,8 +116,8 @@ func get_prompt_debug_state() -> String:
 		str(current_prompt.get("direction", "")),
 		int(current_prompt.get("step_index", 0)) + 1,
 		int(current_prompt.get("step_count", 0)),
-		current_prompt.get("anchor_offset", Vector2.ZERO).x,
-		current_prompt.get("anchor_offset", Vector2.ZERO).y
+		current_prompt.get("anchor_position", Vector2.ZERO).x,
+		current_prompt.get("anchor_position", Vector2.ZERO).y
 	]
 
 func get_sequence_progress_text() -> String:
@@ -130,7 +134,9 @@ func _build_direction_pool(sequence_length: int) -> Array[String]:
 	return result
 
 func _pick_anchor(previous_anchor: Vector2) -> Vector2:
-	var available: Array = Config.ARROW_PROMPT_ANCHOR_OFFSETS
+	var available: Array[Vector2] = available_anchor_positions
+	if available.is_empty():
+		available = Config.ARROW_PROMPT_ANCHOR_OFFSETS
 	var next_anchor: Vector2 = available[rng.randi_range(0, available.size() - 1)]
 	if available.size() <= 1:
 		return next_anchor

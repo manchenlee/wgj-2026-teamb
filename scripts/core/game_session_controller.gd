@@ -9,12 +9,20 @@ const EndingEvaluatorClass := preload("res://scripts/gameplay/ending_evaluator.g
 
 signal ending_requested(ending_type: String)
 
-@onready var upper_layout: BoxContainer = $MarginContainer/ResponsiveLayout/UpperLayout
+@export var show_layout_debug_bounds: bool = false
+
 @onready var background_placeholder: TextureRect = $BackgroundAnchor/BackgroundPlaceholder
-@onready var character_area = $MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn/CenterStage/CharacterArea
-@onready var arousal_visualization = $MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn/CenterStage/CentralArousalVisualization
-@onready var dialogue_panel = $MarginContainer/ResponsiveLayout/UpperLayout/RightSideDialoguePanel
-@onready var status_hud = $MarginContainer/ResponsiveLayout/BottomHUD
+@onready var main_character_area: Control = $MainCharacterArea
+@onready var character_area = $MainCharacterArea/CharacterArea
+@onready var character_prompt_region: Control = $MainCharacterArea/CharacterPromptRegion
+@onready var arousal_visualization = $MainCharacterArea/CentralArousalVisualization
+@onready var dialogue_panel = $RightSideDialoguePanel
+@onready var status_hud = $BottomHUD
+@onready var layout_debug_regions := [
+	$MainCharacterArea/DebugRegionTint,
+	$RightSideDialoguePanel/DebugRegionTint,
+	$BottomHUD/DebugRegionTint
+]
 @onready var feedback_timer: Timer = $FeedbackTimer
 @onready var prompt_spawn_timer: Timer = $PromptSpawnTimer
 @onready var active_prompt_timer: Timer = $ActivePromptTimer
@@ -33,14 +41,18 @@ var pending_prompt_action: String = ""
 
 func _ready() -> void:
 	_apply_character_background()
+	_update_layout_debug_regions()
 
 	# In editor, only apply the preview texture.
 	# Do not start gameplay timers, input handling, or runtime logic.
 	if Engine.is_editor_hint():
+		set_process(false)
+		set_process_unhandled_input(false)
 		return
 
 	feedback_rng.randomize()
 	set_process_unhandled_input(true)
+	_sync_prompt_anchor_layout()
 	dialogue_panel.choice_selected.connect(_on_choice_selected)
 	feedback_timer.timeout.connect(_on_feedback_timer_timeout)
 	prompt_spawn_timer.timeout.connect(_on_prompt_spawn_timer_timeout)
@@ -60,17 +72,26 @@ func _apply_character_background() -> void:
 
 	background_placeholder.texture = character_background
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED and is_node_ready() and not Engine.is_editor_hint():
+		_sync_prompt_anchor_layout()
+
 func _process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
 	if not run_active:
 		return
 
 	arousal_model.apply_decay(delta)
 	arousal_model.update_peak(delta)
 	_update_prompt_timer_visual()
+	_update_choice_timer_visual()
 	_update_presentation()
 	_check_ending()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if Engine.is_editor_hint():
+		return
 	if not run_active:
 		return
 	if event is InputEventKey and event.is_pressed() and not event.is_echo():
@@ -221,16 +242,19 @@ func _check_ending() -> void:
 	ending_requested.emit(ending_type)
 
 func _update_presentation() -> void:
+	if Engine.is_editor_hint():
+		return
 	character_area.update_emotion_state(arousal_model.get_emotion_state())
 	arousal_visualization.set_values(arousal_model.physical, arousal_model.emotional, arousal_model.peak)
 	status_hud.update_values(arousal_model.physical, arousal_model.emotional, arousal_model.peak)
 	status_hud.update_combo(combo)
-	_update_layout_mode()
 	if debug_overlay != null:
 		debug_overlay.sync_live_readout(get_debug_state())
 
-func _update_layout_mode() -> void:
-	upper_layout.vertical = size.x < Config.DESKTOP_BREAKPOINT
+func _update_layout_debug_regions() -> void:
+	var debug_visible := show_layout_debug_bounds
+	for region in layout_debug_regions:
+		region.visible = debug_visible
 
 func _stop_runtime_timers() -> void:
 	feedback_timer.stop()
@@ -303,11 +327,18 @@ func _update_prompt_timer_visual() -> void:
 	var progress := active_prompt_timer.time_left / Config.DIRECTION_PROMPT_TIME_LIMIT
 	character_area.set_prompt_time_progress(progress)
 
+func _update_choice_timer_visual() -> void:
+	if waiting_for_choice and not choice_timeout_timer.is_stopped():
+		var progress := choice_timeout_timer.time_left / Config.CHOICE_TIMEOUT_SECONDS
+		dialogue_panel.set_choice_timeout_progress(progress)
+		return
+	dialogue_panel.set_choice_timeout_progress(0.0)
+
 func _show_visible_prompt(prompt: Dictionary) -> void:
 	character_area.show_direction_prompt(
 		int(prompt.get("prompt_id", -1)),
 		str(prompt.get("direction", "")),
-		prompt.get("anchor_offset", Vector2.ZERO)
+		prompt.get("anchor_position", Vector2.ZERO)
 	)
 	print_debug("prompt spawn: %s" % sequence_controller.get_prompt_debug_state())
 
@@ -342,3 +373,26 @@ func _on_choice_timeout() -> void:
 	dialogue_panel.append_history(Config.FEEDBACK_MESSAGE_TEXT, "companion")
 	_schedule_next_feedback_message()
 	_update_presentation()
+
+func _sync_prompt_anchor_layout() -> void:
+	var region_rect := _get_prompt_region_rect_in_character_area()
+	character_area.set_prompt_bounds(region_rect)
+	sequence_controller.set_prompt_anchor_positions(_get_prompt_anchor_centers_in_character_area())
+
+func _get_prompt_region_rect_in_character_area() -> Rect2:
+	var global_rect := character_prompt_region.get_global_rect()
+	var local_position: Vector2 = character_area.get_global_transform_with_canvas().affine_inverse() * global_rect.position
+	return Rect2(local_position, global_rect.size)
+
+func _get_prompt_anchor_centers_in_character_area() -> Array[Vector2]:
+	var anchor_nodes: Array[Control] = []
+	for child in character_prompt_region.get_children():
+		if child is Control:
+			anchor_nodes.append(child)
+	anchor_nodes.sort_custom(func(a: Control, b: Control) -> bool: return a.name.naturalnocasecmp_to(b.name) < 0)
+
+	var inverse: Transform2D = character_area.get_global_transform_with_canvas().affine_inverse()
+	var centers: Array[Vector2] = []
+	for anchor_node in anchor_nodes:
+		centers.append(inverse * anchor_node.get_global_rect().get_center())
+	return centers
