@@ -5,6 +5,7 @@ const UiThemeScaler := preload("res://scripts/ui/ui_theme_scaler.gd")
 const TITLE_SCENE := preload("res://scenes/screens/TitleScreen.tscn")
 const WARNING_SCENE := preload("res://scenes/screens/WarningScreen.tscn")
 const OPENING_SCENE := preload("res://scenes/screens/OpeningScreen.tscn")
+const RULE_SCENE := preload("res://scenes/screens/RuleScreen.tscn")
 const GAME_SCENE := preload("res://scenes/screens/GameScreen.tscn")
 const ENDING_SCENE := preload("res://scenes/screens/EndingScreen.tscn")
 
@@ -42,6 +43,12 @@ func _show_warning() -> void:
 func _show_opening() -> void:
 	current_screen_id = Config.SCREEN_OPENING
 	var screen := OPENING_SCENE.instantiate()
+	screen.continue_pressed.connect(_show_rule)
+	_swap_screen(screen)
+
+func _show_rule() -> void:
+	current_screen_id = "rule"
+	var screen := RULE_SCENE.instantiate()
 	screen.continue_pressed.connect(_show_game)
 	_swap_screen(screen)
 
