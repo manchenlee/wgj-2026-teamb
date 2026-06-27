@@ -2,9 +2,11 @@
 
 [ext_resource type="Script" uid="uid://bqjifxskxou0v" path="res://scripts/core/game_session_controller.gd" id="1_game"]
 [ext_resource type="PackedScene" path="res://scenes/components/CharacterArea.tscn" id="2_character"]
+[ext_resource type="Texture2D" uid="uid://bvl52yg22147o" path="res://assets/art/character/phase1/overall_init.png" id="2_pbayp"]
 [ext_resource type="PackedScene" path="res://scenes/components/DialoguePanel.tscn" id="3_dialogue"]
 [ext_resource type="PackedScene" path="res://scenes/components/StatusHUD.tscn" id="4_hud"]
 [ext_resource type="Script" uid="uid://y4sw51emkoug" path="res://scripts/presentation/central_arousal_visualization.gd" id="5_vis"]
+[ext_resource type="Script" path="res://scripts/ui/TwoFrameOverlayAnimator.gd" id="6_overlay"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_alg88"]
 load_path = "res://.godot/imported/draft.png-80a3863fe83a454b531da103f3e5f42e.ctex"
@@ -47,9 +49,25 @@ offset_top = -100.0
 offset_bottom = -100.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = SubResource("CompressedTexture2D_alg88")
+texture = ExtResource("2_pbayp")
 expand_mode = 1
 stretch_mode = 6
+
+[node name="OverlayAnimator" type="TextureRect" parent="BackgroundAnchor"]
+z_index = 3
+z_as_relative = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -100.0
+offset_bottom = -100.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 6
+script = ExtResource("6_overlay")
 
 [node name="MainCharacterArea" type="Control" parent="." unique_id=2060484998]
 z_index = 3
@@ -133,19 +151,12 @@ offset_top = 10.0
 offset_right = 488.0
 offset_bottom = 144.0
 
-[node name="PromptAnchorPeakRight" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=1355790063]
+[node name="PromptAnchorPeak" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=1355790063]
 anchors_preset = 0
-offset_left = 336.0
+offset_left = 210.0
 offset_top = 247.0
-offset_right = 424.0
+offset_right = 430.0
 offset_bottom = 320.0
-
-[node name="PromptAnchorPeakLeft" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=1152329960]
-anchors_preset = 0
-offset_left = 197.0
-offset_top = 216.0
-offset_right = 285.0
-offset_bottom = 289.0
 
 [node name="PromptAnchorThighRight" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=913773421]
 anchors_preset = 0
@@ -166,7 +177,14 @@ anchors_preset = 0
 offset_left = 180.0
 offset_top = 351.0
 offset_right = 394.0
-offset_bottom = 776.0
+offset_bottom = 686.0
+
+[node name="PromptAnchorPenis" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=2090603079]
+anchors_preset = 0
+offset_left = 219.0
+offset_top = 684.0
+offset_right = 319.0
+offset_bottom = 792.0
 
 [node name="PromptAnchorArmRight" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=239886867]
 anchors_preset = 0

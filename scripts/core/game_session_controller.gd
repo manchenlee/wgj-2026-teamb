@@ -19,12 +19,31 @@ const CHARACTER_VISUAL_PATHS := {
 	"physic_low_mental_high": "res://assets/art/character/phase1/physic_low_mental_high.png",
 	"physic_low_mental_high_gameover": "res://assets/art/character/phase1/physic_low_mental_high_gameover.png"
 }
+const OVERLAY_MOTION_ASSET_PATHS := {
+	"tentacle1": [
+		"res://assets/art/character/phase1/tentacle1_1.png",
+		"res://assets/art/character/phase1/tentacle1_2.png"
+	],
+	"tentacle2": [
+		"res://assets/art/character/phase1/tentacle2_1.png",
+		"res://assets/art/character/phase1/tentacle2_2.png"
+	],
+	"tentacle3": [
+		"res://assets/art/character/phase1/tentacle3_1.png",
+		"res://assets/art/character/phase1/tentacle3_2.png"
+	],
+	"tentacle4": [
+		"res://assets/art/character/phase1/tentacle4_1.png",
+		"res://assets/art/character/phase1/tentacle4_2.png"
+	]
+}
 
 signal ending_requested(ending_type: String)
 
 @export var show_layout_debug_bounds: bool = false
 
 @onready var background_placeholder: TextureRect = $BackgroundAnchor/BackgroundPlaceholder
+@onready var overlay_animator = $BackgroundAnchor/OverlayAnimator
 @onready var main_character_area: Control = $MainCharacterArea
 @onready var character_area = $MainCharacterArea/CharacterArea
 @onready var character_prompt_region: Control = $MainCharacterArea/CharacterPromptRegion
@@ -54,12 +73,15 @@ var pending_prompt_action: String = ""
 var prompt_expiration_times: Dictionary = {}
 var character_visual_textures: Dictionary = {}
 var character_visual_warnings_printed: Dictionary = {}
+var overlay_motion_set: Dictionary = {}
 var ending_transition_started: bool = false
 
 func _ready() -> void:
 	_cache_character_visual_textures()
+	overlay_motion_set = _build_overlay_motion_set()
 	_apply_character_background()
 	_update_character_visual_state()
+	_apply_overlay_motion_set()
 	_update_layout_debug_regions()
 
 	# In editor, only apply the preview texture.
@@ -115,6 +137,54 @@ func _cache_character_visual_textures() -> void:
 	if not character_visual_textures.has("draft") and character_background != null:
 		character_visual_textures["draft"] = character_background
 
+func _build_overlay_motion_set() -> Dictionary:
+	var motion_set: Dictionary = {}
+	for motion_id_variant in OVERLAY_MOTION_ASSET_PATHS.keys():
+		var motion_id := String(motion_id_variant)
+		var frame_paths_variant = OVERLAY_MOTION_ASSET_PATHS[motion_id]
+		if typeof(frame_paths_variant) != TYPE_ARRAY:
+			_warn_character_visual_once(
+				"overlay_malformed:%s" % motion_id,
+				"Overlay motion '%s' is malformed; expected 2 frame paths." % motion_id
+			)
+			continue
+		var frame_paths: Array = frame_paths_variant
+		if frame_paths.size() != 2:
+			_warn_character_visual_once(
+				"overlay_bad_count:%s" % motion_id,
+				"Overlay motion '%s' must contain exactly 2 frame paths." % motion_id
+			)
+			continue
+		var frames: Array[Texture2D] = []
+		var missing_frame := false
+		for frame_path_variant in frame_paths:
+			var frame_path := String(frame_path_variant)
+			if not ResourceLoader.exists(frame_path):
+				_warn_character_visual_once(
+					"overlay_missing:%s" % frame_path,
+					"Overlay motion asset missing: %s" % frame_path
+				)
+				missing_frame = true
+				break
+			var frame_texture := load(frame_path) as Texture2D
+			if frame_texture == null:
+				_warn_character_visual_once(
+					"overlay_load_failed:%s" % frame_path,
+					"Overlay motion asset failed to load: %s" % frame_path
+				)
+				missing_frame = true
+				break
+			frames.append(frame_texture)
+		if missing_frame:
+			continue
+		motion_set[motion_id] = frames
+	return motion_set
+
+func _apply_overlay_motion_set() -> void:
+	if overlay_animator == null:
+		return
+	overlay_animator.set_motion_set(overlay_motion_set)
+
 func _warn_character_visual_once(warning_key: String, message: String) -> void:
 	if character_visual_warnings_printed.has(warning_key):
 		return
@@ -169,6 +239,8 @@ func _get_character_visual_texture(visual_state: String) -> Texture2D:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready() and not Engine.is_editor_hint():
 		_sync_prompt_anchor_layout()
+	elif what == NOTIFICATION_PREDELETE and overlay_animator != null:
+		overlay_animator.stop()
 
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
@@ -222,6 +294,9 @@ func reset_run() -> void:
 	prompt_expiration_times.clear()
 	character_area.clear_direction_prompts()
 	waiting_for_choice = false
+	_apply_overlay_motion_set()
+	if overlay_animator != null:
+		overlay_animator.play_idle()
 	_push_next_dialogue_event()
 	_start_new_sequence()
 	_update_presentation()
@@ -293,6 +368,8 @@ func _on_direction_pressed(direction: String) -> void:
 				Config.CORRECT_FEEDBACK_DISPLAY_DURATION + 0.1
 			)
 			character_area.show_correct_reaction()
+			if overlay_animator != null:
+				overlay_animator.play_burst_random()
 			_schedule_new_sequence()
 		"wrong":
 			_handle_wrong_input()
@@ -403,6 +480,8 @@ func _stop_runtime_timers() -> void:
 	prompt_spawn_timer.stop()
 	active_prompt_timer.stop()
 	choice_timeout_timer.stop()
+	if overlay_animator != null:
+		overlay_animator.stop()
 
 func _schedule_next_feedback_message() -> void:
 	var wait_time := feedback_rng.randf_range(

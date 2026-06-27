@@ -33,7 +33,7 @@ const BALANCE_TOLERANCE: float = 10.0
 # 身體值每秒自然下降量；調大會讓身體狀態掉得更快，玩家需要更頻繁操作。
 const PHYSICAL_DECAY_PER_SECOND: float = 2.0
 # 情感值每秒自然下降量；調大會讓情感更難維持，玩家需要更常做出正確選擇。
-const EMOTIONAL_DECAY_PER_SECOND: float = 0.1
+const EMOTIONAL_DECAY_PER_SECOND: float = 0.5
 # 身體互動後暫停自然衰減的寬限時間；調大會讓連續輸入壓力變小，調小則更吃節奏。
 const PHYSICAL_ACTIVITY_GRACE_SECONDS: float = 1.4
 # 情感互動後暫停自然衰減的寬限時間；調大可讓選項成功的保護期更長，調小則維持難度更高。
@@ -41,11 +41,11 @@ const EMOTIONAL_ACTIVITY_GRACE_SECONDS: float = 2.8
 # 生理與心理差值在這個範圍內時，整體興奮度以最快速度上升。
 const PEAK_BALANCE_BEST_DIFF: float = 5.0
 # 生理與心理差值超過最佳區後，整體興奮度仍可上升，但會一路趨近於 0。
-const PEAK_BALANCE_OK_DIFF: float = 15.0
+const PEAK_BALANCE_OK_DIFF: float = 10.0
 # 生理與心理差值超過這個範圍後，整體興奮度會進入明顯下降區。
-const PEAK_BALANCE_FAIL_DIFF: float = 30.0
+const PEAK_BALANCE_FAIL_DIFF: float = 25.0
 # 最平衡時的整體興奮度最大上升速度。
-const PEAK_GAIN_RATE_MAX: float = 6.0
+const PEAK_GAIN_RATE_MAX: float = 5.0
 # 離開最佳平衡區後仍可維持的最低上升速度。
 const PEAK_GAIN_RATE_MIN: float = 1.0
 # 差值過大時的基礎下降速度。
