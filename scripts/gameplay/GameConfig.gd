@@ -128,7 +128,7 @@ const CIRCLE_STROKE_MIN: float = 4.0
 # 圓形描邊的最大粗細；調大會強化高狀態時的視覺張力，調小則整體較輕。
 const CIRCLE_STROKE_MAX: float = 8.0
 # 主圓在畫面中的中心比例位置；調整後會改變整體 HUD 佈局重心。
-const CIRCLE_CENTER_RATIO: Vector2 = Vector2(0.62, 0.5)
+const CIRCLE_CENTER_RATIO: Vector2 = Vector2(0.58, 0.46)
 # 高潮標籤相對圓心的垂直位移；調大會讓標籤更往下，調小則更貼近主圓。
 const PEAK_LABEL_OFFSET_Y: float = 228.0
 # 切換桌面版配置的畫面寬度門檻；調大會讓更多裝置維持手機/窄版排版，調小則更早套用桌面版。
