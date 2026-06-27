@@ -3,6 +3,7 @@ extends RefCounted
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 const FEEDBACK_DATA_PATH := "res://assets/dialogue/feedback.json"
+const TEST_TEXT := "測試測試測試測試測試測試測試測試測試測試"
 
 var current_prompt: Dictionary = {}
 var current_entry: Dictionary = {}
@@ -103,8 +104,8 @@ func _build_choice_prompt(entry: Dictionary, physical: float, emotional: float) 
 		return {
 			"text": _build_test_prompt_text(physical, emotional),
 			"choices": [
-				{"id": "good", "text": "[choice] good"},
-				{"id": "neutral", "text": "[choice] neutral"}
+				{"id": "good", "text": TEST_TEXT},
+				{"id": "neutral", "text": TEST_TEXT}
 			]
 		}
 
@@ -133,7 +134,7 @@ func _get_feedback_line(entry: Dictionary, physical: float, emotional: float) ->
 
 func _get_choice_response(choice_quality: String, entry: Dictionary) -> String:
 	if entry.is_empty():
-		return "[choice] " + choice_quality
+		return TEST_TEXT
 
 	var response_map := entry.get("response", {}) as Dictionary
 	var reply_list: Variant = response_map.get(choice_quality, [])
@@ -159,8 +160,8 @@ func _classify_emotional_state(emotional: float) -> String:
 		return "high"
 	return ""
 
-func _build_test_feedback_text(physical: float, emotional: float) -> String:
-	return "[feedback] physical=%.1f emotional=%.1f" % [physical, emotional]
+func _build_test_feedback_text(_physical: float, _emotional: float) -> String:
+	return TEST_TEXT
 
-func _build_test_prompt_text(physical: float, emotional: float) -> String:
-	return "[choice] physical=%.1f emotional=%.1f" % [physical, emotional]
+func _build_test_prompt_text(_physical: float, _emotional: float) -> String:
+	return TEST_TEXT

@@ -7,7 +7,7 @@
 [ext_resource type="Script" uid="uid://y4sw51emkoug" path="res://scripts/presentation/central_arousal_visualization.gd" id="5_vis"]
 [ext_resource type="Script" uid="uid://d3bshm1tk5r8n" path="res://scripts/ui/TwoFrameOverlayAnimator.gd" id="6_overlay"]
 [ext_resource type="Script" uid="uid://7lsklnfonwr6" path="res://scripts/ui/LocalizedMeshBreathing.gd" id="7_breathing"]
-[ext_resource type="Script" path="res://scripts/ui/conversation_viewport.gd" id="8_conversation"]
+[ext_resource type="Script" uid="uid://d24toufu83pxy" path="res://scripts/ui/conversation_viewport.gd" id="8_conversation"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_alg88"]
 load_path = "res://.godot/imported/draft.png-80a3863fe83a454b531da103f3e5f42e.ctex"
@@ -207,22 +207,20 @@ offset_bottom = 644.0
 
 [node name="ConversationViewport" type="Control" parent="." unique_id=1454768142]
 z_index = 4
+clip_contents = true
 layout_mode = 1
 anchors_preset = 0
-offset_left = 860.0
+offset_left = 969.0
 offset_top = 54.0
-offset_right = 1244.0
-offset_bottom = 434.0
-grow_horizontal = 2
-grow_vertical = 2
+offset_right = 1406.0
+offset_bottom = 666.0
 mouse_filter = 2
-clip_contents = true
 script = ExtResource("8_conversation")
 
 [node name="DebugRegionTint" type="ColorRect" parent="ConversationViewport" unique_id=476863550]
 visible = false
 z_index = -1
-layout_mode = 2
+layout_mode = 0
 mouse_filter = 2
 color = Color(0.98, 0.66, 0.2, 0.18)
 
@@ -231,6 +229,7 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_bottom = -48.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
@@ -258,6 +257,7 @@ mouse_filter = 2
 color = Color(0.25, 0.76, 0.44, 0.18)
 
 [node name="ChoiceArea" type="Control" parent="." unique_id=181145727]
+visible = false
 z_index = 5
 layout_mode = 1
 anchors_preset = 0
@@ -265,7 +265,6 @@ offset_left = 928.0
 offset_top = 734.0
 offset_right = 1200.0
 offset_bottom = 804.0
-visible = false
 
 [node name="DebugRegionTint" type="ColorRect" parent="ChoiceArea" unique_id=988312700]
 visible = false
@@ -281,13 +280,12 @@ color = Color(0.98, 0.36, 0.62, 0.18)
 
 [node name="ChoiceButton1" type="TextureButton" parent="ChoiceArea" unique_id=173274958]
 layout_mode = 0
-offset_left = 0.0
 offset_top = 4.0
 offset_right = 120.0
 offset_bottom = 62.4
+focus_mode = 0
 ignore_texture_size = true
 stretch_mode = 0
-focus_mode = 0
 
 [node name="Label" type="Label" parent="ChoiceArea/ChoiceButton1" unique_id=679116587]
 layout_mode = 0
@@ -305,9 +303,9 @@ offset_left = 136.0
 offset_top = 4.0
 offset_right = 256.0
 offset_bottom = 62.4
+focus_mode = 0
 ignore_texture_size = true
 stretch_mode = 0
-focus_mode = 0
 
 [node name="Label" type="Label" parent="ChoiceArea/ChoiceButton2" unique_id=694749857]
 layout_mode = 0

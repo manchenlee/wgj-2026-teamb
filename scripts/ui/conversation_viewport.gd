@@ -9,20 +9,23 @@ const CHARACTER_BUBBLE_PATH := "res://assets/art/ui/text2.png"
 const CHOICE_BUBBLE_PATH := "res://assets/art/ui/text bubble.png"
 
 const BUBBLE_SCALE := 0.5
-const VIEWPORT_PADDING := Vector2(22.0, 22.0)
+const VIEWPORT_PADDING_LEFT := 12.0
+const VIEWPORT_PADDING_RIGHT := 0.0
+const VIEWPORT_PADDING_VERTICAL := 14.0
+const LATEST_MESSAGE_TOP_RATIO := 0.90
 const MESSAGE_GAP := 10.0
-const MESSAGE_TEXT_MARGIN_LEFT := 52.0
-const MESSAGE_TEXT_MARGIN_TOP := 38.0
-const MESSAGE_TEXT_MARGIN_RIGHT := 56.0
-const MESSAGE_TEXT_MARGIN_BOTTOM := 34.0
-const MESSAGE_TEXT_MAX_CHARS := 44
-const CHOICE_TEXT_MARGIN_LEFT := 28.0
-const CHOICE_TEXT_MARGIN_TOP := 24.0
-const CHOICE_TEXT_MARGIN_RIGHT := 28.0
-const CHOICE_TEXT_MARGIN_BOTTOM := 20.0
-const CHOICE_TEXT_MAX_CHARS := 18
-const MESSAGE_FONT_SIZE := 12
-const CHOICE_FONT_SIZE := 11
+const MESSAGE_TEXT_MARGIN_LEFT := 34.0
+const MESSAGE_TEXT_MARGIN_TOP := 24.0
+const MESSAGE_TEXT_MARGIN_RIGHT := 38.0
+const MESSAGE_TEXT_MARGIN_BOTTOM := 22.0
+const MESSAGE_TEXT_MAX_CHARS := 30
+const CHOICE_TEXT_MARGIN_LEFT := 14.0
+const CHOICE_TEXT_MARGIN_TOP := 12.0
+const CHOICE_TEXT_MARGIN_RIGHT := 14.0
+const CHOICE_TEXT_MARGIN_BOTTOM := 10.0
+const CHOICE_TEXT_MAX_CHARS := 10
+const MESSAGE_FONT_SIZE := 24
+const CHOICE_FONT_SIZE := 24
 const FALLBACK_MESSAGE_SIZE := Vector2(520.0, 132.0)
 const FALLBACK_CHOICE_SIZE := Vector2(300.0, 146.0)
 const MAX_VISIBLE_MESSAGES := 5
@@ -123,6 +126,7 @@ func _create_message_bubble(line: String, speaker_type: String) -> Control:
 	root.custom_minimum_size = bubble_size
 	root.size = bubble_size
 	root.set_meta("speaker_type", speaker_type)
+	root.set_meta("align_side", "right" if is_player else "left")
 
 	if texture != null:
 		var bubble_texture := TextureRect.new()
@@ -246,17 +250,30 @@ func _normalize_choices(choices: Variant) -> Array[Dictionary]:
 	return normalized
 
 func _relayout_messages(animated: bool) -> void:
-	var bottom_y := size.y - VIEWPORT_PADDING.y
+	if _message_nodes.is_empty():
+		return
+
+	var latest_message := _message_nodes[_message_nodes.size() - 1]
+	var latest_message_top := clampf(
+		size.y * LATEST_MESSAGE_TOP_RATIO,
+		VIEWPORT_PADDING_VERTICAL,
+		maxf(
+			VIEWPORT_PADDING_VERTICAL,
+			size.y - VIEWPORT_PADDING_VERTICAL - latest_message.size.y
+		)
+	)
+	var bottom_y := latest_message_top + latest_message.size.y
 	var tween := create_tween() if animated else null
 	if tween != null:
 		tween.set_parallel(true)
 
 	for index in range(_message_nodes.size() - 1, -1, -1):
 		var message_node := _message_nodes[index]
-		bottom_y -= message_node.size.y
-		var is_player := str(message_node.get_meta("speaker_type", "companion")) == "player"
-		var target_x := VIEWPORT_PADDING.x if not is_player else size.x - VIEWPORT_PADDING.x - message_node.size.x
-		var target_position := Vector2(target_x, bottom_y)
+		if index != _message_nodes.size() - 1:
+			bottom_y -= message_node.size.y
+		var align_side := str(message_node.get_meta("align_side", "left"))
+		var target_x: float = VIEWPORT_PADDING_LEFT if align_side == "left" else maxf(VIEWPORT_PADDING_LEFT, size.x - VIEWPORT_PADDING_RIGHT - message_node.size.x)
+		var target_position := Vector2(target_x, bottom_y - message_node.size.y)
 		if tween != null:
 			tween.tween_property(message_node, "position", target_position, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		else:
