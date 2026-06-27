@@ -34,7 +34,7 @@ const PHYSICAL_ACTIVITY_GRACE_SECONDS: float = 1.4
 # 情感互動後暫停自然衰減的寬限時間；調大可讓選項成功的保護期更長，調小則維持難度更高。
 const EMOTIONAL_ACTIVITY_GRACE_SECONDS: float = 2.8
 # 高潮值上升速度；調大會更快進入成功結局，調小則需要更久的穩定表現。
-const PEAK_GAIN_RATE: float = 2.0
+const PEAK_GAIN_RATE: float = 3.0
 # 高潮值下降速度；調大會更容易因狀態不佳而退步，調小則容錯更高。
 const PEAK_LOSS_RATE: float = 1.0
 
@@ -85,23 +85,23 @@ const ARROW_PROMPT_ANCHOR_OFFSETS := [
 
 # Emotional interaction tuning.
 # 選到最佳選項時增加的情感值；調大會讓正確判斷更容易穩住情感，調小則成長較慢。
-const EMOTIONAL_GAIN_GOOD_CHOICE: float = 8.0
+const EMOTIONAL_GAIN_GOOD_CHOICE: float = 10.0
 # 選到中性選項時增加的情感值；調大會降低判斷失誤的成本，調小則更需要選到最佳答案。
-const EMOTIONAL_GAIN_NEUTRAL_CHOICE: float = 2.0
+const EMOTIONAL_GAIN_NEUTRAL_CHOICE: float = 3.0
 # 選到不佳選項時扣除的情感值；調大會讓錯選更傷，調小則玩家較能承受試錯。
-const EMOTIONAL_PENALTY_BAD_CHOICE: float = 6.0
+const EMOTIONAL_PENALTY_BAD_CHOICE: float = 5.0
 # 情感選項的作答時限；調大會給玩家更多閱讀與思考時間，調小則節奏更急迫。
 const CHOICE_TIMEOUT_SECONDS: float = 4.2
 # 回饋訊息出現的最短間隔；調大會讓情感事件較不密集，調小則更頻繁打斷玩家。
-const FEEDBACK_MESSAGE_INTERVAL_MIN: float = 1.8
+const FEEDBACK_MESSAGE_INTERVAL_MIN: float = 1.5
 # 回饋訊息出現的最長間隔；調大會拉大事件間距波動，調小則情感互動節奏更固定。
-const FEEDBACK_MESSAGE_INTERVAL_MAX: float = 4.6
+const FEEDBACK_MESSAGE_INTERVAL_MAX: float = 3.0
 
 # Presentation tuning.
 # 圓形 UI 的最小半徑；調大會讓小尺寸狀態下也較醒目，調小則更節省空間。
-const CIRCLE_RADIUS_MIN: float = 164.0
+const CIRCLE_RADIUS_MIN: float = 300.0
 # 圓形 UI 的最大半徑；調大會讓高狀態時的視覺膨脹更誇張，調小則變化較收斂。
-const CIRCLE_RADIUS_MAX: float = 252.0
+const CIRCLE_RADIUS_MAX: float = 600.0
 # 圓形描邊的最小粗細；調大會讓低狀態時也維持較強存在感，調小則更細緻。
 const CIRCLE_STROKE_MIN: float = 4.0
 # 圓形描邊的最大粗細；調大會強化高狀態時的視覺張力，調小則整體較輕。

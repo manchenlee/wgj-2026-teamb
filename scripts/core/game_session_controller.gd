@@ -1,3 +1,4 @@
+@tool
 extends Control
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
@@ -5,7 +6,6 @@ const ArousalModelClass := preload("res://scripts/gameplay/arousal_model.gd")
 const DirectionSequenceControllerClass := preload("res://scripts/gameplay/direction_sequence_controller.gd")
 const DialogueChoiceControllerClass := preload("res://scripts/gameplay/dialogue_choice_controller.gd")
 const EndingEvaluatorClass := preload("res://scripts/gameplay/ending_evaluator.gd")
-const CHARACTER_BACKGROUND_PATH := "res://assets/art/character/draft.png"
 
 signal ending_requested(ending_type: String)
 
@@ -32,8 +32,14 @@ var waiting_for_choice: bool = false
 var pending_prompt_action: String = ""
 
 func _ready() -> void:
+	_apply_character_background()
+
+	# In editor, only apply the preview texture.
+	# Do not start gameplay timers, input handling, or runtime logic.
+	if Engine.is_editor_hint():
+		return
+
 	feedback_rng.randomize()
-	_load_character_background()
 	set_process_unhandled_input(true)
 	dialogue_panel.choice_selected.connect(_on_choice_selected)
 	feedback_timer.timeout.connect(_on_feedback_timer_timeout)
@@ -42,12 +48,17 @@ func _ready() -> void:
 	choice_timeout_timer.timeout.connect(_on_choice_timeout)
 	reset_run()
 
-func _load_character_background() -> void:
-	var image := Image.load_from_file(CHARACTER_BACKGROUND_PATH)
-	if image == null or image.is_empty():
-		push_warning("Failed to load character background: %s" % CHARACTER_BACKGROUND_PATH)
+@export var character_background: Texture2D = preload("res://assets/art/character/draft.png"):
+	set(value):
+		character_background = value
+		if is_inside_tree():
+			_apply_character_background()
+
+func _apply_character_background() -> void:
+	if background_placeholder == null:
 		return
-	background_placeholder.texture = ImageTexture.create_from_image(image)
+
+	background_placeholder.texture = character_background
 
 func _process(delta: float) -> void:
 	if not run_active:

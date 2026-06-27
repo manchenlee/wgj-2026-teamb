@@ -1,110 +1,121 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene format=3 uid="uid://qttlbjiijsxe"]
 
-[ext_resource type="Script" path="res://scripts/core/game_session_controller.gd" id="1_game"]
+[ext_resource type="Script" uid="uid://bqjifxskxou0v" path="res://scripts/core/game_session_controller.gd" id="1_game"]
 [ext_resource type="PackedScene" path="res://scenes/components/CharacterArea.tscn" id="2_character"]
 [ext_resource type="PackedScene" path="res://scenes/components/DialoguePanel.tscn" id="3_dialogue"]
 [ext_resource type="PackedScene" path="res://scenes/components/StatusHUD.tscn" id="4_hud"]
-[ext_resource type="Script" path="res://scripts/presentation/central_arousal_visualization.gd" id="5_vis"]
+[ext_resource type="Script" uid="uid://y4sw51emkoug" path="res://scripts/presentation/central_arousal_visualization.gd" id="5_vis"]
 
-[node name="GameScreen" type="Control"]
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_alg88"]
+load_path = "res://.godot/imported/draft.png-80a3863fe83a454b531da103f3e5f42e.ctex"
+
+[node name="GameScreen" type="Control" unique_id=2039179595]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_game")
+character_background = SubResource("CompressedTexture2D_alg88")
 
-[node name="BackgroundAnchor" type="Control" parent="."]
-anchors_preset = 15
+[node name="BackgroundAnchor" type="Control" parent="." unique_id=1801418674]
+anchors_preset = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
-z_index = 0
 
-[node name="BackgroundColor" type="ColorRect" parent="BackgroundAnchor"]
-anchors_preset = 15
+[node name="BackgroundColor" type="ColorRect" parent="BackgroundAnchor" unique_id=92650428]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(1, 1, 1, 1)
 
-[node name="BackgroundPlaceholder" type="TextureRect" parent="BackgroundAnchor"]
+[node name="BackgroundPlaceholder" type="TextureRect" parent="BackgroundAnchor" unique_id=650608078]
 z_index = 2
 z_as_relative = false
-anchors_preset = 15
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
+texture = SubResource("CompressedTexture2D_alg88")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
-anchors_preset = 15
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=1694606072]
+z_index = 3
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
-z_index = 3
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
-[node name="ResponsiveLayout" type="VBoxContainer" parent="MarginContainer"]
+[node name="ResponsiveLayout" type="VBoxContainer" parent="MarginContainer" unique_id=701422928]
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="UpperLayout" type="BoxContainer" parent="MarginContainer/ResponsiveLayout"]
+[node name="UpperLayout" type="BoxContainer" parent="MarginContainer/ResponsiveLayout" unique_id=1044213160]
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 20
 
-[node name="CenterColumn" type="VBoxContainer" parent="MarginContainer/ResponsiveLayout/UpperLayout"]
+[node name="CenterColumn" type="VBoxContainer" parent="MarginContainer/ResponsiveLayout/UpperLayout" unique_id=38801407]
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 size_flags_stretch_ratio = 4.0
 
-[node name="CenterStage" type="Control" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn"]
+[node name="CenterStage" type="Control" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn" unique_id=2060484998]
 custom_minimum_size = Vector2(1080, 820)
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="CentralArousalVisualization" type="Control" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn/CenterStage"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+[node name="CentralArousalVisualization" type="Control" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn/CenterStage" unique_id=401470020]
 z_index = 1
 z_as_relative = false
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
 script = ExtResource("5_vis")
 character_placeholder_path = NodePath("../CharacterArea/CharacterVisualAnchor/CharacterPlaceholder")
 
-[node name="PeakIndicator" type="Label" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn/CenterStage/CentralArousalVisualization"]
+[node name="PeakIndicator" type="Label" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn/CenterStage/CentralArousalVisualization" unique_id=1128361418]
 z_index = 4
 z_as_relative = false
-text = "Peak 0"
+layout_mode = 0
 theme_override_colors/font_color = Color(0.12, 0.12, 0.16, 1)
+text = "Peak 0"
 
-[node name="CharacterArea" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn/CenterStage" instance=ExtResource("2_character")]
-anchors_preset = 15
+[node name="CharacterArea" parent="MarginContainer/ResponsiveLayout/UpperLayout/CenterColumn/CenterStage" unique_id=806207715 instance=ExtResource("2_character")]
+z_index = 4
+z_as_relative = false
+anchors_preset = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
-z_index = 4
-z_as_relative = false
 
-[node name="RightSideDialoguePanel" parent="MarginContainer/ResponsiveLayout/UpperLayout" instance=ExtResource("3_dialogue")]
+[node name="RightSideDialoguePanel" parent="MarginContainer/ResponsiveLayout/UpperLayout" unique_id=1454768142 instance=ExtResource("3_dialogue")]
 custom_minimum_size = Vector2(320, 0)
-size_flags_stretch_ratio = 1.0
+layout_mode = 2
 
-[node name="BottomHUD" parent="MarginContainer/ResponsiveLayout" instance=ExtResource("4_hud")]
+[node name="BottomHUD" parent="MarginContainer/ResponsiveLayout" unique_id=564354284 instance=ExtResource("4_hud")]
+layout_mode = 2
 
-[node name="AudioPlaceholders" type="Node" parent="."]
+[node name="AudioPlaceholders" type="Node" parent="." unique_id=1725971575]
 
-[node name="FeedbackTimer" type="Timer" parent="."]
-one_shot = true
+[node name="FeedbackTimer" type="Timer" parent="." unique_id=833369606]
 wait_time = 2.0
-
-[node name="PromptSpawnTimer" type="Timer" parent="."]
 one_shot = true
+
+[node name="PromptSpawnTimer" type="Timer" parent="." unique_id=1093291020]
 wait_time = 0.5
-
-[node name="ActivePromptTimer" type="Timer" parent="."]
 one_shot = true
+
+[node name="ActivePromptTimer" type="Timer" parent="." unique_id=225990098]
 wait_time = 1.6
-
-[node name="ChoiceTimeoutTimer" type="Timer" parent="."]
 one_shot = true
+
+[node name="ChoiceTimeoutTimer" type="Timer" parent="." unique_id=292030748]
 wait_time = 4.2
+one_shot = true
