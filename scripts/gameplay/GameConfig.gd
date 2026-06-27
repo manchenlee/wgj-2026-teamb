@@ -7,6 +7,9 @@ const MAX_VALUE: float = 100.0
 const TEST_FEEDBACK_TEXT: String = "test test test test test"
 const TEST_RESPONSE_TEXT: String = "response response response"
 
+# UI scaling.
+const UI_FONT_SCALE: float = 2.0
+
 # Core arousal values.
 const INITIAL_PHYSICAL: float = 30.0
 const INITIAL_EMOTIONAL: float = 30.0

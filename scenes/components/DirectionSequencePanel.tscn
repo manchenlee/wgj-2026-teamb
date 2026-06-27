@@ -21,7 +21,7 @@ text = "Direction Sequence"
 horizontal_alignment = 1
 
 [node name="SequenceLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 88)
+custom_minimum_size = Vector2(0, 176)
 bbcode_enabled = true
 fit_content = false
 scroll_active = false

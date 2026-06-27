@@ -4,6 +4,7 @@ extends PanelContainer
 signal choice_selected(choice_quality: String, choice_text: String)
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
+const UiThemeScaler := preload("res://scripts/ui/ui_theme_scaler.gd")
 
 @onready var history_scroll: ScrollContainer = $MarginContainer/VBoxContainer/ScrollableChatHistory
 @onready var history_list: VBoxContainer = $MarginContainer/VBoxContainer/ScrollableChatHistory/ChatHistoryList
@@ -45,7 +46,7 @@ func append_history(line: String, speaker_type: String = "companion") -> void:
 		row.add_child(left_spacer)
 
 	var bubble := PanelContainer.new()
-	bubble.custom_minimum_size = Vector2(220.0, 46.0)
+	bubble.custom_minimum_size = Vector2(440.0, 92.0)
 	bubble.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bubble.modulate = Color(1.0, 1.0, 1.0, 0.0)
 	bubble.scale = Vector2(0.94, 0.94)
@@ -66,7 +67,7 @@ func append_history(line: String, speaker_type: String = "companion") -> void:
 	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	message_label.text = line
 	message_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	message_label.custom_minimum_size = Vector2(220.0, 0.0)
+	message_label.custom_minimum_size = Vector2(440.0, 0.0)
 	bubble.add_child(message_label)
 	row.add_child(bubble)
 
@@ -76,6 +77,7 @@ func append_history(line: String, speaker_type: String = "companion") -> void:
 		row.add_child(right_spacer)
 
 	history_list.add_child(row)
+	UiThemeScaler.apply_to_tree(row)
 
 	var tween := create_tween()
 	tween.set_parallel(true)

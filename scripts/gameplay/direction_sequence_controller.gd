@@ -63,13 +63,13 @@ func get_sequence_text() -> String:
 	for index in current_sequence.size():
 		var arrow := _to_arrow(current_sequence[index])
 		if index < current_index:
-			parts.append("[font_size=30][color=#71d99e]%s[/color][/font_size]" % arrow)
+			parts.append("[font_size=60][color=#71d99e]%s[/color][/font_size]" % arrow)
 		elif index == current_index and round_active:
-			parts.append("[b][font_size=36][color=#fff1a8]%s[/color][/font_size][/b]" % arrow)
+			parts.append("[b][font_size=72][color=#fff1a8]%s[/color][/font_size][/b]" % arrow)
 		else:
-			parts.append("[font_size=30][color=#7d7d87]%s[/color][/font_size]" % arrow)
+			parts.append("[font_size=60][color=#7d7d87]%s[/color][/font_size]" % arrow)
 	if parts.is_empty():
-		return "[center][font_size=22][color=#7d7d87]Waiting for round...[/color][/font_size][/center]"
+		return "[center][font_size=44][color=#7d7d87]Waiting for round...[/color][/font_size][/center]"
 	return "[center]%s[/center]" % "     ".join(parts)
 
 func _to_arrow(direction: String) -> String:

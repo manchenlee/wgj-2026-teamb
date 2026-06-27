@@ -66,7 +66,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 
 [node name="RightSideDialoguePanel" parent="MarginContainer/ResponsiveLayout/UpperLayout" instance=ExtResource("3_dialogue")]
-custom_minimum_size = Vector2(360, 0)
+custom_minimum_size = Vector2(600, 0)
 
 [node name="BottomHUD" parent="MarginContainer/ResponsiveLayout" instance=ExtResource("4_hud")]
 
