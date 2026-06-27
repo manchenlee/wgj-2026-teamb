@@ -71,12 +71,12 @@ func _show_ending(ending_type: String) -> void:
 	_swap_screen(screen)
 	debug_overlay.sync_live_readout({
 		"screen": "%s:%s" % [Config.SCREEN_ENDING, ending_type],
+		"phase": "-",
 		"physical": "-",
 		"emotional": "-",
 		"peak": "-",
 		"combo": "-",
-		"round": "-",
-		"sequence": "-"
+		"prompt": "-"
 	})
 
 func _swap_screen(next_screen: Control) -> void:

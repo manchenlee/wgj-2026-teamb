@@ -42,14 +42,14 @@ func toggle() -> void:
 	visible = not visible
 
 func sync_live_readout(state: Dictionary) -> void:
-	live_label.text = "Screen: %s | Physical: %s | Emotional: %s | Peak: %s | Combo: %s | Round: %s | Sequence: %s" % [
+	live_label.text = "Screen: %s | Phase: %s | Physical: %s | Emotional: %s | Peak: %s | Combo: %s | Prompt: %s" % [
 		str(state.get("screen", "-")),
+		str(state.get("phase", "-")),
 		str(state.get("physical", "-")),
 		str(state.get("emotional", "-")),
 		str(state.get("peak", "-")),
 		str(state.get("combo", "-")),
-		str(state.get("round", "-")),
-		str(state.get("sequence", "-"))
+		str(state.get("prompt", "-"))
 	]
 
 func _bind_stage_button(path: String, stage: String) -> void:

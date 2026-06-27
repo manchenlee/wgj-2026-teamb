@@ -1,12 +1,11 @@
 class_name DirectionSequenceController
 extends RefCounted
 
-const Config := preload("res://scripts/gameplay/GameConfig.gd")
-
 var rng := RandomNumberGenerator.new()
+var phase_config = null
 var directions: Array[String] = []
-var anchor_positions: Array[Vector2] = []
-var available_anchor_positions: Array[Vector2] = []
+var anchor_ids: Array[String] = []
+var available_anchor_ids: Array[String] = []
 var current_index: int = -1
 var visible_count: int = 0
 var prompt_active: bool = false
@@ -14,22 +13,25 @@ var prompt_active: bool = false
 func _init() -> void:
 	rng.randomize()
 
-func set_prompt_anchor_positions(positions: Array[Vector2]) -> void:
-	available_anchor_positions = positions.duplicate()
+func set_phase_config(next_phase_config) -> void:
+	phase_config = next_phase_config
+
+func set_prompt_anchor_ids(ids: Array[String]) -> void:
+	available_anchor_ids = ids.duplicate()
 
 func start_sequence() -> Dictionary:
 	clear_sequence()
 	var sequence_length := rng.randi_range(
-		Config.DIRECTION_SEQUENCE_LENGTH_MIN,
-		Config.DIRECTION_SEQUENCE_LENGTH_MAX
+		_get_phase_int("direction_sequence_length_min", 3),
+		_get_phase_int("direction_sequence_length_max", 4)
 	)
 	var directions_pool := _build_direction_pool(sequence_length)
-	var last_anchor := Vector2.INF
+	var last_anchor_id := ""
 	for step_index in range(sequence_length):
 		directions.append(directions_pool[step_index])
-		var next_anchor := _pick_anchor(last_anchor)
-		anchor_positions.append(next_anchor)
-		last_anchor = next_anchor
+		var next_anchor_id := _pick_anchor_id(last_anchor_id)
+		anchor_ids.append(next_anchor_id)
+		last_anchor_id = next_anchor_id
 	current_index = 0
 	visible_count = 0
 	prompt_active = not directions.is_empty()
@@ -40,7 +42,7 @@ func get_current_prompt() -> Dictionary:
 		return {}
 	return {
 		"direction": directions[current_index],
-		"anchor_position": anchor_positions[current_index],
+		"anchor_id": anchor_ids[current_index],
 		"arrow": _to_arrow(directions[current_index]),
 		"step_index": current_index,
 		"step_count": directions.size()
@@ -54,7 +56,7 @@ func reveal_next_prompt() -> Dictionary:
 	return {
 		"prompt_id": prompt_index,
 		"direction": directions[prompt_index],
-		"anchor_position": anchor_positions[prompt_index],
+		"anchor_id": anchor_ids[prompt_index],
 		"arrow": _to_arrow(directions[prompt_index]),
 		"step_index": prompt_index,
 		"step_count": directions.size()
@@ -68,7 +70,7 @@ func submit_input(direction: String) -> Dictionary:
 		return {"result": "inactive"}
 
 	var expected := directions[current_index]
-	var current_anchor := anchor_positions[current_index]
+	var current_anchor_id := anchor_ids[current_index]
 	var consumed_index := current_index
 	if direction == expected:
 		current_index += 1
@@ -78,7 +80,7 @@ func submit_input(direction: String) -> Dictionary:
 				"result": "sequence_complete",
 				"consumed_prompt_id": consumed_index,
 				"direction": expected,
-				"anchor_position": current_anchor
+				"anchor_id": current_anchor_id
 			}
 		var auto_revealed_prompt := {}
 		if current_index >= visible_count:
@@ -87,7 +89,7 @@ func submit_input(direction: String) -> Dictionary:
 			"result": "correct",
 			"consumed_prompt_id": consumed_index,
 			"direction": expected,
-			"anchor_position": current_anchor,
+			"anchor_id": current_anchor_id,
 			"next_prompt": get_current_prompt(),
 			"auto_revealed_prompt": auto_revealed_prompt
 		}
@@ -98,12 +100,12 @@ func submit_input(direction: String) -> Dictionary:
 		"consumed_prompt_id": consumed_index,
 		"expected": expected,
 		"direction": direction,
-		"anchor_position": current_anchor
+		"anchor_id": current_anchor_id
 	}
 
 func clear_sequence() -> void:
 	directions.clear()
-	anchor_positions.clear()
+	anchor_ids.clear()
 	current_index = -1
 	visible_count = 0
 	prompt_active = false
@@ -112,12 +114,11 @@ func get_prompt_debug_state() -> String:
 	if not prompt_active:
 		return "waiting"
 	var current_prompt := get_current_prompt()
-	return "%s %d/%d @ (%.0f, %.0f)" % [
+	return "%s %d/%d @ %s" % [
 		str(current_prompt.get("direction", "")),
 		int(current_prompt.get("step_index", 0)) + 1,
 		int(current_prompt.get("step_count", 0)),
-		current_prompt.get("anchor_position", Vector2.ZERO).x,
-		current_prompt.get("anchor_position", Vector2.ZERO).y
+		str(current_prompt.get("anchor_id", "?"))
 	]
 
 func get_sequence_progress_text() -> String:
@@ -133,26 +134,31 @@ func _build_direction_pool(sequence_length: int) -> Array[String]:
 		result.append(base_directions[index % base_directions.size()])
 	return result
 
-func _pick_anchor(previous_anchor: Vector2) -> Vector2:
-	var available: Array[Vector2] = available_anchor_positions
+func _pick_anchor_id(previous_anchor_id: String) -> String:
+	var available: Array[String] = available_anchor_ids
 	if available.is_empty():
-		available = Config.ARROW_PROMPT_ANCHOR_OFFSETS
-	var next_anchor: Vector2 = available[rng.randi_range(0, available.size() - 1)]
+		available = ["HeadLeft", "HeadRight", "Chest", "LeftArm", "RightArm", "Waist"]
+	var next_anchor_id := available[rng.randi_range(0, available.size() - 1)]
 	if available.size() <= 1:
-		return next_anchor
-	while next_anchor == previous_anchor:
-		next_anchor = available[rng.randi_range(0, available.size() - 1)]
-	return next_anchor
+		return next_anchor_id
+	while next_anchor_id == previous_anchor_id:
+		next_anchor_id = available[rng.randi_range(0, available.size() - 1)]
+	return next_anchor_id
+
+func _get_phase_int(property_name: String, fallback: int) -> int:
+	if phase_config != null:
+		return int(phase_config.get(property_name))
+	return fallback
 
 func _to_arrow(direction: String) -> String:
 	match direction:
 		"Left":
-			return "←"
+			return "\u2190"
 		"Right":
-			return "→"
+			return "\u2192"
 		"Up":
-			return "↑"
+			return "\u2191"
 		"Down":
-			return "↓"
+			return "\u2193"
 		_:
 			return "?"

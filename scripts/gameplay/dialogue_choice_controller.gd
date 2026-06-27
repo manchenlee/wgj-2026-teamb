@@ -2,9 +2,9 @@ class_name DialogueChoiceController
 extends RefCounted
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
-const FEEDBACK_DATA_PATH := "res://assets/dialogue/feedback.json"
-const TEST_TEXT := "測試測試測試測試測試測試測試測試測試測試"
+const TEST_TEXT := "皜祈岫皜祈岫皜祈岫皜祈岫皜祈岫皜祈岫皜祈岫皜祈岫皜祈岫皜祈岫"
 
+var phase_config = null
 var current_prompt: Dictionary = {}
 var current_entry: Dictionary = {}
 var entries: Array = []
@@ -13,6 +13,9 @@ var rng := RandomNumberGenerator.new()
 
 func _init() -> void:
 	rng.randomize()
+
+func set_phase_config(next_phase_config) -> void:
+	phase_config = next_phase_config
 	_load_feedback_entries()
 
 func reset() -> void:
@@ -35,11 +38,11 @@ func apply_choice(choice_quality: String, model) -> Dictionary:
 	var delta_value := 0.0
 	match choice_quality:
 		"good":
-			delta_value = Config.EMOTIONAL_GAIN_GOOD_CHOICE
+			delta_value = float(_get_choice_reward_values().get("good", 10.0))
 		"neutral":
-			delta_value = Config.EMOTIONAL_GAIN_NEUTRAL_CHOICE
+			delta_value = float(_get_choice_reward_values().get("neutral", 3.0))
 		"bad":
-			delta_value = -Config.EMOTIONAL_PENALTY_BAD_CHOICE
+			delta_value = -float(_get_choice_penalty_values().get("bad", 5.0))
 
 	model.apply_emotional(delta_value)
 	var reply := _get_choice_response(choice_quality, current_entry)
@@ -55,24 +58,28 @@ func get_timeout_reply() -> String:
 
 func _load_feedback_entries() -> void:
 	entries.clear()
-	if not FileAccess.file_exists(FEEDBACK_DATA_PATH):
-		push_warning("Feedback dialogue file not found: %s" % FEEDBACK_DATA_PATH)
+	var feedback_data_path := _get_feedback_data_path()
+	if feedback_data_path.is_empty():
+		push_warning("Feedback dialogue file path is empty for active phase.")
+		return
+	if not FileAccess.file_exists(feedback_data_path):
+		push_warning("Feedback dialogue file not found: %s" % feedback_data_path)
 		return
 
-	var raw_text := FileAccess.get_file_as_string(FEEDBACK_DATA_PATH)
+	var raw_text := FileAccess.get_file_as_string(feedback_data_path)
 	if raw_text.is_empty():
-		push_warning("Feedback dialogue file is empty: %s" % FEEDBACK_DATA_PATH)
+		push_warning("Feedback dialogue file is empty: %s" % feedback_data_path)
 		return
 
 	var parsed: Variant = JSON.parse_string(raw_text)
 	if typeof(parsed) != TYPE_DICTIONARY:
-		push_warning("Feedback dialogue file has invalid JSON structure: %s" % FEEDBACK_DATA_PATH)
+		push_warning("Feedback dialogue file has invalid JSON structure: %s" % feedback_data_path)
 		return
 	var parsed_dict := parsed as Dictionary
 
 	var parsed_entries: Variant = parsed_dict.get("entries", [])
 	if typeof(parsed_entries) != TYPE_ARRAY:
-		push_warning("Feedback dialogue entries field is not an array: %s" % FEEDBACK_DATA_PATH)
+		push_warning("Feedback dialogue entries field is not an array: %s" % feedback_data_path)
 		return
 
 	for entry_variant in parsed_entries as Array:
@@ -165,14 +172,14 @@ func _pick_random_text(source: Variant, fallback: String) -> String:
 	return str(text_options[rng.randi_range(0, text_options.size() - 1)])
 
 func _classify_physical_state(physical: float) -> String:
-	if physical < Config.FEEDBACK_PHYSICAL_LOW_THRESHOLD:
+	if physical < _get_phase_value("feedback_physical_low_threshold", 30.0):
 		return "low"
 	return ""
 
 func _classify_emotional_state(emotional: float) -> String:
-	if emotional < Config.FEEDBACK_EMOTIONAL_LOW_THRESHOLD:
+	if emotional < _get_phase_value("feedback_emotional_low_threshold", 30.0):
 		return "low"
-	if emotional >= Config.FEEDBACK_EMOTIONAL_HIGH_THRESHOLD:
+	if emotional >= _get_phase_value("feedback_emotional_high_threshold", 60.0):
 		return "high"
 	return ""
 
@@ -181,3 +188,17 @@ func _build_test_feedback_text(_physical: float, _emotional: float) -> String:
 
 func _build_test_prompt_text(_physical: float, _emotional: float) -> String:
 	return TEST_TEXT
+
+func _get_feedback_data_path() -> String:
+	return String(_get_phase_value("dialogue_data_source", "res://assets/dialogue/feedback.json"))
+
+func _get_choice_reward_values() -> Dictionary:
+	return _get_phase_value("choice_reward_values", {"good": 10.0, "neutral": 3.0})
+
+func _get_choice_penalty_values() -> Dictionary:
+	return _get_phase_value("choice_penalty_values", {"bad": 5.0})
+
+func _get_phase_value(property_name: String, fallback: Variant) -> Variant:
+	if phase_config != null:
+		return phase_config.get(property_name)
+	return fallback

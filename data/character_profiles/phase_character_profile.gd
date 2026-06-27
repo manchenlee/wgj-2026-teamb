@@ -1,0 +1,43 @@
+class_name PhaseCharacterProfile
+extends RefCounted
+
+var profile_id: String
+var base_state_textures: Dictionary
+var gameover_state_textures: Dictionary
+var overlay_animation_set: Dictionary
+var prompt_anchor_layout: Dictionary
+var breathing_region_rect: Rect2
+
+func _init(
+	profile_id_value: String = "",
+	base_state_textures_value: Dictionary = {},
+	gameover_state_textures_value: Dictionary = {},
+	overlay_animation_set_value: Dictionary = {},
+	prompt_anchor_layout_value: Dictionary = {},
+	breathing_region_rect_value: Rect2 = Rect2(0.34, 0.5, 0.28, 0.35)
+) -> void:
+	profile_id = profile_id_value
+	base_state_textures = base_state_textures_value.duplicate(true)
+	gameover_state_textures = gameover_state_textures_value.duplicate(true)
+	overlay_animation_set = overlay_animation_set_value.duplicate(true)
+	prompt_anchor_layout = prompt_anchor_layout_value.duplicate(true)
+	breathing_region_rect = breathing_region_rect_value
+
+func get_all_texture_paths() -> Dictionary:
+	var merged := base_state_textures.duplicate(true)
+	for state_name_variant in gameover_state_textures.keys():
+		var state_name := String(state_name_variant)
+		merged[state_name] = gameover_state_textures[state_name]
+	return merged
+
+func get_texture_path(state_name: String) -> String:
+	if gameover_state_textures.has(state_name):
+		return String(gameover_state_textures[state_name])
+	return String(base_state_textures.get(state_name, ""))
+
+func get_anchor_layout_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for anchor_id_variant in prompt_anchor_layout.keys():
+		ids.append(String(anchor_id_variant))
+	ids.sort()
+	return ids

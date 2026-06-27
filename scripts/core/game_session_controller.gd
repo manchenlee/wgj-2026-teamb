@@ -2,6 +2,7 @@
 extends Control
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
+const PhaseLibraryClass := preload("res://data/phases/phase_library.gd")
 const ArousalModelClass := preload("res://scripts/gameplay/arousal_model.gd")
 const DirectionSequenceControllerClass := preload("res://scripts/gameplay/direction_sequence_controller.gd")
 const DialogueChoiceControllerClass := preload("res://scripts/gameplay/dialogue_choice_controller.gd")
@@ -9,39 +10,11 @@ const EndingEvaluatorClass := preload("res://scripts/gameplay/ending_evaluator.g
 const ENDING_SCENE := preload("res://scenes/screens/EndingScreen.tscn")
 const GAME_SCENE := preload("res://scenes/screens/GameScreen.tscn")
 const TITLE_SCENE := preload("res://scenes/screens/TitleScreen.tscn")
-const CHARACTER_VISUAL_PATHS := {
-	"draft": "res://assets/art/character/draft.png",
-	"overall_init": "res://assets/art/character/phase1/overall_init.png",
-	"overall_low": "res://assets/art/character/phase1/overall_low.png",
-	"overall_medium": "res://assets/art/character/phase1/overall_medium.png",
-	"overall_high": "res://assets/art/character/phase1/overall_high.png",
-	"physic_high_mental_low": "res://assets/art/character/phase1/physic_high_mental_low.png.png",
-	"physic_high_mental_low_gameover": "res://assets/art/character/phase1/physic_high_mental_low_gameover.png",
-	"physic_low_mental_high": "res://assets/art/character/phase1/physic_low_mental_high.png",
-	"physic_low_mental_high_gameover": "res://assets/art/character/phase1/physic_low_mental_high_gameover.png"
-}
-const OVERLAY_MOTION_ASSET_PATHS := {
-	"tentacle1": [
-		"res://assets/art/character/phase1/tentacle1_1.png",
-		"res://assets/art/character/phase1/tentacle1_2.png"
-	],
-	"tentacle2": [
-		"res://assets/art/character/phase1/tentacle2_1.png",
-		"res://assets/art/character/phase1/tentacle2_2.png"
-	],
-	"tentacle3": [
-		"res://assets/art/character/phase1/tentacle3_1.png",
-		"res://assets/art/character/phase1/tentacle3_2.png"
-	],
-	"tentacle4": [
-		"res://assets/art/character/phase1/tentacle4_1.png",
-		"res://assets/art/character/phase1/tentacle4_2.png"
-	]
-}
 
 signal ending_requested(ending_type: String)
 
 @export var show_layout_debug_bounds: bool = false
+@export var debug_start_phase_id: String = ""
 
 @onready var background_placeholder: TextureRect = $BackgroundAnchor/BackgroundPlaceholder
 @onready var overlay_animator = $BackgroundAnchor/OverlayAnimator
@@ -52,6 +25,7 @@ signal ending_requested(ending_type: String)
 @onready var arousal_visualization = $MainCharacterArea/CentralArousalVisualization
 @onready var dialogue_panel = $ConversationViewport
 @onready var status_hud = $BottomHUD
+@onready var phase_debug_label: Label = $PhaseDebugLabel
 @onready var layout_debug_regions := [
 	$MainCharacterArea/DebugRegionTint,
 	$ConversationViewport/DebugRegionTint,
@@ -79,18 +53,20 @@ var character_visual_warnings_printed: Dictionary = {}
 var overlay_motion_set: Dictionary = {}
 var ending_transition_started: bool = false
 var has_left_overall_init_visual: bool = false
+var phase_transition_in_progress: bool = false
+var phase_sequence: Array = []
+var active_phase_index: int = 0
+var active_phase_config = null
+var active_character_profile = null
 
 func _ready() -> void:
-	_cache_character_visual_textures()
-	overlay_motion_set = _build_overlay_motion_set()
-	_apply_character_background()
+	_build_phase_sequence()
+	_apply_phase_by_index(_get_initial_phase_index(), false)
 	_update_character_visual_state()
 	_apply_overlay_motion_set()
 	_bind_breathing_targets()
 	_update_layout_debug_regions()
 
-	# In editor, only apply the preview texture.
-	# Do not start gameplay timers, input handling, or runtime logic.
 	if Engine.is_editor_hint():
 		set_process(false)
 		set_process_unhandled_input(false)
@@ -98,7 +74,6 @@ func _ready() -> void:
 
 	feedback_rng.randomize()
 	set_process_unhandled_input(true)
-	_sync_prompt_anchor_layout()
 	dialogue_panel.choice_selected.connect(_on_choice_selected)
 	feedback_timer.timeout.connect(_on_feedback_timer_timeout)
 	prompt_spawn_timer.timeout.connect(_on_prompt_spawn_timer_timeout)
@@ -115,17 +90,67 @@ func _ready() -> void:
 			_apply_character_background()
 			_update_character_visual_state()
 
+func _build_phase_sequence() -> void:
+	phase_sequence = PhaseLibraryClass.build_default_sequence()
+	if phase_sequence.is_empty():
+		push_error("GameSessionController: phase sequence is empty.")
+
+func _get_initial_phase_index() -> int:
+	if debug_start_phase_id.is_empty():
+		return 0
+	for index in range(phase_sequence.size()):
+		if String(phase_sequence[index].phase_id) == debug_start_phase_id:
+			return index
+	push_warning("Unknown debug_start_phase_id '%s'; falling back to Phase 1." % debug_start_phase_id)
+	return 0
+
 func _apply_character_background() -> void:
 	if background_placeholder == null:
 		return
-
 	background_placeholder.texture = character_background
+
+func _apply_phase_by_index(phase_index: int, announce_phase: bool) -> void:
+	if phase_index < 0 or phase_index >= phase_sequence.size():
+		push_error("GameSessionController: invalid phase index %d." % phase_index)
+		return
+
+	active_phase_index = phase_index
+	active_phase_config = phase_sequence[phase_index]
+	active_character_profile = active_phase_config.character_profile
+	arousal_model.set_phase_config(active_phase_config)
+	sequence_controller.set_phase_config(active_phase_config)
+	dialogue_controller.set_phase_config(active_phase_config)
+	_cache_character_visual_textures()
+	overlay_motion_set = _build_overlay_motion_set()
+	_apply_phase_visual_profile()
+	_sync_prompt_anchor_layout()
+	if announce_phase and not Engine.is_editor_hint():
+		dialogue_panel.append_history("Debug: entering %s" % active_phase_config.phase_id, "system")
+	_update_phase_debug_label()
+
+func _apply_phase_visual_profile() -> void:
+	if active_character_profile == null:
+		return
+	_apply_character_background()
+	_update_prompt_anchor_layout_from_profile()
+	_apply_breathing_profile()
+	_update_character_visual_state()
+	_apply_overlay_motion_set()
+	_bind_breathing_targets()
+
+func _apply_breathing_profile() -> void:
+	if breathing_controller == null or active_character_profile == null:
+		return
+	breathing_controller.set("chest_region_rect", active_character_profile.breathing_region_rect)
 
 func _cache_character_visual_textures() -> void:
 	character_visual_textures.clear()
-	for state_name_variant in CHARACTER_VISUAL_PATHS.keys():
+	if active_character_profile == null:
+		return
+	var texture_paths: Dictionary = active_character_profile.get_all_texture_paths()
+	for state_name_variant in texture_paths.keys():
 		var state_name := String(state_name_variant)
-		var asset_path := String(CHARACTER_VISUAL_PATHS[state_name])
+		var asset_path := String(texture_paths[state_name])
 		var texture := _load_texture_from_asset_path(asset_path)
 		if texture == null:
 			_warn_character_visual_once(
@@ -155,9 +180,11 @@ func _load_texture_from_asset_path(asset_path: String) -> Texture2D:
 
 func _build_overlay_motion_set() -> Dictionary:
 	var motion_set: Dictionary = {}
-	for motion_id_variant in OVERLAY_MOTION_ASSET_PATHS.keys():
+	if active_phase_config == null:
+		return motion_set
+	for motion_id_variant in active_phase_config.overlay_animation_set.keys():
 		var motion_id := String(motion_id_variant)
-		var frame_paths_variant = OVERLAY_MOTION_ASSET_PATHS[motion_id]
+		var frame_paths_variant = active_phase_config.overlay_animation_set[motion_id]
 		if typeof(frame_paths_variant) != TYPE_ARRAY:
 			_warn_character_visual_once(
 				"overlay_malformed:%s" % motion_id,
@@ -227,15 +254,15 @@ func _get_character_visual_state_key(forced_ending_type: String = "") -> String:
 	if forced_ending_type == Config.EMOTIONAL_IMBALANCE_FAILURE_ENDING:
 		return "physic_low_mental_high_gameover"
 
-	var mismatch_low_threshold := Config.MINIMUM_ACTIVE_THRESHOLD
-	var mismatch_high_threshold := Config.FEEDBACK_EMOTIONAL_HIGH_THRESHOLD
+	var mismatch_low_threshold := _get_phase_value("minimum_active_threshold", 20.0)
+	var mismatch_high_threshold := _get_phase_value("feedback_emotional_high_threshold", 60.0)
 	if arousal_model.physical >= mismatch_high_threshold and arousal_model.emotional < mismatch_low_threshold:
 		return "physic_high_mental_low"
 	if arousal_model.emotional >= mismatch_high_threshold and arousal_model.physical < mismatch_low_threshold:
 		return "physic_low_mental_high"
-	if arousal_model.peak >= mismatch_high_threshold:
+	if arousal_model.peak >= _get_phase_value("overall_high_threshold", 60.0):
 		return "overall_high"
-	if arousal_model.peak >= mismatch_low_threshold:
+	if arousal_model.peak >= _get_phase_value("overall_medium_threshold", 20.0):
 		return "overall_medium"
 	if has_left_overall_init_visual:
 		return "overall_low"
@@ -245,7 +272,9 @@ func _get_character_visual_texture(visual_state: String) -> Texture2D:
 	if character_visual_textures.has(visual_state):
 		return character_visual_textures[visual_state] as Texture2D
 
-	var missing_path := String(CHARACTER_VISUAL_PATHS.get(visual_state, "unknown"))
+	var missing_path := ""
+	if active_character_profile != null:
+		missing_path = active_character_profile.get_texture_path(visual_state)
 	_warn_character_visual_once(
 		"fallback:%s" % visual_state,
 		"Character visual state '%s' missing, falling back. Expected asset: %s" % [visual_state, missing_path]
@@ -269,6 +298,7 @@ func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
 	if not run_active:
+		_update_phase_debug_label()
 		return
 
 	arousal_model.apply_decay(delta)
@@ -301,24 +331,40 @@ func _unhandled_input(event: InputEvent) -> void:
 			_on_direction_pressed(direction)
 
 func reset_run() -> void:
+	_reset_run_for_phase_index(_get_initial_phase_index())
+
+func start_direct_in_phase_2() -> void:
+	_reset_run_for_phase_id("phase_2")
+
+func start_in_phase_for_debug(phase_id: String) -> void:
+	_reset_run_for_phase_id(phase_id)
+
+func _reset_run_for_phase_id(phase_id: String) -> void:
+	for index in range(phase_sequence.size()):
+		if String(phase_sequence[index].phase_id) == phase_id:
+			_reset_run_for_phase_index(index)
+			return
+	push_warning("Unknown phase id '%s' for debug start." % phase_id)
+	_reset_run_for_phase_index(0)
+
+func _reset_run_for_phase_index(phase_index: int) -> void:
 	print_debug("reset run")
+	phase_transition_in_progress = false
 	run_active = true
 	ending_transition_started = false
 	has_left_overall_init_visual = false
 	combo = 0
-	prompt_spawn_timer.stop()
-	feedback_timer.stop()
-	active_prompt_timer.stop()
-	choice_timeout_timer.stop()
+	current_prompt = {}
 	pending_prompt_action = ""
+	waiting_for_choice = false
+	prompt_expiration_times.clear()
+	_stop_runtime_timers()
 	sequence_controller.clear_sequence()
+	character_area.clear_direction_prompts()
+	dialogue_panel.clear_history()
+	_apply_phase_by_index(phase_index, false)
 	arousal_model.reset()
 	dialogue_controller.reset()
-	dialogue_panel.clear_history()
-	prompt_expiration_times.clear()
-	character_area.clear_direction_prompts()
-	waiting_for_choice = false
-	_apply_overlay_motion_set()
 	if overlay_animator != null:
 		overlay_animator.play_idle()
 	if breathing_controller != null and breathing_controller.has_method("start_breathing"):
@@ -334,11 +380,15 @@ func apply_debug_values(value: float) -> void:
 	_update_presentation()
 
 func force_ending(ending_type: String) -> void:
+	if ending_type == Config.SUCCESS_ENDING and _has_next_phase():
+		_begin_phase_transition()
+		return
 	_begin_ending_transition(ending_type)
 
 func get_debug_state() -> Dictionary:
 	return {
 		"screen": Config.SCREEN_GAME,
+		"phase": _get_active_phase_id(),
 		"physical": int(round(arousal_model.physical)),
 		"emotional": int(round(arousal_model.emotional)),
 		"peak": int(round(arousal_model.peak)),
@@ -357,9 +407,10 @@ func _on_direction_pressed(direction: String) -> void:
 		return
 	var result: Dictionary = sequence_controller.submit_input(direction)
 	print_debug(
-		"direction input: %s -> %s (combo=%d physical=%.1f prompt=%s)" % [
+		"direction input: %s -> %s (phase=%s combo=%d physical=%.1f prompt=%s)" % [
 			direction,
 			str(result.get("result", "unknown")),
+			_get_active_phase_id(),
 			combo,
 			arousal_model.physical,
 			sequence_controller.get_prompt_debug_state()
@@ -368,14 +419,14 @@ func _on_direction_pressed(direction: String) -> void:
 	match str(result.get("result", "")):
 		"correct":
 			combo += 1
-			arousal_model.apply_physical(Config.PHYSICAL_GAIN_ON_CORRECT_INPUT)
+			arousal_model.apply_physical(float(active_phase_config.direction_reward_values.get("correct_input", 1.0)))
 			arousal_model.refresh_physical_activity()
 			_remove_prompt(int(result.get("consumed_prompt_id", -1)))
 			var auto_revealed_prompt: Dictionary = result.get("auto_revealed_prompt", {})
 			if not auto_revealed_prompt.is_empty():
 				_show_visible_prompt(auto_revealed_prompt)
 			character_area.show_prompt_feedback(
-				"Correct +%d" % int(round(Config.PHYSICAL_GAIN_ON_CORRECT_INPUT)),
+				"Correct +%d" % int(round(float(active_phase_config.direction_reward_values.get("correct_input", 1.0)))),
 				Color(0.45, 0.87, 0.56, 1.0),
 				Config.CORRECT_FEEDBACK_DISPLAY_DURATION
 			)
@@ -384,12 +435,12 @@ func _on_direction_pressed(direction: String) -> void:
 			_schedule_extra_prompt_reveal()
 		"sequence_complete":
 			combo += 1
-			arousal_model.apply_physical(Config.PHYSICAL_GAIN_ON_CORRECT_INPUT)
-			arousal_model.apply_physical(Config.PHYSICAL_SEQUENCE_COMPLETE_BONUS)
+			arousal_model.apply_physical(float(active_phase_config.direction_reward_values.get("correct_input", 1.0)))
+			arousal_model.apply_physical(float(active_phase_config.direction_reward_values.get("sequence_complete_bonus", 5.0)))
 			arousal_model.refresh_physical_activity()
 			_remove_prompt(int(result.get("consumed_prompt_id", -1)))
 			character_area.show_prompt_feedback(
-				"Sequence Complete +%d" % int(round(Config.PHYSICAL_SEQUENCE_COMPLETE_BONUS)),
+				"Sequence Complete +%d" % int(round(float(active_phase_config.direction_reward_values.get("sequence_complete_bonus", 5.0)))),
 				Color(0.62, 0.95, 0.56, 1.0),
 				Config.CORRECT_FEEDBACK_DISPLAY_DURATION + 0.1
 			)
@@ -417,13 +468,13 @@ func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 func _handle_wrong_input() -> void:
 	combo = 0
 	active_prompt_timer.stop()
-	arousal_model.apply_physical(-Config.PHYSICAL_PENALTY_ON_WRONG_INPUT)
+	arousal_model.apply_physical(-float(active_phase_config.direction_penalty_values.get("wrong_input", 2.0)))
 	arousal_model.refresh_physical_activity()
 	sequence_controller.clear_sequence()
 	prompt_expiration_times.clear()
 	character_area.clear_direction_prompts()
 	character_area.show_prompt_feedback(
-		"Wrong -%d" % int(round(Config.PHYSICAL_PENALTY_ON_WRONG_INPUT)),
+		"Wrong -%d" % int(round(float(active_phase_config.direction_penalty_values.get("wrong_input", 2.0)))),
 		Color(0.95, 0.35, 0.35, 1.0),
 		Config.WRONG_FEEDBACK_DISPLAY_DURATION
 	)
@@ -431,13 +482,40 @@ func _handle_wrong_input() -> void:
 	_schedule_new_sequence()
 
 func _check_ending() -> void:
-	if ending_transition_started:
+	if ending_transition_started or phase_transition_in_progress:
 		return
-	var ending_type := EndingEvaluatorClass.evaluate(arousal_model)
+	var ending_type := EndingEvaluatorClass.evaluate(arousal_model, active_phase_config)
 	if ending_type.is_empty():
 		return
-	print_debug("ending: %s" % ending_type)
+	print_debug("ending: %s phase=%s" % [ending_type, _get_active_phase_id()])
+	if ending_type == Config.SUCCESS_ENDING and _has_next_phase():
+		_begin_phase_transition()
+		return
 	_begin_ending_transition(ending_type)
+
+func _begin_phase_transition() -> void:
+	if phase_transition_in_progress:
+		return
+	phase_transition_in_progress = true
+	run_active = false
+	_stop_runtime_timers()
+	waiting_for_choice = false
+	current_prompt = {}
+	prompt_expiration_times.clear()
+	sequence_controller.clear_sequence()
+	character_area.clear_direction_prompts()
+	dialogue_panel.hide_prompt()
+	dialogue_panel.hide_choices()
+	var transition_text := active_phase_config.transition_feedback_text
+	if not transition_text.is_empty():
+		dialogue_panel.append_history(transition_text, "system")
+	call_deferred("_complete_phase_transition")
+
+func _complete_phase_transition() -> void:
+	await get_tree().create_timer(0.9).timeout
+	if not is_inside_tree():
+		return
+	_reset_run_for_phase_index(active_phase_index + 1)
 
 func _begin_ending_transition(ending_type: String) -> void:
 	if ending_transition_started:
@@ -462,13 +540,23 @@ func _update_presentation() -> void:
 	arousal_visualization.set_values(arousal_model.physical, arousal_model.emotional, arousal_model.peak)
 	status_hud.update_values(arousal_model.physical, arousal_model.emotional, arousal_model.peak)
 	status_hud.update_combo(combo)
+	_update_phase_debug_label()
 	if debug_overlay != null:
 		debug_overlay.sync_live_readout(get_debug_state())
+
+func _update_phase_debug_label() -> void:
+	if phase_debug_label == null:
+		return
+	phase_debug_label.text = "Phase: %s" % _get_active_phase_id()
+	phase_debug_label.visible = debug_overlay != null and debug_overlay.visible
 
 func _update_layout_debug_regions() -> void:
 	var debug_visible := show_layout_debug_bounds
 	for region in layout_debug_regions:
 		region.visible = debug_visible
+	for child in character_prompt_region.get_children():
+		if child is Control:
+			child.visible = debug_visible
 
 func _request_ending_transition(ending_type: String) -> void:
 	if ending_requested.get_connections().size() > 0:
@@ -513,8 +601,8 @@ func _stop_runtime_timers() -> void:
 
 func _schedule_next_feedback_message() -> void:
 	var wait_time := feedback_rng.randf_range(
-		Config.FEEDBACK_MESSAGE_INTERVAL_MIN,
-		Config.FEEDBACK_MESSAGE_INTERVAL_MAX
+		float(active_phase_config.feedback_message_interval_min),
+		float(active_phase_config.feedback_message_interval_max)
 	)
 	feedback_timer.start(wait_time)
 
@@ -526,7 +614,7 @@ func _push_next_dialogue_event() -> void:
 		dialogue_panel.append_history(str(current_prompt.get("text", Config.FEEDBACK_MESSAGE_TEXT)), "companion")
 		dialogue_panel.show_choices(current_prompt.get("choices", {}))
 		feedback_timer.stop()
-		choice_timeout_timer.start(Config.CHOICE_TIMEOUT_SECONDS)
+		choice_timeout_timer.start(float(active_phase_config.choice_timeout_seconds))
 	else:
 		waiting_for_choice = false
 		dialogue_panel.hide_prompt()
@@ -542,14 +630,14 @@ func _start_new_sequence() -> void:
 	var first_prompt := sequence_controller.start_sequence()
 	if not first_prompt.is_empty():
 		_show_visible_prompt(first_prompt)
-	_activate_current_prompt()
-	_schedule_extra_prompt_reveal()
+		_activate_current_prompt()
+		_schedule_extra_prompt_reveal()
 
 func _schedule_new_sequence() -> void:
 	pending_prompt_action = "new_sequence"
 	var wait_time := feedback_rng.randf_range(
-		Config.PROMPT_SPAWN_DELAY_MIN,
-		Config.PROMPT_SPAWN_DELAY_MAX
+		float(active_phase_config.prompt_spawn_delay_min),
+		float(active_phase_config.prompt_spawn_delay_max)
 	)
 	prompt_spawn_timer.start(wait_time)
 
@@ -575,26 +663,28 @@ func _on_active_prompt_timer_timeout() -> void:
 func _update_prompt_timer_visual() -> void:
 	var progress_by_prompt_id: Dictionary = {}
 	var now := _get_now_seconds()
+	var prompt_time_limit := float(active_phase_config.direction_prompt_time_limit)
 	for prompt_id_variant in prompt_expiration_times.keys():
 		var prompt_id := int(prompt_id_variant)
 		var remaining_time := float(prompt_expiration_times[prompt_id]) - now
-		progress_by_prompt_id[prompt_id] = clampf(remaining_time / Config.DIRECTION_PROMPT_TIME_LIMIT, 0.0, 1.0)
+		progress_by_prompt_id[prompt_id] = clampf(remaining_time / prompt_time_limit, 0.0, 1.0)
 	character_area.set_prompt_time_progresses(progress_by_prompt_id)
 
 func _update_choice_timer_visual() -> void:
 	if waiting_for_choice and not choice_timeout_timer.is_stopped():
-		var progress := choice_timeout_timer.time_left / Config.CHOICE_TIMEOUT_SECONDS
+		var progress := choice_timeout_timer.time_left / float(active_phase_config.choice_timeout_seconds)
 		dialogue_panel.set_choice_timeout_progress(progress)
 		return
 	dialogue_panel.set_choice_timeout_progress(0.0)
 
 func _show_visible_prompt(prompt: Dictionary) -> void:
 	var prompt_id := int(prompt.get("prompt_id", -1))
-	prompt_expiration_times[prompt_id] = _get_now_seconds() + Config.DIRECTION_PROMPT_TIME_LIMIT
+	var anchor_id := str(prompt.get("anchor_id", "Chest"))
+	prompt_expiration_times[prompt_id] = _get_now_seconds() + float(active_phase_config.direction_prompt_time_limit)
 	character_area.show_direction_prompt(
 		prompt_id,
 		str(prompt.get("direction", "")),
-		prompt.get("anchor_position", Vector2.ZERO)
+		_get_prompt_anchor_center_in_character_area(anchor_id)
 	)
 	print_debug("prompt spawn: %s" % sequence_controller.get_prompt_debug_state())
 
@@ -604,6 +694,7 @@ func _activate_current_prompt() -> void:
 		active_prompt_timer.stop()
 		return
 	character_area.set_current_prompt(int(prompt.get("step_index", -1)))
+	active_prompt_timer.start(float(active_phase_config.direction_prompt_time_limit))
 	_update_prompt_timer_visual()
 
 func _schedule_extra_prompt_reveal() -> void:
@@ -613,8 +704,8 @@ func _schedule_extra_prompt_reveal() -> void:
 		return
 	pending_prompt_action = "reveal_extra"
 	var wait_time := feedback_rng.randf_range(
-		Config.NEXT_PROMPT_REVEAL_DELAY,
-		Config.PROMPT_SPAWN_DELAY_MAX
+		float(active_phase_config.next_prompt_reveal_delay),
+		float(active_phase_config.prompt_spawn_delay_max)
 	)
 	prompt_spawn_timer.start(wait_time)
 
@@ -632,25 +723,46 @@ func _on_choice_timeout() -> void:
 func _sync_prompt_anchor_layout() -> void:
 	var region_rect := _get_prompt_region_rect_in_character_area()
 	character_area.set_prompt_bounds(region_rect)
-	sequence_controller.set_prompt_anchor_positions(_get_prompt_anchor_centers_in_character_area())
+	sequence_controller.set_prompt_anchor_ids(_get_prompt_anchor_ids())
 
 func _get_prompt_region_rect_in_character_area() -> Rect2:
 	var global_rect := character_prompt_region.get_global_rect()
 	var local_position: Vector2 = character_area.get_global_transform_with_canvas().affine_inverse() * global_rect.position
 	return Rect2(local_position, global_rect.size)
 
-func _get_prompt_anchor_centers_in_character_area() -> Array[Vector2]:
-	var anchor_nodes: Array[Control] = []
+func _get_prompt_anchor_ids() -> Array[String]:
+	var anchor_ids: Array[String] = []
 	for child in character_prompt_region.get_children():
 		if child is Control:
-			anchor_nodes.append(child)
-	anchor_nodes.sort_custom(func(a: Control, b: Control) -> bool: return a.name.naturalnocasecmp_to(b.name) < 0)
+			anchor_ids.append(String(child.name))
+	anchor_ids.sort()
+	return anchor_ids
 
+func _get_prompt_anchor_center_in_character_area(anchor_id: String) -> Vector2:
+	var anchor_node := character_prompt_region.get_node_or_null(anchor_id) as Control
+	if anchor_node == null:
+		push_warning("Missing prompt anchor '%s' in active phase profile." % anchor_id)
+		return character_area.size * 0.5
 	var inverse: Transform2D = character_area.get_global_transform_with_canvas().affine_inverse()
-	var centers: Array[Vector2] = []
-	for anchor_node in anchor_nodes:
-		centers.append(inverse * anchor_node.get_global_rect().get_center())
-	return centers
+	return inverse * anchor_node.get_global_rect().get_center()
+
+func _update_prompt_anchor_layout_from_profile() -> void:
+	if active_character_profile == null:
+		return
+	for child in character_prompt_region.get_children():
+		if child is Control:
+			child.visible = false
+
+	for anchor_id_variant in active_character_profile.prompt_anchor_layout.keys():
+		var anchor_id := String(anchor_id_variant)
+		var anchor_rect := active_character_profile.prompt_anchor_layout[anchor_id] as Rect2
+		var anchor_node := character_prompt_region.get_node_or_null(anchor_id) as Control
+		if anchor_node == null:
+			push_warning("Prompt anchor node '%s' is missing from GameScreen." % anchor_id)
+			continue
+		anchor_node.position = anchor_rect.position
+		anchor_node.size = anchor_rect.size
+		anchor_node.visible = show_layout_debug_bounds
 
 func _check_prompt_timeouts() -> bool:
 	if prompt_expiration_times.is_empty():
@@ -691,3 +803,16 @@ func _capture_debug_breathing_frames_async() -> void:
 		var save_result := image.save_png(save_path)
 		if save_result != OK:
 			push_warning("Failed to save breathing debug capture: %s (%s)" % [save_path, error_string(save_result)])
+
+func _get_phase_value(property_name: String, fallback: Variant) -> Variant:
+	if active_phase_config != null:
+		return active_phase_config.get(property_name)
+	return fallback
+
+func _get_active_phase_id() -> String:
+	if active_phase_config == null:
+		return "phase_unknown"
+	return String(active_phase_config.phase_id)
+
+func _has_next_phase() -> bool:
+	return active_phase_index + 1 < phase_sequence.size()
