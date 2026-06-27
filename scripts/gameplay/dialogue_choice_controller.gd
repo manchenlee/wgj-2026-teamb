@@ -102,20 +102,24 @@ func _build_choice_prompt(entry: Dictionary, physical: float, emotional: float) 
 	if entry.is_empty():
 		return {
 			"text": _build_test_prompt_text(physical, emotional),
-			"choices": {
-				"good": "[測試] good",
-				"neutral": "[測試] neutral",
-				"bad": "[測試] bad"
-			}
+			"choices": [
+				{"id": "good", "text": "[皜祈岫] good"},
+				{"id": "neutral", "text": "[皜祈岫] neutral"}
+			]
 		}
 
-	var choices := {}
+	var choices: Array[Dictionary] = []
 	for choice_variant in entry.get("choice", []):
 		var choice := choice_variant as Dictionary
 		var choice_id := str(choice.get("id", ""))
 		if choice_id.is_empty():
 			continue
-		choices[choice_id] = str(choice.get("text", Config.RESPONSE_BUTTON_TEXT))
+		choices.append({
+			"id": choice_id,
+			"text": str(choice.get("text", Config.RESPONSE_BUTTON_TEXT))
+		})
+		if choices.size() == 2:
+			break
 
 	return {
 		"text": _get_feedback_line(entry, physical, emotional),
@@ -129,7 +133,7 @@ func _get_feedback_line(entry: Dictionary, physical: float, emotional: float) ->
 
 func _get_choice_response(choice_quality: String, entry: Dictionary) -> String:
 	if entry.is_empty():
-		return "[測試回應] 目前是未實作狀態，收到選項：%s" % choice_quality
+		return "[皜祈岫??] ?桀??舀撖虫?????嗅?賊?嚗?s" % choice_quality
 
 	var response_map := entry.get("response", {}) as Dictionary
 	var reply_list: Variant = response_map.get(choice_quality, [])
@@ -156,7 +160,7 @@ func _classify_emotional_state(emotional: float) -> String:
 	return ""
 
 func _build_test_feedback_text(physical: float, emotional: float) -> String:
-	return "[測試] feedback 未實作，physical=%.1f emotional=%.1f" % [physical, emotional]
+	return "[皜祈岫] feedback ?芸祕雿?physical=%.1f emotional=%.1f" % [physical, emotional]
 
 func _build_test_prompt_text(physical: float, emotional: float) -> String:
-	return "[測試] choice 未實作，physical=%.1f emotional=%.1f" % [physical, emotional]
+	return "[皜祈岫] choice ?芸祕雿?physical=%.1f emotional=%.1f" % [physical, emotional]

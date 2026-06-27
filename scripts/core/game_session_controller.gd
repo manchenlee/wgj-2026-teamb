@@ -50,12 +50,13 @@ signal ending_requested(ending_type: String)
 @onready var character_area = $MainCharacterArea/CharacterArea
 @onready var character_prompt_region: Control = $MainCharacterArea/CharacterPromptRegion
 @onready var arousal_visualization = $MainCharacterArea/CentralArousalVisualization
-@onready var dialogue_panel = $RightSideDialoguePanel
+@onready var dialogue_panel = $ConversationViewport
 @onready var status_hud = $BottomHUD
 @onready var layout_debug_regions := [
 	$MainCharacterArea/DebugRegionTint,
-	$RightSideDialoguePanel/DebugRegionTint,
-	$BottomHUD/DebugRegionTint
+	$ConversationViewport/DebugRegionTint,
+	$BottomHUD/DebugRegionTint,
+	$ChoiceArea/DebugRegionTint
 ]
 @onready var feedback_timer: Timer = $FeedbackTimer
 @onready var prompt_spawn_timer: Timer = $PromptSpawnTimer
@@ -522,6 +523,7 @@ func _push_next_dialogue_event() -> void:
 	if current_prompt.has("choices"):
 		waiting_for_choice = true
 		dialogue_panel.hide_prompt()
+		dialogue_panel.append_history(str(current_prompt.get("text", Config.FEEDBACK_MESSAGE_TEXT)), "companion")
 		dialogue_panel.show_choices(current_prompt.get("choices", {}))
 		feedback_timer.stop()
 		choice_timeout_timer.start(Config.CHOICE_TIMEOUT_SECONDS)
