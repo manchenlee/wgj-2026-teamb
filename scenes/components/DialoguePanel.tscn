@@ -1,42 +1,52 @@
 [gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/dialogue_panel.gd" id="1_dialogue"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/text bubble.png" id="4_choice_bubble"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_choice_button"]
 
 [node name="DialoguePanel" type="PanelContainer"]
-custom_minimum_size = Vector2(320, 840)
+custom_minimum_size = Vector2(360, 860)
 script = ExtResource("1_dialogue")
 size_flags_horizontal = 0
 size_flags_vertical = 0
+theme_override_styles/panel = null
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 12
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 12
+theme_override_constants/separation = 16
 
 [node name="HeaderLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Feedback"
 
-[node name="ScrollableChatHistory" type="ScrollContainer" parent="MarginContainer/VBoxContainer"]
+[node name="ScrollableChatHistory" type="Control" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-size_flags_vertical = 3
-custom_minimum_size = Vector2(0, 420)
-horizontal_scroll_mode = 0
-vertical_scroll_mode = 0
+custom_minimum_size = Vector2(0, 360)
+clip_contents = true
 
 [node name="ChatHistoryList" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ScrollableChatHistory"]
-layout_mode = 2
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_right = 0.0
+offset_bottom = 0.0
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
+
+[node name="BottomSpacer" type="Control" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
 
 [node name="ChoiceCountdownBar" type="ProgressBar" parent="MarginContainer/VBoxContainer"]
 visible = false
@@ -46,39 +56,86 @@ max_value = 100.0
 value = 100.0
 show_percentage = false
 
-[node name="PromptPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-visible = false
-
-[node name="PromptLabel" type="Label" parent="MarginContainer/VBoxContainer/PromptPanel"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 56)
-theme_override_font_sizes/font_size = 16
-text = "choice choice choice"
-vertical_alignment = 1
-
-[node name="ChoiceButtons" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="ChoiceButtons" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 alignment = 2
-visible = false
+theme_override_constants/separation = 10
 
 [node name="GoodButton" type="Button" parent="MarginContainer/VBoxContainer/ChoiceButtons"]
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(96, 46.72)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "response response response"
+theme_override_styles/normal = SubResource("StyleBoxEmpty_choice_button")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_choice_button")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_choice_button")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_choice_button")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_choice_button")
+text = "test"
+disabled = true
 focus_mode = 0
+
+[node name="Background" type="TextureRect" parent="MarginContainer/VBoxContainer/ChoiceButtons/GoodButton"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("4_choice_bubble")
+expand_mode = 0
+stretch_mode = 5
 
 [node name="NeutralButton" type="Button" parent="MarginContainer/VBoxContainer/ChoiceButtons"]
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(96, 46.72)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "response response response"
+theme_override_styles/normal = SubResource("StyleBoxEmpty_choice_button")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_choice_button")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_choice_button")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_choice_button")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_choice_button")
+text = "choice"
+disabled = true
 focus_mode = 0
 
+[node name="Background" type="TextureRect" parent="MarginContainer/VBoxContainer/ChoiceButtons/NeutralButton"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("4_choice_bubble")
+expand_mode = 0
+stretch_mode = 5
+
 [node name="BadButton" type="Button" parent="MarginContainer/VBoxContainer/ChoiceButtons"]
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(96, 46.72)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "response response response"
+theme_override_styles/normal = SubResource("StyleBoxEmpty_choice_button")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_choice_button")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_choice_button")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_choice_button")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_choice_button")
+text = "response"
+disabled = true
 focus_mode = 0
+
+[node name="Background" type="TextureRect" parent="MarginContainer/VBoxContainer/ChoiceButtons/BadButton"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("4_choice_bubble")
+expand_mode = 0
+stretch_mode = 5

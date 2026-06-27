@@ -4,7 +4,7 @@
 
 [node name="StatusHUD" type="PanelContainer"]
 script = ExtResource("1_hud")
-size_flags_horizontal = 3
+size_flags_horizontal = 0
 size_flags_vertical = 0
 
 [node name="MarginContainer" type="MarginContainer" parent="."]

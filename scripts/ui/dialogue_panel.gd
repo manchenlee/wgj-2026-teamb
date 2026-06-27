@@ -4,18 +4,25 @@ extends PanelContainer
 signal choice_selected(choice_quality: String, choice_text: String)
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
-const HISTORY_BUBBLE_MAX_WIDTH := 232.0
-const HISTORY_BUBBLE_MIN_WIDTH := 180.0
+const CHARACTER_BUBBLE_TEXTURE := preload("res://assets/art/ui/text2.png")
+const PLAYER_BUBBLE_TEXTURE := preload("res://assets/art/ui/text.png")
+const INACTIVE_CHOICE_TEXTS := ["test", "choice", "response"]
+const DISABLED_CHOICE_MODULATE := Color(0.42, 0.42, 0.42, 1.0)
+const BUBBLE_DISPLAY_WIDTH := 300.0
+const BUBBLE_TEXT_HORIZONTAL_MARGIN := 28
+const BUBBLE_TEXT_VERTICAL_MARGIN := 14
 
-@onready var history_scroll: ScrollContainer = $MarginContainer/VBoxContainer/ScrollableChatHistory
+@onready var history_scroll: Control = $MarginContainer/VBoxContainer/ScrollableChatHistory
 @onready var history_list: VBoxContainer = $MarginContainer/VBoxContainer/ScrollableChatHistory/ChatHistoryList
 @onready var choice_countdown_bar: ProgressBar = $MarginContainer/VBoxContainer/ChoiceCountdownBar
-@onready var prompt_panel: PanelContainer = $MarginContainer/VBoxContainer/PromptPanel
-@onready var prompt_label: Label = $MarginContainer/VBoxContainer/PromptPanel/PromptLabel
-@onready var choice_buttons: VBoxContainer = $MarginContainer/VBoxContainer/ChoiceButtons
 @onready var good_button: Button = $MarginContainer/VBoxContainer/ChoiceButtons/GoodButton
 @onready var neutral_button: Button = $MarginContainer/VBoxContainer/ChoiceButtons/NeutralButton
 @onready var bad_button: Button = $MarginContainer/VBoxContainer/ChoiceButtons/BadButton
+@onready var choice_button_backgrounds: Array[TextureRect] = [
+	$MarginContainer/VBoxContainer/ChoiceButtons/GoodButton/Background,
+	$MarginContainer/VBoxContainer/ChoiceButtons/NeutralButton/Background,
+	$MarginContainer/VBoxContainer/ChoiceButtons/BadButton/Background
+]
 
 func _ready() -> void:
 	good_button.focus_mode = Control.FOCUS_NONE
@@ -25,30 +32,27 @@ func _ready() -> void:
 	neutral_button.pressed.connect(func() -> void: choice_selected.emit("neutral", neutral_button.text))
 	bad_button.pressed.connect(func() -> void: choice_selected.emit("bad", bad_button.text))
 	history_scroll.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	history_scroll.get_v_scroll_bar().visible = false
-	history_scroll.get_v_scroll_bar().mouse_filter = Control.MOUSE_FILTER_IGNORE
-	resized.connect(_on_panel_resized)
-	_on_panel_resized()
+	add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	_set_choices_active(false)
 
 func show_choices(choices: Dictionary) -> void:
 	good_button.text = str(choices.get("good", ""))
 	neutral_button.text = str(choices.get("neutral", ""))
 	bad_button.text = str(choices.get("bad", ""))
-	choice_buttons.visible = true
+	_set_choices_active(true)
 	choice_countdown_bar.visible = true
 	choice_countdown_bar.value = choice_countdown_bar.max_value
 	call_deferred("_scroll_to_latest")
 
 func hide_choices() -> void:
-	choice_buttons.visible = false
+	_set_choices_active(false)
 	choice_countdown_bar.visible = false
 
-func show_prompt(text_value: String) -> void:
-	prompt_label.text = text_value
-	prompt_panel.visible = true
+func show_prompt(_text_value: String) -> void:
+	pass
 
 func hide_prompt() -> void:
-	prompt_panel.visible = false
+	pass
 
 func clear_history() -> void:
 	for child in history_list.get_children():
@@ -63,35 +67,38 @@ func append_history(line: String, speaker_type: String = "companion") -> void:
 	row.add_theme_constant_override("separation", 12)
 
 	var companion_message := speaker_type != "player"
+	var bubble_texture: Texture2D = CHARACTER_BUBBLE_TEXTURE if companion_message else PLAYER_BUBBLE_TEXTURE
+	var bubble_display_size := _get_bubble_display_size(bubble_texture)
 	if not companion_message:
 		var left_spacer := Control.new()
 		left_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(left_spacer)
 
-	var bubble := PanelContainer.new()
+	var bubble := MarginContainer.new()
 	bubble.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	bubble.custom_minimum_size = Vector2(_get_bubble_width(), 92.0)
+	bubble.custom_minimum_size = bubble_display_size
 	bubble.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bubble.modulate = Color(1.0, 1.0, 1.0, 0.0)
-	bubble.scale = Vector2(0.94, 0.94)
+	bubble.add_theme_constant_override("margin_left", BUBBLE_TEXT_HORIZONTAL_MARGIN)
+	bubble.add_theme_constant_override("margin_top", BUBBLE_TEXT_VERTICAL_MARGIN)
+	bubble.add_theme_constant_override("margin_right", BUBBLE_TEXT_HORIZONTAL_MARGIN)
+	bubble.add_theme_constant_override("margin_bottom", BUBBLE_TEXT_VERTICAL_MARGIN)
 
-	var bubble_style := StyleBoxFlat.new()
-	bubble_style.bg_color = Color(0.15, 0.15, 0.17, 0.92) if companion_message else Color(0.24, 0.24, 0.3, 0.96)
-	bubble_style.corner_radius_top_left = 14
-	bubble_style.corner_radius_top_right = 14
-	bubble_style.corner_radius_bottom_left = 14
-	bubble_style.corner_radius_bottom_right = 14
-	bubble_style.content_margin_left = 12.0
-	bubble_style.content_margin_top = 10.0
-	bubble_style.content_margin_right = 12.0
-	bubble_style.content_margin_bottom = 10.0
-	bubble.set("theme_override_styles/panel", bubble_style)
+	var bubble_background := TextureRect.new()
+	bubble_background.name = "Background"
+	bubble_background.texture = bubble_texture
+	bubble_background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bubble_background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	bubble_background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bubble_background.show_behind_parent = true
+	bubble_background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bubble.add_child(bubble_background)
 
 	var message_label := Label.new()
 	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	message_label.text = line
 	message_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	message_label.custom_minimum_size = Vector2(_get_bubble_width(), 0.0)
+	message_label.clip_text = true
 	message_label.add_theme_font_size_override("font_size", Config.DIALOGUE_BODY_FONT_SIZE)
 	bubble.add_child(message_label)
 	row.add_child(bubble)
@@ -105,33 +112,31 @@ func append_history(line: String, speaker_type: String = "companion") -> void:
 	UiThemeScaler.apply_to_tree(row)
 
 	var tween := create_tween()
-	tween.set_parallel(true)
 	tween.tween_property(bubble, "modulate:a", 1.0, 0.22)
-	tween.tween_property(bubble, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	call_deferred("_scroll_to_latest")
 
 func _scroll_to_latest() -> void:
-	history_scroll.scroll_vertical = int(history_scroll.get_v_scroll_bar().max_value)
+	pass
 
 func set_choice_timeout_progress(progress: float) -> void:
 	if not choice_countdown_bar.visible:
 		return
 	choice_countdown_bar.value = clampf(progress, 0.0, 1.0) * choice_countdown_bar.max_value
 
-func _on_panel_resized() -> void:
-	var bubble_width := _get_bubble_width()
-	history_list.custom_minimum_size.x = bubble_width
-	for row in history_list.get_children():
-		if row.get_child_count() == 0:
-			continue
-		for child in row.get_children():
-			if child is PanelContainer:
-				child.custom_minimum_size.x = bubble_width
-				if child.get_child_count() > 0 and child.get_child(0) is Label:
-					child.get_child(0).custom_minimum_size.x = bubble_width
+func _set_choices_active(is_active: bool) -> void:
+	var buttons: Array[Button] = [good_button, neutral_button, bad_button]
+	for index in range(buttons.size()):
+		var button := buttons[index]
+		button.disabled = not is_active
+		button.modulate = Color.WHITE if is_active else DISABLED_CHOICE_MODULATE
+		choice_button_backgrounds[index].modulate = Color.WHITE if is_active else DISABLED_CHOICE_MODULATE
+		if not is_active:
+			button.text = INACTIVE_CHOICE_TEXTS[index]
 
-func _get_bubble_width() -> float:
-	var available_width := history_scroll.size.x
-	if available_width <= 0.0:
-		available_width = size.x - 24.0
-	return clampf(available_width - 28.0, HISTORY_BUBBLE_MIN_WIDTH, HISTORY_BUBBLE_MAX_WIDTH)
+func _get_bubble_display_size(texture: Texture2D) -> Vector2:
+	if texture == null:
+		return Vector2(BUBBLE_DISPLAY_WIDTH, BUBBLE_DISPLAY_WIDTH)
+	var texture_size := texture.get_size()
+	if texture_size.x <= 0.0:
+		return Vector2(BUBBLE_DISPLAY_WIDTH, BUBBLE_DISPLAY_WIDTH)
+	return Vector2(BUBBLE_DISPLAY_WIDTH, BUBBLE_DISPLAY_WIDTH * (texture_size.y / texture_size.x))
