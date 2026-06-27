@@ -15,14 +15,14 @@ func _init() -> void:
 
 func start_sequence() -> Dictionary:
 	clear_sequence()
-	var pool := ["Left", "Right", "Up", "Down"]
 	var sequence_length := rng.randi_range(
 		Config.DIRECTION_SEQUENCE_LENGTH_MIN,
 		Config.DIRECTION_SEQUENCE_LENGTH_MAX
 	)
+	var directions_pool := _build_direction_pool(sequence_length)
 	var last_anchor := Vector2.INF
-	for _step in sequence_length:
-		directions.append(pool[rng.randi_range(0, pool.size() - 1)])
+	for step_index in range(sequence_length):
+		directions.append(directions_pool[step_index])
 		var next_anchor := _pick_anchor(last_anchor)
 		anchor_offsets.append(next_anchor)
 		last_anchor = next_anchor
@@ -120,6 +120,14 @@ func get_sequence_progress_text() -> String:
 	if directions.is_empty() or current_index < 0:
 		return ""
 	return "%d/%d" % [current_index + 1, directions.size()]
+
+func _build_direction_pool(sequence_length: int) -> Array[String]:
+	var base_directions: Array[String] = ["Left", "Right", "Up", "Down"]
+	base_directions.shuffle()
+	var result: Array[String] = []
+	for index in range(sequence_length):
+		result.append(base_directions[index % base_directions.size()])
+	return result
 
 func _pick_anchor(previous_anchor: Vector2) -> Vector2:
 	var available: Array = Config.ARROW_PROMPT_ANCHOR_OFFSETS

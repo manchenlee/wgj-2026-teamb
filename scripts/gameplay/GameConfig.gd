@@ -28,11 +28,11 @@ const PEAK_LOSS_RATE: float = 8.0
 
 # Physical interaction tuning.
 const DIRECTION_SEQUENCE_LENGTH_MIN: int = 3
-const DIRECTION_SEQUENCE_LENGTH_MAX: int = 5
+const DIRECTION_SEQUENCE_LENGTH_MAX: int = 4
 const DIRECTION_PROMPT_TIME_LIMIT: float = 2.4
-const NEXT_PROMPT_REVEAL_DELAY: float = 0.5
-const PROMPT_SPAWN_DELAY_MIN: float = 0.8
-const PROMPT_SPAWN_DELAY_MAX: float = 1.2
+const NEXT_PROMPT_REVEAL_DELAY: float = 0.9
+const PROMPT_SPAWN_DELAY_MIN: float = 1.1
+const PROMPT_SPAWN_DELAY_MAX: float = 1.5
 const PHYSICAL_GAIN_ON_CORRECT_INPUT: float = 4.0
 const PHYSICAL_PENALTY_ON_WRONG_INPUT: float = 3.0
 const PHYSICAL_SEQUENCE_COMPLETE_BONUS: float = 7.0
@@ -42,6 +42,7 @@ const ARROW_PROMPT_FONT_SIZE: int = 104
 const ARROW_PROMPT_BOX_SIZE: Vector2 = Vector2(132.0, 132.0)
 const ARROW_PROMPT_RING_RADIUS: float = 54.0
 const ARROW_PROMPT_RING_WIDTH: float = 3.0
+const ARROW_PROMPT_EDGE_MARGIN: float = 18.0
 const ARROW_PROMPT_ANCHOR_OFFSETS := [
 	Vector2(-128.0, -164.0),
 	Vector2(0.0, -188.0),

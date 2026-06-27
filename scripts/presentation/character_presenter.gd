@@ -153,12 +153,22 @@ func _apply_style(_texture_rect: TextureRect, _color: Color) -> void:
 func _refresh_prompt_layout() -> void:
 	if prompt_feedback_label == null:
 		return
-	var center := _get_character_center_local()
+	var character_rect := _get_character_rect_local()
 	for key in _prompt_nodes.keys():
 		var prompt_label: Label = _prompt_nodes[key]
 		var prompt_offset: Vector2 = _prompt_offsets.get(key, Vector2.ZERO)
 		var prompt_size := prompt_label.size
-		prompt_label.position = center + prompt_offset - (prompt_size * 0.5)
+		var desired_center := character_rect.get_center() + prompt_offset
+		var half_size := prompt_size * 0.5
+		var min_x := character_rect.position.x + half_size.x + Config.ARROW_PROMPT_EDGE_MARGIN
+		var max_x := character_rect.end.x - half_size.x - Config.ARROW_PROMPT_EDGE_MARGIN
+		var min_y := character_rect.position.y + half_size.y + Config.ARROW_PROMPT_EDGE_MARGIN
+		var max_y := character_rect.end.y - half_size.y - Config.ARROW_PROMPT_EDGE_MARGIN
+		var clamped_center := Vector2(
+			clampf(desired_center.x, min_x, max_x),
+			clampf(desired_center.y, min_y, max_y)
+		)
+		prompt_label.position = clamped_center - half_size
 	_update_prompt_timer_ring()
 	if prompt_feedback_label.visible:
 		_position_feedback_label()
@@ -170,6 +180,11 @@ func _position_feedback_label() -> void:
 
 func _get_character_center_local() -> Vector2:
 	return get_global_transform_with_canvas().affine_inverse() * character_placeholder.get_global_rect().get_center()
+
+func _get_character_rect_local() -> Rect2:
+	var global_rect := character_placeholder.get_global_rect()
+	var local_position := get_global_transform_with_canvas().affine_inverse() * global_rect.position
+	return Rect2(local_position, global_rect.size)
 
 func _get_feedback_anchor_center() -> Vector2:
 	var current_label := _get_current_prompt_label()
