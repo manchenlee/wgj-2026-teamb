@@ -10,7 +10,7 @@ const RESPONSE_BUTTON_TEXT: String = "response response response"
 
 # UI scaling.
 # 整體 UI 字體縮放倍率；調大會讓介面文字更大、更容易閱讀，調小則會讓畫面更緊湊。
-const UI_FONT_SCALE: float = 2.0
+const UI_FONT_SCALE: float = 1.0
 
 # Core arousal values.
 # 遊戲開始時的身體值；調大會讓玩家開局更接近安全區或目標區，調小則開局壓力更高。
@@ -110,6 +110,10 @@ const CIRCLE_STROKE_MAX: float = 8.0
 const CIRCLE_CENTER_RATIO: Vector2 = Vector2(0.62, 0.5)
 # 高潮標籤相對圓心的垂直位移；調大會讓標籤更往下，調小則更貼近主圓。
 const PEAK_LABEL_OFFSET_Y: float = 228.0
+# 高潮標籤相對圓心的水平位移；調大會讓標籤更偏右，調小（負值）則偏左。
+const PEAK_LABEL_OFFSET_X: float = -40.0
+# 回饋標籤相對錨點的垂直位移；調大（負值絕對值增大）會讓標籤更往上，調小則更靠近提示點。
+const FEEDBACK_LABEL_OFFSET_Y: float = -74.0
 # 切換桌面版配置的畫面寬度門檻；調大會讓更多裝置維持手機/窄版排版，調小則更早套用桌面版。
 const DESKTOP_BREAKPOINT: float = 1080.0
 

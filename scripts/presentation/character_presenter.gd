@@ -176,7 +176,7 @@ func _refresh_prompt_layout() -> void:
 func _position_feedback_label() -> void:
 	var center := _get_feedback_anchor_center()
 	var feedback_size := prompt_feedback_label.get_combined_minimum_size()
-	prompt_feedback_label.position = center + Vector2(0.0, -74.0) - (feedback_size * 0.5)
+	prompt_feedback_label.position = center + Vector2(0.0, Config.FEEDBACK_LABEL_OFFSET_Y) - (feedback_size * 0.5)
 
 func _get_character_center_local() -> Vector2:
 	return get_global_transform_with_canvas().affine_inverse() * character_placeholder.get_global_rect().get_center()
