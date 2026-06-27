@@ -1,0 +1,98 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/rule_screen.gd" id="1_rule"]
+[ext_resource type="Texture2D" path="res://assets/curtain.jpg" id="2_curtain"]
+[ext_resource type="Texture2D" path="res://assets/book.png" id="3_book"]
+
+[node name="RuleScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_rule")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -576.0
+offset_top = -324.0
+offset_right = 576.0
+offset_bottom = 324.0
+texture = ExtResource("2_curtain")
+expand_mode = 3
+stretch_mode = 6
+
+[node name="BookPanel" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -520.0
+offset_top = -340.0
+offset_right = 520.0
+offset_bottom = 340.0
+texture = ExtResource("3_book")
+expand_mode = 3
+stretch_mode = 6
+
+[node name="ContentContainer" type="MarginContainer" parent="BookPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 72
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 72
+theme_override_constants/margin_bottom = 40
+
+[node name="VBoxContainer" type="VBoxContainer" parent="BookPanel/ContentContainer"]
+layout_mode = 2
+alignment = 0
+theme_override_constants/separation = 14
+
+[node name="Section1Title" type="Label" parent="BookPanel/ContentContainer/VBoxContainer"]
+layout_mode = 2
+text = "遊戲操作方式"
+theme_override_colors/font_color = Color(0.35, 0.1, 0.05, 1)
+theme_override_font_sizes/font_size = 20
+
+[node name="Section1Body" type="Label" parent="BookPanel/ContentContainer/VBoxContainer"]
+layout_mode = 2
+text = "根據音樂符號出現的順序，透過鍵盤方向鍵提升生理興奮（紅色區域），同時以滑鼠點選對話提升情緒安撫（黃色區域）。將兩者同步維持在高水平，數值隨時間衰減，任一歸零即失敗，最終狀態影響結局。"
+autowrap_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.1, 0.05, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="Divider" type="Control" parent="BookPanel/ContentContainer/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 8)
+
+[node name="Section2Title" type="Label" parent="BookPanel/ContentContainer/VBoxContainer"]
+layout_mode = 2
+text = "什麼是安全詞？"
+theme_override_colors/font_color = Color(0.35, 0.1, 0.05, 1)
+theme_override_font_sizes/font_size = 20
+
+[node name="Section2Body" type="Label" parent="BookPanel/ContentContainer/VBoxContainer"]
+layout_mode = 2
+text = "安全詞是 BDSM 活動中重要的溝通機制，當被動方瀕臨極限時喊出預定安全詞，支配方須立即停止。「同意式非同意」(CNC) 是在百分之百事前知情合意下進行的實踐，安全詞極為關鍵。請務必在開始前與夥伴充分溝通並確認安全詞（如「紅色」代表立刻停止），確保一切建立在知情與合意之上。"
+autowrap_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.1, 0.05, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="Spacer" type="Control" parent="BookPanel/ContentContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ContinueButton" type="Button" parent="BookPanel/ContentContainer/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(160, 48)
+size_flags_horizontal = 4
+text = "NEXT"
+theme_override_font_sizes/font_size = 18
