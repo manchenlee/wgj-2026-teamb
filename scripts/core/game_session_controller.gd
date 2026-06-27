@@ -20,6 +20,10 @@ signal ending_requested(ending_type: String)
 @onready var background_placeholder: TextureRect = $BackgroundAnchor/BackgroundPlaceholder
 @onready var overlay_animator = $BackgroundAnchor/OverlayAnimator
 @onready var breathing_controller = $BackgroundAnchor/BreathingController
+@onready var phase_2_background_layer: TextureRect = $BackgroundAnchor/Phase2BackgroundLayer
+@onready var phase_2_flush_layer: TextureRect = $BackgroundAnchor/Phase2FlushLayer
+@onready var phase_2_face_layer: TextureRect = $BackgroundAnchor/Phase2FaceLayer
+@onready var phase_2_gameover_overlay: TextureRect = $BackgroundAnchor/Phase2GameoverOverlay
 @onready var main_character_area: Control = $MainCharacterArea
 @onready var character_area = $MainCharacterArea/CharacterArea
 @onready var character_prompt_region: Control = $MainCharacterArea/CharacterPromptRegion
@@ -51,6 +55,7 @@ var waiting_for_choice: bool = false
 var pending_prompt_action: String = ""
 var prompt_expiration_times: Dictionary = {}
 var character_visual_textures: Dictionary = {}
+var character_layer_textures: Dictionary = {}
 var character_visual_warnings_printed: Dictionary = {}
 var overlay_motion_set: Dictionary = {}
 var ending_transition_started: bool = false
@@ -148,9 +153,18 @@ func _apply_breathing_profile() -> void:
 
 func _cache_character_visual_textures() -> void:
 	character_visual_textures.clear()
+	character_layer_textures.clear()
 	if active_character_profile == null:
 		return
 	var texture_paths: Dictionary = active_character_profile.get_all_texture_paths()
+	_cache_texture_paths_into_cache(texture_paths, character_visual_textures, "Character visual")
+	_cache_texture_paths_into_cache(active_character_profile.get_layer_texture_paths(), character_layer_textures, "Character layer")
+	_cache_texture_paths_into_cache(active_character_profile.get_face_texture_paths(), character_layer_textures, "Character face")
+
+	if not character_visual_textures.has("draft") and character_background != null:
+		character_visual_textures["draft"] = character_background
+
+func _cache_texture_paths_into_cache(texture_paths: Dictionary, cache: Dictionary, label: String) -> void:
 	for state_name_variant in texture_paths.keys():
 		var state_name := String(state_name_variant)
 		var asset_path := String(texture_paths[state_name])
@@ -158,13 +172,10 @@ func _cache_character_visual_textures() -> void:
 		if texture == null:
 			_warn_character_visual_once(
 				"load_failed:%s" % asset_path,
-				"Character visual asset failed to load: %s" % asset_path
+				"%s asset failed to load: %s" % [label, asset_path]
 			)
 			continue
-		character_visual_textures[state_name] = texture
-
-	if not character_visual_textures.has("draft") and character_background != null:
-		character_visual_textures["draft"] = character_background
+		cache[state_name] = texture
 
 func _load_texture_from_asset_path(asset_path: String) -> Texture2D:
 	if ResourceLoader.exists(asset_path):
@@ -224,6 +235,9 @@ func _apply_overlay_motion_set() -> void:
 		return
 	if overlay_animator == null:
 		return
+	overlay_animator.apply_playback_profile(
+		active_character_profile.get_overlay_idle_playback_config() if active_character_profile != null else {}
+	)
 	overlay_animator.set_motion_set(overlay_motion_set)
 	_bind_breathing_targets()
 
@@ -238,6 +252,7 @@ func _update_character_visual_state(forced_ending_type: String = "") -> void:
 		return
 
 	var visual_state := _get_character_visual_state_key(forced_ending_type)
+	_update_phase_specific_visual_layers(forced_ending_type)
 	var next_texture := _get_character_visual_texture(visual_state)
 	if next_texture == null:
 		return
@@ -253,7 +268,59 @@ func _bind_breathing_targets() -> void:
 	if breathing_controller == null or background_placeholder == null:
 		return
 	if breathing_controller.has_method("bind_targets"):
-		breathing_controller.bind_targets(background_placeholder, overlay_animator.get_overlay_layers())
+		var base_target := background_placeholder
+		var overlay_targets: Array = overlay_animator.get_overlay_layers()
+		if active_character_profile != null and active_character_profile.get_breathing_target_layer_id() == "phase_2_background":
+			base_target = phase_2_background_layer
+			overlay_targets = []
+		breathing_controller.bind_targets(base_target, overlay_targets)
+
+func _update_phase_specific_visual_layers(forced_ending_type: String = "") -> void:
+	if not _is_phase_2_visual_profile_active():
+		_apply_phase_layer_texture(phase_2_background_layer, null)
+		_apply_phase_layer_texture(phase_2_flush_layer, null)
+		_apply_phase_layer_texture(phase_2_face_layer, null)
+		_apply_phase_layer_texture(phase_2_gameover_overlay, null)
+		return
+
+	_apply_phase_layer_texture(phase_2_background_layer, _get_phase_layer_texture("phase_2_background"))
+	_apply_phase_layer_texture(phase_2_flush_layer, _get_phase_layer_texture("phase_2_flush"))
+	_apply_phase_layer_texture(phase_2_face_layer, _get_phase_2_face_texture())
+
+	var show_gameover_overlay := not forced_ending_type.is_empty() and forced_ending_type != Config.SUCCESS_ENDING
+	var gameover_texture := _get_phase_2_gameover_texture() if show_gameover_overlay else null
+	_apply_phase_layer_texture(phase_2_gameover_overlay, gameover_texture)
+
+func _apply_phase_layer_texture(layer: TextureRect, next_texture: Texture2D) -> void:
+	if layer == null:
+		return
+	layer.texture = next_texture
+	layer.visible = next_texture != null
+
+func _is_phase_2_visual_profile_active() -> bool:
+	if active_character_profile == null:
+		return false
+	return not active_character_profile.get_face_texture_paths().is_empty()
+
+func _get_phase_layer_texture(layer_key: String) -> Texture2D:
+	if character_layer_textures.has(layer_key):
+		return character_layer_textures[layer_key] as Texture2D
+	return null
+
+func _get_phase_2_face_texture() -> Texture2D:
+	if active_character_profile == null:
+		return null
+	var face_state: String = active_character_profile.get_face_state_key(
+		arousal_model.peak,
+		float(_get_phase_value("overall_medium_threshold", 20.0)),
+		float(_get_phase_value("overall_high_threshold", 60.0))
+	)
+	if face_state.is_empty():
+		return null
+	return _get_phase_layer_texture(face_state)
+
+func _get_phase_2_gameover_texture() -> Texture2D:
+	return _get_phase_layer_texture("phase_2_gameover_overlay")
 
 func _get_character_visual_state_key(forced_ending_type: String = "") -> String:
 	if forced_ending_type == Config.PHYSICAL_IMBALANCE_FAILURE_ENDING:

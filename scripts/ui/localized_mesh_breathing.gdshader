@@ -1,7 +1,7 @@
 shader_type canvas_item;
 
 uniform vec4 chest_region_rect = vec4(0.34, 0.17, 0.28, 0.23);
-uniform float inhale_strength : hint_range(0.0, 0.05) = 0.01;
+uniform float inhale_strength : hint_range(0.0, 0.1) = 0.03;
 uniform float edge_softness : hint_range(0.01, 0.5) = 0.18;
 uniform float chest_vertical_bias : hint_range(0.0, 1.0) = 0.2;
 uniform float breath_amount : hint_range(0.0, 1.0) = 0.0;

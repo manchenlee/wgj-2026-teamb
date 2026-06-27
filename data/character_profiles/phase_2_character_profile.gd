@@ -1,9 +1,9 @@
 extends PhaseCharacterProfile
 
+const PHASE_2_ROOT := "res://assets/art/character/phase2/"
+
 func _init() -> void:
-	# TODO: Replace the shared placeholder states below with dedicated Phase 2 state art
-	# once separate low/medium/high and gameover variants are exported.
-	var phase_2_base_portrait := "res://assets/art/character/phase2/person.png"
+	var phase_2_base_portrait := "%sperson_bgc.png" % PHASE_2_ROOT
 	super._init(
 		"phase_2_profile",
 		{
@@ -20,13 +20,9 @@ func _init() -> void:
 			"physic_low_mental_high_gameover": phase_2_base_portrait
 		},
 		{
-			"tentacle4": [
-				"res://assets/art/character/phase1/tentacle4_1.png",
-				"res://assets/art/character/phase1/tentacle4_2.png"
-			],
-			"tentacle2": [
-				"res://assets/art/character/phase1/tentacle2_1.png",
-				"res://assets/art/character/phase1/tentacle2_2.png"
+			"penis1": [
+				"%spenis1_1.png" % PHASE_2_ROOT,
+				"%spenis1_2.png" % PHASE_2_ROOT
 			]
 		},
 		{
@@ -41,3 +37,39 @@ func _init() -> void:
 		},
 		Rect2(0.214, 0.296, 0.487, 0.319)
 	)
+
+func get_layer_texture_paths() -> Dictionary:
+	return {
+		"phase_2_background": "%sperson_bgc.png" % PHASE_2_ROOT,
+		"phase_2_flush": "%sflush.png" % PHASE_2_ROOT,
+		"phase_2_gameover_overlay": "%spenis2.png" % PHASE_2_ROOT
+	}
+
+func get_face_texture_paths() -> Dictionary:
+	return {
+		"overall_init": "%sface_init.png" % PHASE_2_ROOT,
+		"overall_low": "%sface_init.png" % PHASE_2_ROOT,
+		"overall_medium": "%sface_medium.png" % PHASE_2_ROOT,
+		"overall_high": "%sface_high.png" % PHASE_2_ROOT
+	}
+
+func get_overlay_idle_playback_config() -> Dictionary:
+	return {
+		"frame_2_duration": 0.18,
+		"idle_ratio_min": 2,
+		"idle_ratio_max": 6,
+		"initial_delay_max": 0.12
+	}
+
+func get_face_state_key(overall_value: float, medium_threshold: float, high_threshold: float) -> String:
+	if overall_value >= high_threshold:
+		return "overall_high"
+	if overall_value >= medium_threshold:
+		return "overall_medium"
+	return "overall_init"
+
+func get_breathing_target_layer_id() -> String:
+	return "phase_2_background"
+
+func get_gameover_overlay_texture_path(_ending_type: String = "") -> String:
+	return "%spenis2.png" % PHASE_2_ROOT

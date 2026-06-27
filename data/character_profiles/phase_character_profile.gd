@@ -41,3 +41,21 @@ func get_anchor_layout_ids() -> Array[String]:
 		ids.append(String(anchor_id_variant))
 	ids.sort()
 	return ids
+
+func get_layer_texture_paths() -> Dictionary:
+	return {}
+
+func get_face_texture_paths() -> Dictionary:
+	return {}
+
+func get_overlay_idle_playback_config() -> Dictionary:
+	return {}
+
+func get_face_state_key(_overall_value: float, _medium_threshold: float, _high_threshold: float) -> String:
+	return ""
+
+func get_breathing_target_layer_id() -> String:
+	return "base"
+
+func get_gameover_overlay_texture_path(_ending_type: String = "") -> String:
+	return ""

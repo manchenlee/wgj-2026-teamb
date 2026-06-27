@@ -7,7 +7,7 @@ const BREATHING_SHADER := preload("res://scripts/ui/localized_mesh_breathing.gds
 	set(value):
 		chest_region_rect = value
 		_update_material_parameters()
-@export_range(0.0, 0.05, 0.0005) var inhale_strength: float = 0.01:
+@export_range(0.0, 0.1, 0.001) var inhale_strength: float = 0.03:
 	set(value):
 		inhale_strength = value
 		_update_material_parameters()
@@ -54,11 +54,13 @@ func _ready() -> void:
 	_update_material_parameters()
 
 func bind_targets(base_target: TextureRect, overlay_targets: Array) -> void:
+	var previous_targets := _get_targets()
 	_base_target = base_target
 	_overlay_targets.clear()
 	for overlay_target in overlay_targets:
 		if overlay_target is TextureRect:
 			_overlay_targets.append(overlay_target)
+	_clear_removed_target_materials(previous_targets)
 	_apply_materials()
 
 func is_debug_breathing_enabled() -> bool:
@@ -138,6 +140,17 @@ func _update_material_parameters() -> void:
 		shader_material.set_shader_parameter("chest_vertical_bias", chest_vertical_bias)
 		shader_material.set_shader_parameter("breath_amount", _breath_amount)
 		shader_material.set_shader_parameter("debug_tint_strength", debug_tint_strength)
+
+func _clear_removed_target_materials(previous_targets: Array[TextureRect]) -> void:
+	var current_targets := _get_targets()
+	for target in previous_targets:
+		if not is_instance_valid(target):
+			continue
+		if current_targets.has(target):
+			continue
+		var shader_material := target.material as ShaderMaterial
+		if shader_material != null and shader_material.shader == BREATHING_SHADER:
+			target.material = null
 
 func _kill_breathing_tween() -> void:
 	if _breathing_tween != null:

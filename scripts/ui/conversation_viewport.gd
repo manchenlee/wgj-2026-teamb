@@ -151,6 +151,7 @@ func _create_message_bubble(line: String, speaker_type: String) -> Control:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.add_theme_font_size_override("font_size", MESSAGE_FONT_SIZE)
+	label.set_meta("_ui_font_scale_applied", true)
 	label.add_theme_color_override("font_color", Color(0.19, 0.12, 0.12, 1.0))
 	label.text = _clamp_text(line, MESSAGE_TEXT_MAX_CHARS)
 	label.position = Vector2(MESSAGE_TEXT_MARGIN_LEFT, MESSAGE_TEXT_MARGIN_TOP) * BUBBLE_SCALE
@@ -197,6 +198,7 @@ func _configure_choice_button(button: TextureButton, label: Label) -> void:
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.add_theme_font_size_override("font_size", CHOICE_FONT_SIZE)
+	label.set_meta("_ui_font_scale_applied", true)
 	label.add_theme_color_override("font_color", Color(0.99, 0.94, 0.94, 1.0))
 	label.position = Vector2(CHOICE_TEXT_MARGIN_LEFT, CHOICE_TEXT_MARGIN_TOP) * CHOICE_BUBBLE_SCALE
 	label.size = Vector2(

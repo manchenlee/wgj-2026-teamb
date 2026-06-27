@@ -14,12 +14,28 @@ var _motion_ids: Array[String] = []
 var _tracks: Dictionary = {}
 var _idle_ratio_min: int = 2
 var _idle_ratio_max: int = 6
+var _idle_initial_delay_max: float = 0.4
 var _pending_burst_track_count: int = 0
+var _default_idle_frame_1_duration: float = 1.2
+var _default_idle_frame_2_duration: float = 0.4
+var _default_burst_frame_duration: float = 0.15
+var _default_burst_cycle_count: int = 3
+var _default_idle_ratio_min: int = 2
+var _default_idle_ratio_max: int = 6
+var _default_idle_initial_delay_max: float = 0.4
 
 func _ready() -> void:
 	_rng.randomize()
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture = null
+	_default_idle_frame_1_duration = idle_frame_1_duration
+	_default_idle_frame_2_duration = idle_frame_2_duration
+	_default_burst_frame_duration = burst_frame_duration
+	_default_burst_cycle_count = burst_cycle_count
+	_default_idle_ratio_min = _idle_ratio_min
+	_default_idle_ratio_max = _idle_ratio_max
+	_default_idle_initial_delay_max = idle_frame_2_duration
+	_idle_initial_delay_max = _default_idle_initial_delay_max
 
 func set_motion_set(motions: Dictionary) -> void:
 	stop()
@@ -54,7 +70,7 @@ func play_idle() -> void:
 		return
 	_pending_burst_track_count = 0
 	for motion_id in _motion_ids:
-		_start_idle_cycle(motion_id, _rng.randf_range(0.0, idle_frame_2_duration))
+		_start_idle_cycle(motion_id, _rng.randf_range(0.0, _idle_initial_delay_max))
 
 func play_burst_random() -> void:
 	if _motion_ids.is_empty():
@@ -81,6 +97,19 @@ func stop() -> void:
 			layer.texture = null
 		_tracks[motion_id] = track
 	texture = null
+
+func apply_playback_profile(config: Dictionary = {}) -> void:
+	idle_frame_1_duration = float(config.get("frame_1_duration", _default_idle_frame_1_duration))
+	idle_frame_2_duration = float(config.get("frame_2_duration", _default_idle_frame_2_duration))
+	burst_frame_duration = float(config.get("burst_frame_duration", _default_burst_frame_duration))
+	burst_cycle_count = int(config.get("burst_cycle_count", _default_burst_cycle_count))
+	_idle_ratio_min = int(config.get("idle_ratio_min", _default_idle_ratio_min))
+	_idle_ratio_max = int(config.get("idle_ratio_max", _default_idle_ratio_max))
+	_idle_initial_delay_max = float(config.get("initial_delay_max", idle_frame_2_duration))
+	if _idle_ratio_min > _idle_ratio_max:
+		var swapped_min := _idle_ratio_max
+		_idle_ratio_max = _idle_ratio_min
+		_idle_ratio_min = swapped_min
 
 func _clear_tracks() -> void:
 	for track_variant in _tracks.values():
@@ -223,7 +252,7 @@ func _advance_burst(motion_id: String) -> void:
 	if int(track.get("burst_cycles_remaining", 0)) <= 0:
 		_tracks[motion_id] = track
 		_pending_burst_track_count = max(_pending_burst_track_count - 1, 0)
-		_start_idle_cycle(motion_id, _rng.randf_range(0.0, idle_frame_2_duration))
+		_start_idle_cycle(motion_id, _rng.randf_range(0.0, _idle_initial_delay_max))
 		if _pending_burst_track_count <= 0:
 			burst_finished.emit()
 		return

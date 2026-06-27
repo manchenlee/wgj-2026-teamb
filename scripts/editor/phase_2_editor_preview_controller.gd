@@ -58,7 +58,7 @@ func _refresh_preview() -> void:
 
 func _sync_anchor_markers(markers_visible: bool) -> void:
 	for index in range(ANCHOR_IDS.size()):
-		var anchor_id := ANCHOR_IDS[index]
+		var anchor_id: String = ANCHOR_IDS[index]
 		var marker := get_node_or_null(anchor_id) as ColorRect
 		if marker == null:
 			continue
