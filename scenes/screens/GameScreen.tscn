@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://d24toufu83pxy" path="res://scripts/ui/conversation_viewport.gd" id="8_conversation"]
 [ext_resource type="Script" uid="uid://x3cgbulqxokf" path="res://scripts/editor/phase_2_editor_preview_controller.gd" id="9_phase2_preview"]
 [ext_resource type="Texture2D" uid="uid://b3obdm5nxmqui" path="res://assets/art/character/phase2/person.png" id="10_phase2_person"]
+[ext_resource type="Texture2D" uid="uid://mkqnsj2nshun" path="res://assets/art/background/game_bg.png" id="11_game_bg"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_alg88"]
 load_path = "res://.godot/imported/draft.png-80a3863fe83a454b531da103f3e5f42e.ctex"
@@ -34,13 +35,16 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="BackgroundColor" type="ColorRect" parent="BackgroundAnchor" unique_id=92650428]
+[node name="BackgroundColor" type="TextureRect" parent="BackgroundAnchor" unique_id=92650428]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+texture = ExtResource("11_game_bg")
+expand_mode = 1
+stretch_mode = 6
 
 [node name="Phase2BackgroundLayer" type="TextureRect" parent="BackgroundAnchor" unique_id=208204111]
 visible = false
@@ -187,6 +191,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="DebugRegionTint" type="ColorRect" parent="MainCharacterArea" unique_id=2121463475]
+visible = false
 z_index = -1
 layout_mode = 1
 anchors_preset = 15
@@ -210,6 +215,7 @@ script = ExtResource("5_vis")
 character_placeholder_path = NodePath("../CharacterArea/CharacterVisualAnchor/CharacterPlaceholder")
 
 [node name="PeakIndicator" type="Label" parent="MainCharacterArea/CentralArousalVisualization" unique_id=1128361418]
+visible = false
 z_index = 4
 z_as_relative = false
 layout_mode = 0
@@ -647,6 +653,7 @@ mouse_filter = 2
 script = ExtResource("8_conversation")
 
 [node name="DebugRegionTint" type="ColorRect" parent="ConversationViewport" unique_id=476863550]
+visible = false
 z_index = -1
 layout_mode = 0
 mouse_filter = 2
@@ -697,6 +704,7 @@ grow_horizontal = 2
 grow_vertical = 0
 
 [node name="DebugRegionTint" type="ColorRect" parent="BottomHUD" unique_id=74340883]
+visible = false
 z_index = -1
 layout_mode = 0
 mouse_filter = 2

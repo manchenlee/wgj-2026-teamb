@@ -4,7 +4,7 @@ extends Control
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 const PHYSICAL_RING_TEXTURE := preload("res://assets/art/ui/circle_red.png")
 const EMOTIONAL_RING_TEXTURE := preload("res://assets/art/ui/circle_yellow.png")
-const MAX_RING_OUTLINE_COLOR := Color(0.55, 0.55, 0.55, 0.55)
+const MAX_RING_OUTLINE_COLOR := Color(1.0, 1.0, 1.0, 0.55)
 const MAX_RING_DASH_COUNT := 48
 const MAX_RING_DASH_RATIO := 0.55
 
@@ -78,7 +78,12 @@ func _ensure_ring_sprite(node_name: String, texture: Texture2D, z_order: int) ->
 		ring.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		add_child(ring)
 	ring.texture = texture
-	ring.z_index = z_order
+	# z_as_relative = false so the ring uses a global z_index directly.
+	# Rings must sit above the background (z=0) but below the character
+	# image BackgroundPlaceholder (z=2, z_as_relative=false), so we use
+	# global z = 0 and 1 (mapped from the incoming z_order of 1 and 2).
+	ring.z_as_relative = false
+	ring.z_index = z_order - 1  # z_order 1 → global 0, z_order 2 → global 1
 	return ring
 
 func _sync_circle_sprites() -> void:
