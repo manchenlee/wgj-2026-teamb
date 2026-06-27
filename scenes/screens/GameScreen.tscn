@@ -249,6 +249,7 @@ offset_right = 268.0
 offset_bottom = 439.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="Phase2AnchorPreviewLayer" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=822463575]
 visible = false
