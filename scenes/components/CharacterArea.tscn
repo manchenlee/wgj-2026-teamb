@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/presentation/character_presenter.gd" id="1_char"]
+[ext_resource type="Texture2D" path="res://assets/art/character/draft.png" id="2_draft"]
 
 [node name="CharacterArea" type="Control"]
 custom_minimum_size = Vector2(820, 820)
@@ -15,8 +16,12 @@ offset_top = 0.0
 offset_right = 0.0
 offset_bottom = 0.0
 
-[node name="CharacterPlaceholder" type="Panel" parent="CharacterVisualAnchor"]
+[node name="CharacterPlaceholder" type="TextureRect" parent="CharacterVisualAnchor"]
 custom_minimum_size = Vector2(360, 520)
+clip_contents = true
+texture = ExtResource("2_draft")
+stretch_mode = 5
+expand_mode = 1
 
 [node name="TopLabelStack" type="VBoxContainer" parent="."]
 offset_left = 24.0

@@ -28,7 +28,7 @@ func set_values(physical: float, emotional: float, peak: float) -> void:
 	emotional_value = Config.clamp_value(emotional)
 	peak_value = Config.clamp_value(peak)
 	peak_indicator.text = "Peak %d" % int(round(peak))
-	peak_indicator.modulate = Color(1.0, 1.0, 1.0, lerpf(0.45, 1.0, peak_value / Config.MAX_VALUE))
+	peak_indicator.modulate = Color(0.12, 0.12, 0.16, lerpf(0.55, 1.0, peak_value / Config.MAX_VALUE))
 	queue_redraw()
 	_sync_peak_indicator()
 

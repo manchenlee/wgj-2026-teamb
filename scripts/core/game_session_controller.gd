@@ -143,7 +143,6 @@ func _on_direction_pressed(direction: String) -> void:
 			)
 			character_area.show_correct_reaction()
 			_activate_current_prompt()
-			_schedule_extra_prompt_reveal()
 		"sequence_complete":
 			combo += 1
 			active_prompt_timer.stop()
@@ -247,7 +246,6 @@ func _start_new_sequence() -> void:
 	if not first_prompt.is_empty():
 		_show_visible_prompt(first_prompt)
 	_activate_current_prompt()
-	_schedule_extra_prompt_reveal()
 
 func _schedule_new_sequence() -> void:
 	pending_prompt_action = "new_sequence"
@@ -261,11 +259,6 @@ func _on_prompt_spawn_timer_timeout() -> void:
 	var action := pending_prompt_action
 	pending_prompt_action = ""
 	match action:
-		"reveal_extra":
-			var prompt := sequence_controller.reveal_next_prompt()
-			if not prompt.is_empty():
-				_show_visible_prompt(prompt)
-			_schedule_extra_prompt_reveal()
 		"new_sequence":
 			_start_new_sequence()
 	_update_presentation()
@@ -298,18 +291,6 @@ func _activate_current_prompt() -> void:
 	character_area.set_current_prompt(int(prompt.get("step_index", -1)))
 	character_area.set_prompt_time_progress(1.0)
 	active_prompt_timer.start(Config.DIRECTION_PROMPT_TIME_LIMIT)
-
-func _schedule_extra_prompt_reveal() -> void:
-	if not sequence_controller.has_more_hidden_prompts():
-		return
-	if pending_prompt_action == "new_sequence":
-		return
-	pending_prompt_action = "reveal_extra"
-	var wait_time := feedback_rng.randf_range(
-		Config.NEXT_PROMPT_REVEAL_DELAY,
-		Config.PROMPT_SPAWN_DELAY_MAX
-	)
-	prompt_spawn_timer.start(wait_time)
 
 func _on_choice_timeout() -> void:
 	if not run_active or not waiting_for_choice:

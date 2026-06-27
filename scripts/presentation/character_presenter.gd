@@ -3,7 +3,7 @@ extends Control
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
-@onready var character_placeholder: Panel = $CharacterVisualAnchor/CharacterPlaceholder
+@onready var character_placeholder: TextureRect = $CharacterVisualAnchor/CharacterPlaceholder
 @onready var emotion_state_label: Label = $TopLabelStack/EmotionStateLabel
 @onready var reaction_label: Label = $TopLabelStack/ReactionLabel
 @onready var prompt_layer: Control = $PromptLayer
@@ -18,9 +18,12 @@ var _prompt_time_progress: float = 1.0
 
 func _ready() -> void:
 	_default_scale = character_placeholder.scale
+	emotion_state_label.add_theme_color_override("font_color", Color(0.12, 0.12, 0.16, 1.0))
+	reaction_label.add_theme_color_override("font_color", Color(0.12, 0.12, 0.16, 1.0))
+	prompt_feedback_label.add_theme_color_override("font_color", Color(0.12, 0.12, 0.16, 1.0))
 	prompt_feedback_label.add_theme_font_size_override("font_size", 24)
 	prompt_timer_line.width = Config.ARROW_PROMPT_RING_WIDTH
-	prompt_timer_line.default_color = Color(1.0, 0.94, 0.68, 0.78)
+	prompt_timer_line.default_color = Color(0.24, 0.24, 0.28, 0.82)
 	prompt_timer_line.closed = false
 	prompt_timer_line.visible = false
 	update_emotion_state("CALM")
@@ -76,12 +79,12 @@ func show_direction_prompt(prompt_id: int, direction: String, anchor_offset: Vec
 	var prompt_label := _ensure_prompt_label(prompt_id)
 	prompt_label.text = _to_arrow(direction)
 	prompt_label.visible = true
-	prompt_label.modulate = Color(0.9, 0.9, 0.95, 0.46)
-	prompt_label.scale = Vector2(0.82, 0.82)
+	prompt_label.scale = Vector2.ONE
+	prompt_label.modulate = Color(0.9, 0.9, 0.95, 0.0)
 	_refresh_prompt_layout()
 
 	var tween := create_tween()
-	tween.tween_property(prompt_label, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(prompt_label, "modulate:a", 0.46, 0.14).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 func set_current_prompt(prompt_id: int) -> void:
 	_current_prompt_id = prompt_id
@@ -144,14 +147,8 @@ func _pulse(color: Color, scale_multiplier: float) -> void:
 	tween.tween_property(character_placeholder, "scale", _default_scale * scale_multiplier, 0.12)
 	tween.tween_property(character_placeholder, "scale", _default_scale, 0.18)
 
-func _apply_style(panel: Panel, color: Color) -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = color
-	style.corner_radius_top_left = 24
-	style.corner_radius_top_right = 24
-	style.corner_radius_bottom_left = 24
-	style.corner_radius_bottom_right = 24
-	panel.add_theme_stylebox_override("panel", style)
+func _apply_style(_texture_rect: TextureRect, _color: Color) -> void:
+	return
 
 func _refresh_prompt_layout() -> void:
 	if prompt_feedback_label == null:
@@ -189,9 +186,11 @@ func _ensure_prompt_label(prompt_id: int) -> Label:
 	prompt_label.text = "↑"
 	prompt_label.custom_minimum_size = Config.ARROW_PROMPT_BOX_SIZE
 	prompt_label.size = Config.ARROW_PROMPT_BOX_SIZE
+	prompt_label.pivot_offset = Config.ARROW_PROMPT_BOX_SIZE * 0.5
 	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	prompt_label.add_theme_font_size_override("font_size", Config.ARROW_PROMPT_FONT_SIZE)
+	prompt_label.add_theme_color_override("font_color", Color(0.1, 0.1, 0.14, 1.0))
 	prompt_layer.add_child(prompt_label)
 	_prompt_nodes[prompt_id] = prompt_label
 	return prompt_label

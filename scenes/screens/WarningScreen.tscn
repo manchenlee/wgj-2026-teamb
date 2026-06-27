@@ -13,7 +13,7 @@ script = ExtResource("1_warn")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.16, 0.08, 0.08, 1)
+color = Color(1, 1, 1, 1)
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 anchors_preset = 15
@@ -30,12 +30,13 @@ alignment = 1
 [node name="HeadingLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 text = "WARNING"
 horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.12, 0.12, 0.16, 1)
 
 [node name="BodyLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 text = "Placeholder content warning screen. Replace with final narrative and safety copy later."
 horizontal_alignment = 1
 autowrap_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.2, 0.24, 1)
 
 [node name="ContinueButton" type="Button" parent="MarginContainer/VBoxContainer"]
 text = "Continue"
-
