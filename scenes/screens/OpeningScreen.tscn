@@ -156,7 +156,7 @@ bbcode_enabled = false
 fit_content = true
 scroll_active = false
 theme_override_colors/default_color = Color(0.98, 0.96, 0.92, 1)
-theme_override_font_sizes/normal_font_size = 16
+theme_override_font_sizes/normal_font_size = 18
 text = "..."
 
 [node name="FooterRow" type="HBoxContainer" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout" unique_id=992871500]
