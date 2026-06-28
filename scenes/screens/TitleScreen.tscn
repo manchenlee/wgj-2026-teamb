@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://bmy2w2x3um4hw" path="res://assets/btn.png" id="2_btn"]
 [ext_resource type="Texture2D" uid="uid://dilrpkr41tspa" path="res://assets/cover.png" id="3_cover"]
 [ext_resource type="FontFile" uid="uid://db5u741tm2yje" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="4_s3gyh"]
+[ext_resource type="Texture2D" uid="uid://c56yim0xees0g" path="res://assets/art/ui/logo.png" id="5_logo"]
 
 [node name="TitleScreen" type="Control" unique_id=1861360168]
 layout_mode = 3
@@ -24,13 +25,27 @@ grow_vertical = 2
 texture = ExtResource("3_cover")
 stretch_mode = 6
 
+[node name="Logo" type="TextureRect" parent="." unique_id=112495637]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -695.0
+offset_top = 624.0
+offset_right = 1505.0
+offset_bottom = 1424.0
+grow_horizontal = 2
+scale = Vector2(0.3525629, 0.3525629)
+texture = ExtResource("5_logo")
+stretch_mode = 5
+
 [node name="StartButton" type="TextureButton" parent="." unique_id=1262390766]
 layout_mode = 0
-offset_left = 810.0
-offset_top = 565.0
-offset_right = 1802.0
-offset_bottom = 1063.0
-scale = Vector2(0.6, 0.6)
+offset_left = 918.0
+offset_top = 739.0
+offset_right = 1910.0
+offset_bottom = 1237.0
+scale = Vector2(0.5, 0.5)
 texture_normal = ExtResource("2_btn")
 
 [node name="ButtonLabel" type="Label" parent="StartButton" unique_id=348086113]
@@ -49,7 +64,7 @@ theme_override_colors/font_shadow_color = Color(1, 0.8, 0.8, 0.5)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
 theme_override_fonts/font = ExtResource("4_s3gyh")
-theme_override_font_sizes/font_size = 84
+theme_override_font_sizes/font_size = 64
 text = "遊戲開始"
 horizontal_alignment = 1
 vertical_alignment = 1

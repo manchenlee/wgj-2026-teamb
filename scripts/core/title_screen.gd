@@ -4,6 +4,7 @@ signal start_pressed
 signal debug_requested
 
 @onready var _start_button: TextureButton = $StartButton
+@onready var _logo: TextureRect = $Logo
 @onready var _debug_hotspot: Button = $BottomBar/DebugHotspot
 @onready var _background: TextureRect = $Background
 
@@ -33,6 +34,8 @@ func _ready() -> void:
 	#	size.y * 0.60 - btn_size.y * 0.5)
 
 func _animate_in() -> void:
+	_logo.modulate.a = 0.0
 	_start_button.modulate.a = 0.0
 	var tween := create_tween().set_trans(Tween.TRANS_SINE)
-	tween.tween_property(_start_button, "modulate:a", 1.0, 0.8)
+	tween.tween_property(_logo, "modulate:a", 1.0, 0.8)
+	tween.parallel().tween_property(_start_button, "modulate:a", 1.0, 0.8)
