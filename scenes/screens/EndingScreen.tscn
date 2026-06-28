@@ -47,14 +47,14 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 72
-theme_override_constants/margin_top = 40
+theme_override_constants/margin_top = 28
 theme_override_constants/margin_right = 72
-theme_override_constants/margin_bottom = 40
+theme_override_constants/margin_bottom = 28
 
 [node name="Layout" type="VBoxContainer" parent="BookPanel/OuterMargin"]
 layout_mode = 2
 alignment = 1
-theme_override_constants/separation = 16
+theme_override_constants/separation = 8
 
 [node name="HeadingLabel" type="Label" parent="BookPanel/OuterMargin/Layout"]
 layout_mode = 2
@@ -72,10 +72,10 @@ theme_override_font_sizes/font_size = 16
 
 [node name="EndingBody" type="Label" parent="BookPanel/OuterMargin/Layout"]
 layout_mode = 2
-size_flags_vertical = 3
+size_flags_vertical = 4
 text = "Placeholder ending content."
 horizontal_alignment = 1
-vertical_alignment = 1
+vertical_alignment = 0
 autowrap_mode = 2
 theme_override_colors/font_color = Color(0.15, 0.08, 0.03, 1)
 theme_override_font_sizes/font_size = 18
