@@ -21,6 +21,10 @@ window/size/viewport_width=1440
 window/size/viewport_height=1024
 window/stretch/mode="canvas_items"
 
+[gui]
+
+theme/custom="res://assets/theme/default_theme.tres"
+
 [physics]
 
 3d/physics_engine="Jolt Physics"

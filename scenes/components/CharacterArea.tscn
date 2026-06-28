@@ -47,6 +47,7 @@ z_index = 1
 [node name="PromptFeedbackLabel" type="Label" parent="PromptLayer"]
 visible = false
 mouse_filter = 2
+theme_override_font_sizes/font_size = 24
 text = "Correct +4"
 
 [node name="CharacterAnimationAnchor" type="Node2D" parent="."]

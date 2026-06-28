@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://cb6d1m2m1bqs8" path="res://scripts/core/rule_screen.gd" id="1_rule"]
 [ext_resource type="Texture2D" uid="uid://dc7csqq8gypo5" path="res://assets/curtain.jpg" id="2_curtain"]
 [ext_resource type="Texture2D" uid="uid://cr6ioiuh23wo7" path="res://assets/book.png" id="3_book"]
+[ext_resource type="FontFile" uid="uid://db5u741tm2yje" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="4_m8gc1"]
 
 [node name="RuleScreen" type="Control" unique_id=426288651]
 layout_mode = 3
@@ -60,6 +61,7 @@ theme_override_constants/separation = 14
 [node name="Section1Title" type="Label" parent="BookPanel/ContentContainer/VBoxContainer" unique_id=1428582430]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.1, 0.05, 1)
+theme_override_fonts/font = ExtResource("4_m8gc1")
 theme_override_font_sizes/font_size = 40
 text = "遊戲操作方式"
 
@@ -77,6 +79,7 @@ layout_mode = 2
 [node name="Section2Title" type="Label" parent="BookPanel/ContentContainer/VBoxContainer" unique_id=689501043]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.1, 0.05, 1)
+theme_override_fonts/font = ExtResource("4_m8gc1")
 theme_override_font_sizes/font_size = 40
 text = "什麼是安全詞？"
 

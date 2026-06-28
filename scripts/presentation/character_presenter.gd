@@ -21,7 +21,6 @@ func _ready() -> void:
 	emotion_state_label.add_theme_color_override("font_color", Color(0.12, 0.12, 0.16, 1.0))
 	reaction_label.add_theme_color_override("font_color", Color(0.12, 0.12, 0.16, 1.0))
 	prompt_feedback_label.add_theme_color_override("font_color", Color(0.12, 0.12, 0.16, 1.0))
-	prompt_feedback_label.add_theme_font_size_override("font_size", 24)
 	prompt_timer_line.width = Config.ARROW_PROMPT_RING_WIDTH
 	prompt_timer_line.default_color = Color(0.24, 0.24, 0.28, 0.82)
 	prompt_timer_line.closed = false
