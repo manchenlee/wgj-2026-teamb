@@ -938,7 +938,7 @@ func _get_prompt_region_rect_in_character_area() -> Rect2:
 func _get_prompt_anchor_ids() -> Array[String]:
 	var anchor_ids: Array[String] = []
 	for child in character_prompt_region.get_children():
-		if child is Control:
+		if child is Control and child.name != "Phase2AnchorPreviewLayer":
 			anchor_ids.append(String(child.name))
 	anchor_ids.sort()
 	return anchor_ids

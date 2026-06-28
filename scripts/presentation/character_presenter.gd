@@ -2,6 +2,10 @@ class_name CharacterPresenter
 extends Control
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
+const DIRECTION_TEXTURE_PATH := "res://assets/art/ui/direction.png"
+const DIRECTION_ALPHA_THRESHOLD := 0.02
+const DIRECTION_CROP_MARGIN := 0
+const DIRECTION_ICON_PADDING := 12.0
 
 @onready var character_placeholder: TextureRect = $CharacterVisualAnchor/CharacterPlaceholder
 @onready var prompt_layer: Control = $PromptLayer
@@ -14,6 +18,96 @@ var _prompt_timer_lines: Dictionary = {}
 var _prompt_time_progresses: Dictionary = {}
 var _current_prompt_id: int = -1
 var _prompt_bounds_rect := Rect2()
+var _direction_texture: Texture2D
+var _direction_texture_warning_emitted := false
+
+func _get_direction_texture() -> Texture2D:
+	if _direction_texture != null:
+		return _direction_texture
+
+	if ResourceLoader.exists(DIRECTION_TEXTURE_PATH):
+		var imported_texture := load(DIRECTION_TEXTURE_PATH) as Texture2D
+		if imported_texture != null:
+			var imported_image := imported_texture.get_image()
+			if imported_image != null and not imported_image.is_empty():
+				_direction_texture = ImageTexture.create_from_image(_prepare_direction_image(imported_image))
+				return _direction_texture
+
+	var absolute_path := ProjectSettings.globalize_path(DIRECTION_TEXTURE_PATH)
+	if FileAccess.file_exists(absolute_path):
+		var image := Image.load_from_file(absolute_path)
+		if image != null and not image.is_empty():
+			_direction_texture = ImageTexture.create_from_image(_prepare_direction_image(image))
+			return _direction_texture
+
+	if not _direction_texture_warning_emitted:
+		_direction_texture_warning_emitted = true
+		push_warning(
+			"Direction arrow texture failed to load from %s. Falling back to generated arrow." % DIRECTION_TEXTURE_PATH
+		)
+	_direction_texture = _create_fallback_direction_texture()
+	return _direction_texture
+
+func _prepare_direction_image(source_image: Image) -> Image:
+	var image := source_image.duplicate()
+	if image.get_format() != Image.FORMAT_RGBA8:
+		image.convert(Image.FORMAT_RGBA8)
+
+	var crop_rect := _find_direction_alpha_bounds(image)
+	if crop_rect.size.x <= 0 or crop_rect.size.y <= 0:
+		return image
+
+	var cropped: Image = image.get_region(crop_rect)
+	for y in range(cropped.get_height()):
+		for x in range(cropped.get_width()):
+			var pixel := cropped.get_pixel(x, y)
+			if pixel.a <= DIRECTION_ALPHA_THRESHOLD:
+				cropped.set_pixel(x, y, Color(0.0, 0.0, 0.0, 0.0))
+			else:
+				cropped.set_pixel(x, y, Color(1.0, 1.0, 1.0, pixel.a))
+	return cropped
+
+func _find_direction_alpha_bounds(image: Image) -> Rect2i:
+	var width := image.get_width()
+	var height := image.get_height()
+	var min_x := width
+	var min_y := height
+	var max_x := -1
+	var max_y := -1
+
+	for y in range(height):
+		for x in range(width):
+			if image.get_pixel(x, y).a > DIRECTION_ALPHA_THRESHOLD:
+				min_x = min(min_x, x)
+				min_y = min(min_y, y)
+				max_x = max(max_x, x)
+				max_y = max(max_y, y)
+
+	if max_x < min_x or max_y < min_y:
+		return Rect2i()
+
+	min_x = max(0, min_x - DIRECTION_CROP_MARGIN)
+	min_y = max(0, min_y - DIRECTION_CROP_MARGIN)
+	max_x = min(width - 1, max_x + DIRECTION_CROP_MARGIN)
+	max_y = min(height - 1, max_y + DIRECTION_CROP_MARGIN)
+	return Rect2i(min_x, min_y, (max_x - min_x) + 1, (max_y - min_y) + 1)
+
+func _create_fallback_direction_texture() -> Texture2D:
+	var image := Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0.0, 0.0, 0.0, 0.0))
+	var color := Color.WHITE
+
+	for y in range(22, 56):
+		for x in range(28, 36):
+			image.set_pixel(x, y, color)
+
+	for row in range(18):
+		var start_x := 32 - row
+		var end_x := 32 + row
+		for x in range(start_x, end_x + 1):
+			image.set_pixel(x, 4 + row, color)
+
+	return ImageTexture.create_from_image(image)
 
 func _ready() -> void:
 	_default_scale = character_placeholder.scale
@@ -71,22 +165,22 @@ func set_prompt_bounds(bounds_rect: Rect2) -> void:
 
 func show_direction_prompt(prompt_id: int, direction: String, anchor_position: Vector2) -> void:
 	_prompt_positions[prompt_id] = anchor_position
-	var prompt_label := _ensure_prompt_label(prompt_id)
-	prompt_label.text = _to_arrow(direction)
-	prompt_label.visible = true
-	prompt_label.scale = Vector2.ONE
-	prompt_label.modulate = Color(0.9, 0.9, 0.95, 0.0)
+	var prompt_icon := _ensure_prompt_icon(prompt_id)
+	prompt_icon.rotation = _direction_rotation(direction)
+	prompt_icon.visible = true
+	prompt_icon.scale = Vector2.ONE
+	prompt_icon.modulate = Color(0.9, 0.9, 0.95, 0.0)
 	_prompt_time_progresses[prompt_id] = 1.0
 	_refresh_prompt_layout()
 
 	var tween := create_tween()
-	tween.tween_property(prompt_label, "modulate:a", 0.46, 0.14).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(prompt_icon, "modulate:a", 0.46, 0.14).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 func set_current_prompt(prompt_id: int) -> void:
 	_current_prompt_id = prompt_id
 	for key in _prompt_nodes.keys():
-		var prompt_label: Label = _prompt_nodes[key]
-		prompt_label.modulate.a = 1.0 if int(key) == _current_prompt_id else 0.46
+		var prompt_icon: TextureRect = _prompt_nodes[key]
+		prompt_icon.modulate.a = 1.0 if int(key) == _current_prompt_id else 0.46
 
 func set_prompt_time_progresses(progress_by_prompt_id: Dictionary) -> void:
 	_prompt_time_progresses.clear()
@@ -94,17 +188,17 @@ func set_prompt_time_progresses(progress_by_prompt_id: Dictionary) -> void:
 		var prompt_id := int(prompt_id_variant)
 		_prompt_time_progresses[prompt_id] = clampf(float(progress_by_prompt_id[prompt_id_variant]), 0.0, 1.0)
 	for key in _prompt_nodes.keys():
-		var prompt_label: Label = _prompt_nodes[key]
+		var prompt_icon: TextureRect = _prompt_nodes[key]
 		var prompt_id := int(key)
 		var progress := float(_prompt_time_progresses.get(prompt_id, 0.0))
-		prompt_label.modulate.a = lerpf(0.22, 1.0, progress) if prompt_id == _current_prompt_id else 0.46
+		prompt_icon.modulate.a = lerpf(0.22, 1.0, progress) if prompt_id == _current_prompt_id else 0.46
 	_update_prompt_timer_rings()
 
 func remove_direction_prompt(prompt_id: int) -> void:
 	if not _prompt_nodes.has(prompt_id):
 		return
-	var prompt_label: Label = _prompt_nodes[prompt_id]
-	prompt_label.queue_free()
+	var prompt_icon: TextureRect = _prompt_nodes[prompt_id]
+	prompt_icon.queue_free()
 	_prompt_nodes.erase(prompt_id)
 	_prompt_positions.erase(prompt_id)
 	if _prompt_timer_lines.has(prompt_id):
@@ -117,8 +211,8 @@ func remove_direction_prompt(prompt_id: int) -> void:
 	_update_prompt_timer_rings()
 
 func clear_direction_prompts() -> void:
-	for prompt_label in _prompt_nodes.values():
-		prompt_label.queue_free()
+	for prompt_icon in _prompt_nodes.values():
+		prompt_icon.queue_free()
 	for prompt_timer_line in _prompt_timer_lines.values():
 		prompt_timer_line.queue_free()
 	_prompt_nodes.clear()
@@ -162,9 +256,9 @@ func _refresh_prompt_layout() -> void:
 		return
 	var bounds_rect := _get_prompt_bounds_rect()
 	for key in _prompt_nodes.keys():
-		var prompt_label: Label = _prompt_nodes[key]
+		var prompt_icon: TextureRect = _prompt_nodes[key]
 		var prompt_position: Vector2 = _prompt_positions.get(key, bounds_rect.get_center())
-		var prompt_size := prompt_label.size
+		var prompt_size := prompt_icon.size
 		var desired_center := prompt_position
 		var half_size := prompt_size * 0.5
 		var min_x := bounds_rect.position.x + half_size.x + Config.ARROW_PROMPT_EDGE_MARGIN
@@ -175,7 +269,7 @@ func _refresh_prompt_layout() -> void:
 			clampf(desired_center.x, min_x, max_x),
 			clampf(desired_center.y, min_y, max_y)
 		)
-		prompt_label.position = clamped_center - half_size
+		prompt_icon.position = clamped_center - half_size
 	_update_prompt_timer_rings()
 	if prompt_feedback_label.visible:
 		_position_feedback_label()
@@ -197,33 +291,38 @@ func _get_feedback_anchor_center() -> Vector2:
 	var current_label := _get_current_prompt_label()
 	if current_label == null:
 		return _get_character_center_local()
-	return current_label.position + (current_label.get_combined_minimum_size() * 0.5)
+	return current_label.position + (current_label.size * 0.5)
 
 func _get_prompt_bounds_rect() -> Rect2:
 	if _prompt_bounds_rect.size.length_squared() > 0.0:
 		return _prompt_bounds_rect
 	return _get_character_rect_local()
 
-func _ensure_prompt_label(prompt_id: int) -> Label:
+func _get_prompt_icon_size() -> Vector2:
+	return Vector2(
+		maxf(24.0, Config.ARROW_PROMPT_BOX_SIZE.x - (DIRECTION_ICON_PADDING * 2.0)),
+		maxf(24.0, Config.ARROW_PROMPT_BOX_SIZE.y - (DIRECTION_ICON_PADDING * 2.0))
+	)
+
+func _ensure_prompt_icon(prompt_id: int) -> TextureRect:
 	if _prompt_nodes.has(prompt_id):
 		return _prompt_nodes[prompt_id]
-	var prompt_label := Label.new()
-	prompt_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	prompt_label.visible = false
-	prompt_label.text = "↑"
-	prompt_label.custom_minimum_size = Config.ARROW_PROMPT_BOX_SIZE
-	prompt_label.size = Config.ARROW_PROMPT_BOX_SIZE
-	prompt_label.pivot_offset = Config.ARROW_PROMPT_BOX_SIZE * 0.5
-	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	prompt_label.add_theme_font_size_override("font_size", Config.ARROW_PROMPT_FONT_SIZE)
-	prompt_label.add_theme_color_override("font_color", Color(0.1, 0.1, 0.14, 1.0))
-	prompt_layer.add_child(prompt_label)
-	_prompt_nodes[prompt_id] = prompt_label
+	var prompt_icon := TextureRect.new()
+	var prompt_icon_size := _get_prompt_icon_size()
+	prompt_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	prompt_icon.visible = false
+	prompt_icon.texture = _get_direction_texture()
+	prompt_icon.custom_minimum_size = prompt_icon_size
+	prompt_icon.size = prompt_icon_size
+	prompt_icon.pivot_offset = prompt_icon_size * 0.5
+	prompt_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	prompt_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	prompt_layer.add_child(prompt_icon)
+	_prompt_nodes[prompt_id] = prompt_icon
 	_ensure_prompt_timer_line(prompt_id)
-	return prompt_label
+	return prompt_icon
 
-func _get_current_prompt_label() -> Label:
+func _get_current_prompt_label() -> TextureRect:
 	if not _prompt_nodes.has(_current_prompt_id):
 		return null
 	return _prompt_nodes[_current_prompt_id]
@@ -244,14 +343,14 @@ func _ensure_prompt_timer_line(prompt_id: int) -> Line2D:
 func _update_prompt_timer_rings() -> void:
 	for prompt_id_variant in _prompt_nodes.keys():
 		var prompt_id := int(prompt_id_variant)
-		var prompt_label: Label = _prompt_nodes[prompt_id]
+		var prompt_icon: TextureRect = _prompt_nodes[prompt_id]
 		var timer_line := _ensure_prompt_timer_line(prompt_id)
 		var progress := float(_prompt_time_progresses.get(prompt_id, 0.0))
-		if not prompt_label.visible or progress <= 0.0:
+		if not prompt_icon.visible or progress <= 0.0:
 			timer_line.visible = false
 			timer_line.clear_points()
 			continue
-		var center := prompt_label.position + (prompt_label.size * 0.5)
+		var center := prompt_icon.position + (prompt_icon.size * 0.5)
 		var radius := Config.ARROW_PROMPT_RING_RADIUS
 		var steps := 48
 		var points: Array[Vector2] = []
@@ -264,15 +363,15 @@ func _update_prompt_timer_rings() -> void:
 		timer_line.points = points
 		timer_line.visible = points.size() >= 2
 
-func _to_arrow(direction: String) -> String:
+func _direction_rotation(direction: String) -> float:
 	match direction:
 		"Left":
-			return "←"
+			return -PI * 0.5
 		"Right":
-			return "→"
+			return PI * 0.5
 		"Up":
-			return "↑"
+			return 0.0
 		"Down":
-			return "↓"
+			return PI
 		_:
-			return "?"
+			return 0.0
