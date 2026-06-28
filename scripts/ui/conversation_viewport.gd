@@ -3,6 +3,7 @@ extends Control
 signal choice_selected(choice_quality: String, choice_text: String)
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
+const MESSAGE_FONT := preload("res://assets/fonts/ShipporiMincho-Bold.ttf")
 
 const PLAYER_BUBBLE_PATH := "res://assets/art/ui/text.png"
 const CHARACTER_BUBBLE_PATH := "res://assets/art/ui/text2.png"
@@ -27,13 +28,16 @@ const CHOICE_TEXT_MARGIN_BOTTOM := 10.0
 const CHOICE_TEXT_MAX_CHARS := 64
 const MESSAGE_FONT_SIZE := 24
 const CHOICE_FONT_SIZE := 24
+const DIALOGUE_TEXT_COLOR := Color(0.0, 0.0, 0.0, 1.0)
+const DIALOGUE_TEXT_OUTLINE_COLOR := Color(1.0, 1.0, 1.0, 1.0)
+const DIALOGUE_TEXT_OUTLINE_SIZE := 0
+const CHOICE_TEXT_COLOR := Color(1.0, 1.0, 1.0, 1.0)
+const CHOICE_TEXT_OUTLINE_SIZE := 0
 const FALLBACK_MESSAGE_SIZE := Vector2(520.0, 132.0)
 const FALLBACK_CHOICE_SIZE := Vector2(300.0, 146.0)
 const MAX_VISIBLE_MESSAGES := 5
 const CHOICE_ENABLED_MODULATE := Color(1.0, 1.0, 1.0, 1.0)
 const CHOICE_DISABLED_MODULATE := Color(0.42, 0.42, 0.42, 1.0)
-const CHOICE_LABEL_ENABLED_COLOR := Color(0.99, 0.94, 0.94, 1.0)
-const CHOICE_LABEL_DISABLED_COLOR := Color(0.7, 0.7, 0.7, 1.0)
 
 @onready var conversation_content: Control = $ConversationContent
 @onready var choice_area: Control = $"../BottomHUD/ChoiceArea"
@@ -154,9 +158,12 @@ func _create_message_bubble(line: String, speaker_type: String) -> Control:
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_override("font", MESSAGE_FONT)
 	label.add_theme_font_size_override("font_size", MESSAGE_FONT_SIZE)
 	label.set_meta("_ui_font_scale_applied", true)
-	label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
+	label.add_theme_color_override("font_color", DIALOGUE_TEXT_COLOR)
+	label.add_theme_color_override("font_outline_color", DIALOGUE_TEXT_OUTLINE_COLOR)
+	label.add_theme_constant_override("outline_size", DIALOGUE_TEXT_OUTLINE_SIZE)
 	label.text = _clamp_text(line, MESSAGE_TEXT_MAX_CHARS)
 	label.position = Vector2(MESSAGE_TEXT_MARGIN_LEFT, MESSAGE_TEXT_MARGIN_TOP) * BUBBLE_SCALE
 	label.size = Vector2(
@@ -201,9 +208,11 @@ func _configure_choice_button(button: TextureButton, label: Label) -> void:
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_override("font", MESSAGE_FONT)
 	label.add_theme_font_size_override("font_size", CHOICE_FONT_SIZE)
 	label.set_meta("_ui_font_scale_applied", true)
-	label.add_theme_color_override("font_color", CHOICE_LABEL_DISABLED_COLOR)
+	label.add_theme_color_override("font_color", CHOICE_TEXT_COLOR)
+	label.add_theme_constant_override("outline_size", CHOICE_TEXT_OUTLINE_SIZE)
 	label.position = Vector2(CHOICE_TEXT_MARGIN_LEFT, CHOICE_TEXT_MARGIN_TOP) * CHOICE_BUBBLE_SCALE
 	label.size = Vector2(
 		bubble_size.x - (CHOICE_TEXT_MARGIN_LEFT + CHOICE_TEXT_MARGIN_RIGHT) * CHOICE_BUBBLE_SCALE,
@@ -235,10 +244,6 @@ func _apply_disabled_choice_button(button: TextureButton, label: Label) -> void:
 func _set_choice_button_enabled_state(button: TextureButton, label: Label, enabled: bool) -> void:
 	button.modulate = CHOICE_ENABLED_MODULATE if enabled else CHOICE_DISABLED_MODULATE
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if enabled else Control.CURSOR_ARROW
-	label.add_theme_color_override(
-		"font_color",
-		CHOICE_LABEL_ENABLED_COLOR if enabled else CHOICE_LABEL_DISABLED_COLOR
-	)
 	var fallback_rect := button.get_node_or_null("FallbackBubble") as ColorRect
 	if fallback_rect != null:
 		fallback_rect.color = Color(0.82, 0.26, 0.45, 0.96) if enabled else Color(0.42, 0.42, 0.42, 0.96)

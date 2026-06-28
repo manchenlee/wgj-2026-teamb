@@ -8,7 +8,7 @@ const FEEDBACK_MESSAGE_TEXT: String = "……"
 const CHOICE_PROMPT_TEXT: String = "……"
 const RESPONSE_BUTTON_TEXT: String = "……"
 const SAFE_WORD_DEFAULT: String = "紅色"
-const FEEDBACK_BRANCH_THRESHOLD: float = 50.0
+const FEEDBACK_BRANCH_THRESHOLD: float = 45.0
 const SAFE_WORD_EVENT_CHANCE: float = 0.15
 
 # UI scaling.
@@ -103,11 +103,13 @@ const ARROW_PROMPT_ANCHOR_OFFSETS := [
 
 # Emotional interaction tuning.
 # 對話事件中，生理低於這個值時視為「低生理」。
-const FEEDBACK_PHYSICAL_LOW_THRESHOLD: float = 30.0
+const FEEDBACK_PHYSICAL_LOW_THRESHOLD: float = 38.0
+# 對話事件中，生理高於這個值時視為「高生理」。
+const FEEDBACK_PHYSICAL_HIGH_THRESHOLD: float = 45.0
 # 對話事件中，心理低於這個值時視為「低心理」。
-const FEEDBACK_EMOTIONAL_LOW_THRESHOLD: float = 30.0
+const FEEDBACK_EMOTIONAL_LOW_THRESHOLD: float = 38.0
 # 對話事件中，心理高於這個值時視為「高心理」。
-const FEEDBACK_EMOTIONAL_HIGH_THRESHOLD: float = 60.0
+const FEEDBACK_EMOTIONAL_HIGH_THRESHOLD: float = 52.0
 # 選到最佳選項時增加的情感值；調大會讓正確判斷更容易穩住情感，調小則成長較慢。
 const EMOTIONAL_GAIN_GOOD_CHOICE: float = 10.0
 # 選到中性選項時增加的情感值；調大會降低判斷失誤的成本，調小則更需要選到最佳答案。

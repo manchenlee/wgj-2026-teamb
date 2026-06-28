@@ -58,8 +58,11 @@ void fragment() {
 		float sheen = band * shine_strength * effect_multiplier;
 		float edge_highlight = edge * edge_strength * effect_multiplier;
 		vec3 base_rgb = base_color.rgb;
+		vec3 outline_rgb = mix(base_rgb * 0.28, vec3(0.16, 0.08, 0.02), 0.82);
 		float input_alpha_factor = clamp(input_color.a / max(source_alpha, 0.0001), 0.0, 1.0);
-		vec3 result_rgb = base_rgb + (metal_color.rgb * (sheen + edge_highlight));
+		vec3 lit_rgb = base_rgb + (metal_color.rgb * sheen);
+		vec3 result_rgb = mix(lit_rgb, outline_rgb, clamp(edge * 0.94, 0.0, 1.0));
+		result_rgb += metal_color.rgb * edge_highlight * 0.28;
 
 		COLOR = vec4(result_rgb, alpha * base_color.a * input_alpha_factor);
 	}

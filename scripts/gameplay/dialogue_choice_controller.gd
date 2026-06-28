@@ -120,8 +120,16 @@ func _select_entry(physical: float, emotional: float, force_safe_word: bool = fa
 	if force_safe_word:
 		return _select_safe_word_entry()
 
-	var target_physical := _classify_state(physical)
-	var target_emotional := _classify_state(emotional)
+	var target_physical := _classify_state(
+		physical,
+		float(_get_phase_value("feedback_physical_low_threshold", Config.FEEDBACK_PHYSICAL_LOW_THRESHOLD)),
+		float(_get_phase_value("feedback_physical_high_threshold", Config.FEEDBACK_PHYSICAL_HIGH_THRESHOLD))
+	)
+	var target_emotional := _classify_state(
+		emotional,
+		float(_get_phase_value("feedback_emotional_low_threshold", Config.FEEDBACK_EMOTIONAL_LOW_THRESHOLD)),
+		float(_get_phase_value("feedback_emotional_high_threshold", Config.FEEDBACK_EMOTIONAL_HIGH_THRESHOLD))
+	)
 	var phase_number := _get_phase_number()
 	if target_physical.is_empty() or target_emotional.is_empty() or phase_number < 1:
 		return {}
@@ -231,8 +239,13 @@ func _pick_random_text(source: Variant, fallback: String) -> String:
 		return fallback
 	return str(text_options[rng.randi_range(0, text_options.size() - 1)])
 
-func _classify_state(value: float) -> String:
-	if value > Config.FEEDBACK_BRANCH_THRESHOLD:
+func _classify_state(value: float, low_threshold: float, high_threshold: float) -> String:
+	if value >= high_threshold:
+		return "high"
+	if value <= low_threshold:
+		return "low"
+	var midpoint := (low_threshold + high_threshold) * 0.5
+	if value >= midpoint:
 		return "high"
 	return "low"
 

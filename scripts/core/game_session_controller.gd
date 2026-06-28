@@ -423,11 +423,13 @@ func _get_character_visual_state_key(forced_ending_type: String = "") -> String:
 	if forced_ending_type == Config.EMOTIONAL_IMBALANCE_FAILURE_ENDING:
 		return "physic_low_mental_high_gameover"
 
-	var mismatch_low_threshold: float = float(_get_phase_value("minimum_active_threshold", 20.0))
-	var mismatch_high_threshold: float = float(_get_phase_value("feedback_emotional_high_threshold", 60.0))
-	if arousal_model.physical >= mismatch_high_threshold and arousal_model.emotional < mismatch_low_threshold:
+	var physical_low_threshold: float = float(_get_phase_value("feedback_physical_low_threshold", Config.FEEDBACK_PHYSICAL_LOW_THRESHOLD))
+	var physical_high_threshold: float = float(_get_phase_value("feedback_physical_high_threshold", Config.FEEDBACK_PHYSICAL_HIGH_THRESHOLD))
+	var emotional_low_threshold: float = float(_get_phase_value("feedback_emotional_low_threshold", Config.FEEDBACK_EMOTIONAL_LOW_THRESHOLD))
+	var emotional_high_threshold: float = float(_get_phase_value("feedback_emotional_high_threshold", Config.FEEDBACK_EMOTIONAL_HIGH_THRESHOLD))
+	if arousal_model.physical >= physical_high_threshold and arousal_model.emotional <= emotional_low_threshold:
 		return "physic_high_mental_low"
-	if arousal_model.emotional >= mismatch_high_threshold and arousal_model.physical < mismatch_low_threshold:
+	if arousal_model.emotional >= emotional_high_threshold and arousal_model.physical <= physical_low_threshold:
 		return "physic_low_mental_high"
 	if arousal_model.peak >= _get_phase_value("overall_high_threshold", 60.0):
 		return "overall_high"
