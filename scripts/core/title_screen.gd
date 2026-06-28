@@ -15,6 +15,7 @@ const _COVER_2 := preload("res://assets/cover_2.png")
 
 var _hover_tween: Tween
 var _transitioning := false
+var _start_button_base_scale := Vector2.ONE
 
 func _ready() -> void:
 	_debug_hotspot.pressed.connect(func() -> void: debug_requested.emit())
@@ -22,6 +23,8 @@ func _ready() -> void:
 	_start_button.mouse_exited.connect(_on_button_mouse_exited)
 	_start_button.pressed.connect(_play_cover_transition)
 	_skip_button.pressed.connect(func() -> void: skip_pressed.emit())
+	_start_button_base_scale = _start_button.scale
+	_start_button.pivot_offset = _start_button.size * 0.5
 
 	_background.visible = true
 	_background.modulate.a = 1.0
@@ -41,21 +44,17 @@ func _on_button_mouse_entered() -> void:
 		return
 	if _hover_tween:
 		_hover_tween.kill()
-	_start_button.pivot_offset = _start_button.size * 0.5
-	var scale_tween := create_tween().set_trans(Tween.TRANS_SINE)
-	scale_tween.tween_property(_start_button, "scale", Vector2(1.08, 1.08), 0.15)
-	_hover_tween = create_tween().set_loops()
-	_hover_tween.tween_property(_start_button, "rotation_degrees", 2.5, 0.1)
-	_hover_tween.tween_property(_start_button, "rotation_degrees", -2.5, 0.2)
-	_hover_tween.tween_property(_start_button, "rotation_degrees", 0.0, 0.1)
+	_hover_tween = create_tween().set_trans(Tween.TRANS_SINE).set_parallel(true)
+	_hover_tween.tween_property(_start_button, "scale", _start_button_base_scale * 1.04, 0.15)
+	_hover_tween.tween_property(_start_button, "modulate", Color(1.08, 1.08, 1.08, 1.0), 0.15)
 
 func _on_button_mouse_exited() -> void:
 	if _hover_tween:
 		_hover_tween.kill()
 		_hover_tween = null
-	var tween := create_tween().set_trans(Tween.TRANS_SINE)
-	tween.tween_property(_start_button, "scale", Vector2.ONE, 0.15)
-	tween.parallel().tween_property(_start_button, "rotation_degrees", 0.0, 0.15)
+	var tween := create_tween().set_trans(Tween.TRANS_SINE).set_parallel(true)
+	tween.tween_property(_start_button, "scale", _start_button_base_scale, 0.15)
+	tween.tween_property(_start_button, "modulate", Color.WHITE, 0.15)
 
 func _play_cover_transition() -> void:
 	if _transitioning:
