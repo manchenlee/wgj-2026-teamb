@@ -50,6 +50,7 @@ func _show_title() -> void:
 	current_screen_id = Config.SCREEN_TITLE
 	var screen := TITLE_SCENE.instantiate()
 	screen.start_pressed.connect(_show_warning)
+	screen.skip_pressed.connect(_show_rule)
 	screen.debug_requested.connect(func() -> void: debug_overlay.visible = true)
 	_swap_screen(screen)
 	_play_bgm("default", false)
@@ -65,6 +66,7 @@ func _show_opening() -> void:
 	current_screen_id = Config.SCREEN_OPENING
 	var screen := OPENING_SCENE.instantiate()
 	screen.continue_pressed.connect(_show_rule)
+	screen.skip_pressed.connect(_show_rule)
 	_swap_screen(screen)
 	_play_bgm("default", false)
 

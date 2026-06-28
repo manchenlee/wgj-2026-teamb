@@ -1,6 +1,7 @@
 extends Control
 
 signal continue_pressed
+signal skip_pressed
 
 const OPENING_DATA_PATH := "res://assets/dialogue/opening.json"
 const DEFAULT_BACKGROUND_PATH := "res://assets/curtain.jpg"
@@ -18,6 +19,7 @@ const DEFAULT_SPEAKER := "旁白"
 @onready var dialogue_label: RichTextLabel = $SafeArea/RootLayout/DialogueBox/DialogueLayout/DialogueLabel
 @onready var hint_label: Label = $SafeArea/RootLayout/DialogueBox/DialogueLayout/FooterRow/HintLabel
 @onready var next_button: Button = $SafeArea/RootLayout/DialogueBox/DialogueLayout/FooterRow/NextButton
+@onready var _skip_button: TextureButton = $SkipButton
 
 var _entries: Array = []
 var _current_entry_index := -1
@@ -38,6 +40,7 @@ func _ready() -> void:
 	_base_sprite = _create_stage_sprite("base")
 	_base_glow_sprite = _create_stage_sprite("base_glow", true)
 	next_button.pressed.connect(_advance_script)
+	_skip_button.pressed.connect(func() -> void: skip_pressed.emit())
 	resized.connect(_layout_character_stage)
 	_load_opening_script()
 	_layout_character_stage()
