@@ -22,17 +22,6 @@ stretch_mode = 5
 expand_mode = 1
 visible = false
 
-[node name="TopLabelStack" type="VBoxContainer" parent="."]
-offset_left = 24.0
-offset_top = 24.0
-theme_override_constants/separation = 6
-
-[node name="EmotionStateLabel" type="Label" parent="TopLabelStack"]
-text = "State: CALM"
-
-[node name="ReactionLabel" type="Label" parent="TopLabelStack"]
-text = "Reaction: ..."
-
 [node name="PromptLayer" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 15

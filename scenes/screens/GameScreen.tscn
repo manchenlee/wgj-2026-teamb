@@ -5,8 +5,8 @@
 [ext_resource type="Texture2D" uid="uid://bvl52yg22147o" path="res://assets/art/character/phase1/overall_init.png" id="2_pbayp"]
 [ext_resource type="PackedScene" path="res://scenes/components/StatusHUD.tscn" id="4_hud"]
 [ext_resource type="Script" uid="uid://y4sw51emkoug" path="res://scripts/presentation/central_arousal_visualization.gd" id="5_vis"]
-[ext_resource type="Script" uid="uid://d3bshm1tk5r8n" path="res://scripts/ui/TwoFrameOverlayAnimator.gd" id="6_overlay"]
-[ext_resource type="Script" uid="uid://7lsklnfonwr6" path="res://scripts/ui/LocalizedMeshBreathing.gd" id="7_breathing"]
+[ext_resource type="Script" path="res://scripts/ui/TwoFrameOverlayAnimator.gd" id="6_overlay"]
+[ext_resource type="Script" path="res://scripts/ui/LocalizedMeshBreathing.gd" id="7_breathing"]
 [ext_resource type="Script" uid="uid://d24toufu83pxy" path="res://scripts/ui/conversation_viewport.gd" id="8_conversation"]
 [ext_resource type="Script" uid="uid://x3cgbulqxokf" path="res://scripts/editor/phase_2_editor_preview_controller.gd" id="9_phase2_preview"]
 [ext_resource type="Texture2D" uid="uid://b3obdm5nxmqui" path="res://assets/art/character/phase2/person.png" id="10_phase2_person"]
@@ -728,7 +728,7 @@ one_shot = true
 wait_time = 4.2
 one_shot = true
 
-[node name="PhaseTransitionOverlay" type="ColorRect" parent="." unique_id=112358132134]
+[node name="PhaseTransitionOverlay" type="ColorRect" parent="." unique_id=688982438]
 visible = false
 z_index = 100
 z_as_relative = false
