@@ -3,10 +3,13 @@ extends RefCounted
 
 const MAX_VALUE: float = 100.0
 
-# Shared placeholder copy.
-const FEEDBACK_MESSAGE_TEXT: String = "[測試] 目前這個狀態的回饋對話尚未實作。"
-const CHOICE_PROMPT_TEXT: String = "[測試] 目前這個狀態的選項對話尚未實作。"
-const RESPONSE_BUTTON_TEXT: String = "[測試選項]"
+# Shared dialogue defaults.
+const FEEDBACK_MESSAGE_TEXT: String = "……"
+const CHOICE_PROMPT_TEXT: String = "……"
+const RESPONSE_BUTTON_TEXT: String = "……"
+const SAFE_WORD_DEFAULT: String = "紅色"
+const FEEDBACK_BRANCH_THRESHOLD: float = 50.0
+const SAFE_WORD_EVENT_CHANCE: float = 0.15
 
 # UI scaling.
 # 整體 UI 字體縮放倍率；調大會讓介面文字更大、更容易閱讀，調小則會讓畫面更緊湊。
@@ -144,6 +147,7 @@ const PHYSICAL_IMBALANCE_FAILURE_ENDING: String = "physical_imbalance_failure"
 const EMOTIONAL_IMBALANCE_FAILURE_ENDING: String = "emotional_imbalance_failure"
 const PHYSICAL_FAILURE_ENDING: String = PEAK_DEPLETION_FAILURE_ENDING
 const EMOTIONAL_FAILURE_ENDING: String = PEAK_DEPLETION_FAILURE_ENDING
+const SAFEWORD_IGNORED_FAILURE_ENDING: String = "safeword_ignored_failure"
 
 const SCREEN_TITLE: String = "title"
 const SCREEN_WARNING: String = "warning"

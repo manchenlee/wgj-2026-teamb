@@ -15,6 +15,7 @@ const ENDING_SCENE := preload("res://scenes/screens/EndingScreen.tscn")
 
 var current_screen: Control
 var current_screen_id: String = ""
+var current_safe_word: String = "紅色"
 
 func _ready() -> void:
 	debug_overlay.stage_jump_requested.connect(_show_stage)
@@ -53,10 +54,15 @@ func _show_rule() -> void:
 	screen.continue_pressed.connect(_show_game)
 	_swap_screen(screen)
 
-func _show_game() -> void:
+func _show_game(safe_word: String = "紅色") -> void:
 	bg_music.stop()
 	current_screen_id = Config.SCREEN_GAME
 	var screen := GAME_SCENE.instantiate()
+	var trimmed_safe_word := safe_word.strip_edges()
+	current_safe_word = trimmed_safe_word if not trimmed_safe_word.is_empty() else current_safe_word
+	if current_safe_word.is_empty():
+		current_safe_word = Config.SAFE_WORD_DEFAULT
+	screen.safe_word = current_safe_word
 	screen.ending_requested.connect(_show_ending)
 	screen.debug_overlay = debug_overlay
 	_swap_screen(screen)
@@ -66,7 +72,7 @@ func _show_ending(ending_type: String) -> void:
 	current_screen_id = Config.SCREEN_ENDING
 	var screen := ENDING_SCENE.instantiate()
 	screen.set_result(ending_type)
-	screen.restart_pressed.connect(_show_game)
+	screen.restart_pressed.connect(func() -> void: _show_game(current_safe_word))
 	screen.back_to_title_pressed.connect(_show_title)
 	_swap_screen(screen)
 	debug_overlay.sync_live_readout({

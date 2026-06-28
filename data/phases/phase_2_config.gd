@@ -4,7 +4,6 @@ const Phase2CharacterProfile := preload("res://data/character_profiles/phase_2_c
 
 func _init() -> void:
 	var profile = Phase2CharacterProfile.new()
-	# TODO: Replace Phase 2 placeholder values and dialogue source with final tuning/content.
 	super._init(
 		{
 			"phase_id": "phase_2",
@@ -67,6 +66,6 @@ func _init() -> void:
 			"character_profile": profile,
 			"overlay_animation_set": profile.overlay_animation_set,
 			"prompt_anchor_profile_id": profile.profile_id,
-			"transition_feedback_text": "Phase 2 clear."
+			"transition_feedback_text": "演奏暫時告一段落。"
 		}
 	)

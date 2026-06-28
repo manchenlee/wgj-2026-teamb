@@ -66,6 +66,6 @@ func _init() -> void:
 			"character_profile": profile,
 			"overlay_animation_set": profile.overlay_animation_set,
 			"prompt_anchor_profile_id": profile.profile_id,
-			"transition_feedback_text": "Phase 1 clear. Transitioning to Phase 2..."
+			"transition_feedback_text": "演奏進入下一個段落。"
 		}
 	)

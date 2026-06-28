@@ -17,6 +17,7 @@ signal ending_requested(ending_type: String)
 @export var show_layout_debug_bounds: bool = false
 @export var show_phase2_editor_reference: bool = true
 @export var debug_start_phase_id: String = ""
+@export var safe_word: String = Config.SAFE_WORD_DEFAULT
 
 @onready var background_placeholder: TextureRect = $BackgroundAnchor/BackgroundPlaceholder
 @onready var overlay_animator = $BackgroundAnchor/OverlayAnimator
@@ -133,12 +134,13 @@ func _apply_phase_by_index(phase_index: int, announce_phase: bool) -> void:
 	arousal_model.set_phase_config(active_phase_config)
 	sequence_controller.set_phase_config(active_phase_config)
 	dialogue_controller.set_phase_config(active_phase_config)
+	dialogue_controller.set_safe_word(safe_word)
 	_cache_character_visual_textures()
 	overlay_motion_set = _build_overlay_motion_set()
 	_apply_phase_visual_profile()
 	_sync_prompt_anchor_layout()
 	if announce_phase and not Engine.is_editor_hint():
-		dialogue_panel.append_history("Debug: entering %s" % active_phase_config.phase_id, "system")
+		dialogue_panel.append_history(active_phase_config.transition_feedback_text, "system")
 	_update_phase_debug_label()
 
 func _apply_phase_visual_profile() -> void:
@@ -515,7 +517,6 @@ func _reset_run_for_phase_id(phase_id: String) -> void:
 	_reset_run_for_phase_index(0)
 
 func _reset_run_for_phase_index(phase_index: int) -> void:
-	print_debug("reset run")
 	phase_transition_in_progress = false
 	run_active = true
 	ending_transition_started = false
@@ -567,22 +568,11 @@ func _on_feedback_timer_timeout() -> void:
 	if not run_active or waiting_for_choice:
 		return
 	_push_next_dialogue_event()
-	print_debug("feedback message")
 
 func _on_direction_pressed(direction: String) -> void:
 	if not run_active:
 		return
 	var result: Dictionary = sequence_controller.submit_input(direction)
-	print_debug(
-		"direction input: %s -> %s (phase=%s combo=%d physical=%.1f prompt=%s)" % [
-			direction,
-			str(result.get("result", "unknown")),
-			_get_active_phase_id(),
-			combo,
-			arousal_model.physical,
-			sequence_controller.get_prompt_debug_state()
-		]
-	)
 	match str(result.get("result", "")):
 		"correct":
 			combo += 1
@@ -628,9 +618,15 @@ func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	dialogue_panel.hide_choices()
 	waiting_for_choice = false
 	var outcome := dialogue_controller.apply_choice(choice_quality, arousal_model)
+	var ending_type := str(outcome.get("ending_type", ""))
 	arousal_model.refresh_emotional_activity()
-	dialogue_panel.append_history(str(outcome.get("reply", Config.FEEDBACK_MESSAGE_TEXT)), "companion")
+	var reply_text := str(outcome.get("reply", ""))
+	if not reply_text.is_empty():
+		dialogue_panel.append_history(reply_text, "companion")
 	character_area.show_choice_reaction(choice_quality)
+	if not ending_type.is_empty():
+		_begin_ending_transition(ending_type)
+		return
 	_schedule_next_feedback_message()
 	_update_presentation()
 
@@ -656,7 +652,6 @@ func _check_ending() -> void:
 	var ending_type := EndingEvaluatorClass.evaluate(arousal_model, active_phase_config)
 	if ending_type.is_empty():
 		return
-	print_debug("ending: %s phase=%s" % [ending_type, _get_active_phase_id()])
 	if ending_type == Config.SUCCESS_ENDING and _has_next_phase():
 		_begin_phase_transition()
 		return
@@ -812,7 +807,8 @@ func _schedule_next_feedback_message() -> void:
 	feedback_timer.start(wait_time)
 
 func _push_next_dialogue_event() -> void:
-	current_prompt = dialogue_controller.next_event(arousal_model.physical, arousal_model.emotional)
+	var should_force_safe_word := dialogue_controller.has_safe_word_event() and feedback_rng.randf() < Config.SAFE_WORD_EVENT_CHANCE
+	current_prompt = dialogue_controller.next_event(arousal_model.physical, arousal_model.emotional, should_force_safe_word)
 	if current_prompt.has("choices"):
 		waiting_for_choice = true
 		dialogue_panel.hide_prompt()
@@ -891,7 +887,6 @@ func _show_visible_prompt(prompt: Dictionary) -> void:
 		str(prompt.get("direction", "")),
 		_get_prompt_anchor_center_in_character_area(anchor_id)
 	)
-	print_debug("prompt spawn: %s" % sequence_controller.get_prompt_debug_state())
 
 func _activate_current_prompt() -> void:
 	var prompt := sequence_controller.get_current_prompt()
@@ -983,7 +978,6 @@ func _check_prompt_timeouts() -> bool:
 			break
 	if expired_prompt_id < 0:
 		return false
-	print_debug("prompt timeout: id=%d state=%s" % [expired_prompt_id, sequence_controller.get_prompt_debug_state()])
 	_handle_wrong_input()
 	_update_presentation()
 	return true
@@ -1027,5 +1021,4 @@ func _has_next_phase() -> bool:
 func _on_phase_2_skip_pressed() -> void:
 	if _get_active_phase_id() == "phase_2" or phase_transition_in_progress:
 		return
-	dialogue_panel.append_history("Debug: skip to phase_2", "system")
 	_reset_run_for_phase_id("phase_2")
