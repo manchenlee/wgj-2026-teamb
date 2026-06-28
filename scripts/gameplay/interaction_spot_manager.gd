@@ -10,7 +10,7 @@ extends RefCounted
 # at a time. Each anchor is used at most once across all live spots.
 # ---------------------------------------------------------------------------
 
-const InteractionSpotScene := preload("uid://dq3kxvpyb6nj7")
+const InteractionSpotScene := preload("res://scenes/components/InteractionSpot.tscn")
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
