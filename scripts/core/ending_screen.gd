@@ -21,28 +21,23 @@ const DEFAULT_ENDING_TEXTS := {
 	}
 }
 
+const _BG_BY_TYPE := {
+	"peak_depletion_failure": preload("res://assets/end01.png"),
+	"physical_imbalance_failure": preload("res://assets/end02.png"),
+	"emotional_imbalance_failure": preload("res://assets/end03.png"),
+	"success": preload("res://assets/end04.png"),
+	"safeword_ignored_failure": preload("res://assets/end05.png"),
+}
+
 signal restart_pressed
 signal back_to_title_pressed
 
-@onready var heading_label: Label = get_node_or_null(
-	"BookPanel/OuterMargin/Layout/HeadingLabel"
-)
-
-@onready var result_label: Label = get_node_or_null(
-	"BookPanel/OuterMargin/Layout/ResultSubtypeLabel"
-)
-
-@onready var body_label: Label = get_node_or_null(
-	"BookPanel/OuterMargin/Layout/EndingBody"
-)
-
-@onready var restart_button: Button = get_node_or_null(
-	"BookPanel/OuterMargin/Layout/RestartButtons/RestartButton"
-)
-
-@onready var back_to_title_button: Button = get_node_or_null(
-	"BookPanel/OuterMargin/Layout/RestartButtons/BackToTitleButton"
-)
+@onready var _background: TextureRect = $Background
+@onready var heading_label: Label = get_node_or_null("OuterMargin/Layout/HeadingLabel")
+@onready var result_label: Label = get_node_or_null("OuterMargin/Layout/ResultSubtypeLabel")
+@onready var body_label: Label = get_node_or_null("OuterMargin/Layout/EndingBody")
+@onready var restart_button: Button = get_node_or_null("OuterMargin/Layout/RestartButtons/RestartButton")
+@onready var back_to_title_button: Button = get_node_or_null("OuterMargin/Layout/RestartButtons/BackToTitleButton")
 
 var pending_result_type: String = ""
 var ending_texts_by_type: Dictionary = {}
@@ -77,26 +72,12 @@ func set_result(result_type: String) -> void:
 		_apply_result(result_type)
 
 func _apply_result(result_type: String) -> void:
-	if heading_label == null:
-		push_error(
-			"EndingScreen: HeadingLabel node not found at "
-			+ "BookPanel/OuterMargin/Layout/HeadingLabel"
-		)
+	if heading_label == null or result_label == null or body_label == null:
+		push_error("EndingScreen: one or more label nodes not found.")
 		return
 
-	if result_label == null:
-		push_error(
-			"EndingScreen: ResultSubtypeLabel node not found at "
-			+ "BookPanel/OuterMargin/Layout/ResultSubtypeLabel"
-		)
-		return
-
-	if body_label == null:
-		push_error(
-			"EndingScreen: EndingBody node not found at "
-			+ "BookPanel/OuterMargin/Layout/EndingBody"
-		)
-		return
+	if _BG_BY_TYPE.has(result_type):
+		_background.texture = _BG_BY_TYPE[result_type]
 
 	result_label.visible = false
 	var ending_entry_variant: Variant = ending_texts_by_type.get(result_type, {})
