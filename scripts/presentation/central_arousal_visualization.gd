@@ -54,7 +54,7 @@ func _get_character_center() -> Vector2:
 
 func _sync_peak_indicator() -> void:
 	var center := _get_character_center()
-	peak_indicator.position = center + Vector2(-40.0, Config.PEAK_LABEL_OFFSET_Y)
+	peak_indicator.position = center + Vector2(Config.PEAK_LABEL_OFFSET_X, Config.PEAK_LABEL_OFFSET_Y)
 
 func _draw_max_ring_outline() -> void:
 	var center := _get_character_center()

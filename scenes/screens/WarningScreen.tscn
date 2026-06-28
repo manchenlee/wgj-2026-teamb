@@ -1,10 +1,33 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://smt2dt6or873"]
 
-[ext_resource type="Script" path="res://scripts/core/warning_screen.gd" id="1_warn"]
-[ext_resource type="Texture2D" path="res://assets/curtain.jpg" id="2_curtain"]
-[ext_resource type="Texture2D" path="res://assets/warning.png" id="3_warning"]
+[ext_resource type="Script" uid="uid://frcwqljbelob" path="res://scripts/core/warning_screen.gd" id="1_warn"]
 
-[node name="WarningScreen" type="Control"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_leave_normal"]
+bg_color = Color(0.55, 0.55, 0.55, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+content_margin_left = 24.0
+content_margin_top = 12.0
+content_margin_right = 24.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_continue_normal"]
+bg_color = Color(0.95, 0.55, 0.65, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+content_margin_left = 24.0
+content_margin_top = 12.0
+content_margin_right = 24.0
+content_margin_bottom = 12.0
+[ext_resource type="Texture2D" uid="uid://dc7csqq8gypo5" path="res://assets/curtain.jpg" id="2_curtain"]
+[ext_resource type="Texture2D" uid="uid://csiddsncvaf8p" path="res://assets/warning.png" id="3_warning"]
+[ext_resource type="FontFile" uid="uid://cwkj3luqwe71h" path="res://assets/fonts/ShipporiMincho-SemiBold.ttf" id="4_i7tt6"]
+
+[node name="WarningScreen" type="Control" unique_id=1184787338]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -13,7 +36,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_warn")
 
-[node name="Background" type="TextureRect" parent="."]
+[node name="Background" type="TextureRect" parent="." unique_id=1440883054]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -21,10 +44,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_curtain")
-expand_mode = 3
-stretch_mode = 6
+expand_mode = 2
+stretch_mode = 5
 
-[node name="WarningPanel" type="TextureRect" parent="."]
+[node name="WarningPanel" type="TextureRect" parent="." unique_id=649824025]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -38,55 +61,67 @@ grow_vertical = 2
 texture = ExtResource("3_warning")
 expand_mode = 3
 stretch_mode = 6
+metadata/_edit_group_ = true
 
-[node name="ContentContainer" type="MarginContainer" parent="WarningPanel"]
+[node name="ContentContainer" type="MarginContainer" parent="WarningPanel" unique_id=1071547686]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/margin_left = 72
 theme_override_constants/margin_top = 48
 theme_override_constants/margin_right = 72
 theme_override_constants/margin_bottom = 48
 
-[node name="VBoxContainer" type="VBoxContainer" parent="WarningPanel/ContentContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="WarningPanel/ContentContainer" unique_id=2116981587]
 layout_mode = 2
-alignment = 1
 theme_override_constants/separation = 16
+alignment = 1
 
-[node name="HeadingLabel" type="Label" parent="WarningPanel/ContentContainer/VBoxContainer"]
+[node name="HeadingLabel" type="Label" parent="WarningPanel/ContentContainer/VBoxContainer" unique_id=770058209]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.05, 0.05, 1)
+theme_override_fonts/font = ExtResource("4_i7tt6")
+theme_override_font_sizes/font_size = 48
 text = "成人內容提醒"
 horizontal_alignment = 1
-theme_override_colors/font_color = Color(0.5, 0.05, 0.05, 1)
-theme_override_font_sizes/font_size = 28
 
-[node name="BodyLabel" type="Label" parent="WarningPanel/ContentContainer/VBoxContainer"]
+[node name="Spacer2" type="Control" parent="WarningPanel/ContentContainer/VBoxContainer" unique_id=526302969]
+custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
+
+[node name="BodyLabel" type="Label" parent="WarningPanel/ContentContainer/VBoxContainer" unique_id=1443242091]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.1, 0.05, 1)
+theme_override_font_sizes/font_size = 28
 text = "本作含成人及 BDSM 內容，僅供 18 歲以上玩家。
 未達法定年齡請立即離開。"
 horizontal_alignment = 1
 autowrap_mode = 2
-theme_override_colors/font_color = Color(0.2, 0.1, 0.05, 1)
-theme_override_font_sizes/font_size = 16
 
-[node name="Spacer" type="Control" parent="WarningPanel/ContentContainer/VBoxContainer"]
-layout_mode = 2
+[node name="Spacer" type="Control" parent="WarningPanel/ContentContainer/VBoxContainer" unique_id=204691801]
 custom_minimum_size = Vector2(0, 32)
-
-[node name="ButtonRow" type="HBoxContainer" parent="WarningPanel/ContentContainer/VBoxContainer"]
 layout_mode = 2
-alignment = 1
+
+[node name="ButtonRow" type="HBoxContainer" parent="WarningPanel/ContentContainer/VBoxContainer" unique_id=1220756202]
+layout_mode = 2
 theme_override_constants/separation = 32
+alignment = 1
 
-[node name="LeaveButton" type="Button" parent="WarningPanel/ContentContainer/VBoxContainer/ButtonRow"]
-layout_mode = 2
+[node name="LeaveButton" type="Button" parent="WarningPanel/ContentContainer/VBoxContainer/ButtonRow" unique_id=220913538]
 custom_minimum_size = Vector2(180, 56)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_leave_normal")
 text = "離開遊戲"
-theme_override_font_sizes/font_size = 18
 
-[node name="ContinueButton" type="Button" parent="WarningPanel/ContentContainer/VBoxContainer/ButtonRow"]
-layout_mode = 2
+[node name="ContinueButton" type="Button" parent="WarningPanel/ContentContainer/VBoxContainer/ButtonRow" unique_id=1594333250]
 custom_minimum_size = Vector2(180, 56)
-text = "確認遊玩"
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_continue_normal")
+text = "確認遊玩"
