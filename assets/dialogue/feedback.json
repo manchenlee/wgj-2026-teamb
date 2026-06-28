@@ -1,9 +1,10 @@
 {
-  "usage": "畫面右側，角色長時跳出的心理活動",
+  "usage": "畫面右側，依整體低興奮度與第二階段狀態跳出的角色心理活動",
   "entries": [
     {
-      "id": "physical_low_emotional_high_01",
+      "id": "phase1_physical_low_emotional_high_01",
       "condition": {
+        "phase": 1,
         "physical": "low",
         "emotional": "high"
       },
@@ -14,39 +15,32 @@
       "choice": [
         {
           "id": "good",
-          "text": "我看不懂小提琴要吃飯的原理，但，好喔。",
-          "effect": "large_positive"
-        },
-        {
-          "id": "neutral",
-          "text": "小提琴也要吃飯嗎？",
-          "effect": "small_positive"
+          "text": "小提琴也會餓嗎？……好，我扶你起來。",
+          "effect": "positive"
         },
         {
           "id": "bad",
-          "text": "吃甚麼吃？吃我的大觸手啦！！",
+          "text": "才剛剛開始，我們再努力一下好不好？",
           "effect": "negative"
         }
       ],
       "response": {
         "good": [
-          "好喔？……噗，噗哈哈哈！！\n你什麼都不知道，就先答應了嗎？",
+          "……噗，噗呵呵！",
           "其實是我騙你的，小提琴怎麼可能肚子餓呢？",
           "不過……你這樣，總覺得……奇怪的地方，有點餓了……"
         ],
-        "neutral": [
-          "不用啊，我開玩笑的。",
-          "……哈哈哈！對不起！對不起嘛！"
-        ],
         "bad": [
           "……",
-          "……我看錯你了。"
+          "……好，我、我再努力一下……",
+          "……"
         ]
       }
     },
     {
-      "id": "physical_low_emotional_low_01",
+      "id": "phase1_physical_low_emotional_low_01",
       "condition": {
+        "phase": 1,
         "physical": "low",
         "emotional": "low"
       },
@@ -58,16 +52,11 @@
         {
           "id": "good",
           "text": "抱歉，那要休息一下嗎？",
-          "effect": "large_positive"
-        },
-        {
-          "id": "neutral",
-          "text": "你、你再讓我努力一下！",
-          "effect": "small_positive"
+          "effect": "positive"
         },
         {
           "id": "bad",
-          "text": "……",
+          "text": "是不是你太敏感了？",
           "effect": "negative"
         }
       ],
@@ -76,12 +65,227 @@
           "……算你識相。",
           "……算了，也不是……不行啦，你還可以再努力一下。"
         ],
-        "neutral": [
-          "努力什麼？努力弄痛我嗎？",
-          "……好啦好啦，看在你這麼努力的份上，再給你一點機會好了。"
+        "bad": [
+          "……我！說！你！弄！痛！我！了！"
+        ]
+      }
+    },
+    {
+      "id": "phase1_physical_high_emotional_low_01",
+      "condition": {
+        "phase": 1,
+        "physical": "high",
+        "emotional": "low"
+      },
+      "feedback": [
+        "唔嗯！唔嗯……！",
+        "……哈啊……"
+      ],
+      "choice": [
+        {
+          "id": "good",
+          "text": "調整自己的步調，讓節奏慢下來。",
+          "effect": "positive"
+        },
+        {
+          "id": "bad",
+          "text": "不舒服就說，你不說話，我怎麼知道你怎麼了？",
+          "effect": "negative"
+        }
+      ],
+      "response": {
+        "good": [
+          "……哈啊……"
         ],
         "bad": [
-            "……我！說！你！弄！痛！我！了！"
+          "……我……沒有，我沒有怎樣。"
+        ]
+      }
+    },
+    {
+      "id": "phase1_physical_high_emotional_high_01",
+      "condition": {
+        "phase": 1,
+        "physical": "high",
+        "emotional": "high"
+      },
+      "feedback": [
+        "哈……",
+        "好、好像漸漸有點感覺了……"
+      ],
+      "choice": [
+        {
+          "id": "good",
+          "text": "你很棒，我們慢慢來就好……",
+          "effect": "positive"
+        },
+        {
+          "id": "bad",
+          "text": "這樣才有點感覺？你是覺得我技術不好嗎？",
+          "effect": "negative"
+        }
+      ],
+      "response": {
+        "good": [
+          "嗯，謝謝……稍微快一點，快一點也可以……"
+        ],
+        "bad": [
+          "我、我不是這個意思……嗚……對、對不起。"
+        ]
+      }
+    },
+    {
+      "id": "safe_word_event_01",
+      "condition": {
+        "event": "safe_word"
+      },
+      "feedback": [
+        "哈啊……我、我不要了……{safe_word}……{safe_word}……"
+      ],
+      "choice": [
+        {
+          "id": "good",
+          "text": "抱歉！好，我立刻停下來。",
+          "effect": "positive"
+        },
+        {
+          "id": "bad",
+          "text": "剛剛不是很舒服嗎？為什麼不要了？再來一下嘛！",
+          "effect": "bad_ending"
+        }
+      ],
+      "response": {
+        "good": [
+          "唔……謝謝……我休息一下，等等就可以繼續了。"
+        ],
+        "bad": []
+      }
+    },
+    {
+      "id": "phase2_physical_low_emotional_high_01",
+      "condition": {
+        "phase": 2,
+        "physical": "low",
+        "emotional": "high"
+      },
+      "feedback": [
+        "哈啊……為什麼，突然慢下來了……",
+        "我、我還差一點點就要……"
+      ],
+      "choice": [
+        {
+          "id": "good",
+          "text": "可以嗎？我有點擔心你受不了。",
+          "effect": "positive"
+        },
+        {
+          "id": "bad",
+          "text": "我稍微慢一點，這是為了你身體好。",
+          "effect": "negative"
+        }
+      ],
+      "response": {
+        "good": [
+          "我沒關係，你可以再……用力一點！"
+        ],
+        "bad": [
+          "為我好……"
+        ]
+      }
+    },
+    {
+      "id": "phase2_physical_low_emotional_low_01",
+      "condition": {
+        "phase": 2,
+        "physical": "low",
+        "emotional": "low"
+      },
+      "feedback": [
+        "你累了？還是不要了？"
+      ],
+      "choice": [
+        {
+          "id": "good",
+          "text": "呼……稍微有點累了。",
+          "effect": "positive"
+        },
+        {
+          "id": "bad",
+          "text": "我不像你一直躺著，當然累。",
+          "effect": "negative"
+        }
+      ],
+      "response": {
+        "good": [
+          "謝謝你，一直顧著讓我舒服……我都沒注意到你也累了，那我們先休息一下吧。"
+        ],
+        "bad": [
+          "什麼叫做一直躺著？",
+          "我沒有一直躺著，我也有在配合你啊！"
+        ]
+      }
+    },
+    {
+      "id": "phase2_physical_high_emotional_low_01",
+      "condition": {
+        "phase": 2,
+        "physical": "high",
+        "emotional": "low"
+      },
+      "feedback": [
+        "哈啊！哈啊啊……！好、好舒服！",
+        "不對、不要了……不對、繼續……繼續！"
+      ],
+      "choice": [
+        {
+          "id": "good",
+          "text": "緩和自己的步調，讓他稍微休息。",
+          "effect": "positive"
+        },
+        {
+          "id": "bad",
+          "text": "舒服嗎？是不是只有我能讓你這麼舒服？",
+          "effect": "negative"
+        }
+      ],
+      "response": {
+        "good": [
+          "哈啊……哈……"
+        ],
+        "bad": [
+          "嗯！嗯……！只、只有你可以！只有你可以……！嗚嗚！"
+        ]
+      }
+    },
+    {
+      "id": "phase2_physical_high_emotional_high_01",
+      "condition": {
+        "phase": 2,
+        "physical": "high",
+        "emotional": "high"
+      },
+      "feedback": [
+        "哈啊！哈啊啊……！哈啊！",
+        "快、快要到了！嗚嗚、快要到了！"
+      ],
+      "choice": [
+        {
+          "id": "good",
+          "text": "我們一起……我們一起……",
+          "effect": "positive"
+        },
+        {
+          "id": "bad",
+          "text": "加快動作。",
+          "effect": "negative"
+        }
+      ],
+      "response": {
+        "good": [
+          "嗚！嗚嗚……好舒服……前面，前面好像有什麼東西出來了！"
+        ],
+        "bad": [
+          "哈啊啊啊！出、出來了！！"
         ]
       }
     }
