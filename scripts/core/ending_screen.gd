@@ -24,6 +24,10 @@ const DEFAULT_ENDING_TEXTS := {
 signal restart_pressed
 signal back_to_title_pressed
 
+@onready var heading_label: Label = get_node_or_null(
+	"BookPanel/OuterMargin/Layout/HeadingLabel"
+)
+
 @onready var result_label: Label = get_node_or_null(
 	"BookPanel/OuterMargin/Layout/ResultSubtypeLabel"
 )
@@ -73,6 +77,13 @@ func set_result(result_type: String) -> void:
 		_apply_result(result_type)
 
 func _apply_result(result_type: String) -> void:
+	if heading_label == null:
+		push_error(
+			"EndingScreen: HeadingLabel node not found at "
+			+ "BookPanel/OuterMargin/Layout/HeadingLabel"
+		)
+		return
+
 	if result_label == null:
 		push_error(
 			"EndingScreen: ResultSubtypeLabel node not found at "
@@ -87,16 +98,18 @@ func _apply_result(result_type: String) -> void:
 		)
 		return
 
-	result_label.text = "Result: %s" % result_type
+	result_label.visible = false
 	var ending_entry_variant: Variant = ending_texts_by_type.get(result_type, {})
 	if ending_entry_variant is Dictionary:
 		var ending_entry: Dictionary = ending_entry_variant
 		var ending_title: String = str(ending_entry.get("title", ""))
 		var ending_body: String = str(ending_entry.get("body", ""))
 		if not ending_title.is_empty() and not ending_body.is_empty():
-			body_label.text = "%s\n\n%s" % [ending_title, ending_body]
+			heading_label.text = ending_title
+			body_label.text = ending_body
 			return
 
+	heading_label.text = "結局"
 	body_label.text = "未知結局。\n\n尚未找到對應的 ending 文案。"
 
 func _load_ending_texts() -> Dictionary:

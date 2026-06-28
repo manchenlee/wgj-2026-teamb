@@ -29,6 +29,7 @@ var _background_texture_cache: Dictionary = {}
 var _character_texture_cache: Dictionary = {}
 var _shake_tween: Tween
 var _glow_tween: Tween
+var _fade_tween: Tween
 var _pivot_rest_position := Vector2.ZERO
 var _current_character_offset := Vector2.ZERO
 var _current_character_scale := Vector2.ONE
@@ -196,6 +197,12 @@ func _apply_effects(effects_variant: Variant) -> void:
 func _apply_effect(effect_data: Dictionary) -> void:
 	var effect_type := str(effect_data.get("type", "")).to_lower()
 	match effect_type:
+		"fade_in":
+			_play_fade_in_effect(
+				float(effect_data.get("duration", 0.45)),
+				float(effect_data.get("from", 0.0)),
+				float(effect_data.get("to", 1.0))
+			)
 		"shake":
 			_play_shake_effect(
 				float(effect_data.get("duration", 0.4)),
@@ -259,12 +266,22 @@ func _play_flash_effect(duration: float, flash_color: Color) -> void:
 	tween.tween_property(flash_rect, "modulate:a", 0.0, duration * 0.65)
 	tween.tween_callback(flash_rect.queue_free)
 
+func _play_fade_in_effect(duration: float, from_alpha: float, to_alpha: float) -> void:
+	if _fade_tween != null and _fade_tween.is_running():
+		_fade_tween.kill()
+	character_root.modulate.a = clampf(from_alpha, 0.0, 1.0)
+	_fade_tween = create_tween()
+	_fade_tween.tween_property(character_root, "modulate:a", clampf(to_alpha, 0.0, 1.0), maxf(duration, 0.01))
+
 func _reset_effect_state() -> void:
 	if _shake_tween != null and _shake_tween.is_running():
 		_shake_tween.kill()
 	if _glow_tween != null and _glow_tween.is_running():
 		_glow_tween.kill()
+	if _fade_tween != null and _fade_tween.is_running():
+		_fade_tween.kill()
 	character_root.position = _pivot_rest_position + _current_character_offset
+	character_root.modulate.a = 1.0
 	character_glow_root.position = _pivot_rest_position + _current_character_offset
 	character_glow_root.modulate.a = 0.0
 	character_glow_root.scale = _current_character_scale
@@ -278,9 +295,7 @@ func _update_next_button_text() -> void:
 func _layout_character_stage() -> void:
 	if not is_node_ready():
 		return
-	var stage_height := maxf(size.y * 0.62, 420.0)
-	character_stage.custom_minimum_size.y = stage_height
-	_pivot_rest_position = Vector2(0.0, 20.0)
+	_pivot_rest_position = Vector2.ZERO
 	character_root.position = _pivot_rest_position + _current_character_offset
 	character_glow_root.position = _pivot_rest_position + _current_character_offset
 
@@ -288,17 +303,17 @@ func _create_stage_sprite(node_name: String, is_glow: bool = false) -> TextureRe
 	var sprite := TextureRect.new()
 	sprite.name = node_name
 	sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	sprite.stretch_mode = TextureRect.STRETCH_SCALE
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	sprite.anchor_left = 0.5
-	sprite.anchor_top = 0.5
-	sprite.anchor_right = 0.5
-	sprite.anchor_bottom = 0.5
-	sprite.offset_left = -260.0
-	sprite.offset_top = -340.0
-	sprite.offset_right = 260.0
-	sprite.offset_bottom = 340.0
+	sprite.anchor_left = 0.0
+	sprite.anchor_top = 0.0
+	sprite.anchor_right = 1.0
+	sprite.anchor_bottom = 1.0
+	sprite.offset_left = 0.0
+	sprite.offset_top = 0.0
+	sprite.offset_right = 0.0
+	sprite.offset_bottom = 0.0
 	sprite.visible = not is_glow
 	var parent := character_glow_root if is_glow else character_root
 	parent.add_child(sprite)

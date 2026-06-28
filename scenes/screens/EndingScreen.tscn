@@ -58,14 +58,14 @@ theme_override_constants/separation = 16
 
 [node name="HeadingLabel" type="Label" parent="BookPanel/OuterMargin/Layout"]
 layout_mode = 2
-text = "ENDING"
+text = "結局"
 horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.3, 0.1, 0.05, 1)
 theme_override_font_sizes/font_size = 24
 
 [node name="ResultSubtypeLabel" type="Label" parent="BookPanel/OuterMargin/Layout"]
 layout_mode = 2
-text = "Result: pending"
+visible = false
 horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.3, 0.1, 0.05, 1)
 theme_override_font_sizes/font_size = 16
@@ -88,11 +88,11 @@ theme_override_constants/separation = 24
 [node name="RestartButton" type="Button" parent="BookPanel/OuterMargin/Layout/RestartButtons"]
 layout_mode = 2
 custom_minimum_size = Vector2(180, 52)
-text = "Restart"
+text = "再度演奏"
 theme_override_font_sizes/font_size = 18
 
 [node name="BackToTitleButton" type="Button" parent="BookPanel/OuterMargin/Layout/RestartButtons"]
 layout_mode = 2
 custom_minimum_size = Vector2(180, 52)
-text = "Back to Title"
+text = "回到標題"
 theme_override_font_sizes/font_size = 18
