@@ -391,7 +391,7 @@ func _get_character_center_local() -> Vector2:
 
 func _get_character_rect_local() -> Rect2:
 	var global_rect := character_placeholder.get_global_rect()
-	var local_position := get_global_transform_with_canvas().affine_inverse() * global_rect.position
+	var local_position: Vector2 = get_global_transform_with_canvas().affine_inverse() * global_rect.position
 	return Rect2(local_position, global_rect.size)
 
 func _get_feedback_anchor_center() -> Vector2:
