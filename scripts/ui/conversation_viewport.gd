@@ -30,6 +30,10 @@ const CHOICE_FONT_SIZE := 24
 const FALLBACK_MESSAGE_SIZE := Vector2(520.0, 132.0)
 const FALLBACK_CHOICE_SIZE := Vector2(300.0, 146.0)
 const MAX_VISIBLE_MESSAGES := 5
+const CHOICE_ENABLED_MODULATE := Color(1.0, 1.0, 1.0, 1.0)
+const CHOICE_DISABLED_MODULATE := Color(0.42, 0.42, 0.42, 1.0)
+const CHOICE_LABEL_ENABLED_COLOR := Color(0.99, 0.94, 0.94, 1.0)
+const CHOICE_LABEL_DISABLED_COLOR := Color(0.7, 0.7, 0.7, 1.0)
 
 @onready var conversation_content: Control = $ConversationContent
 @onready var choice_area: Control = $"../BottomHUD/ChoiceArea"
@@ -69,10 +73,10 @@ func show_choices(choices: Variant) -> void:
 	choice_area.visible = true
 
 func hide_choices() -> void:
-	choice_area.visible = false
-	for button in [choice_button_1, choice_button_2]:
-		button.visible = false
-		button.disabled = true
+	choice_area.visible = true
+	_choice_data.clear()
+	_apply_disabled_choice_button(choice_button_1, choice_label_1)
+	_apply_disabled_choice_button(choice_button_2, choice_label_2)
 
 func show_prompt(_text_value: String) -> void:
 	pass
@@ -184,7 +188,7 @@ func _configure_choice_button(button: TextureButton, label: Label) -> void:
 	button.texture_hover = _choice_bubble_texture
 	button.texture_pressed = _choice_bubble_texture
 	button.texture_disabled = _choice_bubble_texture
-	button.modulate = Color.WHITE
+	button.modulate = CHOICE_DISABLED_MODULATE
 	if _choice_bubble_texture == null:
 		var fallback_rect := button.get_node_or_null("FallbackBubble") as ColorRect
 		if fallback_rect == null:
@@ -207,7 +211,7 @@ func _configure_choice_button(button: TextureButton, label: Label) -> void:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.add_theme_font_size_override("font_size", CHOICE_FONT_SIZE)
 	label.set_meta("_ui_font_scale_applied", true)
-	label.add_theme_color_override("font_color", Color(0.99, 0.94, 0.94, 1.0))
+	label.add_theme_color_override("font_color", CHOICE_LABEL_DISABLED_COLOR)
 	label.position = Vector2(CHOICE_TEXT_MARGIN_LEFT, CHOICE_TEXT_MARGIN_TOP) * CHOICE_BUBBLE_SCALE
 	label.size = Vector2(
 		bubble_size.x - (CHOICE_TEXT_MARGIN_LEFT + CHOICE_TEXT_MARGIN_RIGHT) * CHOICE_BUBBLE_SCALE,
@@ -216,8 +220,7 @@ func _configure_choice_button(button: TextureButton, label: Label) -> void:
 
 func _apply_choice_to_button(button: TextureButton, label: Label, choices: Array[Dictionary], index: int) -> void:
 	if index >= choices.size():
-		button.visible = false
-		button.disabled = true
+		_apply_disabled_choice_button(button, label)
 		label.text = ""
 		return
 
@@ -227,6 +230,26 @@ func _apply_choice_to_button(button: TextureButton, label: Label, choices: Array
 	button.set_meta("choice_id", str(choice.get("id", "")))
 	button.set_meta("choice_text", str(choice.get("text", "")))
 	label.text = _clamp_text(str(choice.get("text", "")), CHOICE_TEXT_MAX_CHARS)
+	_set_choice_button_enabled_state(button, label, true)
+
+func _apply_disabled_choice_button(button: TextureButton, label: Label) -> void:
+	button.visible = true
+	button.disabled = true
+	button.set_meta("choice_id", "")
+	button.set_meta("choice_text", "")
+	label.text = ""
+	_set_choice_button_enabled_state(button, label, false)
+
+func _set_choice_button_enabled_state(button: TextureButton, label: Label, enabled: bool) -> void:
+	button.modulate = CHOICE_ENABLED_MODULATE if enabled else CHOICE_DISABLED_MODULATE
+	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if enabled else Control.CURSOR_ARROW
+	label.add_theme_color_override(
+		"font_color",
+		CHOICE_LABEL_ENABLED_COLOR if enabled else CHOICE_LABEL_DISABLED_COLOR
+	)
+	var fallback_rect := button.get_node_or_null("FallbackBubble") as ColorRect
+	if fallback_rect != null:
+		fallback_rect.color = Color(0.82, 0.26, 0.45, 0.96) if enabled else Color(0.42, 0.42, 0.42, 0.96)
 
 func _emit_choice(index: int) -> void:
 	if index >= _choice_data.size():

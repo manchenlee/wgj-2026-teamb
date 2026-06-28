@@ -579,7 +579,6 @@ func _on_feedback_timer_timeout() -> void:
 		return
 	_push_next_dialogue_event()
 	print_debug("feedback message")
-
 func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	choice_timeout_timer.stop()
 	dialogue_panel.append_history(choice_text, "player")

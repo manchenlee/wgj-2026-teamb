@@ -127,7 +127,7 @@ const ARROW_PROMPT_FONT_SIZE: int = 104
 # 方向提示框的尺寸；調大會增加點擊/辨識範圍感，調小則版面更精簡。
 const ARROW_PROMPT_BOX_SIZE: Vector2 = Vector2(132.0, 132.0)
 # 方向提示外圈半徑；調大會讓提示元素看起來更鬆散，調小則更集中。
-const ARROW_PROMPT_RING_RADIUS: float = 54.0
+const ARROW_PROMPT_RING_RADIUS: float = 84.0
 # 方向提示外圈線條粗細；調大會更顯眼，調小則視覺存在感更弱。
 const ARROW_PROMPT_RING_WIDTH: float = 3.0
 # 方向提示距離畫面邊緣的保留空間；調大可避免太貼邊，調小則可利用更多畫面範圍。
