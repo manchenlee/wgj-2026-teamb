@@ -6,6 +6,7 @@ const Config := preload("res://scripts/gameplay/GameConfig.gd")
 var phase_config = null
 var current_prompt: Dictionary = {}
 var current_entry: Dictionary = {}
+var current_feedback_index: int = -1
 var entries: Array = []
 var rng := RandomNumberGenerator.new()
 var safe_word: String = Config.SAFE_WORD_DEFAULT
@@ -25,10 +26,13 @@ func set_safe_word(next_safe_word: String) -> void:
 func reset() -> void:
 	current_prompt = {}
 	current_entry = {}
+	current_feedback_index = -1
 
 func next_event(physical: float, emotional: float, force_safe_word: bool = false) -> Dictionary:
-	current_entry = _select_entry(physical, emotional, force_safe_word)
-	current_prompt = _build_choice_prompt(current_entry)
+	if current_entry.is_empty():
+		current_entry = _select_entry(physical, emotional, force_safe_word)
+		current_feedback_index = -1
+	current_prompt = _build_next_prompt(current_entry)
 	return current_prompt
 
 func apply_choice(choice_id: String, model) -> Dictionary:
@@ -58,12 +62,14 @@ func apply_choice(choice_id: String, model) -> Dictionary:
 	var reply := _get_choice_response(choice_id, current_entry, ending_type.is_empty())
 	current_prompt = {}
 	current_entry = {}
+	current_feedback_index = -1
 	return {"reply": reply, "delta": delta_value, "ending_type": ending_type}
 
 func get_timeout_reply() -> String:
-	var reply := _get_feedback_line(current_entry)
+	var reply := _get_current_feedback_line(current_entry)
 	current_prompt = {}
 	current_entry = {}
+	current_feedback_index = -1
 	return reply
 
 func has_safe_word_event() -> bool:
@@ -142,10 +148,42 @@ func _select_safe_word_entry() -> Dictionary:
 		return {}
 	return matches[rng.randi_range(0, matches.size() - 1)].duplicate(true)
 
-func _build_choice_prompt(entry: Dictionary) -> Dictionary:
+func _build_next_prompt(entry: Dictionary) -> Dictionary:
 	if entry.is_empty():
 		return {"text": Config.FEEDBACK_MESSAGE_TEXT}
 
+	var feedback_lines := _get_feedback_lines(entry)
+	if feedback_lines.is_empty():
+		_clear_current_sequence()
+		return {"text": Config.FEEDBACK_MESSAGE_TEXT}
+
+	current_feedback_index = mini(current_feedback_index + 1, feedback_lines.size() - 1)
+	var is_last_feedback_line := current_feedback_index >= feedback_lines.size() - 1
+	var choices: Array[Dictionary] = []
+	if is_last_feedback_line:
+		choices = _build_choices(entry)
+	if choices.is_empty() and is_last_feedback_line:
+		var terminal_text := _get_current_feedback_line(entry)
+		_clear_current_sequence()
+		return {"text": terminal_text}
+	if choices.is_empty():
+		return {"text": _get_current_feedback_line(entry)}
+	return {"text": _get_current_feedback_line(entry), "choices": choices}
+
+func _get_current_feedback_line(entry: Dictionary) -> String:
+	var feedback_lines := _get_feedback_lines(entry)
+	if feedback_lines.is_empty():
+		return Config.FEEDBACK_MESSAGE_TEXT
+	var clamped_index := clampi(current_feedback_index, 0, feedback_lines.size() - 1)
+	return _format_text(str(feedback_lines[clamped_index]))
+
+func _get_feedback_lines(entry: Dictionary) -> Array:
+	var feedback_variant: Variant = entry.get("feedback", [])
+	if typeof(feedback_variant) != TYPE_ARRAY:
+		return []
+	return feedback_variant as Array
+
+func _build_choices(entry: Dictionary) -> Array[Dictionary]:
 	var choices: Array[Dictionary] = []
 	for choice_variant in entry.get("choice", []):
 		var choice := choice_variant as Dictionary
@@ -158,13 +196,7 @@ func _build_choice_prompt(entry: Dictionary) -> Dictionary:
 		})
 		if choices.size() == 2:
 			break
-
-	if choices.is_empty():
-		return {"text": _get_feedback_line(entry)}
-	return {"text": _get_feedback_line(entry), "choices": choices}
-
-func _get_feedback_line(entry: Dictionary) -> String:
-	return _format_text(_pick_random_text(entry.get("feedback", []), Config.FEEDBACK_MESSAGE_TEXT))
+	return choices
 
 func _get_choice_response(choice_id: String, entry: Dictionary, use_fallback: bool = true) -> String:
 	var response_map := entry.get("response", {}) as Dictionary
@@ -177,6 +209,11 @@ func _get_choice_definition(entry: Dictionary, choice_id: String) -> Dictionary:
 		if str(choice.get("id", "")) == choice_id:
 			return choice
 	return {}
+
+func _clear_current_sequence() -> void:
+	current_prompt = {}
+	current_entry = {}
+	current_feedback_index = -1
 
 func _pick_random_text(source: Variant, fallback: String) -> String:
 	if typeof(source) != TYPE_ARRAY:
