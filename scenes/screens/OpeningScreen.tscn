@@ -2,7 +2,39 @@
 
 [ext_resource type="Script" uid="uid://d1k8ac85xt1rs" path="res://scripts/core/opening_screen.gd" id="1_opening"]
 [ext_resource type="Texture2D" uid="uid://dc7csqq8gypo5" path="res://assets/curtain.jpg" id="2_curtain"]
+<<<<<<< Updated upstream
 [ext_resource type="Texture2D" uid="uid://cr6ioiuh23wo7" path="res://assets/book.png" id="3_book"]
+=======
+[ext_resource type="Texture2D" uid="uid://4wr2irri54pd" path="res://assets/btn_skip.png" id="3_skip"]
+[ext_resource type="FontFile" uid="uid://db5u741tm2yje" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="4_bold"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dialogue"]
+content_margin_left = 24.0
+content_margin_top = 18.0
+content_margin_right = 24.0
+content_margin_bottom = 18.0
+bg_color = Color(0.11, 0.07, 0.08, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.86, 0.68, 0.3)
+corner_radius_top_left = 26
+corner_radius_top_right = 26
+corner_radius_bottom_right = 26
+corner_radius_bottom_left = 26
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_speaker"]
+content_margin_left = 14.0
+content_margin_top = 6.0
+content_margin_right = 14.0
+content_margin_bottom = 6.0
+bg_color = Color(0.91, 0.79, 0.56, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+>>>>>>> Stashed changes
 
 [node name="OpeningScreen" type="Control" unique_id=194662856]
 layout_mode = 3
@@ -55,11 +87,106 @@ theme_override_constants/margin_bottom = 40
 layout_mode = 2
 theme_override_constants/separation = 12
 
+<<<<<<< Updated upstream
 [node name="ScrollContainer" type="ScrollContainer" parent="BookPanel/OuterMargin/Layout" unique_id=345163699]
+=======
+[node name="CharacterPivot" type="Control" parent="CharacterStage" unique_id=982210176]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="GlowRoot" type="Control" parent="CharacterStage/CharacterPivot" unique_id=1640084511]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="CharacterRoot" type="Control" parent="CharacterStage/CharacterPivot" unique_id=300118593]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="SafeArea" type="MarginContainer" parent="." unique_id=845908141]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 28
+
+[node name="RootLayout" type="VBoxContainer" parent="SafeArea" unique_id=1679932007]
+>>>>>>> Stashed changes
 layout_mode = 2
 size_flags_vertical = 3
 
+<<<<<<< Updated upstream
 [node name="DialogueLabel" type="Label" parent="BookPanel/OuterMargin/Layout/ScrollContainer" unique_id=92416121]
+=======
+[node name="TopRow" type="HBoxContainer" parent="SafeArea/RootLayout" unique_id=151505183]
+layout_mode = 2
+
+[node name="ChapterLabel" type="Label" parent="SafeArea/RootLayout/TopRow" unique_id=1919374577]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.89, 0.68, 1)
+theme_override_font_sizes/font_size = 20
+text = "序章"
+
+[node name="TopSpacer" type="Control" parent="SafeArea/RootLayout" unique_id=835305174]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="DialogueBox" type="PanelContainer" parent="SafeArea/RootLayout" unique_id=166112798]
+custom_minimum_size = Vector2(0, 196)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dialogue")
+
+[node name="DialogueLayout" type="VBoxContainer" parent="SafeArea/RootLayout/DialogueBox" unique_id=1776621023]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="SpeakerPanel" type="PanelContainer" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout" unique_id=666000271]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_speaker")
+
+[node name="SpeakerLabel" type="Label" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout/SpeakerPanel" unique_id=1123056162]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.19, 0.11, 0.08, 1)
+theme_override_font_sizes/font_size = 24
+text = "旁白"
+
+[node name="DialogueLabel" type="RichTextLabel" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout" unique_id=92416121]
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 2
+theme_override_colors/default_color = Color(0.98, 0.96, 0.92, 1)
+theme_override_font_sizes/normal_font_size = 24
+text = "..."
+fit_content = true
+scroll_active = false
+
+[node name="FooterRow" type="HBoxContainer" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout" unique_id=992871500]
+layout_mode = 2
+alignment = 1
+
+[node name="HintLabel" type="Label" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout/FooterRow" unique_id=343295201]
+>>>>>>> Stashed changes
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.15, 0.08, 0.03, 1)
@@ -107,3 +234,31 @@ layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 18
 text = "NEXT"
+
+[node name="OpeningScreen_SkipButton#SkipLabel" type="Label" parent="." unique_id=901938264]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.75, 0.05, 0.05, 1)
+theme_override_fonts/font = ExtResource("4_bold")
+theme_override_font_sizes/font_size = 32
+text = "Skip"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OpeningScreen#SkipButton" type="TextureButton" parent="OpeningScreen_SkipButton#SkipLabel" unique_id=801847253]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -203.0
+offset_top = 10.0
+offset_right = 757.0
+offset_bottom = 410.0
+grow_horizontal = 0
+scale = Vector2(0.19872974, 0.19872974)
+texture_normal = ExtResource("3_skip")
+stretch_mode = 1

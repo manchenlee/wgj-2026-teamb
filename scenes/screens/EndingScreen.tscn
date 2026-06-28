@@ -1,21 +1,62 @@
+<<<<<<< Updated upstream
 [gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/core/ending_screen.gd" id="1_ending"]
+=======
+[gd_scene format=3 uid="uid://d10sdhxjawcbb"]
 
-[node name="EndingScreen" type="Control"]
+[ext_resource type="Script" uid="uid://da2wkr84q7xya" path="res://scripts/core/ending_screen.gd" id="1_ending"]
+[ext_resource type="Texture2D" uid="uid://dc7csqq8gypo5" path="res://assets/curtain.jpg" id="2_curtain"]
+[ext_resource type="Texture2D" uid="uid://cr6ioiuh23wo7" path="res://assets/book.png" id="3_book"]
+[ext_resource type="Texture2D" uid="uid://bmy2w2x3um4hw" path="res://assets/btn.png" id="4_jqsvs"]
+[ext_resource type="FontFile" uid="uid://db5u741tm2yje" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="5_v1inw"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
+bg_color = Color(0.6431373, 0.050980393, 0.050980393, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_pressed"]
+bg_color = Color(0.32, 0.03, 0.03, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_hover"]
+bg_color = Color(0.8509804, 0.078431375, 0.078431375, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+>>>>>>> Stashed changes
+
+[node name="EndingScreen" type="Control" unique_id=406494822]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource("1_ending")
 
+<<<<<<< Updated upstream
 [node name="Background" type="ColorRect" parent="."]
+=======
+[node name="Background" type="TextureRect" parent="." unique_id=335003444]
+layout_mode = 1
+>>>>>>> Stashed changes
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(1, 1, 1, 1)
 
+<<<<<<< Updated upstream
 [node name="MarginContainer" type="MarginContainer" parent="."]
+=======
+[node name="BookPanel" type="TextureRect" parent="." unique_id=941743838]
+layout_mode = 1
+>>>>>>> Stashed changes
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -24,6 +65,7 @@ theme_override_constants/margin_top = 80
 theme_override_constants/margin_right = 80
 theme_override_constants/margin_bottom = 80
 
+<<<<<<< Updated upstream
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 alignment = 1
 
@@ -45,3 +87,100 @@ theme_override_colors/font_color = Color(0.2, 0.2, 0.24, 1)
 
 [node name="RestartButton" type="Button" parent="MarginContainer/VBoxContainer"]
 text = "Restart"
+=======
+[node name="OuterMargin" type="MarginContainer" parent="BookPanel" unique_id=1922246932]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 72
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_right = 72
+theme_override_constants/margin_bottom = 28
+
+[node name="Layout" type="VBoxContainer" parent="BookPanel/OuterMargin" unique_id=305251501]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="HeadingLabel" type="Label" parent="BookPanel/OuterMargin/Layout" unique_id=1418183349]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.1, 0.05, 1)
+theme_override_font_sizes/font_size = 24
+text = "結局"
+horizontal_alignment = 1
+
+[node name="ResultSubtypeLabel" type="Label" parent="BookPanel/OuterMargin/Layout" unique_id=1889551623]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.1, 0.05, 1)
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+
+[node name="EndingBody" type="Label" parent="BookPanel/OuterMargin/Layout" unique_id=144537141]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.15, 0.08, 0.03, 1)
+theme_override_font_sizes/font_size = 20
+text = "Placeholder ending content."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="StartButton" type="TextureButton" parent="BookPanel/OuterMargin/Layout/EndingBody" unique_id=443285367]
+layout_mode = 0
+offset_left = 720.99994
+offset_top = 115.99999
+offset_right = 1713.0
+offset_bottom = 614.0
+scale = Vector2(0.32031012, 0.32031012)
+texture_normal = ExtResource("4_jqsvs")
+
+[node name="ButtonLabel" type="Label" parent="BookPanel/OuterMargin/Layout/EndingBody/StartButton" unique_id=96932855]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = 90.0
+offset_right = -110.0
+offset_bottom = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.55, 0, 0.05, 1)
+theme_override_colors/font_shadow_color = Color(1, 0.8, 0.8, 0.5)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("5_v1inw")
+theme_override_font_sizes/font_size = 64
+text = "重新開始"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RestartButtons" type="HBoxContainer" parent="BookPanel/OuterMargin/Layout" unique_id=1337842120]
+layout_mode = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="RestartButton" type="Button" parent="BookPanel/OuterMargin/Layout/RestartButtons" unique_id=1786882237]
+visible = false
+custom_minimum_size = Vector2(180, 52)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+text = "再度演奏"
+
+[node name="BackToTitleButton" type="Button" parent="BookPanel/OuterMargin/Layout/RestartButtons" unique_id=122600832]
+visible = false
+custom_minimum_size = Vector2(180, 52)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+text = "回到標題"
+>>>>>>> Stashed changes

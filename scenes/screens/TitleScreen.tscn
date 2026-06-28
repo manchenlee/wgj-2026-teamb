@@ -2,8 +2,16 @@
 
 [ext_resource type="Script" uid="uid://bm325q3w8fibw" path="res://scripts/core/title_screen.gd" id="1_title"]
 [ext_resource type="Texture2D" uid="uid://bmy2w2x3um4hw" path="res://assets/btn.png" id="2_btn"]
-[ext_resource type="Texture2D" uid="uid://dilrpkr41tspa" path="res://assets/cover.png" id="3_cover"]
+[ext_resource type="Texture2D" uid="uid://bvnmskadm1bmg" path="res://assets/cover_0.png" id="3_cover"]
 [ext_resource type="FontFile" uid="uid://db5u741tm2yje" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="4_s3gyh"]
+<<<<<<< Updated upstream
+=======
+[ext_resource type="Texture2D" uid="uid://c56yim0xees0g" path="res://assets/art/ui/logo.png" id="5_logo"]
+[ext_resource type="Texture2D" uid="uid://3v1xpbffetnv" path="res://assets/cover_1.png" id="6_cover1"]
+[ext_resource type="Texture2D" uid="uid://bmn0jbgxm1u2e" path="res://assets/cover_2.png" id="7_cover2"]
+[ext_resource type="Texture2D" uid="uid://4wr2irri54pd" path="res://assets/btn_skip.png" id="8_skip"]
+[ext_resource type="FontFile" uid="uid://db5u741tm2yje" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="9_bold"]
+>>>>>>> Stashed changes
 
 [node name="TitleScreen" type="Control" unique_id=1861360168]
 layout_mode = 3
@@ -30,6 +38,7 @@ grow_vertical = 2
 texture = ExtResource("3_cover")
 stretch_mode = 6
 
+<<<<<<< Updated upstream
 [node name="StartButton" type="TextureButton" parent="." unique_id=1262390766]
 layout_mode = 0
 offset_left = 810.0
@@ -37,6 +46,29 @@ offset_top = 565.0
 offset_right = 1802.0
 offset_bottom = 1063.0
 scale = Vector2(0.6, 0.6)
+=======
+[node name="Logo" type="TextureRect" parent="." unique_id=112495637]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -21.0
+offset_top = 104.0
+offset_right = 2179.0
+offset_bottom = 904.0
+grow_horizontal = 2
+scale = Vector2(0.3176799, 0.31252766)
+texture = ExtResource("5_logo")
+stretch_mode = 5
+
+[node name="StartButton" type="TextureButton" parent="." unique_id=1262390766]
+layout_mode = 0
+offset_left = 1001.0
+offset_top = 483.00003
+offset_right = 1993.0
+offset_bottom = 981.0
+scale = Vector2(0.44504905, 0.44504905)
+>>>>>>> Stashed changes
 texture_normal = ExtResource("2_btn")
 
 [node name="ButtonLabel" type="Label" parent="StartButton" unique_id=348086113]
@@ -57,6 +89,37 @@ theme_override_constants/shadow_offset_y = 1
 theme_override_fonts/font = ExtResource("4_s3gyh")
 theme_override_font_sizes/font_size = 120
 text = "遊戲開始"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SkipButton" type="TextureButton" parent="." unique_id=601847253]
+visible = false
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -280.0
+offset_top = 32.0
+offset_right = -32.0
+offset_bottom = 152.0
+grow_horizontal = 0
+modulate = Color(1, 1, 1, 0)
+texture_normal = ExtResource("8_skip")
+stretch_mode = 1
+
+[node name="SkipLabel" type="Label" parent="SkipButton" unique_id=701938264]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.75, 0.05, 0.05, 1)
+theme_override_fonts/font = ExtResource("9_bold")
+theme_override_font_sizes/font_size = 32
+text = "Skip"
 horizontal_alignment = 1
 vertical_alignment = 1
 
