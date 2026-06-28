@@ -14,6 +14,7 @@ signal debug_requested
 
 const _COVER_1 := preload("res://assets/cover_1.png")
 const _COVER_2 := preload("res://assets/cover_2.png")
+const _COVER_3 := preload("res://assets/cover_3.png")
 
 var _hover_tween: Tween
 var _transitioning := false
@@ -92,6 +93,10 @@ func _play_cover_transition() -> void:
 	tween.tween_callback(func() -> void: _commit_cover_crossfade())
 	tween.tween_interval(0.3)
 	tween.tween_callback(func() -> void: _begin_cover_crossfade(_COVER_2))
+	tween.tween_property(_cover_overlay, "modulate:a", 1.0, 0.5)
+	tween.tween_callback(func() -> void: _commit_cover_crossfade())
+	tween.tween_interval(0.3)
+	tween.tween_callback(func() -> void: _begin_cover_crossfade(_COVER_3))
 	tween.tween_property(_cover_overlay, "modulate:a", 1.0, 0.5)
 	tween.tween_callback(func() -> void: _commit_cover_crossfade())
 	tween.tween_interval(0.3)
