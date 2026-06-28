@@ -3,19 +3,63 @@ extends Control
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 const DIRECTION_TEXTURE_PATH := "res://assets/art/ui/direction.png"
+const METALLIC_SHEEN_SHADER := preload("res://scripts/ui/metallic_sheen_2d.gdshader")
 const DIRECTION_ALPHA_THRESHOLD := 0.02
 const DIRECTION_CROP_MARGIN := 0
 const DIRECTION_ICON_PADDING := 12.0
+const TIMER_RING_TEXTURE_SIZE := 256
+const TIMER_RING_BASE_PHASE_STEP := 0.73
+const TIMER_RING_COLOR := Color(0.24, 0.21, 0.14, 1.0)
 
 @onready var character_placeholder: TextureRect = $CharacterVisualAnchor/CharacterPlaceholder
 @onready var prompt_layer: Control = $PromptLayer
 @onready var prompt_feedback_label: Label = $PromptLayer/PromptFeedbackLabel
 
+@export_group("Direction Metallic Shader")
+@export var base_color: Color = Color(0.24, 0.21, 0.14, 1.0):
+	set(value):
+		base_color = value
+		_update_prompt_shader_parameters()
+@export var metal_color: Color = Color(1.0, 0.92, 0.68, 1.0):
+	set(value):
+		metal_color = value
+		_update_prompt_shader_parameters()
+@export_range(0.0, 2.0, 0.01) var shine_speed: float = 0.12:
+	set(value):
+		shine_speed = value
+		_update_prompt_shader_parameters()
+@export_range(0.02, 0.6, 0.01) var shine_width: float = 0.22:
+	set(value):
+		shine_width = value
+		_update_prompt_shader_parameters()
+@export_range(0.0, 2.0, 0.01) var shine_strength: float = 0.52:
+	set(value):
+		shine_strength = value
+		_update_prompt_shader_parameters()
+@export_range(0.0, 2.0, 0.01) var edge_strength: float = 0.22:
+	set(value):
+		edge_strength = value
+		_update_prompt_shader_parameters()
+@export_range(0.0, 6.28318, 0.01) var phase_offset: float = 0.0:
+	set(value):
+		phase_offset = value
+		_update_prompt_shader_parameters()
+@export var debug_metallic_prompt_effect: bool = false:
+	set(value):
+		debug_metallic_prompt_effect = value
+		_update_prompt_shader_parameters()
+@export_range(0.0, 4.0, 0.05) var debug_boost_amount: float = 2.2:
+	set(value):
+		debug_boost_amount = value
+		_update_prompt_shader_parameters()
+
 var _default_scale := Vector2.ONE
 var _prompt_nodes: Dictionary = {}
 var _prompt_positions: Dictionary = {}
-var _prompt_timer_lines: Dictionary = {}
+var _prompt_timer_rings: Dictionary = {}
 var _prompt_time_progresses: Dictionary = {}
+var _prompt_phase_offsets: Dictionary = {}
+var _prompt_ring_progress_cache: Dictionary = {}
 var _current_prompt_id: int = -1
 var _prompt_bounds_rect := Rect2()
 var _direction_texture: Texture2D
@@ -115,6 +159,7 @@ func _ready() -> void:
 	prompt_feedback_label.add_theme_font_size_override("font_size", Config.PROMPT_FEEDBACK_FONT_SIZE)
 	update_emotion_state("CALM")
 	clear_direction_prompts()
+	_update_prompt_shader_parameters()
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready():
@@ -201,11 +246,13 @@ func remove_direction_prompt(prompt_id: int) -> void:
 	prompt_icon.queue_free()
 	_prompt_nodes.erase(prompt_id)
 	_prompt_positions.erase(prompt_id)
-	if _prompt_timer_lines.has(prompt_id):
-		var prompt_timer_line: Line2D = _prompt_timer_lines[prompt_id]
-		prompt_timer_line.queue_free()
-		_prompt_timer_lines.erase(prompt_id)
+	if _prompt_timer_rings.has(prompt_id):
+		var prompt_timer_ring: TextureRect = _prompt_timer_rings[prompt_id]
+		prompt_timer_ring.queue_free()
+		_prompt_timer_rings.erase(prompt_id)
 	_prompt_time_progresses.erase(prompt_id)
+	_prompt_phase_offsets.erase(prompt_id)
+	_prompt_ring_progress_cache.erase(prompt_id)
 	if _current_prompt_id == prompt_id:
 		_current_prompt_id = -1
 	_update_prompt_timer_rings()
@@ -213,12 +260,14 @@ func remove_direction_prompt(prompt_id: int) -> void:
 func clear_direction_prompts() -> void:
 	for prompt_icon in _prompt_nodes.values():
 		prompt_icon.queue_free()
-	for prompt_timer_line in _prompt_timer_lines.values():
-		prompt_timer_line.queue_free()
+	for prompt_timer_ring in _prompt_timer_rings.values():
+		prompt_timer_ring.queue_free()
 	_prompt_nodes.clear()
 	_prompt_positions.clear()
-	_prompt_timer_lines.clear()
+	_prompt_timer_rings.clear()
 	_prompt_time_progresses.clear()
+	_prompt_phase_offsets.clear()
+	_prompt_ring_progress_cache.clear()
 	_current_prompt_id = -1
 	_update_prompt_timer_rings()
 
@@ -317,9 +366,10 @@ func _ensure_prompt_icon(prompt_id: int) -> TextureRect:
 	prompt_icon.pivot_offset = prompt_icon_size * 0.5
 	prompt_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	prompt_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	prompt_icon.material = _create_prompt_shader_material(_get_prompt_phase_offset(prompt_id), false)
 	prompt_layer.add_child(prompt_icon)
 	_prompt_nodes[prompt_id] = prompt_icon
-	_ensure_prompt_timer_line(prompt_id)
+	_ensure_prompt_timer_ring(prompt_id)
 	return prompt_icon
 
 func _get_current_prompt_label() -> TextureRect:
@@ -327,41 +377,109 @@ func _get_current_prompt_label() -> TextureRect:
 		return null
 	return _prompt_nodes[_current_prompt_id]
 
-func _ensure_prompt_timer_line(prompt_id: int) -> Line2D:
-	if _prompt_timer_lines.has(prompt_id):
-		return _prompt_timer_lines[prompt_id]
-	var timer_line := Line2D.new()
-	timer_line.width = Config.ARROW_PROMPT_RING_WIDTH
-	timer_line.default_color = Color(0.24, 0.24, 0.28, 0.82)
-	timer_line.closed = false
-	timer_line.visible = false
-	timer_line.z_index = 0
-	prompt_layer.add_child(timer_line)
-	_prompt_timer_lines[prompt_id] = timer_line
-	return timer_line
+func _ensure_prompt_timer_ring(prompt_id: int) -> TextureRect:
+	if _prompt_timer_rings.has(prompt_id):
+		return _prompt_timer_rings[prompt_id]
+	var timer_ring := TextureRect.new()
+	var radius := Config.ARROW_PROMPT_RING_RADIUS
+	var diameter := (radius * 2.0) + Config.ARROW_PROMPT_RING_WIDTH
+	var ring_size := Vector2.ONE * diameter
+	timer_ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	timer_ring.visible = false
+	timer_ring.texture = _build_timer_ring_texture(1.0)
+	timer_ring.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	timer_ring.stretch_mode = TextureRect.STRETCH_SCALE
+	timer_ring.custom_minimum_size = ring_size
+	timer_ring.size = ring_size
+	timer_ring.pivot_offset = ring_size * 0.5
+	timer_ring.z_index = 0
+	timer_ring.modulate = TIMER_RING_COLOR
+	timer_ring.material = _create_prompt_shader_material(_get_prompt_phase_offset(prompt_id) + TIMER_RING_BASE_PHASE_STEP, false)
+	prompt_layer.add_child(timer_ring)
+	_prompt_timer_rings[prompt_id] = timer_ring
+	return timer_ring
 
 func _update_prompt_timer_rings() -> void:
 	for prompt_id_variant in _prompt_nodes.keys():
 		var prompt_id := int(prompt_id_variant)
 		var prompt_icon: TextureRect = _prompt_nodes[prompt_id]
-		var timer_line := _ensure_prompt_timer_line(prompt_id)
+		var timer_ring := _ensure_prompt_timer_ring(prompt_id)
 		var progress := float(_prompt_time_progresses.get(prompt_id, 0.0))
 		if not prompt_icon.visible or progress <= 0.0:
-			timer_line.visible = false
-			timer_line.clear_points()
+			timer_ring.visible = false
 			continue
 		var center := prompt_icon.position + (prompt_icon.size * 0.5)
-		var radius := Config.ARROW_PROMPT_RING_RADIUS
-		var steps := 48
-		var points: Array[Vector2] = []
-		var start_angle := -PI * 0.5
-		var end_angle := start_angle + (TAU * progress)
-		for step in range(steps + 1):
-			var t := float(step) / float(steps)
-			var angle := lerpf(start_angle, end_angle, t)
-			points.append(center + Vector2.RIGHT.rotated(angle) * radius)
-		timer_line.points = points
-		timer_line.visible = points.size() >= 2
+		timer_ring.position = center - (timer_ring.size * 0.5)
+		var cached_progress := float(_prompt_ring_progress_cache.get(prompt_id, -1.0))
+		if absf(cached_progress - progress) > 0.0005:
+			timer_ring.texture = _build_timer_ring_texture(progress)
+			_prompt_ring_progress_cache[prompt_id] = progress
+		timer_ring.visible = true
+
+func _get_prompt_phase_offset(prompt_id: int) -> float:
+	if not _prompt_phase_offsets.has(prompt_id):
+		_prompt_phase_offsets[prompt_id] = fposmod(phase_offset + (float(prompt_id) * 1.61803398875), TAU)
+	return float(_prompt_phase_offsets[prompt_id])
+
+func _create_prompt_shader_material(material_phase_offset: float, use_arc_mask: bool) -> ShaderMaterial:
+	var shader_material := ShaderMaterial.new()
+	shader_material.shader = METALLIC_SHEEN_SHADER
+	_apply_shader_parameters(shader_material, material_phase_offset, use_arc_mask)
+	shader_material.set_shader_parameter("arc_progress", 1.0)
+	return shader_material
+
+func _update_prompt_shader_parameters() -> void:
+	_prompt_phase_offsets.clear()
+	for prompt_id_variant in _prompt_nodes.keys():
+		var prompt_id := int(prompt_id_variant)
+		var prompt_icon := _prompt_nodes[prompt_id] as TextureRect
+		if prompt_icon != null:
+			var icon_material := prompt_icon.material as ShaderMaterial
+			if icon_material != null and icon_material.shader == METALLIC_SHEEN_SHADER:
+				_apply_shader_parameters(icon_material, _get_prompt_phase_offset(prompt_id), false)
+		var prompt_ring := _prompt_timer_rings.get(prompt_id) as TextureRect
+		if prompt_ring != null:
+			var ring_material := prompt_ring.material as ShaderMaterial
+			if ring_material != null and ring_material.shader == METALLIC_SHEEN_SHADER:
+				_apply_shader_parameters(ring_material, _get_prompt_phase_offset(prompt_id) + TIMER_RING_BASE_PHASE_STEP, false)
+
+func _apply_shader_parameters(shader_material: ShaderMaterial, material_phase_offset: float, use_arc_mask: bool) -> void:
+	shader_material.set_shader_parameter("base_color", base_color)
+	shader_material.set_shader_parameter("metal_color", metal_color)
+	shader_material.set_shader_parameter("shine_speed", shine_speed)
+	shader_material.set_shader_parameter("shine_width", shine_width)
+	shader_material.set_shader_parameter("shine_strength", shine_strength)
+	shader_material.set_shader_parameter("edge_strength", edge_strength)
+	shader_material.set_shader_parameter("phase_offset", fposmod(material_phase_offset, TAU))
+	shader_material.set_shader_parameter("use_arc_mask", 1.0 if use_arc_mask else 0.0)
+	shader_material.set_shader_parameter("debug_boost", debug_boost_amount if debug_metallic_prompt_effect else 0.0)
+
+func _build_timer_ring_texture(progress: float) -> Texture2D:
+	var image := Image.create(TIMER_RING_TEXTURE_SIZE, TIMER_RING_TEXTURE_SIZE, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0.0, 0.0, 0.0, 0.0))
+	var center := Vector2(TIMER_RING_TEXTURE_SIZE, TIMER_RING_TEXTURE_SIZE) * 0.5
+	var outer_radius := (float(TIMER_RING_TEXTURE_SIZE) * 0.5) - 1.0
+	var display_outer_radius := Config.ARROW_PROMPT_RING_RADIUS + (Config.ARROW_PROMPT_RING_WIDTH * 0.5)
+	var ring_half_width := maxf(
+		((Config.ARROW_PROMPT_RING_WIDTH * 0.5) / maxf(display_outer_radius, 1.0)) * outer_radius,
+		1.0
+	)
+	var inner_radius := maxf(outer_radius - (ring_half_width * 2.0), 0.0)
+	var clamped_progress := clampf(progress, 0.0, 1.0)
+	var max_angle := clamped_progress * TAU
+	for y in range(TIMER_RING_TEXTURE_SIZE):
+		for x in range(TIMER_RING_TEXTURE_SIZE):
+			var sample_position := Vector2(x + 0.5, y + 0.5)
+			var distance := center.distance_to(sample_position)
+			if distance < inner_radius or distance > outer_radius:
+				continue
+			var centered := sample_position - center
+			var angle := atan2(centered.x, -centered.y)
+			if angle < 0.0:
+				angle += TAU
+			if angle <= max_angle:
+				image.set_pixel(x, y, Color(0.0, 0.0, 0.0, 1.0))
+	return ImageTexture.create_from_image(image)
 
 func _direction_rotation(direction: String) -> float:
 	match direction:
