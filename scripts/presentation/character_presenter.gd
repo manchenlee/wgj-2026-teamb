@@ -9,7 +9,7 @@ const DIRECTION_CROP_MARGIN := 0
 const DIRECTION_ICON_PADDING := 12.0
 const TIMER_RING_TEXTURE_SIZE := 256
 const TIMER_RING_BASE_PHASE_STEP := 0.73
-const TIMER_RING_COLOR := Color(0.24, 0.21, 0.14, 1.0)
+const TIMER_RING_COLOR := Color(0.83, 0.73, 0.42, 1.0)
 const SUCCESS_NOTE_GLYPHS := ["♪", "♫"]
 const SUCCESS_NOTE_COUNT := 3
 const SUCCESS_NOTE_RISE_DISTANCE := 52.0
@@ -20,11 +20,11 @@ const SUCCESS_NOTE_LIFETIME := 0.72
 @onready var prompt_feedback_label: Label = $PromptLayer/PromptFeedbackLabel
 
 @export_group("Direction Metallic Shader")
-@export var base_color: Color = Color(0.24, 0.21, 0.14, 1.0):
+@export var base_color: Color = Color(0.83, 0.73, 0.42, 1.0):
 	set(value):
 		base_color = value
 		_update_prompt_shader_parameters()
-@export var metal_color: Color = Color(1.0, 0.92, 0.68, 1.0):
+@export var metal_color: Color = Color(0.97, 0.91, 0.72, 1.0):
 	set(value):
 		metal_color = value
 		_update_prompt_shader_parameters()
@@ -384,7 +384,7 @@ func _refresh_prompt_layout() -> void:
 func _position_feedback_label() -> void:
 	var center := _get_character_center_local()
 	var feedback_size := prompt_feedback_label.get_combined_minimum_size()
-	prompt_feedback_label.position = center + Vector2(0.0, -74.0) - (feedback_size * 0.5)
+	prompt_feedback_label.position = center + Vector2(0.0, Config.FEEDBACK_LABEL_OFFSET_Y) - (feedback_size * 0.5)
 
 
 func _get_character_center_local() -> Vector2:

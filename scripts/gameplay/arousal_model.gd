@@ -84,13 +84,13 @@ func _get_peak_rate_from_difference(difference: float) -> float:
 
 func get_emotion_state() -> String:
 	var average := (physical + emotional) * 0.5
-	if average <= 15.0:
+	if average <= 10.0:
 		return "SAD"
-	if average <= 35.0:
+	if average <= 25.0:
 		return "UNEASY"
-	if average <= 60.0:
+	if average <= 45.0:
 		return "CALM"
-	if average <= 80.0:
+	if average <= 65.0:
 		return "ENGAGED"
 	return "EXCITED"
 

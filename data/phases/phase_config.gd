@@ -41,6 +41,7 @@ var choice_timeout_seconds: float
 var feedback_message_interval_min: float
 var feedback_message_interval_max: float
 var feedback_physical_low_threshold: float
+var feedback_physical_high_threshold: float
 var feedback_emotional_low_threshold: float
 var feedback_emotional_high_threshold: float
 var minimum_active_threshold: float
@@ -101,9 +102,10 @@ func _init(values: Dictionary = {}) -> void:
 	choice_timeout_seconds = float(values.get("choice_timeout_seconds", 5.0))
 	feedback_message_interval_min = float(values.get("feedback_message_interval_min", 2.0))
 	feedback_message_interval_max = float(values.get("feedback_message_interval_max", 4.0))
-	feedback_physical_low_threshold = float(values.get("feedback_physical_low_threshold", 30.0))
-	feedback_emotional_low_threshold = float(values.get("feedback_emotional_low_threshold", 30.0))
-	feedback_emotional_high_threshold = float(values.get("feedback_emotional_high_threshold", 60.0))
+	feedback_physical_low_threshold = float(values.get("feedback_physical_low_threshold", 38.0))
+	feedback_physical_high_threshold = float(values.get("feedback_physical_high_threshold", 45.0))
+	feedback_emotional_low_threshold = float(values.get("feedback_emotional_low_threshold", 38.0))
+	feedback_emotional_high_threshold = float(values.get("feedback_emotional_high_threshold", 52.0))
 	minimum_active_threshold = float(values.get("minimum_active_threshold", 20.0))
 	overall_medium_threshold = float(values.get("overall_medium_threshold", minimum_active_threshold))
 	overall_high_threshold = float(values.get("overall_high_threshold", feedback_emotional_high_threshold))

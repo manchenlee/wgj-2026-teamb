@@ -19,6 +19,7 @@ signal ending_requested(ending_type: String)
 @export var show_layout_debug_bounds: bool = false
 @export var show_phase2_editor_reference: bool = true
 @export var debug_start_phase_id: String = ""
+@export var safe_word: String = Config.SAFE_WORD_DEFAULT
 
 @onready var background_placeholder: TextureRect = $BackgroundAnchor/BackgroundPlaceholder
 @onready var overlay_animator = $BackgroundAnchor/OverlayAnimator
@@ -154,6 +155,7 @@ func _apply_phase_by_index(phase_index: int, announce_phase: bool) -> void:
 	active_character_profile = active_phase_config.character_profile
 	arousal_model.set_phase_config(active_phase_config)
 	dialogue_controller.set_phase_config(active_phase_config)
+	dialogue_controller.set_safe_word(safe_word)
 	if spot_manager != null:
 		spot_manager.set_phase_config(active_phase_config)
 		spot_manager.set_available_anchor_ids(
@@ -164,7 +166,7 @@ func _apply_phase_by_index(phase_index: int, announce_phase: bool) -> void:
 	overlay_motion_set = _build_overlay_motion_set()
 	_apply_phase_visual_profile()
 	if announce_phase and not Engine.is_editor_hint():
-		dialogue_panel.append_history("Debug: entering %s" % active_phase_config.phase_id, "system")
+		dialogue_panel.append_history(active_phase_config.transition_feedback_text, "system")
 	_update_phase_debug_label()
 
 func _apply_phase_visual_profile() -> void:
@@ -396,11 +398,13 @@ func _get_character_visual_state_key(forced_ending_type: String = "") -> String:
 		return "physic_high_mental_low_gameover"
 	if forced_ending_type == Config.EMOTIONAL_IMBALANCE_FAILURE_ENDING:
 		return "physic_low_mental_high_gameover"
-	var mismatch_low: float = float(_get_phase_value("minimum_active_threshold", 20.0))
-	var mismatch_high: float = float(_get_phase_value("feedback_emotional_high_threshold", 60.0))
-	if arousal_model.physical >= mismatch_high and arousal_model.emotional < mismatch_low:
+	var physical_low_threshold: float = float(_get_phase_value("feedback_physical_low_threshold", Config.FEEDBACK_PHYSICAL_LOW_THRESHOLD))
+	var physical_high_threshold: float = float(_get_phase_value("feedback_physical_high_threshold", Config.FEEDBACK_PHYSICAL_HIGH_THRESHOLD))
+	var emotional_low_threshold: float = float(_get_phase_value("feedback_emotional_low_threshold", Config.FEEDBACK_EMOTIONAL_LOW_THRESHOLD))
+	var emotional_high_threshold: float = float(_get_phase_value("feedback_emotional_high_threshold", Config.FEEDBACK_EMOTIONAL_HIGH_THRESHOLD))
+	if arousal_model.physical >= physical_high_threshold and arousal_model.emotional <= emotional_low_threshold:
 		return "physic_high_mental_low"
-	if arousal_model.emotional >= mismatch_high and arousal_model.physical < mismatch_low:
+	if arousal_model.emotional >= emotional_high_threshold and arousal_model.physical <= physical_low_threshold:
 		return "physic_low_mental_high"
 	if arousal_model.peak >= _get_phase_value("overall_high_threshold", 60.0):
 		return "overall_high"
@@ -485,7 +489,6 @@ func _reset_run_for_phase_id(phase_id: String) -> void:
 	_reset_run_for_phase_index(0)
 
 func _reset_run_for_phase_index(phase_index: int) -> void:
-	print_debug("reset run")
 	phase_transition_in_progress = false
 	run_active = true
 	ending_transition_started = false
@@ -578,7 +581,7 @@ func _on_feedback_timer_timeout() -> void:
 	if not run_active or waiting_for_choice:
 		return
 	_push_next_dialogue_event()
-	print_debug("feedback message")
+
 func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	choice_timeout_timer.stop()
 	dialogue_panel.append_history(choice_text, "player")
@@ -586,9 +589,15 @@ func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	dialogue_panel.hide_choices()
 	waiting_for_choice = false
 	var outcome := dialogue_controller.apply_choice(choice_quality, arousal_model)
+	var ending_type := str(outcome.get("ending_type", ""))
 	arousal_model.refresh_emotional_activity()
-	dialogue_panel.append_history(str(outcome.get("reply", Config.FEEDBACK_MESSAGE_TEXT)), "companion")
+	var reply_text := str(outcome.get("reply", ""))
+	if not reply_text.is_empty():
+		dialogue_panel.append_history(reply_text, "companion")
 	character_area.show_choice_reaction(choice_quality)
+	if not ending_type.is_empty():
+		_begin_ending_transition(ending_type)
+		return
 	_schedule_next_feedback_message()
 	_update_presentation()
 
@@ -604,7 +613,10 @@ func _on_choice_timeout() -> void:
 	_update_presentation()
 
 func _push_next_dialogue_event() -> void:
-	current_prompt = dialogue_controller.next_event(arousal_model.physical, arousal_model.emotional)
+	var should_force_safe_word := dialogue_controller.has_safe_word_event() and feedback_rng.randf() < Config.SAFE_WORD_EVENT_CHANCE
+	current_prompt = dialogue_controller.next_event(arousal_model.physical, arousal_model.emotional, should_force_safe_word)
+	if current_prompt.is_empty():
+		return
 	if current_prompt.has("choices"):
 		waiting_for_choice = true
 		dialogue_panel.hide_prompt()
@@ -637,7 +649,6 @@ func _check_ending() -> void:
 	var ending_type := EndingEvaluatorClass.evaluate(arousal_model, active_phase_config)
 	if ending_type.is_empty():
 		return
-	print_debug("ending: %s phase=%s" % [ending_type, _get_active_phase_id()])
 	if ending_type == Config.SUCCESS_ENDING and _has_next_phase():
 		_begin_phase_transition()
 		return
@@ -811,5 +822,4 @@ func _has_next_phase() -> bool:
 func _on_phase_2_skip_pressed() -> void:
 	if _get_active_phase_id() == "phase_2" or phase_transition_in_progress:
 		return
-	dialogue_panel.append_history("Debug: skip to phase_2", "system")
 	_reset_run_for_phase_id("phase_2")

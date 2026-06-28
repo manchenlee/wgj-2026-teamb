@@ -51,12 +51,13 @@ func _init() -> void:
 			"choice_timeout_seconds": 5.0,
 			"feedback_message_interval_min": 2.0,
 			"feedback_message_interval_max": 4.0,
-			"feedback_physical_low_threshold": 30.0,
-			"feedback_emotional_low_threshold": 30.0,
-			"feedback_emotional_high_threshold": 60.0,
+			"feedback_physical_low_threshold": 38.0,
+			"feedback_physical_high_threshold": 45.0,
+			"feedback_emotional_low_threshold": 38.0,
+			"feedback_emotional_high_threshold": 52.0,
 			"minimum_active_threshold": 20.0,
-			"overall_medium_threshold": 20.0,
-			"overall_high_threshold": 60.0,
+			"overall_medium_threshold": 15.0,
+			"overall_high_threshold": 45.0,
 			"overall_peak_threshold": 100.0,
 			"peak_balance_best_diff": 5.0,
 			"peak_balance_ok_diff": 15.0,
@@ -80,6 +81,6 @@ func _init() -> void:
 			"character_profile": profile,
 			"overlay_animation_set": profile.overlay_animation_set,
 			"prompt_anchor_profile_id": profile.profile_id,
-			"transition_feedback_text": "Phase 1 clear. Transitioning to Phase 2..."
+			"transition_feedback_text": "演奏進入下一個段落。"
 		}
 	)

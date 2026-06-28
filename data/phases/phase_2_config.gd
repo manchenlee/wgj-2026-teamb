@@ -4,7 +4,6 @@ const Phase2CharacterProfile := preload("res://data/character_profiles/phase_2_c
 
 func _init() -> void:
 	var profile = Phase2CharacterProfile.new()
-	# TODO: Replace Phase 2 placeholder values and dialogue source with final tuning/content.
 	super._init(
 		{
 			"phase_id": "phase_2",
@@ -52,12 +51,13 @@ func _init() -> void:
 			"choice_timeout_seconds": 5.0,
 			"feedback_message_interval_min": 2.0,
 			"feedback_message_interval_max": 4.0,
-			"feedback_physical_low_threshold": 30.0,
-			"feedback_emotional_low_threshold": 30.0,
-			"feedback_emotional_high_threshold": 60.0,
+			"feedback_physical_low_threshold": 38.0,
+			"feedback_physical_high_threshold": 45.0,
+			"feedback_emotional_low_threshold": 38.0,
+			"feedback_emotional_high_threshold": 52.0,
 			"minimum_active_threshold": 20.0,
-			"overall_medium_threshold": 20.0,
-			"overall_high_threshold": 60.0,
+			"overall_medium_threshold": 15.0,
+			"overall_high_threshold": 45.0,
 			"overall_peak_threshold": 100.0,
 			"peak_balance_best_diff": 5.0,
 			"peak_balance_ok_diff": 15.0,
@@ -81,6 +81,6 @@ func _init() -> void:
 			"character_profile": profile,
 			"overlay_animation_set": profile.overlay_animation_set,
 			"prompt_anchor_profile_id": profile.profile_id,
-			"transition_feedback_text": "Phase 2 clear."
+			"transition_feedback_text": "演奏暫時告一段落。"
 		}
 	)

@@ -3,10 +3,13 @@ extends RefCounted
 
 const MAX_VALUE: float = 100.0
 
-# Shared placeholder copy.
-const FEEDBACK_MESSAGE_TEXT: String = "[測試] 目前這個狀態的回饋對話尚未實作。"
-const CHOICE_PROMPT_TEXT: String = "[測試] 目前這個狀態的選項對話尚未實作。"
-const RESPONSE_BUTTON_TEXT: String = "[測試選項]"
+# Shared dialogue defaults.
+const FEEDBACK_MESSAGE_TEXT: String = "……"
+const CHOICE_PROMPT_TEXT: String = "……"
+const RESPONSE_BUTTON_TEXT: String = "……"
+const SAFE_WORD_DEFAULT: String = "紅色"
+const FEEDBACK_BRANCH_THRESHOLD: float = 45.0
+const SAFE_WORD_EVENT_CHANCE: float = 0.15
 
 # UI scaling.
 # 整體 UI 字體縮放倍率；調大會讓介面文字更大、更容易閱讀，調小則會讓畫面更緊湊。
@@ -129,7 +132,7 @@ const ARROW_PROMPT_BOX_SIZE: Vector2 = Vector2(132.0, 132.0)
 # 方向提示外圈半徑；調大會讓提示元素看起來更鬆散，調小則更集中。
 const ARROW_PROMPT_RING_RADIUS: float = 84.0
 # 方向提示外圈線條粗細；調大會更顯眼，調小則視覺存在感更弱。
-const ARROW_PROMPT_RING_WIDTH: float = 3.0
+const ARROW_PROMPT_RING_WIDTH: float = 6.0
 # 方向提示距離畫面邊緣的保留空間；調大可避免太貼邊，調小則可利用更多畫面範圍。
 const ARROW_PROMPT_EDGE_MARGIN: float = 18.0
 # 各方向提示相對中心的固定錨點位置；調整這組座標會直接改變提示在畫面上的分布與可讀性。
@@ -146,11 +149,13 @@ const ARROW_PROMPT_ANCHOR_OFFSETS := [
 
 # Emotional interaction tuning.
 # 對話事件中，生理低於這個值時視為「低生理」。
-const FEEDBACK_PHYSICAL_LOW_THRESHOLD: float = 30.0
+const FEEDBACK_PHYSICAL_LOW_THRESHOLD: float = 38.0
+# 對話事件中，生理高於這個值時視為「高生理」。
+const FEEDBACK_PHYSICAL_HIGH_THRESHOLD: float = 45.0
 # 對話事件中，心理低於這個值時視為「低心理」。
-const FEEDBACK_EMOTIONAL_LOW_THRESHOLD: float = 30.0
+const FEEDBACK_EMOTIONAL_LOW_THRESHOLD: float = 38.0
 # 對話事件中，心理高於這個值時視為「高心理」。
-const FEEDBACK_EMOTIONAL_HIGH_THRESHOLD: float = 60.0
+const FEEDBACK_EMOTIONAL_HIGH_THRESHOLD: float = 52.0
 # 選到最佳選項時增加的情感值；調大會讓正確判斷更容易穩住情感，調小則成長較慢。
 const EMOTIONAL_GAIN_GOOD_CHOICE: float = 10.0
 # 選到中性選項時增加的情感值；調大會降低判斷失誤的成本，調小則更需要選到最佳答案。
@@ -177,6 +182,10 @@ const CIRCLE_STROKE_MAX: float = 4.0
 const CIRCLE_CENTER_RATIO: Vector2 = Vector2(0.58, 0.46)
 # 高潮標籤相對圓心的垂直位移；調大會讓標籤更往下，調小則更貼近主圓。
 const PEAK_LABEL_OFFSET_Y: float = 228.0
+# 高潮標籤相對圓心的水平位移；調大會讓標籤更偏右，調小（負值）則偏左。
+const PEAK_LABEL_OFFSET_X: float = -40.0
+# 回饋標籤相對錨點的垂直位移；調大（負值絕對值增大）會讓標籤更往上，調小則更靠近提示點。
+const FEEDBACK_LABEL_OFFSET_Y: float = -74.0
 # 切換桌面版配置的畫面寬度門檻；調大會讓更多裝置維持手機/窄版排版，調小則更早套用桌面版。
 const DESKTOP_BREAKPOINT: float = 1080.0
 
@@ -186,6 +195,7 @@ const PHYSICAL_IMBALANCE_FAILURE_ENDING: String = "physical_imbalance_failure"
 const EMOTIONAL_IMBALANCE_FAILURE_ENDING: String = "emotional_imbalance_failure"
 const PHYSICAL_FAILURE_ENDING: String = PEAK_DEPLETION_FAILURE_ENDING
 const EMOTIONAL_FAILURE_ENDING: String = PEAK_DEPLETION_FAILURE_ENDING
+const SAFEWORD_IGNORED_FAILURE_ENDING: String = "safeword_ignored_failure"
 
 const SCREEN_TITLE: String = "title"
 const SCREEN_WARNING: String = "warning"

@@ -7,6 +7,9 @@ const HUD_BACKGROUND_COLOR := Color("290315")
 const HEART_LABEL_FONT_SIZE := 24
 const CHOICE_FONT_SIZE := 24
 const CHOICE_LABEL_MARGIN := Vector2(28.0, 22.0)
+const CHOICE_LABEL_COLOR := Color(1.0, 1.0, 1.0, 1.0)
+const CHOICE_LABEL_OUTLINE_COLOR := Color(1.0, 1.0, 1.0, 1.0)
+const CHOICE_LABEL_OUTLINE_SIZE := 0
 const HEART_SCALE := 0.8
 const STAFF_SCALE := 0.8
 const NOTE_SCALE := 0.3
@@ -98,7 +101,9 @@ func _ready() -> void:
 	heart_value_label.add_theme_color_override("font_color", Color(0.98, 0.94, 0.86, 1.0))
 	for label in [choice_label_1, choice_label_2]:
 		label.add_theme_font_size_override("font_size", CHOICE_FONT_SIZE)
-		label.add_theme_color_override("font_color", Color(0.99, 0.94, 0.94, 1.0))
+		label.add_theme_color_override("font_color", CHOICE_LABEL_COLOR)
+		label.add_theme_color_override("font_outline_color", CHOICE_LABEL_OUTLINE_COLOR)
+		label.add_theme_constant_override("outline_size", CHOICE_LABEL_OUTLINE_SIZE)
 	choice_area.mouse_filter = Control.MOUSE_FILTER_PASS
 	choice_button_1.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	choice_button_2.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND

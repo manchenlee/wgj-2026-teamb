@@ -1,7 +1,7 @@
 shader_type canvas_item;
 
-uniform vec4 base_color : source_color = vec4(0.24, 0.21, 0.14, 1.0);
-uniform vec4 metal_color : source_color = vec4(1.0, 0.92, 0.68, 1.0);
+uniform vec4 base_color : source_color = vec4(0.83, 0.73, 0.42, 1.0);
+uniform vec4 metal_color : source_color = vec4(0.97, 0.91, 0.72, 1.0);
 uniform float shine_speed : hint_range(0.0, 2.0) = 0.12;
 uniform float shine_width : hint_range(0.02, 0.6) = 0.22;
 uniform float shine_strength : hint_range(0.0, 2.0) = 0.52;
@@ -58,8 +58,11 @@ void fragment() {
 		float sheen = band * shine_strength * effect_multiplier;
 		float edge_highlight = edge * edge_strength * effect_multiplier;
 		vec3 base_rgb = base_color.rgb;
+		vec3 outline_rgb = mix(base_rgb * 0.28, vec3(0.16, 0.08, 0.02), 0.82);
 		float input_alpha_factor = clamp(input_color.a / max(source_alpha, 0.0001), 0.0, 1.0);
-		vec3 result_rgb = base_rgb + (metal_color.rgb * (sheen + edge_highlight));
+		vec3 lit_rgb = base_rgb + (metal_color.rgb * sheen);
+		vec3 result_rgb = mix(lit_rgb, outline_rgb, clamp(edge * 0.94, 0.0, 1.0));
+		result_rgb += metal_color.rgb * edge_highlight * 0.28;
 
 		COLOR = vec4(result_rgb, alpha * base_color.a * input_alpha_factor);
 	}
