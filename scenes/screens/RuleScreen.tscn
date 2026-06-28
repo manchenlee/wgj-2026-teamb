@@ -5,6 +5,51 @@
 [ext_resource type="Texture2D" uid="uid://cr6ioiuh23wo7" path="res://assets/book.png" id="3_book"]
 [ext_resource type="FontFile" uid="uid://db5u741tm2yje" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="4_m8gc1"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_input_normal"]
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+bg_color = Color(0.9882, 0.9882, 0.9882, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.6, 0.6, 0.6, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_input_focus"]
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+bg_color = Color(0.9882, 0.9882, 0.9882, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.1, 0.05, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
+bg_color = Color(0.6431373, 0.050980393, 0.050980393, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_pressed"]
+bg_color = Color(0.32, 0.03, 0.03, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_hover"]
+bg_color = Color(0.8509804, 0.078431375, 0.078431375, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
 [node name="RuleScreen" type="Control" unique_id=426288651]
 layout_mode = 3
 anchors_preset = 15
@@ -49,10 +94,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 scale = Vector2(0.99676526, 1)
-theme_override_constants/margin_left = 72
-theme_override_constants/margin_top = 40
-theme_override_constants/margin_right = 72
-theme_override_constants/margin_bottom = 40
+theme_override_constants/margin_left = 82
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 82
+theme_override_constants/margin_bottom = 50
 
 [node name="VBoxContainer" type="VBoxContainer" parent="BookPanel/ContentContainer" unique_id=864176443]
 layout_mode = 2
@@ -67,6 +112,8 @@ text = "遊戲操作方式"
 
 [node name="Section1Body" type="Label" parent="BookPanel/ContentContainer/VBoxContainer" unique_id=529008808]
 layout_mode = 2
+custom_minimum_size = Vector2(1, 0)
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.2, 0.1, 0.05, 1)
 theme_override_font_sizes/font_size = 20
 text = "根據音樂符號出現的順序，透過鍵盤方向鍵提升生理興奮（紅色區域），同時以滑鼠點選對話提升情緒安撫（黃色區域）。將兩者同步維持在高水平，數值隨時間衰減，任一歸零即失敗，最終狀態影響結局。"
@@ -85,15 +132,46 @@ text = "什麼是安全詞？"
 
 [node name="Section2Body" type="Label" parent="BookPanel/ContentContainer/VBoxContainer" unique_id=92038435]
 layout_mode = 2
+custom_minimum_size = Vector2(1, 0)
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.2, 0.1, 0.05, 1)
 theme_override_font_sizes/font_size = 20
 text = "安全詞是 BDSM 活動中重要的溝通機制，當被動方瀕臨極限時喊出預定安全詞，支配方須立即停止。「同意式非同意」(CNC) 是在百分之百事前知情合意下進行的實踐，安全詞極為關鍵。請務必在開始前與夥伴充分溝通並確認安全詞（如「紅色」代表立刻停止），確保一切建立在知情與合意之上。"
 autowrap_mode = 2
 
-[node name="ContinueButton" type="Button" parent="BookPanel/ContentContainer/VBoxContainer" unique_id=733461388]
-custom_minimum_size = Vector2(160, 48)
+[node name="Divider2" type="Control" parent="BookPanel/ContentContainer/VBoxContainer" unique_id=1748740146]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="SafeWordRow" type="HBoxContainer" parent="BookPanel/ContentContainer/VBoxContainer" unique_id=201938471]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SafeWordLabel" type="Label" parent="BookPanel/ContentContainer/VBoxContainer/SafeWordRow" unique_id=301847562]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.1, 0.05, 1)
+theme_override_font_sizes/font_size = 20
+text = "輸入安全詞"
+
+[node name="SafeWordInput" type="LineEdit" parent="BookPanel/ContentContainer/VBoxContainer/SafeWordRow" unique_id=401756453]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_placeholder_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_input_normal")
+theme_override_styles/focus = SubResource("StyleBoxFlat_input_focus")
+placeholder_text = "南港展覽館官方網站"
+
+[node name="ContinueButton" type="Button" parent="BookPanel/ContentContainer/VBoxContainer/SafeWordRow" unique_id=733461388]
+custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 6
-theme_override_font_sizes/font_size = 18
-text = "NEXT"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("4_m8gc1")
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+text = "確認"

@@ -1,6 +1,28 @@
 [gd_scene format=3 uid="uid://smt2dt6or873"]
 
 [ext_resource type="Script" uid="uid://frcwqljbelob" path="res://scripts/core/warning_screen.gd" id="1_warn"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_leave_normal"]
+bg_color = Color(0.55, 0.55, 0.55, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+content_margin_left = 24.0
+content_margin_top = 12.0
+content_margin_right = 24.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_continue_normal"]
+bg_color = Color(0.95, 0.55, 0.65, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+content_margin_left = 24.0
+content_margin_top = 12.0
+content_margin_right = 24.0
+content_margin_bottom = 12.0
 [ext_resource type="Texture2D" uid="uid://dc7csqq8gypo5" path="res://assets/curtain.jpg" id="2_curtain"]
 [ext_resource type="Texture2D" uid="uid://csiddsncvaf8p" path="res://assets/warning.png" id="3_warning"]
 [ext_resource type="FontFile" uid="uid://cwkj3luqwe71h" path="res://assets/fonts/ShipporiMincho-SemiBold.ttf" id="4_i7tt6"]
@@ -102,11 +124,15 @@ alignment = 1
 [node name="LeaveButton" type="Button" parent="WarningPanel/ContentContainer/VBoxContainer/ButtonRow" unique_id=220913538]
 custom_minimum_size = Vector2(180, 56)
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_leave_normal")
 text = "離開遊戲"
 
 [node name="ContinueButton" type="Button" parent="WarningPanel/ContentContainer/VBoxContainer/ButtonRow" unique_id=1594333250]
 custom_minimum_size = Vector2(180, 56)
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_continue_normal")
 text = "確認遊玩"
