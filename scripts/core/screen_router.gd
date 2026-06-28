@@ -15,10 +15,13 @@ const BGM_ENDING := preload("res://assets/audio/bgm/ending.mp3")
 const BGM_TARGET_VOLUME_DB := -6.0
 const BGM_SILENT_VOLUME_DB := -40.0
 const BGM_CROSSFADE_DURATION := 1.0
+const SCREEN_TRANSITION_DURATION := 0.3
+const SCREEN_TRANSITION_COLOR := Color(0, 0, 0, 1)
 
 @onready var screen_container: Control = $ScreenContainer
 @onready var debug_overlay = $DebugOverlay
 @onready var bg_music: AudioStreamPlayer = $BgMusic
+@onready var screen_transition_overlay: ColorRect = $ScreenTransitionOverlay
 
 var current_screen: Control
 var current_screen_id: String = ""
@@ -30,6 +33,7 @@ var bgm_library := {}
 var bgm_playback_positions := {}
 var current_bgm_key: String = ""
 var bgm_tween: Tween
+var screen_transition_tween: Tween
 
 func _ready() -> void:
 	_setup_bgm_players()
@@ -39,6 +43,15 @@ func _ready() -> void:
 	debug_overlay.force_ending_requested.connect(_force_ending)
 	debug_overlay.reset_run_requested.connect(_reset_run)
 	UiThemeScaler.apply_to_tree(debug_overlay)
+	if screen_transition_overlay != null:
+		screen_transition_overlay.visible = false
+		screen_transition_overlay.color = Color(
+			SCREEN_TRANSITION_COLOR.r,
+			SCREEN_TRANSITION_COLOR.g,
+			SCREEN_TRANSITION_COLOR.b,
+			0.0
+		)
+		screen_transition_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_play_bgm("default", false)
 	_show_title()
 
@@ -111,6 +124,46 @@ func _show_ending(ending_type: String) -> void:
 	})
 
 func _swap_screen(next_screen: Control) -> void:
+	if current_screen == null or screen_transition_overlay == null:
+		_swap_screen_immediately(next_screen)
+		return
+
+	if screen_transition_tween != null:
+		screen_transition_tween.kill()
+		screen_transition_tween = null
+
+	screen_transition_overlay.visible = true
+	screen_transition_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	screen_transition_overlay.color = Color(
+		SCREEN_TRANSITION_COLOR.r,
+		SCREEN_TRANSITION_COLOR.g,
+		SCREEN_TRANSITION_COLOR.b,
+		0.0
+	)
+
+	screen_transition_tween = create_tween().set_trans(Tween.TRANS_SINE)
+	screen_transition_tween.tween_property(
+		screen_transition_overlay,
+		"color:a",
+		1.0,
+		SCREEN_TRANSITION_DURATION
+	)
+	screen_transition_tween.tween_callback(func() -> void:
+		_swap_screen_immediately(next_screen)
+	)
+	screen_transition_tween.tween_property(
+		screen_transition_overlay,
+		"color:a",
+		0.0,
+		SCREEN_TRANSITION_DURATION
+	)
+	screen_transition_tween.tween_callback(func() -> void:
+		screen_transition_overlay.visible = false
+		screen_transition_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		screen_transition_tween = null
+	)
+
+func _swap_screen_immediately(next_screen: Control) -> void:
 	if current_screen != null:
 		current_screen.queue_free()
 	current_screen = next_screen
