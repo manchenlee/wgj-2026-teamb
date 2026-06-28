@@ -7,6 +7,7 @@ var phase_config = null
 var current_prompt: Dictionary = {}
 var current_entry: Dictionary = {}
 var current_feedback_index: int = -1
+var choice_prompt_pending: bool = false
 var entries: Array = []
 var rng := RandomNumberGenerator.new()
 var safe_word: String = Config.SAFE_WORD_DEFAULT
@@ -27,8 +28,11 @@ func reset() -> void:
 	current_prompt = {}
 	current_entry = {}
 	current_feedback_index = -1
+	choice_prompt_pending = false
 
 func next_event(physical: float, emotional: float, force_safe_word: bool = false) -> Dictionary:
+	if choice_prompt_pending:
+		return {}
 	if current_entry.is_empty():
 		current_entry = _select_entry(physical, emotional, force_safe_word)
 		current_feedback_index = -1
@@ -63,6 +67,7 @@ func apply_choice(choice_id: String, model) -> Dictionary:
 	current_prompt = {}
 	current_entry = {}
 	current_feedback_index = -1
+	choice_prompt_pending = false
 	return {"reply": reply, "delta": delta_value, "ending_type": ending_type}
 
 func get_timeout_reply() -> String:
@@ -70,6 +75,7 @@ func get_timeout_reply() -> String:
 	current_prompt = {}
 	current_entry = {}
 	current_feedback_index = -1
+	choice_prompt_pending = false
 	return reply
 
 func has_safe_word_event() -> bool:
@@ -168,6 +174,7 @@ func _build_next_prompt(entry: Dictionary) -> Dictionary:
 		return {"text": terminal_text}
 	if choices.is_empty():
 		return {"text": _get_current_feedback_line(entry)}
+	choice_prompt_pending = true
 	return {"text": _get_current_feedback_line(entry), "choices": choices}
 
 func _get_current_feedback_line(entry: Dictionary) -> String:
@@ -214,6 +221,7 @@ func _clear_current_sequence() -> void:
 	current_prompt = {}
 	current_entry = {}
 	current_feedback_index = -1
+	choice_prompt_pending = false
 
 func _pick_random_text(source: Variant, fallback: String) -> String:
 	if typeof(source) != TYPE_ARRAY:

@@ -1,7 +1,7 @@
 shader_type canvas_item;
 
-uniform vec4 base_color : source_color = vec4(0.24, 0.21, 0.14, 1.0);
-uniform vec4 metal_color : source_color = vec4(1.0, 0.92, 0.68, 1.0);
+uniform vec4 base_color : source_color = vec4(0.83, 0.73, 0.42, 1.0);
+uniform vec4 metal_color : source_color = vec4(0.97, 0.91, 0.72, 1.0);
 uniform float shine_speed : hint_range(0.0, 2.0) = 0.12;
 uniform float shine_width : hint_range(0.02, 0.6) = 0.22;
 uniform float shine_strength : hint_range(0.0, 2.0) = 0.52;

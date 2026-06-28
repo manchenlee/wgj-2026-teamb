@@ -809,6 +809,8 @@ func _schedule_next_feedback_message() -> void:
 func _push_next_dialogue_event() -> void:
 	var should_force_safe_word := dialogue_controller.has_safe_word_event() and feedback_rng.randf() < Config.SAFE_WORD_EVENT_CHANCE
 	current_prompt = dialogue_controller.next_event(arousal_model.physical, arousal_model.emotional, should_force_safe_word)
+	if current_prompt.is_empty():
+		return
 	if current_prompt.has("choices"):
 		waiting_for_choice = true
 		dialogue_panel.hide_prompt()
