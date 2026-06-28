@@ -1,0 +1,216 @@
+{
+  "chapter": "序章",
+  "steps": [
+    {
+      "background": "res://assets/curtain.jpg",
+      "speaker": "店到店訊息",
+      "text": "您的包裹已抵達。",
+      "character": {
+        "visible": false,
+        "clear_layers": true
+      }
+    },
+    {
+      "speaker": "你",
+      "text": "……？啊，是我之前新買的樂器，已經送到了啊。",
+      "character": {
+        "visible": false
+      }
+    },
+    {
+      "speaker": "你",
+      "text": "嗯……無論是成色還是木香，還有這旋鈕，都十分傑出……不枉我一番苦尋。",
+      "character": {
+        "base": "res://assets/art/character/normal_violin.png"
+      },
+      "effects": [
+        {
+          "type": "fade_in",
+          "duration": 0.55
+        }
+      ]
+    },
+    {
+      "speaker": "你",
+      "text": "這下周末音樂會，就不必煩惱了……嗯？",
+      "character": {
+        "base": "res://assets/art/character/normal_violin.png"
+      }
+    },
+    {
+      "speaker": "你",
+      "text": "……嗯？這琴弦聲音，不對。沒辦法，到底是商家出貨，沒辦法面面俱到。",
+      "character": {
+        "base": "res://assets/art/character/normal_violin.png"
+      }
+    },
+    {
+      "speaker": "旁白",
+      "text": "你伸出觸手，輕輕碰了一下琴身。",
+      "character": {
+        "base": "res://assets/art/character/normal_violin.png"
+      },
+      "effects": [
+        {
+          "type": "glow",
+          "duration": 0.9,
+          "strength": 0.9,
+          "color": "#ffe2a6"
+        }
+      ]
+    },
+    {
+      "speaker": "旁白",
+      "text": "小提琴圖樣閃爍強光，下一瞬間，眼前已經變成了男人。",
+      "character": {
+        "base": "res://assets/art/character/normal.png",
+        "clear_layers": true
+      },
+      "effects": [
+        {
+          "type": "flash",
+          "duration": 0.22,
+          "color": "#fff8ef"
+        },
+        {
+          "type": "glow",
+          "duration": 0.95,
+          "strength": 0.85,
+          "color": "#fff0c8"
+        },
+        {
+          "type": "shake",
+          "duration": 0.45,
+          "strength": 16,
+          "loops": 4
+        }
+      ]
+    },
+    {
+      "speaker": "小提琴",
+      "text": "……您好。",
+      "character": {
+        "base": "res://assets/art/character/normal.png"
+      }
+    },
+    {
+      "speaker": "你",
+      "text": "……",
+      "character": {
+        "base": "res://assets/art/character/normal.png"
+      }
+    },
+    {
+      "speaker": "你",
+      "text": "………………",
+      "character": {
+        "base": "res://assets/art/character/normal.png"
+      }
+    },
+    {
+      "speaker": "你",
+      "text": "我、我看看我的賣家訊息……！",
+      "character": {
+        "base": "res://assets/art/character/normal.png"
+      },
+      "effects": [
+        {
+          "type": "shake",
+          "duration": 0.36,
+          "strength": 12,
+          "loops": 3
+        }
+      ]
+    },
+    {
+      "speaker": "店到店訊息",
+      "text": "您的包裹『帥哥小提琴！Handsome Violin！！』已收貨，歡迎五星好評。",
+      "character": {
+        "base": "res://assets/art/character/normal.png"
+      }
+    },
+    {
+      "speaker": "你",
+      "text": "……帥哥……小提琴？",
+      "character": {
+        "base": "res://assets/art/character/normal.png"
+      }
+    },
+    {
+      "speaker": "你",
+      "text": "我一定搞錯了什麼……但事到如今，即便搞錯了，我也無法再回頭了。",
+      "character": {
+        "base": "res://assets/art/character/normal.png",
+        "layers": [
+          {
+            "id": "tentacle_hint",
+            "path": "res://assets/art/character/phase1/tentacle1_1.png",
+            "scale": [1, 1],
+            "modulate": [1, 1, 1, 1],
+            "z_index": 1
+          }
+        ]
+      },
+      "effects": [
+        {
+          "type": "glow",
+          "duration": 0.8,
+          "strength": 0.55,
+          "color": "#ffd2d2"
+        }
+      ]
+    },
+    {
+      "speaker": "旁白",
+      "text": "觸手緩緩伸出，纏上了那把不該存在的小提琴。",
+      "character": {
+        "base": "res://assets/art/character/normal.png",
+        "layers": [
+          {
+            "id": "tentacle_hint",
+            "path": "res://assets/art/character/phase1/tentacle1_1.png",
+            "scale": [1, 1],
+            "modulate": [1, 1, 1, 1],
+            "z_index": 1
+          },
+          {
+            "id": "tentacle_hint_2",
+            "path": "res://assets/art/character/phase1/tentacle2_1.png",
+            "scale": [1, 1],
+            "modulate": [1, 1, 1, 1],
+            "z_index": 2
+          }
+        ]
+      }
+    },
+    {
+      "speaker": "你",
+      "text": "沒事的，不會痛……會很舒服的……！",
+      "character": {
+        "base": "res://assets/art/character/normal.png"
+      }
+    },
+    {
+      "speaker": "你",
+      "text": "為了我的音樂演出，你……我要調教你！！",
+      "character": {
+        "base": "res://assets/art/character/normal.png"
+      },
+      "effects": [
+        {
+          "type": "shake",
+          "duration": 0.44,
+          "strength": 20,
+          "loops": 4
+        },
+        {
+          "type": "glow",
+          "duration": 0.7,
+          "strength": 0.7,
+          "color": "#ffcf9d"
+        }
+      ],
+      "hint": "點擊、Enter 或按 START 進入下一幕"
+    }
+  ]
+}

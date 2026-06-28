@@ -1,8 +1,34 @@
 [gd_scene format=3 uid="uid://bxl0qyvoobbvm"]
 
-[ext_resource type="Script" uid="uid://d1k8ac85xt1rs" path="res://scripts/core/opening_screen.gd" id="1_opening"]
+[ext_resource type="Script" uid="uid://djk07baydsik5" path="res://scripts/core/opening_screen.gd" id="1_opening"]
 [ext_resource type="Texture2D" uid="uid://dc7csqq8gypo5" path="res://assets/curtain.jpg" id="2_curtain"]
-[ext_resource type="Texture2D" uid="uid://cr6ioiuh23wo7" path="res://assets/book.png" id="3_book"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dialogue"]
+bg_color = Color(0.11, 0.07, 0.08, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.86, 0.68, 0.3)
+corner_radius_top_left = 26
+corner_radius_top_right = 26
+corner_radius_bottom_right = 26
+corner_radius_bottom_left = 26
+content_margin_left = 24.0
+content_margin_top = 18.0
+content_margin_right = 24.0
+content_margin_bottom = 18.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_speaker"]
+bg_color = Color(0.91, 0.79, 0.56, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+content_margin_left = 14.0
+content_margin_top = 6.0
+content_margin_right = 14.0
+content_margin_bottom = 6.0
 
 [node name="OpeningScreen" type="Control" unique_id=194662856]
 layout_mode = 3
@@ -11,6 +37,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 1
 script = ExtResource("1_opening")
 
 [node name="Background" type="TextureRect" parent="." unique_id=811108925]
@@ -21,96 +48,131 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_curtain")
-expand_mode = 3
+expand_mode = 1
 stretch_mode = 6
 
-[node name="BookPanel" type="TextureRect" parent="." unique_id=1415073350]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 180.0
-offset_top = 120.0
-offset_right = -180.0
-offset_bottom = -120.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = ExtResource("3_book")
-expand_mode = 3
-stretch_mode = 6
-
-[node name="OuterMargin" type="MarginContainer" parent="BookPanel" unique_id=1524356456]
+[node name="BackdropTint" type="ColorRect" parent="." unique_id=195303100]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 72
-theme_override_constants/margin_top = 40
-theme_override_constants/margin_right = 72
-theme_override_constants/margin_bottom = 40
+mouse_filter = 2
+color = Color(0.05, 0.03, 0.05, 0.36)
 
-[node name="Layout" type="VBoxContainer" parent="BookPanel/OuterMargin" unique_id=698791775]
-layout_mode = 2
-theme_override_constants/separation = 12
+[node name="CharacterStage" type="Control" parent="." unique_id=111018811]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 
-[node name="HeadingLabel" type="Label" parent="BookPanel/OuterMargin/Layout" unique_id=1919374577]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.3, 0.1, 0.05, 1)
-theme_override_font_sizes/font_size = 24
-text = "序章"
-horizontal_alignment = 1
+[node name="CharacterPivot" type="Control" parent="CharacterStage" unique_id=982210176]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 
-[node name="ScrollContainer" type="ScrollContainer" parent="BookPanel/OuterMargin/Layout" unique_id=345163699]
+[node name="GlowRoot" type="Control" parent="CharacterStage/CharacterPivot" unique_id=1640084511]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="CharacterRoot" type="Control" parent="CharacterStage/CharacterPivot" unique_id=300118593]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="SafeArea" type="MarginContainer" parent="." unique_id=845908141]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 28
+mouse_filter = 2
+
+[node name="RootLayout" type="VBoxContainer" parent="SafeArea" unique_id=1679932007]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_constants/separation = 18
 
-[node name="DialogueLabel" type="Label" parent="BookPanel/OuterMargin/Layout/ScrollContainer" unique_id=92416121]
+[node name="TopRow" type="HBoxContainer" parent="SafeArea/RootLayout" unique_id=151505183]
+layout_mode = 2
+
+[node name="ChapterLabel" type="Label" parent="SafeArea/RootLayout/TopRow" unique_id=1919374577]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.89, 0.68, 1)
+theme_override_font_sizes/font_size = 20
+text = "序章"
+
+[node name="TopSpacer" type="Control" parent="SafeArea/RootLayout" unique_id=835305174]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="DialogueBox" type="PanelContainer" parent="SafeArea/RootLayout" unique_id=166112798]
+custom_minimum_size = Vector2(0, 196)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dialogue")
+
+[node name="DialogueLayout" type="VBoxContainer" parent="SafeArea/RootLayout/DialogueBox" unique_id=1776621023]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="SpeakerPanel" type="PanelContainer" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout" unique_id=666000271]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_speaker")
+
+[node name="SpeakerLabel" type="Label" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout/SpeakerPanel" unique_id=1123056162]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.19, 0.11, 0.08, 1)
+theme_override_font_sizes/font_size = 18
+text = "旁白"
+
+[node name="DialogueLabel" type="RichTextLabel" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout" unique_id=92416121]
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 2
+bbcode_enabled = false
+fit_content = true
+scroll_active = false
+theme_override_colors/default_color = Color(0.98, 0.96, 0.92, 1)
+theme_override_font_sizes/normal_font_size = 16
+text = "..."
+
+[node name="FooterRow" type="HBoxContainer" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout" unique_id=992871500]
+layout_mode = 2
+alignment = 1
+
+[node name="HintLabel" type="Label" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout/FooterRow" unique_id=343295201]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.15, 0.08, 0.03, 1)
-theme_override_font_sizes/font_size = 15
-text = "【店到店訊息：您的包裹已抵達。】
+theme_override_colors/font_color = Color(0.83, 0.77, 0.72, 0.92)
+theme_override_font_sizes/font_size = 12
+text = "點擊、Enter 或按鈕繼續"
+vertical_alignment = 1
 
-你：……？
-
-你：啊，是我之前新買的樂器，已經送到了啊。
-
-你：嗯……無論是成色還是木香，還有這旋鈕，都十分傑出……不枉我一番苦尋。
-
-你：這下周末音樂會，就不必煩惱了……嗯？
-
-你：……嗯？這琴弦聲音，不對。沒辦法，到底是商家出貨，沒辦法面面俱到。
-
-（伸出觸手摸了一下小提琴，小提琴圖樣閃爍強光後變成了男人）
-
-小提琴：……您好。
-
-你：……
-
-你：…………
-
-你：我、我看看我的賣家訊息……！
-
-【店到店訊息：您的包裹——『帥哥小提琴！Handsome Violin！！』已收貨，歡迎五星好評。】
-
-你：……帥哥……小提琴？
-
-你：……
-
-你：我一定搞錯了什麼……但事到如今，即便搞錯了，我也無法再回頭了。
-
-（觸手伸出）
-
-你：沒事的，不會痛……會很舒服的……！
-
-你：為了我的音樂演出，你——我要調教你！！"
-autowrap_mode = 2
-
-[node name="ContinueButton" type="Button" parent="BookPanel/OuterMargin/Layout" unique_id=1760788133]
-custom_minimum_size = Vector2(160, 48)
+[node name="NextButton" type="Button" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout/FooterRow" unique_id=1760788133]
+custom_minimum_size = Vector2(180, 52)
 layout_mode = 2
-size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 18
 text = "NEXT"
