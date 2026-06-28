@@ -10,6 +10,10 @@ const DIRECTION_ICON_PADDING := 12.0
 const TIMER_RING_TEXTURE_SIZE := 256
 const TIMER_RING_BASE_PHASE_STEP := 0.73
 const TIMER_RING_COLOR := Color(0.24, 0.21, 0.14, 1.0)
+const SUCCESS_NOTE_GLYPHS := ["♪", "♫"]
+const SUCCESS_NOTE_COUNT := 3
+const SUCCESS_NOTE_RISE_DISTANCE := 52.0
+const SUCCESS_NOTE_LIFETIME := 0.72
 
 @onready var character_placeholder: TextureRect = $CharacterVisualAnchor/CharacterPlaceholder
 @onready var prompt_layer: Control = $PromptLayer
@@ -169,6 +173,11 @@ func show_correct_reaction() -> void:
 	_set_reaction("!")
 	_pulse(Color(0.85, 0.24, 0.24, 1.0), 1.08)
 
+func show_success_note_burst(prompt_id: int) -> void:
+	var origin := _get_success_note_origin(prompt_id)
+	for note_index in range(SUCCESS_NOTE_COUNT):
+		_spawn_success_note_particle(origin, note_index)
+
 func show_mistake_reaction() -> void:
 	_set_reaction("?")
 	_pulse(Color(0.35, 0.45, 0.85, 1.0), 0.92)
@@ -214,18 +223,15 @@ func show_direction_prompt(prompt_id: int, direction: String, anchor_position: V
 	prompt_icon.rotation = _direction_rotation(direction)
 	prompt_icon.visible = true
 	prompt_icon.scale = Vector2.ONE
-	prompt_icon.modulate = Color(0.9, 0.9, 0.95, 0.0)
+	prompt_icon.modulate = Color(0.9, 0.9, 0.95, 1.0)
 	_prompt_time_progresses[prompt_id] = 1.0
 	_refresh_prompt_layout()
-
-	var tween := create_tween()
-	tween.tween_property(prompt_icon, "modulate:a", 0.46, 0.14).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 func set_current_prompt(prompt_id: int) -> void:
 	_current_prompt_id = prompt_id
 	for key in _prompt_nodes.keys():
 		var prompt_icon: TextureRect = _prompt_nodes[key]
-		prompt_icon.modulate.a = 1.0 if int(key) == _current_prompt_id else 0.46
+		prompt_icon.modulate.a = 1.0
 
 func set_prompt_time_progresses(progress_by_prompt_id: Dictionary) -> void:
 	_prompt_time_progresses.clear()
@@ -234,9 +240,7 @@ func set_prompt_time_progresses(progress_by_prompt_id: Dictionary) -> void:
 		_prompt_time_progresses[prompt_id] = clampf(float(progress_by_prompt_id[prompt_id_variant]), 0.0, 1.0)
 	for key in _prompt_nodes.keys():
 		var prompt_icon: TextureRect = _prompt_nodes[key]
-		var prompt_id := int(key)
-		var progress := float(_prompt_time_progresses.get(prompt_id, 0.0))
-		prompt_icon.modulate.a = lerpf(0.22, 1.0, progress) if prompt_id == _current_prompt_id else 0.46
+		prompt_icon.modulate.a = 1.0
 	_update_prompt_timer_rings()
 
 func remove_direction_prompt(prompt_id: int) -> void:
@@ -299,6 +303,37 @@ func _pulse(color: Color, scale_multiplier: float) -> void:
 
 func _apply_style(_texture_rect: TextureRect, _color: Color) -> void:
 	return
+
+func _spawn_success_note_particle(origin: Vector2, note_index: int) -> void:
+	var note := Label.new()
+	note.text = SUCCESS_NOTE_GLYPHS[note_index % SUCCESS_NOTE_GLYPHS.size()]
+	note.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	note.z_index = 3
+	note.pivot_offset = Vector2(12.0, 12.0)
+	note.position = origin + Vector2(randf_range(-22.0, 22.0), randf_range(-12.0, 10.0))
+	note.rotation = deg_to_rad(randf_range(-16.0, 16.0))
+	note.scale = Vector2.ONE * randf_range(0.82, 1.08)
+	note.modulate = Color(1.0, 0.97, 0.68, 0.0)
+	note.add_theme_font_size_override("font_size", 26 + (note_index * 2))
+	note.add_theme_color_override("font_color", Color(1.0, 0.96, 0.72, 1.0))
+	note.add_theme_color_override("font_outline_color", Color(1.0, 0.82, 0.28, 0.85))
+	note.add_theme_constant_override("outline_size", 4)
+	prompt_layer.add_child(note)
+
+	var end_position := note.position + Vector2(randf_range(-12.0, 12.0), -SUCCESS_NOTE_RISE_DISTANCE - randf_range(0.0, 18.0))
+	var tween := note.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(note, "modulate:a", 1.0, 0.08).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(note, "position", end_position, SUCCESS_NOTE_LIFETIME).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(note, "scale", note.scale * 1.18, SUCCESS_NOTE_LIFETIME * 0.55).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(note, "modulate:a", 0.0, SUCCESS_NOTE_LIFETIME).set_delay(0.08).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tween.chain().tween_callback(note.queue_free)
+
+func _get_success_note_origin(prompt_id: int) -> Vector2:
+	var prompt_icon := _prompt_nodes.get(prompt_id) as TextureRect
+	if prompt_icon != null and prompt_icon.visible:
+		return prompt_icon.position + (prompt_icon.size * 0.5) + Vector2(0.0, -8.0)
+	return _get_feedback_anchor_center()
 
 func _refresh_prompt_layout() -> void:
 	if prompt_feedback_label == null:

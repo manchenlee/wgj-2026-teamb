@@ -588,6 +588,7 @@ func _on_direction_pressed(direction: String) -> void:
 			combo += 1
 			arousal_model.apply_physical(float(active_phase_config.direction_reward_values.get("correct_input", 1.0)))
 			arousal_model.refresh_physical_activity()
+			character_area.show_success_note_burst(int(result.get("consumed_prompt_id", -1)))
 			_remove_prompt(int(result.get("consumed_prompt_id", -1)))
 			var auto_revealed_prompt: Dictionary = result.get("auto_revealed_prompt", {})
 			if not auto_revealed_prompt.is_empty():
@@ -605,6 +606,7 @@ func _on_direction_pressed(direction: String) -> void:
 			arousal_model.apply_physical(float(active_phase_config.direction_reward_values.get("correct_input", 1.0)))
 			arousal_model.apply_physical(float(active_phase_config.direction_reward_values.get("sequence_complete_bonus", 5.0)))
 			arousal_model.refresh_physical_activity()
+			character_area.show_success_note_burst(int(result.get("consumed_prompt_id", -1)))
 			_remove_prompt(int(result.get("consumed_prompt_id", -1)))
 			character_area.show_prompt_feedback(
 				"Sequence Complete +%d" % int(round(float(active_phase_config.direction_reward_values.get("sequence_complete_bonus", 5.0)))),
