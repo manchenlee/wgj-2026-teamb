@@ -4,7 +4,7 @@ extends Control
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
 const HUD_BACKGROUND_COLOR := Color("290315")
-const HEART_LABEL_FONT_SIZE := 34
+const HEART_LABEL_FONT_SIZE := 24
 const CHOICE_FONT_SIZE := 24
 const CHOICE_LABEL_MARGIN := Vector2(28.0, 22.0)
 const HEART_SCALE := 0.8
@@ -186,7 +186,7 @@ func _apply_layout() -> void:
 	choice_label_2.position = CHOICE_LABEL_MARGIN
 	choice_label_2.size = label_size
 
-	heart_value_label.add_theme_font_size_override("font_size", int(round(HEART_LABEL_FONT_SIZE * HEART_SCALE)))
+	heart_value_label.add_theme_font_size_override("font_size", HEART_LABEL_FONT_SIZE)
 	_apply_meter_fill(_peak_value)
 	_center_meter_group_vertically()
 

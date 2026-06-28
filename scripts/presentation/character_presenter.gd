@@ -4,8 +4,6 @@ extends Control
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
 @onready var character_placeholder: TextureRect = $CharacterVisualAnchor/CharacterPlaceholder
-@onready var emotion_state_label: Label = $TopLabelStack/EmotionStateLabel
-@onready var reaction_label: Label = $TopLabelStack/ReactionLabel
 @onready var prompt_layer: Control = $PromptLayer
 @onready var prompt_feedback_label: Label = $PromptLayer/PromptFeedbackLabel
 
@@ -13,12 +11,10 @@ var _default_scale := Vector2.ONE
 
 func _ready() -> void:
 	_default_scale = character_placeholder.scale
-	emotion_state_label.add_theme_color_override("font_color", Color(0.12, 0.12, 0.16, 1.0))
-	reaction_label.add_theme_color_override("font_color", Color(0.12, 0.12, 0.16, 1.0))
 	prompt_feedback_label.add_theme_color_override("font_color", Color(0.12, 0.12, 0.16, 1.0))
 	prompt_feedback_label.add_theme_font_size_override("font_size", Config.PROMPT_FEEDBACK_FONT_SIZE)
 	update_emotion_state("CALM")
-	_set_reaction("...")
+	clear_direction_prompts()
 
 
 # ---------------------------------------------------------------------------
@@ -71,7 +67,6 @@ func show_choice_reaction(choice_quality: String) -> void:
 # ---------------------------------------------------------------------------
 
 func update_emotion_state(state: String) -> void:
-	emotion_state_label.text = "State: %s" % state
 	var color := Color(0.7, 0.7, 0.7, 1.0)
 	match state:
 		"SAD":
@@ -108,13 +103,8 @@ func show_prompt_feedback(text_value: String, color: Color, display_duration: fl
 	tween.tween_property(prompt_feedback_label, "position:y", start_y - 22.0, 0.18).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.chain().tween_callback(func() -> void: prompt_feedback_label.visible = false)
 
-
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
-
-func _set_reaction(text_value: String) -> void:
-	reaction_label.text = "Reaction: %s" % text_value
+func _set_reaction(_text_value: String) -> void:
+	return
 
 
 func _pulse(color: Color, scale_multiplier: float) -> void:

@@ -115,12 +115,12 @@ func get_overlay_idle_playback_config() -> Dictionary:
 #   All children here use z_as_relative=false so the values are absolute.
 #
 #   Desired Phase 2 render order (back to front):
-#     3  — tentacle7 static (behind animated tentacles)
+#     3  — tentacle7 static and tentacle10 static
+#          (kept behind the stable hub/front overlay layer)
 #     4  — tentacle5, tentacle6, tentacle8, tentacle9, tentacle11 animated tracks
 #          (TwoFrameOverlayAnimator._create_track uses no explicit z_index so
 #           they stack in child order — adequate because they overlap as art)
-#     5  — tentacle10 static (sits above animated group)
-#     6  — hole companion overlay (tied to tentacle10, sits just above it)
+#     6  — hole companion overlay (tied to tentacle10, sits above it)
 #     7  — Phase2FlushLayer   (managed externally, z=4 on BackgroundAnchor node)
 #     8  — Phase2FaceLayer    (managed externally, z=5 on BackgroundAnchor node)
 #
@@ -139,9 +139,9 @@ func get_phase2_overlay_profile_config() -> Dictionary:
 				"z_index": 3
 			},
 			{
-				# tentacle10: appears above the animated tentacles
+				# tentacle10: kept below the stable hub/front overlay layer
 				"texture_path": "%stentacle10.png" % PHASE_2_ROOT,
-				"z_index": 5
+				"z_index": 3
 			}
 		],
 
