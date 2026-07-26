@@ -79,11 +79,15 @@ func _play_cover_transition() -> void:
 		return
 	_transitioning = true
 	_start_button.disabled = true
-	_reset_start_button_visual(false)
+	if _hover_tween:
+		_hover_tween.kill()
+		_hover_tween = null
+	_start_button_root.visible = false
+	_start_button_root.modulate.a = 0.0
+	_start_button_root.scale = _start_button_base_scale
 
 	var tween := create_tween().set_trans(Tween.TRANS_SINE)
 	tween.tween_property(_logo, "modulate:a", 0.0, 0.3)
-	tween.parallel().tween_property(_start_button_root, "modulate:a", 0.0, 0.3)
 	tween.tween_callback(func() -> void:
 		_skip_button.visible = true
 	)

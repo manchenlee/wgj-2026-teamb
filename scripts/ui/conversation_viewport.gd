@@ -7,10 +7,8 @@ const MESSAGE_FONT := preload("res://assets/fonts/ShipporiMincho-Bold.ttf")
 
 const PLAYER_BUBBLE_PATH := "res://assets/art/ui/text.png"
 const CHARACTER_BUBBLE_PATH := "res://assets/art/ui/text2.png"
-const CHOICE_BUBBLE_PATH := "res://assets/art/ui/text bubble.png"
 
 const BUBBLE_SCALE := 0.5
-const CHOICE_BUBBLE_SCALE := 1.0
 const VIEWPORT_PADDING_LEFT := 12.0
 const VIEWPORT_PADDING_RIGHT := 0.0
 const VIEWPORT_PADDING_VERTICAL := 14.0
@@ -21,20 +19,12 @@ const MESSAGE_TEXT_MARGIN_TOP := 24.0
 const MESSAGE_TEXT_MARGIN_RIGHT := 38.0
 const MESSAGE_TEXT_MARGIN_BOTTOM := 22.0
 const MESSAGE_TEXT_MAX_CHARS := 30
-const CHOICE_TEXT_MARGIN_LEFT := 14.0
-const CHOICE_TEXT_MARGIN_TOP := 12.0
-const CHOICE_TEXT_MARGIN_RIGHT := 14.0
-const CHOICE_TEXT_MARGIN_BOTTOM := 10.0
 const CHOICE_TEXT_MAX_CHARS := 64
 const MESSAGE_FONT_SIZE := 24
-const CHOICE_FONT_SIZE := 24
 const DIALOGUE_TEXT_COLOR := Color(0.0, 0.0, 0.0, 1.0)
 const DIALOGUE_TEXT_OUTLINE_COLOR := Color(1.0, 1.0, 1.0, 1.0)
 const DIALOGUE_TEXT_OUTLINE_SIZE := 0
-const CHOICE_TEXT_COLOR := Color(1.0, 1.0, 1.0, 1.0)
-const CHOICE_TEXT_OUTLINE_SIZE := 0
 const FALLBACK_MESSAGE_SIZE := Vector2(520.0, 132.0)
-const FALLBACK_CHOICE_SIZE := Vector2(300.0, 146.0)
 const MAX_VISIBLE_MESSAGES := 5
 const CHOICE_ENABLED_MODULATE := Color(1.0, 1.0, 1.0, 1.0)
 const CHOICE_DISABLED_MODULATE := Color(0.42, 0.42, 0.42, 1.0)
@@ -51,15 +41,12 @@ var _warning_keys: Dictionary = {}
 var _choice_data: Array[Dictionary] = []
 var _player_bubble_texture: Texture2D
 var _character_bubble_texture: Texture2D
-var _choice_bubble_texture: Texture2D
 
 func _ready() -> void:
 	clip_contents = true
 	conversation_content.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	choice_area.mouse_filter = Control.MOUSE_FILTER_PASS
 	_load_textures()
-	_configure_choice_button(choice_button_1, choice_label_1)
-	_configure_choice_button(choice_button_2, choice_label_2)
 	choice_button_1.pressed.connect(func() -> void: _emit_choice(0))
 	choice_button_2.pressed.connect(func() -> void: _emit_choice(1))
 	hide_choices()
@@ -109,7 +96,6 @@ func _sync_content_rect() -> void:
 func _load_textures() -> void:
 	_player_bubble_texture = _load_texture_or_warn(PLAYER_BUBBLE_PATH, "player_bubble")
 	_character_bubble_texture = _load_texture_or_warn(CHARACTER_BUBBLE_PATH, "character_bubble")
-	_choice_bubble_texture = _load_texture_or_warn(CHOICE_BUBBLE_PATH, "choice_bubble")
 
 func _load_texture_or_warn(path: String, warning_key: String) -> Texture2D:
 	if ResourceLoader.exists(path):
@@ -173,51 +159,6 @@ func _create_message_bubble(line: String, speaker_type: String) -> Control:
 	root.add_child(label)
 
 	return root
-
-func _configure_choice_button(button: TextureButton, label: Label) -> void:
-	var source_bubble_size := _get_texture_size(_choice_bubble_texture, FALLBACK_CHOICE_SIZE)
-	var bubble_size := source_bubble_size * CHOICE_BUBBLE_SCALE
-	button.focus_mode = Control.FOCUS_NONE
-	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	button.ignore_texture_size = true
-	button.stretch_mode = TextureButton.STRETCH_SCALE
-	button.custom_minimum_size = bubble_size
-	button.size = bubble_size
-	button.texture_normal = _choice_bubble_texture
-	button.texture_hover = _choice_bubble_texture
-	button.texture_pressed = _choice_bubble_texture
-	button.texture_disabled = _choice_bubble_texture
-	button.modulate = CHOICE_DISABLED_MODULATE
-	if _choice_bubble_texture == null:
-		var fallback_rect := button.get_node_or_null("FallbackBubble") as ColorRect
-		if fallback_rect == null:
-			fallback_rect = ColorRect.new()
-			fallback_rect.name = "FallbackBubble"
-			fallback_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			fallback_rect.color = Color(0.82, 0.26, 0.45, 0.96)
-			fallback_rect.position = Vector2.ZERO
-			fallback_rect.size = bubble_size
-			button.add_child(fallback_rect)
-			button.move_child(fallback_rect, 0)
-	else:
-		var fallback_rect := button.get_node_or_null("FallbackBubble")
-		if fallback_rect != null:
-			fallback_rect.queue_free()
-
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_override("font", MESSAGE_FONT)
-	label.add_theme_font_size_override("font_size", CHOICE_FONT_SIZE)
-	label.set_meta("_ui_font_scale_applied", true)
-	label.add_theme_color_override("font_color", CHOICE_TEXT_COLOR)
-	label.add_theme_constant_override("outline_size", CHOICE_TEXT_OUTLINE_SIZE)
-	label.position = Vector2(CHOICE_TEXT_MARGIN_LEFT, CHOICE_TEXT_MARGIN_TOP) * CHOICE_BUBBLE_SCALE
-	label.size = Vector2(
-		bubble_size.x - (CHOICE_TEXT_MARGIN_LEFT + CHOICE_TEXT_MARGIN_RIGHT) * CHOICE_BUBBLE_SCALE,
-		bubble_size.y - (CHOICE_TEXT_MARGIN_TOP + CHOICE_TEXT_MARGIN_BOTTOM) * CHOICE_BUBBLE_SCALE
-	)
 
 func _apply_choice_to_button(button: TextureButton, label: Label, choices: Array[Dictionary], index: int) -> void:
 	if index >= choices.size():
