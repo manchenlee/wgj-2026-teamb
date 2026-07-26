@@ -78,12 +78,12 @@ expand_mode = 1
 stretch_mode = 0
 
 [node name="TrebleClef" type="TextureRect" parent="ArousalMeter"]
-z_index = 2
+z_index = 1
 layout_mode = 0
-offset_left = 55.38
-offset_top = 24.225
-offset_right = 234.38
-offset_bottom = 437.225
+offset_left = -19.8
+offset_top = -120.325
+offset_right = 159.2
+offset_bottom = 292.675
 pivot_offset = Vector2(107.4, 206.5)
 mouse_filter = 2
 scale = Vector2(0.3, 0.3)

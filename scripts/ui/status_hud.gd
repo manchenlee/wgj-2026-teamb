@@ -34,17 +34,8 @@ func _apply_meter_fill(peak: float) -> void:
 	var fill_start := fill_start_marker.position
 	var fill_end := fill_end_marker.position
 	var fill_width := maxf(fill_end.x - fill_start.x, 0.0)
-	var note_center := Vector2(
-		fill_start.x + (fill_width * fill_ratio),
-		note_center_guide.position.y
-	)
+	var note_center_x := fill_start.x + (fill_width * fill_ratio)
 
 	arousal_fill_bar.position = fill_start
-	arousal_fill_bar.size.x = maxf(note_center.x - fill_start.x, 0.0)
-	treble_clef.position = note_center - _get_scaled_pivot_offset(treble_clef)
-
-func _get_scaled_pivot_offset(control: Control) -> Vector2:
-	return Vector2(
-		control.pivot_offset.x * control.scale.x,
-		control.pivot_offset.y * control.scale.y
-	)
+	arousal_fill_bar.size.x = maxf(note_center_x - fill_start.x, 0.0)
+	treble_clef.position.x = note_center_x - treble_clef.pivot_offset.x
