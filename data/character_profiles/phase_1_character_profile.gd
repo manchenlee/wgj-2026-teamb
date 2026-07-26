@@ -46,13 +46,3 @@ func _init() -> void:
 		},
 		Rect2(0.34, 0.5, 0.28, 0.35)
 	)
-
-
-func get_interaction_spot_anchor_ids() -> Array[String]:
-	return [
-		"HeadAnchor",
-		"ShoulderLeftAnchor",
-		"ShoulderRightAnchor",
-		"ArmLeftAnchor",
-		"ArmRightAnchor"
-	]

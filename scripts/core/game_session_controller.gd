@@ -30,6 +30,7 @@ signal bgm_requested(track_key: String, use_fade: bool)
 @onready var phase_2_gameover_overlay: TextureRect = $BackgroundAnchor/Phase2GameoverOverlay
 @onready var main_character_area: Control = $MainCharacterArea
 @onready var character_area = $MainCharacterArea/CharacterArea
+@onready var character_prompt_region = %CharacterPromptRegion
 @onready var arousal_visualization = $MainCharacterArea/CentralArousalVisualization
 @onready var dialogue_panel = $ConversationViewport
 @onready var status_hud = $BottomHUD
@@ -110,14 +111,13 @@ func _ready() -> void:
 func _setup_spot_manager() -> void:
 	spot_manager = InteractionSpotManagerClass.new()
 	var prompt_layer := character_area.get_node_or_null("PromptLayer") as Control
-	var anchor_layer := character_area.get_node_or_null("InteractionSpotAnchorLayer") as Control
 	if prompt_layer == null:
 		push_error("GameSessionController: PromptLayer not found in CharacterArea.")
 		return
-	if anchor_layer == null:
-		push_error("GameSessionController: InteractionSpotAnchorLayer not found in CharacterArea.")
+	if character_prompt_region == null:
+		push_error("GameSessionController: CharacterPromptRegion not found.")
 		return
-	spot_manager.setup(arousal_model, character_area, prompt_layer, anchor_layer, spot_spawn_timer)
+	spot_manager.setup(arousal_model, character_area, prompt_layer, character_prompt_region, spot_spawn_timer)
 	spot_manager.spot_scrub_started.connect(_on_spot_scrub_started)
 	spot_manager.spot_scrub_ended.connect(_on_spot_scrub_ended)
 	spot_manager.spot_telemetry_updated.connect(_on_spot_telemetry_updated)
@@ -155,15 +155,12 @@ func _apply_phase_by_index(phase_index: int, announce_phase: bool) -> void:
 	arousal_model.set_phase_config(active_phase_config)
 	dialogue_controller.set_phase_config(active_phase_config)
 	dialogue_controller.set_safe_word(safe_word)
-	if spot_manager != null:
-		spot_manager.set_phase_config(active_phase_config)
-		spot_manager.set_available_anchor_ids(
-			active_character_profile.get_interaction_spot_anchor_ids() \
-			if active_character_profile != null else []
-		)
 	_cache_character_visual_textures()
 	overlay_motion_set = _build_overlay_motion_set()
 	_apply_phase_visual_profile()
+	if spot_manager != null:
+		spot_manager.set_phase_config(active_phase_config)
+		_sync_spot_anchor_layout()
 	if announce_phase and not Engine.is_editor_hint():
 		dialogue_panel.append_history(active_phase_config.transition_feedback_text, "system")
 	_update_phase_debug_label()
@@ -172,6 +169,7 @@ func _apply_phase_visual_profile() -> void:
 	if active_character_profile == null:
 		return
 	_apply_character_background()
+	_update_prompt_anchor_layout_from_profile()
 	_apply_breathing_profile()
 	_update_character_visual_state()
 	_apply_overlay_motion_set()
@@ -432,7 +430,9 @@ func _get_character_visual_texture(visual_state: String) -> Texture2D:
 # ---------------------------------------------------------------------------
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_PREDELETE:
+	if what == NOTIFICATION_RESIZED and is_node_ready() and not Engine.is_editor_hint():
+		_sync_spot_anchor_layout()
+	elif what == NOTIFICATION_PREDELETE:
 		if not Engine.is_editor_hint() and overlay_animator != null:
 			overlay_animator.stop()
 		if not Engine.is_editor_hint() and breathing_controller != null \
@@ -789,6 +789,8 @@ func _update_layout_debug_regions() -> void:
 	var debug_visible := show_layout_debug_bounds
 	for region in layout_debug_regions:
 		region.visible = debug_visible
+	if character_prompt_region != null:
+		character_prompt_region.set_debug_bounds_visible(debug_visible)
 
 # ---------------------------------------------------------------------------
 # Timer helpers
@@ -808,6 +810,26 @@ func _stop_runtime_timers() -> void:
 # ---------------------------------------------------------------------------
 # Misc helpers
 # ---------------------------------------------------------------------------
+
+func _sync_spot_anchor_layout() -> void:
+	if Engine.is_editor_hint() or spot_manager == null or character_prompt_region == null:
+		return
+	spot_manager.set_available_anchor_ids(character_prompt_region.get_available_anchor_ids())
+	spot_manager.set_bounds_rect(_get_prompt_region_rect_in_prompt_layer())
+
+func _get_prompt_region_rect_in_prompt_layer() -> Rect2:
+	var prompt_layer := character_area.get_node_or_null("PromptLayer") as Control
+	if prompt_layer == null or character_prompt_region == null:
+		return Rect2()
+	var global_rect: Rect2 = character_prompt_region.get_region_global_rect()
+	var local_position: Vector2 = prompt_layer.get_global_transform_with_canvas().affine_inverse() * global_rect.position
+	return Rect2(local_position, global_rect.size)
+
+func _update_prompt_anchor_layout_from_profile() -> void:
+	if active_character_profile == null or character_prompt_region == null:
+		return
+	character_prompt_region.apply_profile(active_character_profile)
+	character_prompt_region.set_debug_bounds_visible(show_layout_debug_bounds)
 
 func _capture_debug_breathing_frames() -> void:
 	call_deferred("_capture_debug_breathing_frames_async")

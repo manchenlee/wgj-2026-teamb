@@ -22,10 +22,11 @@ signal spot_telemetry_updated(telemetry: Dictionary)
 var _arousal_model = null
 var _character_presenter = null
 var _prompt_layer: Control = null
-var _anchor_layer: Control = null
+var _anchor_region: Control = null
 var _spawn_timer: Timer = null
 var _phase_config = null
 var _rng := RandomNumberGenerator.new()
+var _bounds_rect := Rect2()
 
 var _available_anchor_ids: Array[String] = []
 var _last_anchor_id: String = ""
@@ -48,13 +49,13 @@ func setup(
 	arousal_model,
 	character_presenter,
 	prompt_layer: Control,
-	anchor_layer: Control,
+	anchor_region: Control,
 	spawn_timer: Timer
 ) -> void:
 	_arousal_model = arousal_model
 	_character_presenter = character_presenter
 	_prompt_layer = prompt_layer
-	_anchor_layer = anchor_layer
+	_anchor_region = anchor_region
 	_spawn_timer = spawn_timer
 	_spawn_timer.timeout.connect(_on_spawn_timer_timeout)
 
@@ -65,6 +66,10 @@ func set_phase_config(phase_config) -> void:
 
 func set_available_anchor_ids(ids: Array[String]) -> void:
 	_available_anchor_ids = ids.duplicate()
+
+
+func set_bounds_rect(bounds_rect: Rect2) -> void:
+	_bounds_rect = bounds_rect
 
 
 func start() -> void:
@@ -167,16 +172,21 @@ func _spawn_spot() -> void:
 		return  # all anchors occupied
 
 	var anchor_id := _pick_anchor_id_from(available_now)
-	var anchor_node := _anchor_layer.get_node_or_null(anchor_id) as Control
-	if anchor_node == null:
-		push_warning("InteractionSpotManager: anchor node '%s' not found in anchor layer." % anchor_id)
+	if _anchor_region == null or not _anchor_region.has_method("get_anchor_global_center"):
+		push_warning("InteractionSpotManager: anchor region is unavailable. Cannot spawn spot.")
 		return
 
-	var global_center := anchor_node.get_global_rect().get_center()
+	var fallback_global_center := _get_fallback_global_center()
+	var global_center: Vector2 = _anchor_region.call(
+		"get_anchor_global_center",
+		StringName(anchor_id),
+		fallback_global_center
+	)
 	# Convert to PromptLayer local coordinates.
 	var local_center: Vector2 = _prompt_layer.get_global_transform_with_canvas().affine_inverse() * global_center
 
 	var radius: float = _get_config_value("spot_radius", Config.SPOT_RADIUS)
+	local_center = _clamp_center_to_bounds(local_center, radius)
 	var diameter := radius * 2.0
 
 	var spot := InteractionSpotScene.instantiate() as InteractionSpot
@@ -199,15 +209,40 @@ func _spawn_spot() -> void:
 	_last_anchor_id = anchor_id
 
 	print_debug(
-		"InteractionSpotManager: spawned spot anchor='%s' anchor_global=%s prompt_layer_global=%s local_center=%s spot_pos=%s radius=%.0f active=%d" % [
+		"InteractionSpotManager: spawned spot anchor='%s' anchor_global=%s prompt_layer_global=%s bounds=%s local_center=%s spot_pos=%s radius=%.0f active=%d" % [
 			anchor_id,
-			str(anchor_node.get_global_rect().get_center()),
+			str(global_center),
 			str(_prompt_layer.get_global_rect().position),
+			str(_bounds_rect),
 			str(local_center),
 			str(spot.position),
 			radius,
 			_active_spots.size()
 		]
+	)
+
+
+func _get_fallback_global_center() -> Vector2:
+	if _anchor_region != null:
+		return _anchor_region.get_global_rect().get_center()
+	if _prompt_layer != null:
+		return _prompt_layer.get_global_rect().get_center()
+	return Vector2.ZERO
+
+
+func _clamp_center_to_bounds(center: Vector2, radius: float) -> Vector2:
+	if _bounds_rect.size.length_squared() <= 0.0:
+		return center
+	var inset := radius + Config.ARROW_PROMPT_EDGE_MARGIN
+	var min_x := _bounds_rect.position.x + inset
+	var max_x := _bounds_rect.end.x - inset
+	var min_y := _bounds_rect.position.y + inset
+	var max_y := _bounds_rect.end.y - inset
+	if min_x > max_x or min_y > max_y:
+		return _bounds_rect.get_center()
+	return Vector2(
+		clampf(center.x, min_x, max_x),
+		clampf(center.y, min_y, max_y)
 	)
 
 
