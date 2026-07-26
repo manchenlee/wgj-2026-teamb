@@ -33,6 +33,7 @@ signal bgm_requested(track_key: String, use_fade: bool)
 @onready var character_prompt_region = %CharacterPromptRegion
 @onready var arousal_visualization = $MainCharacterArea/CentralArousalVisualization
 @onready var dialogue_panel = $ConversationViewport
+@onready var choice_panel: ChoicePanel = %ChoicePanel
 @onready var status_hud = $BottomHUD
 @onready var phase_debug_label: Label = $PhaseDebugLabel
 @onready var phase_skip_button: Button = $Phase2SkipButton
@@ -40,7 +41,7 @@ signal bgm_requested(track_key: String, use_fade: bool)
 	$MainCharacterArea/DebugRegionTint,
 	$ConversationViewport/DebugRegionTint,
 	$BottomHUD/DebugRegionTint,
-	$BottomHUD/ChoicePanel/DebugRegionTint
+	$ChoiceLayer/ChoicePanel/DebugRegionTint
 ]
 @onready var feedback_timer: Timer = $FeedbackTimer
 @onready var spot_spawn_timer: Timer = $SpotSpawnTimer
@@ -87,7 +88,7 @@ func _ready() -> void:
 
 	feedback_rng.randomize()
 	set_process_unhandled_input(true)
-	dialogue_panel.choice_selected.connect(_on_choice_selected)
+	choice_panel.choice_selected.connect(_on_choice_selected)
 	phase_skip_button.pressed.connect(_on_phase_2_skip_pressed)
 	feedback_timer.timeout.connect(_on_feedback_timer_timeout)
 	choice_timeout_timer.timeout.connect(_on_choice_timeout)
@@ -464,7 +465,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_dialogue_choice_input(index: int) -> void:
 	if not waiting_for_choice:
 		return
-	dialogue_panel.emit_choice_by_index(index)
+	choice_panel.emit_choice_by_index(index)
 
 # ---------------------------------------------------------------------------
 # Run lifecycle
@@ -587,7 +588,7 @@ func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	choice_timeout_timer.stop()
 	dialogue_panel.append_history(choice_text, "player")
 	dialogue_panel.hide_prompt()
-	dialogue_panel.hide_choices()
+	choice_panel.clear_choices()
 	waiting_for_choice = false
 	var outcome := dialogue_controller.apply_choice(choice_quality, arousal_model)
 	var ending_type := str(outcome.get("ending_type", ""))
@@ -607,7 +608,7 @@ func _on_choice_timeout() -> void:
 		return
 	waiting_for_choice = false
 	dialogue_panel.hide_prompt()
-	dialogue_panel.hide_choices()
+	choice_panel.clear_choices()
 	character_area.show_ignored_reaction()
 	dialogue_panel.append_history(dialogue_controller.get_timeout_reply(), "companion")
 	_schedule_next_feedback_message()
@@ -622,14 +623,14 @@ func _push_next_dialogue_event() -> void:
 		waiting_for_choice = true
 		dialogue_panel.hide_prompt()
 		dialogue_panel.append_history(str(current_prompt.get("text", Config.FEEDBACK_MESSAGE_TEXT)), "companion")
-		dialogue_panel.show_choices(current_prompt.get("choices", {}))
+		choice_panel.show_choices(current_prompt.get("choices", {}))
 		feedback_timer.stop()
 		choice_timeout_timer.start(float(active_phase_config.choice_timeout_seconds))
 	else:
 		waiting_for_choice = false
 		dialogue_panel.hide_prompt()
 		dialogue_panel.append_history(str(current_prompt.get("text", Config.FEEDBACK_MESSAGE_TEXT)), "companion")
-		dialogue_panel.hide_choices()
+		choice_panel.clear_choices()
 		choice_timeout_timer.stop()
 		_schedule_next_feedback_message()
 
@@ -664,7 +665,7 @@ func _begin_phase_transition() -> void:
 	waiting_for_choice = false
 	current_prompt = {}
 	dialogue_panel.hide_prompt()
-	dialogue_panel.hide_choices()
+	choice_panel.clear_choices()
 	var transition_text := active_phase_config.transition_feedback_text
 	if not transition_text.is_empty():
 		dialogue_panel.append_history(transition_text, "system")
@@ -806,6 +807,8 @@ func _stop_runtime_timers() -> void:
 		overlay_animator.stop()
 	if breathing_controller != null and breathing_controller.has_method("stop_breathing"):
 		breathing_controller.stop_breathing()
+	if choice_panel != null:
+		choice_panel.clear_choices()
 
 # ---------------------------------------------------------------------------
 # Misc helpers
