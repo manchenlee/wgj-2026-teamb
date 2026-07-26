@@ -34,13 +34,13 @@ signal bgm_requested(track_key: String, use_fade: bool)
 @onready var arousal_visualization = $MainCharacterArea/CentralArousalVisualization
 @onready var dialogue_panel = $ConversationViewport
 @onready var choice_panel: ChoicePanel = %ChoicePanel
-@onready var status_hud = $BottomHUD
+@onready var status_hud: StatusHUD = %StatusHUD
 @onready var phase_debug_label: Label = $PhaseDebugLabel
 @onready var phase_skip_button: Button = $Phase2SkipButton
 @onready var layout_debug_regions := [
 	$MainCharacterArea/DebugRegionTint,
 	$ConversationViewport/DebugRegionTint,
-	$BottomHUD/DebugRegionTint,
+	$HudLayer/TopHudCenter/StatusHUD/DebugRegionTint,
 	$ChoiceLayer/ChoicePanel/DebugRegionTint
 ]
 @onready var feedback_timer: Timer = $FeedbackTimer

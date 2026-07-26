@@ -698,6 +698,36 @@ offset_right = 1428.0
 offset_bottom = -20.0
 grow_vertical = 0
 
+[node name="HudLayer" type="Control" parent="." unique_id=564354284]
+z_index = 4
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TopHudCenter" type="CenterContainer" parent="HudLayer"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 24.0
+offset_bottom = 240.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="StatusHUD" parent="HudLayer/TopHudCenter" instance=ExtResource("4_hud")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="DebugRegionTint" type="ColorRect" parent="HudLayer/TopHudCenter/StatusHUD" unique_id=74340883]
+visible = false
+z_index = -1
+layout_mode = 0
+mouse_filter = 2
+color = Color(0.25, 0.76, 0.44, 0.18)
+
 [node name="PhaseDebugLabel" type="Label" parent="." unique_id=1642423401]
 visible = false
 z_index = 8
@@ -720,24 +750,6 @@ offset_bottom = 56.0
 focus_mode = 0
 theme_override_font_sizes/font_size = 14
 text = "Skip to Phase 2"
-
-[node name="BottomHUD" parent="." unique_id=564354284 instance=ExtResource("4_hud")]
-z_index = 4
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -184.0
-grow_horizontal = 2
-grow_vertical = 0
-
-[node name="DebugRegionTint" type="ColorRect" parent="BottomHUD" unique_id=74340883]
-visible = false
-z_index = -1
-layout_mode = 0
-mouse_filter = 2
-color = Color(0.25, 0.76, 0.44, 0.18)
 
 [node name="AudioPlaceholders" type="Node" parent="." unique_id=1725971575]
 

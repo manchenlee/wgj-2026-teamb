@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" path="res://assets/art/ui/Rectangle 7.png" id="4_bar"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/musical note.png" id="5_note"]
 [node name="StatusHUD" type="Control"]
+custom_minimum_size = Vector2(820, 200)
 clip_contents = false
 mouse_filter = 2
 script = ExtResource("1_hud")
