@@ -159,8 +159,6 @@ func _create_fallback_direction_texture() -> Texture2D:
 
 func _ready() -> void:
 	_default_scale = character_placeholder.scale
-	prompt_feedback_label.add_theme_color_override("font_color", Color(0.12, 0.12, 0.16, 1.0))
-	prompt_feedback_label.add_theme_font_size_override("font_size", Config.PROMPT_FEEDBACK_FONT_SIZE)
 	update_emotion_state("CALM")
 	clear_direction_prompts()
 	_update_prompt_shader_parameters()
