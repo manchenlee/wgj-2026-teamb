@@ -105,7 +105,7 @@ theme_override_constants/separation = 14
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.1, 0.05, 1)
 theme_override_fonts/font = ExtResource("4_m8gc1")
-theme_override_font_sizes/font_size = 51
+theme_override_font_sizes/font_size = 44
 text = "遊戲操作方式"
 
 [node name="Section1Body" type="Label" parent="BookPanel/ContentContainer/VBoxContainer" unique_id=529008808]
@@ -113,7 +113,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(1, 0)
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.2, 0.1, 0.05, 1)
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 28
 text = "根據音樂符號出現的順序，透過鍵盤方向鍵提升生理興奮（紅色區域），同時以滑鼠點選對話提升情緒安撫（黃色區域）。將兩者同步維持在高水平，數值隨時間衰減，任一歸零即失敗，最終狀態影響結局。"
 autowrap_mode = 2
 
@@ -125,7 +125,7 @@ layout_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.1, 0.05, 1)
 theme_override_fonts/font = ExtResource("4_m8gc1")
-theme_override_font_sizes/font_size = 51
+theme_override_font_sizes/font_size = 44
 text = "什麼是安全詞？"
 
 [node name="Section2Body" type="Label" parent="BookPanel/ContentContainer/VBoxContainer" unique_id=92038435]
@@ -133,7 +133,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(1, 0)
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.2, 0.1, 0.05, 1)
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 28
 text = "安全詞是 BDSM 活動中重要的溝通機制，當被動方瀕臨極限時喊出預定安全詞，支配方須立即停止。「同意式非同意」(CNC) 是在百分之百事前知情合意下進行的實踐，安全詞極為關鍵。請務必在開始前與夥伴充分溝通並確認安全詞（如「紅色」代表立刻停止），確保一切建立在知情與合意之上。"
 autowrap_mode = 2
 
@@ -148,7 +148,7 @@ theme_override_constants/separation = 12
 [node name="SafeWordLabel" type="Label" parent="BookPanel/ContentContainer/VBoxContainer/SafeWordRow" unique_id=301847562]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.1, 0.05, 1)
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 28
 text = "輸入安全詞"
 
 [node name="SafeWordInput" type="LineEdit" parent="BookPanel/ContentContainer/VBoxContainer/SafeWordRow" unique_id=401756453]
@@ -156,7 +156,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_colors/font_placeholder_color = Color(0.5, 0.5, 0.5, 1)
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 28
 theme_override_styles/normal = SubResource("StyleBoxFlat_input_normal")
 theme_override_styles/focus = SubResource("StyleBoxFlat_input_focus")
 placeholder_text = "南港展覽館官方網站"
@@ -168,7 +168,7 @@ size_flags_horizontal = 4
 size_flags_vertical = 6
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("4_m8gc1")
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 28
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
