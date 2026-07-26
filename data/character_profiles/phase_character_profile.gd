@@ -6,6 +6,7 @@ var base_state_textures: Dictionary
 var gameover_state_textures: Dictionary
 var overlay_animation_set: Dictionary
 var prompt_anchor_layout: Dictionary
+var interaction_spot_anchor_layout: Dictionary
 var breathing_region_rect: Rect2
 
 func _init(
@@ -14,6 +15,7 @@ func _init(
 	gameover_state_textures_value: Dictionary = {},
 	overlay_animation_set_value: Dictionary = {},
 	prompt_anchor_layout_value: Dictionary = {},
+	interaction_spot_anchor_layout_value: Dictionary = {},
 	breathing_region_rect_value: Rect2 = Rect2(0.34, 0.5, 0.28, 0.35)
 ) -> void:
 	profile_id = profile_id_value
@@ -21,6 +23,9 @@ func _init(
 	gameover_state_textures = gameover_state_textures_value.duplicate(true)
 	overlay_animation_set = overlay_animation_set_value.duplicate(true)
 	prompt_anchor_layout = prompt_anchor_layout_value.duplicate(true)
+	interaction_spot_anchor_layout = interaction_spot_anchor_layout_value.duplicate(true)
+	if interaction_spot_anchor_layout.is_empty():
+		interaction_spot_anchor_layout = prompt_anchor_layout.duplicate(true)
 	breathing_region_rect = breathing_region_rect_value
 
 func get_all_texture_paths() -> Dictionary:
@@ -43,7 +48,11 @@ func get_anchor_layout_ids() -> Array[String]:
 	return ids
 
 func get_interaction_spot_anchor_ids() -> Array[String]:
-	return get_anchor_layout_ids()
+	var ids: Array[String] = []
+	for anchor_id_variant in interaction_spot_anchor_layout.keys():
+		ids.append(String(anchor_id_variant))
+	ids.sort()
+	return ids
 
 func get_layer_texture_paths() -> Dictionary:
 	return {}

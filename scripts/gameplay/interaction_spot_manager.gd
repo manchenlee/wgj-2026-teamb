@@ -172,20 +172,21 @@ func _spawn_spot() -> void:
 		return  # all anchors occupied
 
 	var anchor_id := _pick_anchor_id_from(available_now)
-	if _anchor_region == null or not _anchor_region.has_method("get_anchor_global_center"):
+	if _anchor_region == null or not _anchor_region.has_method("get_interaction_spot_global_rect"):
 		push_warning("InteractionSpotManager: anchor region is unavailable. Cannot spawn spot.")
 		return
 
 	var fallback_global_center := _get_fallback_global_center()
-	var global_center: Vector2 = _anchor_region.call(
-		"get_anchor_global_center",
+	var global_rect: Rect2 = _anchor_region.call(
+		"get_interaction_spot_global_rect",
 		StringName(anchor_id),
 		fallback_global_center
 	)
-	# Convert to PromptLayer local coordinates.
-	var local_center: Vector2 = _prompt_layer.get_global_transform_with_canvas().affine_inverse() * global_center
 
 	var radius: float = _get_config_value("spot_radius", Config.SPOT_RADIUS)
+	var global_center: Vector2 = _pick_global_center_in_rect(global_rect, radius)
+	# Convert to PromptLayer local coordinates.
+	var local_center: Vector2 = _prompt_layer.get_global_transform_with_canvas().affine_inverse() * global_center
 	local_center = _clamp_center_to_bounds(local_center, radius)
 	var diameter := radius * 2.0
 
@@ -219,6 +220,22 @@ func _spawn_spot() -> void:
 			radius,
 			_active_spots.size()
 		]
+	)
+
+
+func _pick_global_center_in_rect(global_rect: Rect2, radius: float) -> Vector2:
+	if global_rect.size.length_squared() <= 0.0:
+		return global_rect.position
+	var inset := radius
+	var min_x := global_rect.position.x + inset
+	var max_x := global_rect.end.x - inset
+	var min_y := global_rect.position.y + inset
+	var max_y := global_rect.end.y - inset
+	if min_x > max_x or min_y > max_y:
+		return global_rect.get_center()
+	return Vector2(
+		_rng.randf_range(min_x, max_x),
+		_rng.randf_range(min_y, max_y)
 	)
 
 

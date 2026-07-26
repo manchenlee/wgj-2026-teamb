@@ -814,7 +814,7 @@ func _stop_runtime_timers() -> void:
 func _sync_spot_anchor_layout() -> void:
 	if Engine.is_editor_hint() or spot_manager == null or character_prompt_region == null:
 		return
-	spot_manager.set_available_anchor_ids(character_prompt_region.get_available_anchor_ids())
+	spot_manager.set_available_anchor_ids(character_prompt_region.get_interaction_spot_anchor_ids())
 	spot_manager.set_bounds_rect(_get_prompt_region_rect_in_prompt_layer())
 
 func _get_prompt_region_rect_in_prompt_layer() -> Rect2:

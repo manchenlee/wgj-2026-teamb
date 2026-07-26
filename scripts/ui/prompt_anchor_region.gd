@@ -5,6 +5,7 @@ extends Control
 const PREVIEW_LAYER_NAME := "Phase2AnchorPreviewLayer"
 
 var _debug_bounds_visible := false
+var _interaction_spot_anchor_layout: Dictionary = {}
 
 func apply_profile(profile) -> void:
 	if profile == null:
@@ -12,6 +13,10 @@ func apply_profile(profile) -> void:
 
 	set_debug_bounds_visible(false)
 	var prompt_anchor_layout: Dictionary = profile.get("prompt_anchor_layout")
+	var raw_spot_layout: Variant = profile.get("interaction_spot_anchor_layout")
+	_interaction_spot_anchor_layout = raw_spot_layout.duplicate(true) if raw_spot_layout is Dictionary else {}
+	if _interaction_spot_anchor_layout.is_empty():
+		_interaction_spot_anchor_layout = prompt_anchor_layout.duplicate(true)
 	for anchor_id_variant in prompt_anchor_layout.keys():
 		var anchor_id := StringName(str(anchor_id_variant))
 		var anchor_rect := prompt_anchor_layout[anchor_id_variant] as Rect2
@@ -31,12 +36,30 @@ func get_available_anchor_ids() -> Array[String]:
 	anchor_ids.sort()
 	return anchor_ids
 
+func get_interaction_spot_anchor_ids() -> Array[String]:
+	var anchor_ids: Array[String] = []
+	for anchor_id_variant in _interaction_spot_anchor_layout.keys():
+		anchor_ids.append(String(anchor_id_variant))
+	anchor_ids.sort()
+	return anchor_ids
+
 func get_anchor_global_center(anchor_id: StringName, fallback_global_center: Vector2) -> Vector2:
 	var anchor_node := _get_anchor_node(anchor_id)
 	if anchor_node == null:
 		push_warning("Missing prompt anchor '%s' in active phase profile." % String(anchor_id))
 		return fallback_global_center
 	return anchor_node.get_global_rect().get_center()
+
+func get_interaction_spot_global_rect(anchor_id: StringName, fallback_global_center: Vector2) -> Rect2:
+	var anchor_rect: Rect2 = _interaction_spot_anchor_layout.get(anchor_id, Rect2()) as Rect2
+	if anchor_rect.size.length_squared() <= 0.0:
+		anchor_rect = _interaction_spot_anchor_layout.get(String(anchor_id), Rect2()) as Rect2
+	if anchor_rect.size.length_squared() <= 0.0:
+		return Rect2(fallback_global_center, Vector2.ZERO)
+	var transform: Transform2D = get_global_transform_with_canvas()
+	var global_position: Vector2 = transform * anchor_rect.position
+	var global_end: Vector2 = transform * anchor_rect.end
+	return Rect2(global_position, global_end - global_position).abs()
 
 func get_region_global_rect() -> Rect2:
 	return get_global_rect()
