@@ -24,9 +24,6 @@ func update_values(_physical: float, _emotional: float, peak: float) -> void:
 	heart_value_label.text = str(int(round(_peak_value)))
 	_apply_meter_fill(_peak_value)
 
-func update_combo(_combo: int) -> void:
-	pass
-
 func _apply_meter_fill(peak: float) -> void:
 	if not is_node_ready():
 		return

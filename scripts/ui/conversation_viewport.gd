@@ -1,8 +1,5 @@
 extends Control
 
-signal choice_selected(choice_quality: String, choice_text: String)
-
-const Config := preload("res://scripts/gameplay/GameConfig.gd")
 const MESSAGE_FONT := preload("res://assets/fonts/ShipporiMincho-Bold.ttf")
 
 const PLAYER_BUBBLE_PATH := "res://assets/art/ui/text.png"
@@ -19,37 +16,24 @@ const MESSAGE_TEXT_MARGIN_TOP := 24.0
 const MESSAGE_TEXT_MARGIN_RIGHT := 38.0
 const MESSAGE_TEXT_MARGIN_BOTTOM := 22.0
 const MESSAGE_TEXT_MAX_CHARS := 30
-const CHOICE_TEXT_MAX_CHARS := 64
 const MESSAGE_FONT_SIZE := 24
 const DIALOGUE_TEXT_COLOR := Color(0.0, 0.0, 0.0, 1.0)
 const DIALOGUE_TEXT_OUTLINE_COLOR := Color(1.0, 1.0, 1.0, 1.0)
 const DIALOGUE_TEXT_OUTLINE_SIZE := 0
 const FALLBACK_MESSAGE_SIZE := Vector2(520.0, 132.0)
 const MAX_VISIBLE_MESSAGES := 5
-const CHOICE_ENABLED_MODULATE := Color(1.0, 1.0, 1.0, 1.0)
-const CHOICE_DISABLED_MODULATE := Color(0.42, 0.42, 0.42, 1.0)
 
 @onready var conversation_content: Control = $ConversationContent
-@onready var choice_area: Control = $"../BottomHUD/ChoiceArea"
-@onready var choice_button_1: TextureButton = $"../BottomHUD/ChoiceArea/ChoiceButton1"
-@onready var choice_button_2: TextureButton = $"../BottomHUD/ChoiceArea/ChoiceButton2"
-@onready var choice_label_1: Label = $"../BottomHUD/ChoiceArea/ChoiceButton1/Label"
-@onready var choice_label_2: Label = $"../BottomHUD/ChoiceArea/ChoiceButton2/Label"
 
 var _message_nodes: Array[Control] = []
 var _warning_keys: Dictionary = {}
-var _choice_data: Array[Dictionary] = []
 var _player_bubble_texture: Texture2D
 var _character_bubble_texture: Texture2D
 
 func _ready() -> void:
 	clip_contents = true
 	conversation_content.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	choice_area.mouse_filter = Control.MOUSE_FILTER_PASS
 	_load_textures()
-	choice_button_1.pressed.connect(func() -> void: _emit_choice(0))
-	choice_button_2.pressed.connect(func() -> void: _emit_choice(1))
-	hide_choices()
 	_sync_content_rect()
 
 func _notification(what: int) -> void:
@@ -57,38 +41,16 @@ func _notification(what: int) -> void:
 		_sync_content_rect()
 		_relayout_messages(false)
 
-func show_choices(choices: Variant) -> void:
-	_choice_data = _normalize_choices(choices)
-	_apply_choice_to_button(choice_button_1, choice_label_1, _choice_data, 0)
-	_apply_choice_to_button(choice_button_2, choice_label_2, _choice_data, 1)
-	choice_area.visible = true
-
-func hide_choices() -> void:
-	choice_area.visible = true
-	_choice_data.clear()
-	_apply_disabled_choice_button(choice_button_1, choice_label_1)
-	_apply_disabled_choice_button(choice_button_2, choice_label_2)
-
-func show_prompt(_text_value: String) -> void:
-	pass
-
-func hide_prompt() -> void:
-	pass
-
 func clear_history() -> void:
 	for message_node in _message_nodes:
 		message_node.queue_free()
 	_message_nodes.clear()
-	hide_choices()
 
 func append_history(line: String, speaker_type: String = "companion") -> void:
 	var message_node := _create_message_bubble(line, speaker_type)
 	conversation_content.add_child(message_node)
 	_message_nodes.append(message_node)
 	_relayout_messages(true)
-
-func set_choice_timeout_progress(_progress: float) -> void:
-	pass
 
 func _sync_content_rect() -> void:
 	conversation_content.position = Vector2.ZERO
@@ -158,65 +120,6 @@ func _create_message_bubble(line: String, speaker_type: String) -> Control:
 	root.add_child(label)
 
 	return root
-
-func _apply_choice_to_button(button: TextureButton, label: Label, choices: Array[Dictionary], index: int) -> void:
-	if index >= choices.size():
-		_apply_disabled_choice_button(button, label)
-		label.text = ""
-		return
-
-	var choice := choices[index]
-	button.visible = true
-	button.disabled = false
-	button.set_meta("choice_id", str(choice.get("id", "")))
-	button.set_meta("choice_text", str(choice.get("text", "")))
-	label.text = _clamp_text(str(choice.get("text", "")), CHOICE_TEXT_MAX_CHARS)
-	_set_choice_button_enabled_state(button, label, true)
-
-func _apply_disabled_choice_button(button: TextureButton, label: Label) -> void:
-	button.visible = true
-	button.disabled = true
-	button.set_meta("choice_id", "")
-	button.set_meta("choice_text", "")
-	label.text = ""
-	_set_choice_button_enabled_state(button, label, false)
-
-func _set_choice_button_enabled_state(button: TextureButton, label: Label, enabled: bool) -> void:
-	button.modulate = CHOICE_ENABLED_MODULATE if enabled else CHOICE_DISABLED_MODULATE
-	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if enabled else Control.CURSOR_ARROW
-	var fallback_rect := button.get_node_or_null("FallbackBubble") as ColorRect
-	if fallback_rect != null:
-		fallback_rect.color = Color(0.82, 0.26, 0.45, 0.96) if enabled else Color(0.42, 0.42, 0.42, 0.96)
-
-func _emit_choice(index: int) -> void:
-	if index >= _choice_data.size():
-		return
-	var choice := _choice_data[index]
-	choice_selected.emit(str(choice.get("id", "")), str(choice.get("text", "")))
-
-func _normalize_choices(choices: Variant) -> Array[Dictionary]:
-	var normalized: Array[Dictionary] = []
-	if typeof(choices) == TYPE_ARRAY:
-		for choice_variant in choices as Array:
-			if typeof(choice_variant) != TYPE_DICTIONARY:
-				continue
-			var choice := choice_variant as Dictionary
-			var choice_id := str(choice.get("id", ""))
-			var choice_text := str(choice.get("text", ""))
-			if choice_id.is_empty() or choice_text.is_empty() or choice_id == "neutral":
-				continue
-			normalized.append({"id": choice_id, "text": choice_text})
-			if normalized.size() == 2:
-				break
-	elif typeof(choices) == TYPE_DICTIONARY:
-		for choice_id_variant in ["good", "bad"]:
-			if not choices.has(choice_id_variant):
-				continue
-			var choice_text := str(choices.get(choice_id_variant, ""))
-			if choice_text.is_empty():
-				continue
-			normalized.append({"id": String(choice_id_variant), "text": choice_text})
-	return normalized
 
 func _relayout_messages(animated: bool) -> void:
 	if _message_nodes.is_empty():

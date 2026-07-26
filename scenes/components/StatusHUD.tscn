@@ -1,12 +1,11 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/status_hud.gd" id="1_hud"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/heart.png" id="2_heart"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/musical.png" id="3_staff"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/Rectangle 7.png" id="4_bar"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/musical note.png" id="5_note"]
-[ext_resource type="Texture2D" path="res://assets/art/ui/text bubble.png" id="6_bubble"]
-[ext_resource type="FontFile" uid="uid://db5u741tm2yje" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="7_choice_font"]
+[ext_resource type="PackedScene" path="res://scenes/components/ChoicePanel.tscn" id="6_choice_panel"]
 
 [node name="StatusHUD" type="Control"]
 clip_contents = false
@@ -115,80 +114,5 @@ offset_right = 87.6
 offset_bottom = 86.175
 mouse_filter = 2
 
-[node name="ChoiceArea" type="Control" parent="."]
-layout_mode = 0
-offset_left = 804.0
-offset_top = 18.0
-offset_right = 1428.0
-offset_bottom = 164.0
-mouse_filter = 1
-
-[node name="DebugRegionTint" type="ColorRect" parent="ChoiceArea"]
-visible = false
-z_index = -1
-layout_mode = 0
-offset_right = 624.0
-offset_bottom = 146.0
-mouse_filter = 2
-color = Color(0.98, 0.36, 0.62, 0.18)
-
-[node name="ChoiceButton1" type="TextureButton" parent="ChoiceArea"]
-modulate = Color(0.42, 0.42, 0.42, 1)
-custom_minimum_size = Vector2(300, 146)
-layout_mode = 0
-offset_right = 300.0
-offset_bottom = 146.0
-focus_mode = 0
-ignore_texture_size = true
-stretch_mode = 0
-texture_normal = ExtResource("6_bubble")
-texture_hover = ExtResource("6_bubble")
-texture_pressed = ExtResource("6_bubble")
-texture_disabled = ExtResource("6_bubble")
-
-[node name="Label" type="Label" parent="ChoiceArea/ChoiceButton1"]
-layout_mode = 0
-offset_left = 14.0
-offset_top = 12.0
-offset_right = 286.0
-offset_bottom = 136.0
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 0
-theme_override_fonts/font = ExtResource("7_choice_font")
-theme_override_font_sizes/font_size = 22
-horizontal_alignment = 1
-vertical_alignment = 1
-autowrap_mode = 2
-mouse_filter = 2
-
-[node name="ChoiceButton2" type="TextureButton" parent="ChoiceArea"]
-modulate = Color(0.42, 0.42, 0.42, 1)
-custom_minimum_size = Vector2(300, 146)
-layout_mode = 0
-offset_left = 324.0
-offset_right = 624.0
-offset_bottom = 146.0
-focus_mode = 0
-ignore_texture_size = true
-stretch_mode = 0
-texture_normal = ExtResource("6_bubble")
-texture_hover = ExtResource("6_bubble")
-texture_pressed = ExtResource("6_bubble")
-texture_disabled = ExtResource("6_bubble")
-
-[node name="Label" type="Label" parent="ChoiceArea/ChoiceButton2"]
-layout_mode = 0
-offset_left = 14.0
-offset_top = 12.0
-offset_right = 286.0
-offset_bottom = 136.0
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 0
-theme_override_fonts/font = ExtResource("7_choice_font")
-theme_override_font_sizes/font_size = 22
-horizontal_alignment = 1
-vertical_alignment = 1
-autowrap_mode = 2
-mouse_filter = 2
+[node name="ChoicePanel" parent="." instance=ExtResource("6_choice_panel")]
+unique_name_in_owner = true
