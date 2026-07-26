@@ -1,7 +1,6 @@
 extends Control
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
-const UiThemeScaler := preload("res://scripts/ui/ui_theme_scaler.gd")
 const TITLE_SCENE := preload("res://scenes/screens/TitleScreen.tscn")
 const WARNING_SCENE := preload("res://scenes/screens/WarningScreen.tscn")
 const OPENING_SCENE := preload("res://scenes/screens/OpeningScreen.tscn")
@@ -42,7 +41,6 @@ func _ready() -> void:
 	debug_overlay.values_requested.connect(_apply_debug_values)
 	debug_overlay.force_ending_requested.connect(_force_ending)
 	debug_overlay.reset_run_requested.connect(_reset_run)
-	UiThemeScaler.apply_to_tree(debug_overlay)
 	if screen_transition_overlay != null:
 		screen_transition_overlay.visible = false
 		screen_transition_overlay.color = Color(
@@ -168,7 +166,6 @@ func _swap_screen_immediately(next_screen: Control) -> void:
 		current_screen.queue_free()
 	current_screen = next_screen
 	screen_container.add_child(current_screen)
-	UiThemeScaler.apply_to_tree(current_screen)
 
 func _show_stage(target: String) -> void:
 	match target:

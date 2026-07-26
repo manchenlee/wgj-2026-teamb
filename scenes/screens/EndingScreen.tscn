@@ -71,14 +71,14 @@ layout_mode = 2
 text = "結局"
 horizontal_alignment = 0
 theme_override_colors/font_color = Color(0.3, 0.1, 0.05, 1)
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 45
 
 [node name="ResultSubtypeLabel" type="Label" parent="OuterMargin/Layout"]
 layout_mode = 2
 visible = false
 horizontal_alignment = 0
 theme_override_colors/font_color = Color(0.3, 0.1, 0.05, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 32
 
 [node name="EndingBody" type="Label" parent="OuterMargin/Layout"]
 layout_mode = 2
@@ -90,7 +90,7 @@ autowrap_mode = 2
 custom_minimum_size = Vector2(1, 0)
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.15, 0.08, 0.03, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 29
 
 [node name="RestartButtons" type="HBoxContainer" parent="OuterMargin/Layout"]
 layout_mode = 2
@@ -102,7 +102,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(160, 52)
 text = "再度演奏"
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 29
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
@@ -112,7 +112,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(160, 52)
 text = "回到標題"
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 29
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
