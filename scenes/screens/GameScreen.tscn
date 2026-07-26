@@ -295,7 +295,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 0.96)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 22
 text = "HeadLeft"
 
 [node name="HeadRight" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=1414477306]
@@ -335,7 +335,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 0.96)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 22
 text = "HeadRight"
 
 [node name="Chest" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=2030241764]
@@ -375,7 +375,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 0.96)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 22
 text = "Chest"
 
 [node name="LeftArm" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=731899806]
@@ -414,7 +414,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 0.96)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 22
 text = "LeftArm"
 
 [node name="RightArm" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=1712614215]
@@ -454,7 +454,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 0.96)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 22
 text = "RightArm"
 
 [node name="Waist" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=477406248]
@@ -494,7 +494,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 0.96)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 22
 text = "Waist"
 
 [node name="LeftLeg" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=1925705489]
@@ -534,7 +534,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 0.96)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 22
 text = "LeftLeg"
 
 [node name="RightLeg" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=1232166577]
@@ -574,7 +574,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 0.96)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 22
 text = "RightLeg"
 
 [node name="LeftArm" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=1000469115]
