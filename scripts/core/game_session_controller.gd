@@ -2,7 +2,6 @@
 extends Control
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
-const UiThemeScaler := preload("res://scripts/ui/ui_theme_scaler.gd")
 const PhaseLibraryClass := preload("res://data/phases/phase_library.gd")
 const ArousalModelClass := preload("res://scripts/gameplay/arousal_model.gd")
 # LEGACY: DirectionSequenceControllerClass kept for rollback reference — NOT instantiated.
@@ -40,7 +39,7 @@ signal bgm_requested(track_key: String, use_fade: bool)
 	$MainCharacterArea/DebugRegionTint,
 	$ConversationViewport/DebugRegionTint,
 	$BottomHUD/DebugRegionTint,
-	$BottomHUD/ChoiceArea/DebugRegionTint
+	$BottomHUD/ChoicePanel/DebugRegionTint
 ]
 @onready var feedback_timer: Timer = $FeedbackTimer
 @onready var spot_spawn_timer: Timer = $SpotSpawnTimer
@@ -73,9 +72,6 @@ var last_requested_bgm_key: String = ""
 var _last_spot_telemetry: Dictionary = {}
 
 func _ready() -> void:
-	if not Engine.is_editor_hint():
-		UiThemeScaler.apply_to_tree(self)
-
 	_build_phase_sequence()
 	_apply_phase_by_index(_get_initial_phase_index(), false)
 	_update_character_visual_state()

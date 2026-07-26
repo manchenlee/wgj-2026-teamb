@@ -40,11 +40,7 @@ const CHOICE_ENABLED_MODULATE := Color(1.0, 1.0, 1.0, 1.0)
 const CHOICE_DISABLED_MODULATE := Color(0.42, 0.42, 0.42, 1.0)
 
 @onready var conversation_content: Control = $ConversationContent
-@onready var choice_area: Control = $"../BottomHUD/ChoiceArea"
-@onready var choice_button_1: TextureButton = $"../BottomHUD/ChoiceArea/ChoiceButton1"
-@onready var choice_button_2: TextureButton = $"../BottomHUD/ChoiceArea/ChoiceButton2"
-@onready var choice_label_1: Label = $"../BottomHUD/ChoiceArea/ChoiceButton1/Label"
-@onready var choice_label_2: Label = $"../BottomHUD/ChoiceArea/ChoiceButton2/Label"
+@onready var choice_panel: ChoicePanel = $"../BottomHUD/ChoicePanel"
 
 var _message_nodes: Array[Control] = []
 var _warning_keys: Dictionary = {}
@@ -56,12 +52,11 @@ var _choice_bubble_texture: Texture2D
 func _ready() -> void:
 	clip_contents = true
 	conversation_content.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	choice_area.mouse_filter = Control.MOUSE_FILTER_PASS
+	choice_panel.choice_selected.connect(
+		func(choice_quality: String, choice_text: String) -> void:
+			choice_selected.emit(choice_quality, choice_text)
+	)
 	_load_textures()
-	_configure_choice_button(choice_button_1, choice_label_1)
-	_configure_choice_button(choice_button_2, choice_label_2)
-	choice_button_1.pressed.connect(func() -> void: _emit_choice(0))
-	choice_button_2.pressed.connect(func() -> void: _emit_choice(1))
 	hide_choices()
 	_sync_content_rect()
 
@@ -71,16 +66,10 @@ func _notification(what: int) -> void:
 		_relayout_messages(false)
 
 func show_choices(choices: Variant) -> void:
-	_choice_data = _normalize_choices(choices)
-	_apply_choice_to_button(choice_button_1, choice_label_1, _choice_data, 0)
-	_apply_choice_to_button(choice_button_2, choice_label_2, _choice_data, 1)
-	choice_area.visible = true
+	choice_panel.show_choices(choices)
 
 func hide_choices() -> void:
-	choice_area.visible = true
-	_choice_data.clear()
-	_apply_disabled_choice_button(choice_button_1, choice_label_1)
-	_apply_disabled_choice_button(choice_button_2, choice_label_2)
+	choice_panel.clear_choices()
 
 func show_prompt(_text_value: String) -> void:
 	pass
@@ -107,9 +96,7 @@ func set_choice_timeout_progress(_progress: float) -> void:
 func emit_choice_by_index(index: int) -> void:
 	## Called by GameSessionController to trigger a choice via keyboard input.
 	## ConversationViewport does not process keyboard events directly.
-	if not choice_area.visible:
-		return
-	_emit_choice(index)
+	choice_panel.emit_choice_by_index(index)
 
 func _sync_content_rect() -> void:
 	conversation_content.position = Vector2.ZERO
@@ -249,7 +236,7 @@ func _apply_disabled_choice_button(button: TextureButton, label: Label) -> void:
 	label.text = ""
 	_set_choice_button_enabled_state(button, label, false)
 
-func _set_choice_button_enabled_state(button: TextureButton, label: Label, enabled: bool) -> void:
+func _set_choice_button_enabled_state(button: TextureButton, _label: Label, enabled: bool) -> void:
 	button.modulate = CHOICE_ENABLED_MODULATE if enabled else CHOICE_DISABLED_MODULATE
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if enabled else Control.CURSOR_ARROW
 	var fallback_rect := button.get_node_or_null("FallbackBubble") as ColorRect

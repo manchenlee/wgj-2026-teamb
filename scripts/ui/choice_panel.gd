@@ -7,32 +7,65 @@ const CHOICE_TEXT_MAX_CHARS := 64
 const CHOICE_ENABLED_MODULATE := Color(1.0, 1.0, 1.0, 1.0)
 const CHOICE_DISABLED_MODULATE := Color(0.42, 0.42, 0.42, 1.0)
 
-@onready var choice_button_1: TextureButton = $ChoiceButton1
-@onready var choice_button_2: TextureButton = $ChoiceButton2
-@onready var choice_label_1: Label = $ChoiceButton1/Label
-@onready var choice_label_2: Label = $ChoiceButton2/Label
+var choice_button_1: TextureButton = null
+var choice_button_2: TextureButton = null
+var choice_label_1: Label = null
+var choice_label_2: Label = null
 
 var _choice_data: Array[Dictionary] = []
+var _missing_nodes_warning_printed: bool = false
+var _buttons_connected: bool = false
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_PASS
-	choice_button_1.pressed.connect(func() -> void: _emit_choice(0))
-	choice_button_2.pressed.connect(func() -> void: _emit_choice(1))
+	if not _bind_choice_nodes():
+		return
 	clear_choices()
 
 func show_choices(choices: Variant) -> void:
+	if not _bind_choice_nodes():
+		return
 	_choice_data = _normalize_choices(choices)
 	_apply_choice_to_button(choice_button_1, choice_label_1, 0)
 	_apply_choice_to_button(choice_button_2, choice_label_2, 1)
 	visible = true
 
 func clear_choices() -> void:
+	if not _bind_choice_nodes():
+		return
 	visible = true
 	_choice_data.clear()
 	_apply_disabled_choice_button(choice_button_1, choice_label_1)
 	_apply_disabled_choice_button(choice_button_2, choice_label_2)
 
+func emit_choice_by_index(index: int) -> void:
+	_emit_choice(index)
+
+func _bind_choice_nodes() -> bool:
+	if choice_button_1 != null and choice_button_2 != null and choice_label_1 != null and choice_label_2 != null:
+		return true
+	choice_button_1 = get_node_or_null("ChoiceButton1") as TextureButton
+	choice_button_2 = get_node_or_null("ChoiceButton2") as TextureButton
+	choice_label_1 = get_node_or_null("ChoiceButton1/Label") as Label
+	choice_label_2 = get_node_or_null("ChoiceButton2/Label") as Label
+	if choice_button_1 != null and choice_button_2 != null and choice_label_1 != null and choice_label_2 != null:
+		_connect_buttons_once()
+		return true
+	if not _missing_nodes_warning_printed:
+		_missing_nodes_warning_printed = true
+		push_error("ChoicePanel: expected ChoiceButton1, ChoiceButton2, and their Label children.")
+	return false
+
+func _connect_buttons_once() -> void:
+	if _buttons_connected:
+		return
+	_buttons_connected = true
+	choice_button_1.pressed.connect(func() -> void: _emit_choice(0))
+	choice_button_2.pressed.connect(func() -> void: _emit_choice(1))
+
 func _apply_choice_to_button(button: TextureButton, label: Label, index: int) -> void:
+	if button == null or label == null:
+		return
 	if index >= _choice_data.size():
 		_apply_disabled_choice_button(button, label)
 		label.text = ""
@@ -45,12 +78,16 @@ func _apply_choice_to_button(button: TextureButton, label: Label, index: int) ->
 	_set_choice_button_enabled_state(button, true)
 
 func _apply_disabled_choice_button(button: TextureButton, label: Label) -> void:
+	if button == null or label == null:
+		return
 	button.visible = true
 	button.disabled = true
 	label.text = ""
 	_set_choice_button_enabled_state(button, false)
 
 func _set_choice_button_enabled_state(button: TextureButton, enabled: bool) -> void:
+	if button == null:
+		return
 	button.modulate = CHOICE_ENABLED_MODULATE if enabled else CHOICE_DISABLED_MODULATE
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if enabled else Control.CURSOR_ARROW
 	var fallback_rect := button.get_node_or_null("FallbackBubble") as ColorRect
