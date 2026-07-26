@@ -28,7 +28,7 @@ signal bgm_requested(track_key: String, use_fade: bool)
 @onready var phase_2_gameover_overlay: TextureRect = $BackgroundAnchor/Phase2GameoverOverlay
 @onready var main_character_area: Control = $MainCharacterArea
 @onready var character_area = $MainCharacterArea/CharacterArea
-@onready var character_prompt_region: Control = $MainCharacterArea/CharacterPromptRegion
+@onready var character_prompt_region = %CharacterPromptRegion
 @onready var arousal_visualization = $MainCharacterArea/CentralArousalVisualization
 @onready var conversation_viewport = $ConversationViewport
 @onready var status_hud = $BottomHUD
@@ -768,9 +768,7 @@ func _update_layout_debug_regions() -> void:
 	var debug_visible := show_layout_debug_bounds
 	for region in layout_debug_regions:
 		region.visible = debug_visible
-	for child in character_prompt_region.get_children():
-		if child is Control:
-			child.visible = debug_visible
+	character_prompt_region.set_debug_bounds_visible(debug_visible)
 
 func _request_ending_transition(ending_type: String) -> void:
 	if ending_requested.get_connections().size() > 0:
@@ -937,43 +935,23 @@ func _sync_prompt_anchor_layout() -> void:
 	sequence_controller.set_prompt_anchor_ids(_get_prompt_anchor_ids())
 
 func _get_prompt_region_rect_in_character_area() -> Rect2:
-	var global_rect := character_prompt_region.get_global_rect()
+	var global_rect: Rect2 = character_prompt_region.get_region_global_rect()
 	var local_position: Vector2 = character_area.get_global_transform_with_canvas().affine_inverse() * global_rect.position
 	return Rect2(local_position, global_rect.size)
 
 func _get_prompt_anchor_ids() -> Array[String]:
-	var anchor_ids: Array[String] = []
-	for child in character_prompt_region.get_children():
-		if child is Control and child.name != "Phase2AnchorPreviewLayer":
-			anchor_ids.append(String(child.name))
-	anchor_ids.sort()
-	return anchor_ids
+	return character_prompt_region.get_available_anchor_ids()
 
 func _get_prompt_anchor_center_in_character_area(anchor_id: String) -> Vector2:
-	var anchor_node := character_prompt_region.get_node_or_null(anchor_id) as Control
-	if anchor_node == null:
-		push_warning("Missing prompt anchor '%s' in active phase profile." % anchor_id)
-		return character_area.size * 0.5
 	var inverse: Transform2D = character_area.get_global_transform_with_canvas().affine_inverse()
-	return inverse * anchor_node.get_global_rect().get_center()
+	var fallback_global_center: Vector2 = character_area.get_global_transform_with_canvas() * (character_area.size * 0.5)
+	return inverse * character_prompt_region.get_anchor_global_center(StringName(anchor_id), fallback_global_center)
 
 func _update_prompt_anchor_layout_from_profile() -> void:
 	if active_character_profile == null:
 		return
-	for child in character_prompt_region.get_children():
-		if child is Control:
-			child.visible = false
-
-	for anchor_id_variant in active_character_profile.prompt_anchor_layout.keys():
-		var anchor_id := String(anchor_id_variant)
-		var anchor_rect := active_character_profile.prompt_anchor_layout[anchor_id] as Rect2
-		var anchor_node := character_prompt_region.get_node_or_null(anchor_id) as Control
-		if anchor_node == null:
-			push_warning("Prompt anchor node '%s' is missing from GameScreen." % anchor_id)
-			continue
-		anchor_node.position = anchor_rect.position
-		anchor_node.size = anchor_rect.size
-		anchor_node.visible = show_layout_debug_bounds
+	character_prompt_region.apply_profile(active_character_profile)
+	character_prompt_region.set_debug_bounds_visible(show_layout_debug_bounds)
 
 func _check_prompt_timeouts() -> bool:
 	if prompt_expiration_times.is_empty():

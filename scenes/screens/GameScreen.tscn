@@ -5,12 +5,13 @@
 [ext_resource type="Texture2D" uid="uid://bvl52yg22147o" path="res://assets/art/character/phase1/overall_init.png" id="2_pbayp"]
 [ext_resource type="PackedScene" path="res://scenes/components/StatusHUD.tscn" id="4_hud"]
 [ext_resource type="Script" uid="uid://y4sw51emkoug" path="res://scripts/presentation/central_arousal_visualization.gd" id="5_vis"]
-[ext_resource type="Script" path="res://scripts/ui/TwoFrameOverlayAnimator.gd" id="6_overlay"]
-[ext_resource type="Script" path="res://scripts/ui/LocalizedMeshBreathing.gd" id="7_breathing"]
+[ext_resource type="Script" uid="uid://d3bshm1tk5r8n" path="res://scripts/ui/TwoFrameOverlayAnimator.gd" id="6_overlay"]
+[ext_resource type="Script" uid="uid://7lsklnfonwr6" path="res://scripts/ui/LocalizedMeshBreathing.gd" id="7_breathing"]
 [ext_resource type="Script" uid="uid://d24toufu83pxy" path="res://scripts/ui/conversation_viewport.gd" id="8_conversation"]
 [ext_resource type="Script" uid="uid://x3cgbulqxokf" path="res://scripts/editor/phase_2_editor_preview_controller.gd" id="9_phase2_preview"]
 [ext_resource type="Texture2D" uid="uid://b3obdm5nxmqui" path="res://assets/art/character/phase2/person.png" id="10_phase2_person"]
 [ext_resource type="Texture2D" uid="uid://mkqnsj2nshun" path="res://assets/art/background/game_bg.png" id="11_game_bg"]
+[ext_resource type="Script" uid="uid://c537cpupxlgv0" path="res://scripts/ui/prompt_anchor_region.gd" id="12_prompt_region"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_alg88"]
 load_path = "res://.godot/imported/draft.png-80a3863fe83a454b531da103f3e5f42e.ctex"
@@ -233,6 +234,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="CharacterPromptRegion" type="Control" parent="MainCharacterArea" unique_id=1553580740]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -245,6 +247,7 @@ offset_right = 268.0
 offset_bottom = 439.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("12_prompt_region")
 
 [node name="Phase2AnchorPreviewLayer" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=822463575]
 visible = false

@@ -68,12 +68,11 @@ func _sync_anchor_markers(markers_visible: bool) -> void:
 		if border != null:
 			border.color = MARKER_COLORS[index % MARKER_COLORS.size()].lightened(0.15)
 			border.visible = markers_visible
-			border.size = marker.size
 		var label := marker.get_node_or_null("Fill/Label") as Label
 		if label != null:
 			label.text = anchor_id
 			label.visible = markers_visible
-	_sync_editor_anchor_nodes()
+	_sync_editor_anchor_nodes(markers_visible)
 
 func _get_reference_rect() -> TextureRect:
 	var screen := _get_game_screen()
@@ -101,22 +100,23 @@ func _is_screen_reference_enabled() -> bool:
 		return true
 	return bool(screen.get("show_phase2_editor_reference"))
 
-func _sync_editor_anchor_nodes() -> void:
-	var screen := _get_game_screen()
-	if screen == null:
-		return
-	var prompt_region := screen.get_node_or_null("MainCharacterArea/CharacterPromptRegion") as Control
+func _sync_editor_anchor_nodes(_markers_visible: bool) -> void:
+	var prompt_region = _get_prompt_anchor_region()
 	if prompt_region == null:
 		return
 	for index in range(ANCHOR_IDS.size()):
 		var anchor_id: String = ANCHOR_IDS[index]
-		var anchor_node := prompt_region.get_node_or_null(anchor_id) as Control
 		var marker := get_node_or_null(anchor_id) as Control
-		if anchor_node == null or marker == null:
+		if marker == null:
 			continue
-		anchor_node.position = marker.position
-		anchor_node.size = marker.size
-		anchor_node.visible = false
+		prompt_region.set_anchor_rect(StringName(anchor_id), Rect2(marker.position, marker.size))
+	prompt_region.set_debug_bounds_visible(false)
+
+func _get_prompt_anchor_region():
+	var screen := _get_game_screen()
+	if screen == null:
+		return null
+	return screen.get_node_or_null("%CharacterPromptRegion")
 
 func _print_anchor_rect_dump() -> void:
 	var lines: Array[String] = []
