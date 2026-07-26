@@ -11,15 +11,6 @@ const SAFE_WORD_DEFAULT: String = "紅色"
 const FEEDBACK_BRANCH_THRESHOLD: float = 45.0
 const SAFE_WORD_EVENT_CHANCE: float = 0.15
 
-# UI scaling.
-# 整體 UI 字體縮放倍率；調大會讓介面文字更大、更容易閱讀，調小則會讓畫面更緊湊。
-const UI_FONT_SCALE: float = 1.6
-const PROMPT_FEEDBACK_FONT_SIZE: int = 16
-const DIALOGUE_HEADER_FONT_SIZE: int = 18
-const DIALOGUE_BODY_FONT_SIZE: int = 16
-const DIALOGUE_CHOICE_FONT_SIZE: int = 16
-const HUD_FONT_SIZE: int = 16
-
 # Core arousal values.
 # 遊戲開始時的身體值；調大會讓玩家開局更接近安全區或目標區，調小則開局壓力更高。
 const INITIAL_PHYSICAL: float = 40.0

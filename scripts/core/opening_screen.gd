@@ -1,6 +1,7 @@
 extends Control
 
 signal continue_pressed
+signal skip_pressed
 
 const OPENING_DATA_PATH := "res://assets/dialogue/opening.json"
 const DEFAULT_BACKGROUND_PATH := "res://assets/curtain.jpg"
@@ -18,6 +19,7 @@ const DEFAULT_SPEAKER := "旁白"
 @onready var dialogue_label: RichTextLabel = $SafeArea/RootLayout/DialogueBox/DialogueLayout/DialogueLabel
 @onready var hint_label: Label = $SafeArea/RootLayout/DialogueBox/DialogueLayout/FooterRow/HintLabel
 @onready var next_button: Button = $SafeArea/RootLayout/DialogueBox/DialogueLayout/FooterRow/NextButton
+@onready var _skip_button: TextureButton = $SkipButton
 
 var _entries: Array = []
 var _current_entry_index := -1
@@ -38,6 +40,7 @@ func _ready() -> void:
 	_base_sprite = _create_stage_sprite("base")
 	_base_glow_sprite = _create_stage_sprite("base_glow", true)
 	next_button.pressed.connect(_advance_script)
+	_skip_button.pressed.connect(func() -> void: skip_pressed.emit())
 	resized.connect(_layout_character_stage)
 	_load_opening_script()
 	_layout_character_stage()
@@ -128,9 +131,9 @@ func _apply_character(character_data_variant: Variant) -> void:
 		return
 
 	var character_data: Dictionary = character_data_variant
-	var visible := bool(character_data.get("visible", true))
-	character_stage.visible = visible
-	if not visible:
+	var is_character_visible := bool(character_data.get("visible", true))
+	character_stage.visible = is_character_visible
+	if not is_character_visible:
 		return
 
 	_reset_effect_state()
@@ -180,10 +183,10 @@ func _apply_layers(layers_variant: Variant) -> void:
 		var glow_sprite := _ensure_layer_sprite(layer_id, true)
 		var offset := _parse_vector2(layer.get("offset", Vector2.ZERO), Vector2.ZERO)
 		var scale_value := _parse_vector2(layer.get("scale", Vector2.ONE), Vector2.ONE)
-		var modulate := _parse_color(layer.get("modulate", Color.WHITE), Color.WHITE)
-		var z_index := int(layer.get("z_index", 0))
-		_configure_sprite(sprite, texture, offset, scale_value, modulate, z_index)
-		_configure_sprite(glow_sprite, texture, offset, scale_value, modulate, z_index)
+		var layer_modulate := _parse_color(layer.get("modulate", Color.WHITE), Color.WHITE)
+		var layer_z_index := int(layer.get("z_index", 0))
+		_configure_sprite(sprite, texture, offset, scale_value, layer_modulate, layer_z_index)
+		_configure_sprite(glow_sprite, texture, offset, scale_value, layer_modulate, layer_z_index)
 
 func _apply_effects(effects_variant: Variant) -> void:
 	if not (effects_variant is Array):
@@ -353,14 +356,14 @@ func _configure_sprite(
 	texture: Texture2D,
 	offset: Vector2,
 	scale_value: Vector2,
-	modulate: Color,
-	z_index: int
+	sprite_modulate: Color,
+	sprite_z_index: int
 ) -> void:
 	sprite.texture = texture
 	sprite.position = offset
 	sprite.scale = scale_value
-	sprite.modulate = modulate
-	sprite.z_index = z_index
+	sprite.modulate = sprite_modulate
+	sprite.z_index = sprite_z_index
 
 func _load_texture(path: String, cache: Dictionary) -> Texture2D:
 	if path.is_empty():

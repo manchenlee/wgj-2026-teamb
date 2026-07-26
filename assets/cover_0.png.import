@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bebhs4txa0xwl"
-path="res://.godot/imported/face_init.png-347336b49cef7b950ec9352f4323de72.ctex"
+uid="uid://bvnmskadm1bmg"
+path="res://.godot/imported/cover_0.png-675eb2561693b82ed0eb489040c2f32b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/character/phase2/face_init.png"
-dest_files=["res://.godot/imported/face_init.png-347336b49cef7b950ec9352f4323de72.ctex"]
+source_file="res://assets/cover_0.png"
+dest_files=["res://.godot/imported/cover_0.png-675eb2561693b82ed0eb489040c2f32b.ctex"]
 
 [params]
 

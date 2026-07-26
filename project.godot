@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 window/size/viewport_width=1440
 window/size/viewport_height=1024
+window/size/mode=3
 window/stretch/mode="canvas_items"
 
 [input]
@@ -49,3 +50,4 @@ theme/custom="res://assets/theme/default_theme.tres"
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true

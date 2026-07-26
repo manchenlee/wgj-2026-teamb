@@ -1,8 +1,11 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/core/ending_screen.gd" id="1_ending"]
-[ext_resource type="Texture2D" path="res://assets/curtain.jpg" id="2_curtain"]
-[ext_resource type="Texture2D" path="res://assets/book.png" id="3_book"]
+[ext_resource type="Texture2D" path="res://assets/end01.png" id="2_end01"]
+[ext_resource type="Texture2D" path="res://assets/end02.png" id="3_end02"]
+[ext_resource type="Texture2D" path="res://assets/end03.png" id="4_end03"]
+[ext_resource type="Texture2D" path="res://assets/end04.png" id="5_end04"]
+[ext_resource type="Texture2D" path="res://assets/end05.png" id="6_end05"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
 bg_color = Color(0.6431373, 0.050980393, 0.050980393, 1)
@@ -41,87 +44,75 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = ExtResource("2_curtain")
-expand_mode = 3
+texture = ExtResource("2_end01")
+expand_mode = 1
 stretch_mode = 6
 
-[node name="BookPanel" type="TextureRect" parent="."]
+[node name="OuterMargin" type="MarginContainer" parent="."]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 180.0
-offset_top = 120.0
-offset_right = -180.0
-offset_bottom = -120.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = ExtResource("3_book")
-expand_mode = 3
-stretch_mode = 6
-
-[node name="OuterMargin" type="MarginContainer" parent="BookPanel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.45
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 72
-theme_override_constants/margin_top = 28
-theme_override_constants/margin_right = 72
-theme_override_constants/margin_bottom = 28
+theme_override_constants/margin_left = 60
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 40
 
-[node name="Layout" type="VBoxContainer" parent="BookPanel/OuterMargin"]
+[node name="Layout" type="VBoxContainer" parent="OuterMargin"]
 layout_mode = 2
 alignment = 1
-theme_override_constants/separation = 8
+theme_override_constants/separation = 16
 
-[node name="HeadingLabel" type="Label" parent="BookPanel/OuterMargin/Layout"]
+[node name="HeadingLabel" type="Label" parent="OuterMargin/Layout"]
 layout_mode = 2
 text = "結局"
-horizontal_alignment = 1
+horizontal_alignment = 0
 theme_override_colors/font_color = Color(0.3, 0.1, 0.05, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 44
 
-[node name="ResultSubtypeLabel" type="Label" parent="BookPanel/OuterMargin/Layout"]
+[node name="ResultSubtypeLabel" type="Label" parent="OuterMargin/Layout"]
 layout_mode = 2
 visible = false
-horizontal_alignment = 1
+horizontal_alignment = 0
 theme_override_colors/font_color = Color(0.3, 0.1, 0.05, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 36
 
-[node name="EndingBody" type="Label" parent="BookPanel/OuterMargin/Layout"]
+[node name="EndingBody" type="Label" parent="OuterMargin/Layout"]
 layout_mode = 2
 size_flags_vertical = 4
 text = "Placeholder ending content."
-horizontal_alignment = 1
+horizontal_alignment = 0
 vertical_alignment = 0
 autowrap_mode = 2
+custom_minimum_size = Vector2(1, 0)
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.15, 0.08, 0.03, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 28
 
-[node name="RestartButtons" type="HBoxContainer" parent="BookPanel/OuterMargin/Layout"]
+[node name="RestartButtons" type="HBoxContainer" parent="OuterMargin/Layout"]
 layout_mode = 2
-alignment = 1
-theme_override_constants/separation = 24
+alignment = 0
+theme_override_constants/separation = 16
 
-[node name="RestartButton" type="Button" parent="BookPanel/OuterMargin/Layout/RestartButtons"]
+[node name="RestartButton" type="Button" parent="OuterMargin/Layout/RestartButtons"]
 layout_mode = 2
-custom_minimum_size = Vector2(180, 52)
+custom_minimum_size = Vector2(160, 52)
 text = "再度演奏"
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 28
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 
-[node name="BackToTitleButton" type="Button" parent="BookPanel/OuterMargin/Layout/RestartButtons"]
+[node name="BackToTitleButton" type="Button" parent="OuterMargin/Layout/RestartButtons"]
 layout_mode = 2
-custom_minimum_size = Vector2(180, 52)
+custom_minimum_size = Vector2(160, 52)
 text = "回到標題"
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 28
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")

@@ -3,3 +3,5 @@
 /android/
 docs/
 .DS_Store
+dist/
+downloadable/

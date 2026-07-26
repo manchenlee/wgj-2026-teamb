@@ -15,6 +15,7 @@ const GAME_SCENE := preload("res://scenes/screens/GameScreen.tscn")
 const TITLE_SCENE := preload("res://scenes/screens/TitleScreen.tscn")
 
 signal ending_requested(ending_type: String)
+signal bgm_requested(track_key: String, use_fade: bool)
 
 @export var show_layout_debug_bounds: bool = false
 @export var show_phase2_editor_reference: bool = true
@@ -65,6 +66,8 @@ var phase_sequence: Array = []
 var active_phase_index: int = 0
 var active_phase_config: PhaseConfig = null
 var active_character_profile = null
+var has_switched_to_game_bgm: bool = false
+var last_requested_bgm_key: String = ""
 
 # Telemetry from spot manager for debug readout
 var _last_spot_telemetry: Dictionary = {}
@@ -493,6 +496,8 @@ func _reset_run_for_phase_index(phase_index: int) -> void:
 	run_active = true
 	ending_transition_started = false
 	has_left_overall_init_visual = false
+	has_switched_to_game_bgm = false
+	last_requested_bgm_key = ""
 	current_prompt = {}
 	waiting_for_choice = false
 	_last_spot_telemetry = {}
@@ -742,6 +747,7 @@ func _update_presentation() -> void:
 	if Engine.is_editor_hint():
 		return
 	_update_character_visual_state()
+	_update_bgm_state()
 	character_area.update_emotion_state(arousal_model.get_emotion_state())
 	arousal_visualization.set_values(arousal_model.physical, arousal_model.emotional, arousal_model.peak)
 	status_hud.update_values(arousal_model.physical, arousal_model.emotional, arousal_model.peak)
@@ -755,6 +761,23 @@ func _update_choice_timer_visual() -> void:
 		dialogue_panel.set_choice_timeout_progress(progress)
 		return
 	dialogue_panel.set_choice_timeout_progress(0.0)
+
+func _update_bgm_state() -> void:
+	var next_track_key := "default"
+	var use_fade := false
+
+	if has_switched_to_game_bgm:
+		next_track_key = "overall_low" if arousal_model.peak >= 50.0 else "overall_high"
+		use_fade = true
+	elif arousal_model.peak_has_activated:
+		has_switched_to_game_bgm = true
+		next_track_key = "overall_low" if arousal_model.peak >= 50.0 else "overall_high"
+		use_fade = true
+
+	if last_requested_bgm_key == next_track_key:
+		return
+	last_requested_bgm_key = next_track_key
+	bgm_requested.emit(next_track_key, use_fade)
 
 func _update_phase_debug_label() -> void:
 	if phase_debug_label == null:
