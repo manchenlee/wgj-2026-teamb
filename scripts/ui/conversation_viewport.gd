@@ -146,7 +146,6 @@ func _create_message_bubble(line: String, speaker_type: String) -> Control:
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.add_theme_font_override("font", MESSAGE_FONT)
 	label.add_theme_font_size_override("font_size", MESSAGE_FONT_SIZE)
-	label.set_meta("_ui_font_scale_applied", true)
 	label.add_theme_color_override("font_color", DIALOGUE_TEXT_COLOR)
 	label.add_theme_color_override("font_outline_color", DIALOGUE_TEXT_OUTLINE_COLOR)
 	label.add_theme_constant_override("outline_size", DIALOGUE_TEXT_OUTLINE_SIZE)

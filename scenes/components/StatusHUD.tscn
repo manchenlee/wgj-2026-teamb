@@ -161,7 +161,6 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 mouse_filter = 2
-metadata/_ui_font_scale_applied = true
 
 [node name="ChoiceButton2" type="TextureButton" parent="ChoiceArea"]
 modulate = Color(0.42, 0.42, 0.42, 1)
@@ -193,4 +192,3 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 mouse_filter = 2
-metadata/_ui_font_scale_applied = true
