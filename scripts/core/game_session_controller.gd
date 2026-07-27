@@ -20,6 +20,7 @@ signal bgm_requested(track_key: String, use_fade: bool)
 @export var show_phase2_editor_reference: bool = true
 @export var debug_start_phase_id: String = ""
 @export var safe_word: String = Config.SAFE_WORD_DEFAULT
+@export var shared_character_alignment_offset: Vector2 = Vector2.ZERO
 
 @onready var character_alignment_root: Control = $CharacterAlignmentRoot
 @onready var background_placeholder: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/BackgroundPlaceholder
@@ -70,6 +71,7 @@ var active_phase_config: PhaseConfig = null
 var active_character_profile = null
 var has_switched_to_game_bgm: bool = false
 var last_requested_bgm_key: String = ""
+var _resolved_character_alignment_offset: Vector2 = Vector2.ZERO
 
 # Telemetry from spot manager for debug readout
 var _last_spot_telemetry: Dictionary = {}
@@ -160,6 +162,7 @@ func _apply_phase_by_index(phase_index: int, announce_phase: bool) -> void:
 	_cache_character_visual_textures()
 	overlay_motion_set = _build_overlay_motion_set()
 	_apply_phase_visual_profile()
+	_apply_character_alignment()
 	if spot_manager != null:
 		spot_manager.set_phase_config(active_phase_config)
 		_sync_spot_anchor_layout()
@@ -433,6 +436,7 @@ func _get_character_visual_texture(visual_state: String) -> Texture2D:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready() and not Engine.is_editor_hint():
+		_apply_character_alignment()
 		_sync_spot_anchor_layout()
 	elif what == NOTIFICATION_PREDELETE:
 		if not Engine.is_editor_hint() and overlay_animator != null:
@@ -554,7 +558,8 @@ func get_debug_state() -> Dictionary:
 		"spot_incr": "%.1f" % float(telemetry.get("incremental_gain", 0.0)),
 		"spot_bonus": "%.1f" % float(telemetry.get("completion_bonus", 0.0)),
 		"spot_penalty": "%.1f" % float(telemetry.get("penalty", 0.0)),
-		"spot_net": "%.1f" % float(telemetry.get("net_physical_change", 0.0))
+		"spot_net": "%.1f" % float(telemetry.get("net_physical_change", 0.0)),
+		"alignment_x": "%.1f" % _resolved_character_alignment_offset.x
 	}
 
 # ---------------------------------------------------------------------------
@@ -793,6 +798,67 @@ func _update_layout_debug_regions() -> void:
 		region.visible = debug_visible
 	if character_prompt_region != null:
 		character_prompt_region.set_debug_bounds_visible(debug_visible)
+
+func _apply_character_alignment() -> void:
+	if character_alignment_root == null:
+		return
+	var phase_alignment_offset := _resolve_active_phase_alignment_offset()
+	_resolved_character_alignment_offset = shared_character_alignment_offset + phase_alignment_offset
+	character_alignment_root.position = _resolved_character_alignment_offset
+
+func _resolve_active_phase_alignment_offset() -> Vector2:
+	if active_character_profile == null or character_alignment_root == null:
+		return Vector2.ZERO
+	var focus_layer := _get_character_alignment_focus_layer()
+	if focus_layer == null or focus_layer.texture == null:
+		return Vector2.ZERO
+	var focus_position := _get_texture_focus_position_in_alignment_root(
+		focus_layer,
+		active_character_profile.character_visual_focus_normalized
+	)
+	var target_x := character_alignment_root.size.x * 0.5
+	return Vector2(target_x - focus_position.x, 0.0)
+
+func _get_character_alignment_focus_layer() -> TextureRect:
+	if _is_phase_2_visual_profile_active() and phase_2_background_layer != null and phase_2_background_layer.texture != null:
+		return phase_2_background_layer
+	return background_placeholder
+
+func _get_texture_focus_position_in_alignment_root(texture_rect: TextureRect, focus_normalized: Vector2) -> Vector2:
+	var texture := texture_rect.texture
+	if texture == null:
+		return Vector2.ZERO
+	var texture_size: Vector2 = texture.get_size()
+	if texture_size.x <= 0.0 or texture_size.y <= 0.0:
+		return Vector2.ZERO
+	var root_transform: Transform2D = character_alignment_root.get_global_transform_with_canvas()
+	var texture_transform: Transform2D = texture_rect.get_global_transform_with_canvas()
+	var root_to_texture: Transform2D = root_transform.affine_inverse() * texture_transform
+	var content_rect: Rect2 = _get_texture_content_rect(texture_rect, texture_size)
+	return root_to_texture.origin + content_rect.position + content_rect.size * focus_normalized
+
+func _get_texture_content_rect(texture_rect: TextureRect, texture_size: Vector2) -> Rect2:
+	var rect_size: Vector2 = texture_rect.size
+	if rect_size.x <= 0.0 or rect_size.y <= 0.0:
+		return Rect2(Vector2.ZERO, Vector2.ZERO)
+	match texture_rect.stretch_mode:
+		TextureRect.STRETCH_KEEP_ASPECT_CENTERED:
+			var centered_scale: float = min(rect_size.x / texture_size.x, rect_size.y / texture_size.y)
+			var centered_size: Vector2 = texture_size * centered_scale
+			return Rect2((rect_size - centered_size) * 0.5, centered_size)
+		TextureRect.STRETCH_KEEP_ASPECT_COVERED:
+			var covered_scale: float = max(rect_size.x / texture_size.x, rect_size.y / texture_size.y)
+			var covered_size: Vector2 = texture_size * covered_scale
+			return Rect2((rect_size - covered_size) * 0.5, covered_size)
+		TextureRect.STRETCH_KEEP_CENTERED:
+			return Rect2((rect_size - texture_size) * 0.5, texture_size)
+		TextureRect.STRETCH_KEEP_ASPECT:
+			var aspect_scale: float = min(rect_size.x / texture_size.x, rect_size.y / texture_size.y)
+			return Rect2(Vector2.ZERO, texture_size * aspect_scale)
+		TextureRect.STRETCH_KEEP:
+			return Rect2(Vector2.ZERO, texture_size)
+		_:
+			return Rect2(Vector2.ZERO, rect_size)
 
 # ---------------------------------------------------------------------------
 # Timer helpers

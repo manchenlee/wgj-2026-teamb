@@ -29,6 +29,17 @@ script = ExtResource("1_game")
 show_phase2_editor_reference = false
 character_background = SubResource("CompressedTexture2D_alg88")
 
+[node name="BackgroundColor" type="TextureRect" parent="." unique_id=92650428]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("11_game_bg")
+expand_mode = 1
+stretch_mode = 6
+
 [node name="CharacterAlignmentRoot" type="Control" parent="." unique_id=707856629]
 layout_mode = 1
 anchors_preset = 15
@@ -45,17 +56,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-
-[node name="BackgroundColor" type="TextureRect" parent="CharacterAlignmentRoot/BackgroundAnchor" unique_id=92650428]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = ExtResource("11_game_bg")
-expand_mode = 1
-stretch_mode = 6
 
 [node name="Phase2BackgroundLayer" type="TextureRect" parent="CharacterAlignmentRoot/BackgroundAnchor" unique_id=208204111]
 visible = false

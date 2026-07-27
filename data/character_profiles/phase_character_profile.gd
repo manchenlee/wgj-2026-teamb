@@ -8,6 +8,8 @@ var overlay_animation_set: Dictionary
 var prompt_anchor_layout: Dictionary
 var interaction_spot_anchor_layout: Dictionary
 var breathing_region_rect: Rect2
+# Texture-local normalized focus point used for horizontal character alignment.
+var character_visual_focus_normalized: Vector2
 
 func _init(
 	profile_id_value: String = "",
@@ -16,7 +18,8 @@ func _init(
 	overlay_animation_set_value: Dictionary = {},
 	prompt_anchor_layout_value: Dictionary = {},
 	interaction_spot_anchor_layout_value: Dictionary = {},
-	breathing_region_rect_value: Rect2 = Rect2(0.34, 0.5, 0.28, 0.35)
+	breathing_region_rect_value: Rect2 = Rect2(0.34, 0.5, 0.28, 0.35),
+	character_visual_focus_normalized_value: Vector2 = Vector2(0.5, 0.5)
 ) -> void:
 	profile_id = profile_id_value
 	base_state_textures = base_state_textures_value.duplicate(true)
@@ -27,6 +30,7 @@ func _init(
 	if interaction_spot_anchor_layout.is_empty():
 		interaction_spot_anchor_layout = prompt_anchor_layout.duplicate(true)
 	breathing_region_rect = breathing_region_rect_value
+	character_visual_focus_normalized = character_visual_focus_normalized_value
 
 func get_all_texture_paths() -> Dictionary:
 	var merged := base_state_textures.duplicate(true)
