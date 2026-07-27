@@ -21,24 +21,25 @@ signal bgm_requested(track_key: String, use_fade: bool)
 @export var debug_start_phase_id: String = ""
 @export var safe_word: String = Config.SAFE_WORD_DEFAULT
 
-@onready var background_placeholder: TextureRect = $BackgroundAnchor/BackgroundPlaceholder
-@onready var overlay_animator = $BackgroundAnchor/OverlayAnimator
-@onready var breathing_controller = $BackgroundAnchor/BreathingController
-@onready var phase_2_background_layer: TextureRect = $BackgroundAnchor/Phase2BackgroundLayer
-@onready var phase_2_flush_layer: TextureRect = $BackgroundAnchor/Phase2FlushLayer
-@onready var phase_2_face_layer: TextureRect = $BackgroundAnchor/Phase2FaceLayer
-@onready var phase_2_gameover_overlay: TextureRect = $BackgroundAnchor/Phase2GameoverOverlay
-@onready var main_character_area: Control = $MainCharacterArea
-@onready var character_area = $MainCharacterArea/CharacterArea
+@onready var character_alignment_root: Control = $CharacterAlignmentRoot
+@onready var background_placeholder: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/BackgroundPlaceholder
+@onready var overlay_animator = $CharacterAlignmentRoot/BackgroundAnchor/OverlayAnimator
+@onready var breathing_controller = $CharacterAlignmentRoot/BackgroundAnchor/BreathingController
+@onready var phase_2_background_layer: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/Phase2BackgroundLayer
+@onready var phase_2_flush_layer: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/Phase2FlushLayer
+@onready var phase_2_face_layer: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/Phase2FaceLayer
+@onready var phase_2_gameover_overlay: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/Phase2GameoverOverlay
+@onready var main_character_area: Control = $CharacterAlignmentRoot/MainCharacterArea
+@onready var character_area = $CharacterAlignmentRoot/MainCharacterArea/CharacterArea
 @onready var character_prompt_region = %CharacterPromptRegion
-@onready var arousal_visualization = $MainCharacterArea/CentralArousalVisualization
+@onready var arousal_visualization = $CharacterAlignmentRoot/MainCharacterArea/CentralArousalVisualization
 @onready var dialogue_panel = $ConversationViewport
 @onready var choice_panel: ChoicePanel = %ChoicePanel
 @onready var status_hud: StatusHUD = %StatusHUD
 @onready var phase_debug_label: Label = $PhaseDebugLabel
 @onready var phase_skip_button: Button = $Phase2SkipButton
 @onready var layout_debug_regions := [
-	$MainCharacterArea/DebugRegionTint,
+	$CharacterAlignmentRoot/MainCharacterArea/DebugRegionTint,
 	$ConversationViewport/DebugRegionTint,
 	$HudLayer/TopHudCenter/StatusHUD/DebugRegionTint,
 	$ChoiceLayer/ChoicePanel/DebugRegionTint

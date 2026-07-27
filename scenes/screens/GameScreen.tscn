@@ -29,7 +29,16 @@ script = ExtResource("1_game")
 show_phase2_editor_reference = false
 character_background = SubResource("CompressedTexture2D_alg88")
 
-[node name="BackgroundAnchor" type="Control" parent="." unique_id=1801418674]
+[node name="CharacterAlignmentRoot" type="Control" parent="." unique_id=707856629]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="BackgroundAnchor" type="Control" parent="CharacterAlignmentRoot" unique_id=1801418674]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -37,7 +46,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="BackgroundColor" type="TextureRect" parent="BackgroundAnchor" unique_id=92650428]
+[node name="BackgroundColor" type="TextureRect" parent="CharacterAlignmentRoot/BackgroundAnchor" unique_id=92650428]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -48,7 +57,7 @@ texture = ExtResource("11_game_bg")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="Phase2BackgroundLayer" type="TextureRect" parent="BackgroundAnchor" unique_id=208204111]
+[node name="Phase2BackgroundLayer" type="TextureRect" parent="CharacterAlignmentRoot/BackgroundAnchor" unique_id=208204111]
 visible = false
 z_index = 1
 z_as_relative = false
@@ -66,7 +75,7 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 6
 
-[node name="BackgroundPlaceholder" type="TextureRect" parent="BackgroundAnchor" unique_id=650608078]
+[node name="BackgroundPlaceholder" type="TextureRect" parent="CharacterAlignmentRoot/BackgroundAnchor" unique_id=650608078]
 z_index = 2
 z_as_relative = false
 layout_mode = 1
@@ -84,7 +93,7 @@ texture = ExtResource("2_pbayp")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="Phase2EditorReference" type="TextureRect" parent="BackgroundAnchor" unique_id=1066310849]
+[node name="Phase2EditorReference" type="TextureRect" parent="CharacterAlignmentRoot/BackgroundAnchor" unique_id=1066310849]
 visible = false
 z_index = 2
 z_as_relative = false
@@ -103,12 +112,12 @@ texture = ExtResource("10_phase2_person")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="BreathingController" type="Node" parent="BackgroundAnchor" unique_id=51132587]
+[node name="BreathingController" type="Node" parent="CharacterAlignmentRoot/BackgroundAnchor" unique_id=51132587]
 script = ExtResource("7_breathing")
 chest_region_rect = Rect2(0.34, 0.5, 0.28, 0.35)
 debug_cycle_duration = 2.1
 
-[node name="OverlayAnimator" type="TextureRect" parent="BackgroundAnchor" unique_id=2024183291]
+[node name="OverlayAnimator" type="TextureRect" parent="CharacterAlignmentRoot/BackgroundAnchor" unique_id=2024183291]
 z_index = 3
 z_as_relative = false
 layout_mode = 1
@@ -126,7 +135,7 @@ expand_mode = 1
 stretch_mode = 6
 script = ExtResource("6_overlay")
 
-[node name="Phase2FlushLayer" type="TextureRect" parent="BackgroundAnchor" unique_id=160112433]
+[node name="Phase2FlushLayer" type="TextureRect" parent="CharacterAlignmentRoot/BackgroundAnchor" unique_id=160112433]
 visible = false
 z_index = 4
 z_as_relative = false
@@ -144,7 +153,7 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 6
 
-[node name="Phase2FaceLayer" type="TextureRect" parent="BackgroundAnchor" unique_id=145221887]
+[node name="Phase2FaceLayer" type="TextureRect" parent="CharacterAlignmentRoot/BackgroundAnchor" unique_id=145221887]
 visible = false
 z_index = 5
 z_as_relative = false
@@ -162,7 +171,7 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 6
 
-[node name="Phase2GameoverOverlay" type="TextureRect" parent="BackgroundAnchor" unique_id=190000112]
+[node name="Phase2GameoverOverlay" type="TextureRect" parent="CharacterAlignmentRoot/BackgroundAnchor" unique_id=190000112]
 visible = false
 z_index = 6
 z_as_relative = false
@@ -180,7 +189,7 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 6
 
-[node name="MainCharacterArea" type="Control" parent="." unique_id=2060484998]
+[node name="MainCharacterArea" type="Control" parent="CharacterAlignmentRoot" unique_id=2060484998]
 z_index = 3
 layout_mode = 1
 anchors_preset = 15
@@ -193,7 +202,7 @@ offset_bottom = -164.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="DebugRegionTint" type="ColorRect" parent="MainCharacterArea" unique_id=2121463475]
+[node name="DebugRegionTint" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea" unique_id=2121463475]
 visible = false
 z_index = -1
 layout_mode = 1
@@ -205,7 +214,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.18, 0.48, 0.9, 0.18)
 
-[node name="CentralArousalVisualization" type="Control" parent="MainCharacterArea" unique_id=401470020]
+[node name="CentralArousalVisualization" type="Control" parent="CharacterAlignmentRoot/MainCharacterArea" unique_id=401470020]
 z_index = 1
 z_as_relative = false
 layout_mode = 1
@@ -218,7 +227,7 @@ mouse_filter = 2
 script = ExtResource("5_vis")
 character_placeholder_path = NodePath("../CharacterArea/CharacterVisualAnchor/CharacterPlaceholder")
 
-[node name="PeakIndicator" type="Label" parent="MainCharacterArea/CentralArousalVisualization" unique_id=1128361418]
+[node name="PeakIndicator" type="Label" parent="CharacterAlignmentRoot/MainCharacterArea/CentralArousalVisualization" unique_id=1128361418]
 visible = false
 z_index = 4
 z_as_relative = false
@@ -226,7 +235,7 @@ layout_mode = 0
 theme_override_colors/font_color = Color(0.12, 0.12, 0.16, 1)
 text = "Peak 0"
 
-[node name="CharacterArea" parent="MainCharacterArea" unique_id=806207715 instance=ExtResource("2_character")]
+[node name="CharacterArea" parent="CharacterAlignmentRoot/MainCharacterArea" unique_id=806207715 instance=ExtResource("2_character")]
 z_index = 4
 z_as_relative = false
 layout_mode = 1
@@ -236,7 +245,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="CharacterPromptRegion" type="Control" parent="MainCharacterArea" unique_id=1553580740]
+[node name="CharacterPromptRegion" type="Control" parent="CharacterAlignmentRoot/MainCharacterArea" unique_id=1553580740]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 8
@@ -253,7 +262,7 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("12_prompt_region")
 
-[node name="Phase2AnchorPreviewLayer" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=822463575]
+[node name="Phase2AnchorPreviewLayer" type="Control" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion" unique_id=822463575]
 visible = false
 z_index = 20
 layout_mode = 1
@@ -265,7 +274,7 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("9_phase2_preview")
 
-[node name="HeadLeft" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=769787432]
+[node name="HeadLeft" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=769787432]
 visible = false
 layout_mode = 0
 offset_left = 160.0
@@ -275,7 +284,7 @@ offset_bottom = 180.0
 mouse_filter = 2
 color = Color(0.96, 0.34, 0.34, 0.28)
 
-[node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadLeft" unique_id=1612576474]
+[node name="Border" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadLeft" unique_id=1612576474]
 visible = false
 layout_mode = 0
 anchor_right = 1.0
@@ -285,7 +294,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.96599996, 0.439, 0.439, 0.28)
 
-[node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadLeft" unique_id=1338285697]
+[node name="Fill" type="MarginContainer" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadLeft" unique_id=1338285697]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -295,7 +304,7 @@ grow_vertical = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
 
-[node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadLeft/Fill" unique_id=1236387391]
+[node name="Label" type="Label" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadLeft/Fill" unique_id=1236387391]
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.96)
@@ -305,7 +314,7 @@ theme_override_constants/shadow_offset_y = 1
 theme_override_font_sizes/font_size = 13
 text = "HeadLeft"
 
-[node name="HeadRight" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=1414477306]
+[node name="HeadRight" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=1414477306]
 visible = false
 layout_mode = 0
 offset_left = 280.0
@@ -315,7 +324,7 @@ offset_bottom = 210.0
 mouse_filter = 2
 color = Color(0.96, 0.62, 0.24, 0.28)
 
-[node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadRight" unique_id=1966341748]
+[node name="Border" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadRight" unique_id=1966341748]
 visible = false
 layout_mode = 0
 anchor_right = 1.0
@@ -325,7 +334,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.96599996, 0.677, 0.354, 0.28)
 
-[node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadRight" unique_id=217540671]
+[node name="Fill" type="MarginContainer" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadRight" unique_id=217540671]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -335,7 +344,7 @@ grow_vertical = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
 
-[node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadRight/Fill" unique_id=455605048]
+[node name="Label" type="Label" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/HeadRight/Fill" unique_id=455605048]
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.96)
@@ -345,7 +354,7 @@ theme_override_constants/shadow_offset_y = 1
 theme_override_font_sizes/font_size = 13
 text = "HeadRight"
 
-[node name="Chest" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=2030241764]
+[node name="Chest" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=2030241764]
 visible = false
 layout_mode = 0
 offset_left = 110.0
@@ -355,7 +364,7 @@ offset_bottom = 520.0
 mouse_filter = 2
 color = Color(0.96, 0.86, 0.24, 0.28)
 
-[node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Chest" unique_id=1030862194]
+[node name="Border" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Chest" unique_id=1030862194]
 visible = false
 layout_mode = 0
 anchor_right = 1.0
@@ -365,7 +374,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.96599996, 0.88100004, 0.354, 0.28)
 
-[node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Chest" unique_id=651244542]
+[node name="Fill" type="MarginContainer" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Chest" unique_id=651244542]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -375,7 +384,7 @@ grow_vertical = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
 
-[node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Chest/Fill" unique_id=1377685524]
+[node name="Label" type="Label" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Chest/Fill" unique_id=1377685524]
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.96)
@@ -385,7 +394,7 @@ theme_override_constants/shadow_offset_y = 1
 theme_override_font_sizes/font_size = 13
 text = "Chest"
 
-[node name="LeftArm" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=731899806]
+[node name="LeftArm" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=731899806]
 visible = false
 layout_mode = 0
 offset_left = 80.0
@@ -394,7 +403,7 @@ offset_bottom = 182.0
 mouse_filter = 2
 color = Color(0.38, 0.84, 0.42, 0.28)
 
-[node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftArm" unique_id=408641511]
+[node name="Border" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftArm" unique_id=408641511]
 visible = false
 layout_mode = 0
 anchor_right = 1.0
@@ -404,7 +413,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.473, 0.86399996, 0.50699997, 0.28)
 
-[node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftArm" unique_id=393835266]
+[node name="Fill" type="MarginContainer" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftArm" unique_id=393835266]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -414,7 +423,7 @@ grow_vertical = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
 
-[node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftArm/Fill" unique_id=1399358342]
+[node name="Label" type="Label" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftArm/Fill" unique_id=1399358342]
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.96)
@@ -424,7 +433,7 @@ theme_override_constants/shadow_offset_y = 1
 theme_override_font_sizes/font_size = 13
 text = "LeftArm"
 
-[node name="RightArm" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=1712614215]
+[node name="RightArm" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=1712614215]
 visible = false
 layout_mode = 0
 offset_left = 400.0
@@ -434,7 +443,7 @@ offset_bottom = 290.0
 mouse_filter = 2
 color = Color(0.24, 0.78, 0.9, 0.28)
 
-[node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightArm" unique_id=585527879]
+[node name="Border" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightArm" unique_id=585527879]
 visible = false
 layout_mode = 0
 anchor_right = 1.0
@@ -444,7 +453,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.354, 0.81299996, 0.91499996, 0.28)
 
-[node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightArm" unique_id=1002417178]
+[node name="Fill" type="MarginContainer" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightArm" unique_id=1002417178]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -454,7 +463,7 @@ grow_vertical = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
 
-[node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightArm/Fill" unique_id=364209913]
+[node name="Label" type="Label" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightArm/Fill" unique_id=364209913]
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.96)
@@ -464,7 +473,7 @@ theme_override_constants/shadow_offset_y = 1
 theme_override_font_sizes/font_size = 13
 text = "RightArm"
 
-[node name="Waist" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=477406248]
+[node name="Waist" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=477406248]
 visible = false
 layout_mode = 0
 offset_left = 220.0
@@ -474,7 +483,7 @@ offset_bottom = 750.0
 mouse_filter = 2
 color = Color(0.44, 0.56, 0.96, 0.28)
 
-[node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Waist" unique_id=1087089047]
+[node name="Border" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Waist" unique_id=1087089047]
 visible = false
 layout_mode = 0
 anchor_right = 1.0
@@ -484,7 +493,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.524, 0.626, 0.96599996, 0.28)
 
-[node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Waist" unique_id=606426074]
+[node name="Fill" type="MarginContainer" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Waist" unique_id=606426074]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -494,7 +503,7 @@ grow_vertical = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
 
-[node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Waist/Fill" unique_id=2029806096]
+[node name="Label" type="Label" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/Waist/Fill" unique_id=2029806096]
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.96)
@@ -504,7 +513,7 @@ theme_override_constants/shadow_offset_y = 1
 theme_override_font_sizes/font_size = 13
 text = "Waist"
 
-[node name="LeftLeg" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=1925705489]
+[node name="LeftLeg" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=1925705489]
 visible = false
 layout_mode = 0
 offset_left = -100.0
@@ -514,7 +523,7 @@ offset_bottom = 700.0
 mouse_filter = 2
 color = Color(0.72, 0.44, 0.96, 0.28)
 
-[node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftLeg" unique_id=1356289345]
+[node name="Border" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftLeg" unique_id=1356289345]
 visible = false
 layout_mode = 0
 anchor_right = 1.0
@@ -524,7 +533,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.762, 0.524, 0.96599996, 0.28)
 
-[node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftLeg" unique_id=14751947]
+[node name="Fill" type="MarginContainer" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftLeg" unique_id=14751947]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -534,7 +543,7 @@ grow_vertical = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
 
-[node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftLeg/Fill" unique_id=13063830]
+[node name="Label" type="Label" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/LeftLeg/Fill" unique_id=13063830]
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.96)
@@ -544,7 +553,7 @@ theme_override_constants/shadow_offset_y = 1
 theme_override_font_sizes/font_size = 13
 text = "LeftLeg"
 
-[node name="RightLeg" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=1232166577]
+[node name="RightLeg" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer" unique_id=1232166577]
 visible = false
 layout_mode = 0
 offset_left = 370.0
@@ -554,7 +563,7 @@ offset_bottom = 720.0
 mouse_filter = 2
 color = Color(0.94, 0.4, 0.7, 0.28)
 
-[node name="Border" type="ColorRect" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightLeg" unique_id=1419699542]
+[node name="Border" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightLeg" unique_id=1419699542]
 visible = false
 layout_mode = 0
 anchor_right = 1.0
@@ -564,7 +573,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.949, 0.49, 0.745, 0.28)
 
-[node name="Fill" type="MarginContainer" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightLeg" unique_id=953627161]
+[node name="Fill" type="MarginContainer" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightLeg" unique_id=953627161]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -574,7 +583,7 @@ grow_vertical = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
 
-[node name="Label" type="Label" parent="MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightLeg/Fill" unique_id=1857229350]
+[node name="Label" type="Label" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion/Phase2AnchorPreviewLayer/RightLeg/Fill" unique_id=1857229350]
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.96)
@@ -584,14 +593,14 @@ theme_override_constants/shadow_offset_y = 1
 theme_override_font_sizes/font_size = 13
 text = "RightLeg"
 
-[node name="LeftArm" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=1000469115]
+[node name="LeftArm" type="Control" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion" unique_id=1000469115]
 visible = false
 anchors_preset = 0
 offset_left = 80.0
 offset_right = 150.0
 offset_bottom = 182.0
 
-[node name="HeadLeft" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=1990332631]
+[node name="HeadLeft" type="Control" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion" unique_id=1990332631]
 visible = false
 anchors_preset = 0
 offset_left = 160.0
@@ -599,7 +608,7 @@ offset_top = 100.0
 offset_right = 240.0
 offset_bottom = 180.0
 
-[node name="HeadRight" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=1355790063]
+[node name="HeadRight" type="Control" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion" unique_id=1355790063]
 visible = false
 anchors_preset = 0
 offset_left = 280.0
@@ -607,7 +616,7 @@ offset_top = 130.0
 offset_right = 360.0
 offset_bottom = 210.0
 
-[node name="RightLeg" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=913773421]
+[node name="RightLeg" type="Control" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion" unique_id=913773421]
 visible = false
 anchors_preset = 0
 offset_left = 370.0
@@ -615,7 +624,7 @@ offset_top = 370.0
 offset_right = 552.0
 offset_bottom = 720.0
 
-[node name="LeftLeg" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=1314564178]
+[node name="LeftLeg" type="Control" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion" unique_id=1314564178]
 visible = false
 anchors_preset = 0
 offset_left = -100.0
@@ -623,7 +632,7 @@ offset_top = 350.0
 offset_right = 82.0
 offset_bottom = 700.0
 
-[node name="Chest" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=931439333]
+[node name="Chest" type="Control" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion" unique_id=931439333]
 visible = false
 anchors_preset = 0
 offset_left = 110.0
@@ -631,7 +640,7 @@ offset_top = 250.0
 offset_right = 360.0
 offset_bottom = 520.0
 
-[node name="Waist" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=2090603079]
+[node name="Waist" type="Control" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion" unique_id=2090603079]
 visible = false
 anchors_preset = 0
 offset_left = 220.0
@@ -639,7 +648,7 @@ offset_top = 530.0
 offset_right = 340.0
 offset_bottom = 750.0
 
-[node name="RightArm" type="Control" parent="MainCharacterArea/CharacterPromptRegion" unique_id=239886867]
+[node name="RightArm" type="Control" parent="CharacterAlignmentRoot/MainCharacterArea/CharacterPromptRegion" unique_id=239886867]
 visible = false
 anchors_preset = 0
 offset_left = 400.0

@@ -78,7 +78,7 @@ func _get_reference_rect() -> TextureRect:
 	var screen := _get_game_screen()
 	if screen == null:
 		return null
-	return screen.get_node_or_null("BackgroundAnchor/Phase2EditorReference") as TextureRect
+	return screen.get_node_or_null("CharacterAlignmentRoot/BackgroundAnchor/Phase2EditorReference") as TextureRect
 
 func _get_game_screen() -> Node:
 	var current: Node = self
