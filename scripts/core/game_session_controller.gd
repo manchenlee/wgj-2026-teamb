@@ -435,9 +435,10 @@ func _get_character_visual_texture(visual_state: String) -> Texture2D:
 # ---------------------------------------------------------------------------
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED and is_node_ready() and not Engine.is_editor_hint():
+	if what == NOTIFICATION_RESIZED and is_node_ready():
 		_apply_character_alignment()
-		_sync_spot_anchor_layout()
+		if not Engine.is_editor_hint():
+			_sync_spot_anchor_layout()
 	elif what == NOTIFICATION_PREDELETE:
 		if not Engine.is_editor_hint() and overlay_animator != null:
 			overlay_animator.stop()
@@ -803,7 +804,10 @@ func _apply_character_alignment() -> void:
 	if character_alignment_root == null:
 		return
 	var phase_alignment_offset := _resolve_active_phase_alignment_offset()
-	_resolved_character_alignment_offset = shared_character_alignment_offset + phase_alignment_offset
+	_resolved_character_alignment_offset = Vector2(
+		shared_character_alignment_offset.x + phase_alignment_offset.x,
+		phase_alignment_offset.y
+	)
 	character_alignment_root.position = _resolved_character_alignment_offset
 
 func _resolve_active_phase_alignment_offset() -> Vector2:
@@ -812,19 +816,28 @@ func _resolve_active_phase_alignment_offset() -> Vector2:
 	var focus_layer := _get_character_alignment_focus_layer()
 	if focus_layer == null or focus_layer.texture == null:
 		return Vector2.ZERO
-	var focus_position := _get_texture_focus_position_in_alignment_root(
+	var focus_position := _get_texture_normalized_position_in_alignment_root(
 		focus_layer,
 		active_character_profile.character_visual_focus_normalized
 	)
+	var texture_size: Vector2 = focus_layer.texture.get_size()
+	var bottom_position := _get_texture_visible_normalized_position_in_alignment_root(
+		focus_layer,
+		Vector2(
+			active_character_profile.character_visual_focus_normalized.x,
+			active_character_profile.get_character_visual_bottom_normalized(texture_size)
+		)
+	)
 	var target_x := character_alignment_root.size.x * 0.5
-	return Vector2(target_x - focus_position.x, 0.0)
+	var target_y := character_alignment_root.size.y
+	return Vector2(target_x - focus_position.x, target_y - bottom_position.y)
 
 func _get_character_alignment_focus_layer() -> TextureRect:
 	if _is_phase_2_visual_profile_active() and phase_2_background_layer != null and phase_2_background_layer.texture != null:
 		return phase_2_background_layer
 	return background_placeholder
 
-func _get_texture_focus_position_in_alignment_root(texture_rect: TextureRect, focus_normalized: Vector2) -> Vector2:
+func _get_texture_normalized_position_in_alignment_root(texture_rect: TextureRect, normalized_position: Vector2) -> Vector2:
 	var texture := texture_rect.texture
 	if texture == null:
 		return Vector2.ZERO
@@ -835,7 +848,22 @@ func _get_texture_focus_position_in_alignment_root(texture_rect: TextureRect, fo
 	var texture_transform: Transform2D = texture_rect.get_global_transform_with_canvas()
 	var root_to_texture: Transform2D = root_transform.affine_inverse() * texture_transform
 	var content_rect: Rect2 = _get_texture_content_rect(texture_rect, texture_size)
-	return root_to_texture.origin + content_rect.position + content_rect.size * focus_normalized
+	return root_to_texture.origin + content_rect.position + content_rect.size * normalized_position
+
+func _get_texture_visible_normalized_position_in_alignment_root(texture_rect: TextureRect, normalized_position: Vector2) -> Vector2:
+	var texture := texture_rect.texture
+	if texture == null:
+		return Vector2.ZERO
+	var texture_size: Vector2 = texture.get_size()
+	if texture_size.x <= 0.0 or texture_size.y <= 0.0:
+		return Vector2.ZERO
+	var root_transform: Transform2D = character_alignment_root.get_global_transform_with_canvas()
+	var texture_transform: Transform2D = texture_rect.get_global_transform_with_canvas()
+	var root_to_texture: Transform2D = root_transform.affine_inverse() * texture_transform
+	var content_rect: Rect2 = _get_texture_content_rect(texture_rect, texture_size)
+	var unclipped_position := content_rect.position + content_rect.size * normalized_position
+	var clipped_position := unclipped_position.clamp(Vector2.ZERO, texture_rect.size)
+	return root_to_texture.origin + clipped_position
 
 func _get_texture_content_rect(texture_rect: TextureRect, texture_size: Vector2) -> Rect2:
 	var rect_size: Vector2 = texture_rect.size

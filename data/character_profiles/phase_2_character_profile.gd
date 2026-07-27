@@ -69,7 +69,8 @@ func _init() -> void:
 			"RightLeg": Rect2(380.0, 428.0, 116.0, 210.0)
 		},
 		Rect2(0.214, 0.296, 0.487, 0.319),
-		Vector2(0.527778, 0.5)
+		Vector2(0.527778, 0.5),
+		0.0
 	)
 
 func get_layer_texture_paths() -> Dictionary:
