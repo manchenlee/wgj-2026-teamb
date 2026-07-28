@@ -33,6 +33,7 @@ signal bgm_requested(track_key: String, use_fade: bool)
 @onready var main_character_area: Control = $CharacterAlignmentRoot/MainCharacterArea
 @onready var character_area = $CharacterAlignmentRoot/MainCharacterArea/CharacterArea
 @onready var character_prompt_region = %CharacterPromptRegion
+@onready var speech_bubble_anchor: Control = $CharacterAlignmentRoot/MainCharacterArea/SpeechBubbleAnchor
 @onready var arousal_visualization = $CharacterAlignmentRoot/MainCharacterArea/CentralArousalVisualization
 @onready var dialogue_panel = $ConversationViewport
 @onready var choice_panel: ChoicePanel = %ChoicePanel
@@ -82,6 +83,7 @@ func _ready() -> void:
 	_update_character_visual_state()
 	_apply_overlay_motion_set()
 	_bind_breathing_targets()
+	dialogue_panel.set_speech_bubble_anchor(speech_bubble_anchor)
 	_update_layout_debug_regions()
 
 	if Engine.is_editor_hint():
@@ -163,6 +165,8 @@ func _apply_phase_by_index(phase_index: int, announce_phase: bool) -> void:
 	overlay_motion_set = _build_overlay_motion_set()
 	_apply_phase_visual_profile()
 	_apply_character_alignment()
+	if dialogue_panel != null:
+		dialogue_panel.refresh_active_dialogue_position()
 	if spot_manager != null:
 		spot_manager.set_phase_config(active_phase_config)
 		_sync_spot_anchor_layout()
@@ -437,6 +441,8 @@ func _get_character_visual_texture(visual_state: String) -> Texture2D:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready():
 		_apply_character_alignment()
+		if dialogue_panel != null:
+			dialogue_panel.refresh_active_dialogue_position()
 		if not Engine.is_editor_hint():
 			_sync_spot_anchor_layout()
 	elif what == NOTIFICATION_PREDELETE:
@@ -799,6 +805,8 @@ func _update_layout_debug_regions() -> void:
 		region.visible = debug_visible
 	if character_prompt_region != null:
 		character_prompt_region.set_debug_bounds_visible(debug_visible)
+	if speech_bubble_anchor != null:
+		speech_bubble_anchor.visible = debug_visible
 
 func _apply_character_alignment() -> void:
 	if character_alignment_root == null:

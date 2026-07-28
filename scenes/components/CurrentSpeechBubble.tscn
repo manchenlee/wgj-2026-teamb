@@ -1,0 +1,54 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/current_speech_bubble.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://c0vvbw15y8mg8" path="res://assets/art/ui/text2.png" id="2_texture"]
+[ext_resource type="FontFile" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="3_font"]
+
+[node name="CurrentSpeechBubble" type="Control"]
+custom_minimum_size = Vector2(180, 72)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 420.0
+offset_bottom = 104.0
+mouse_filter = 2
+script = ExtResource("1_script")
+max_width = 420.0
+minimum_bubble_size = Vector2(180, 72)
+text_margins = Vector4(24, 16, 28, 18)
+
+[node name="BubbleTexture" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_texture")
+expand_mode = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 18
+
+[node name="TextLabel" type="Label" parent="MarginContainer"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 0
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 24
+text = "Dialogue"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
