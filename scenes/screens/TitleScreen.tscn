@@ -1,10 +1,10 @@
 [gd_scene format=3 uid="uid://b5b0dwoyk3nlh"]
 
 [ext_resource type="Script" uid="uid://bm325q3w8fibw" path="res://scripts/core/title_screen.gd" id="1_title"]
-[ext_resource type="Texture2D" uid="uid://bmy2w2x3um4hw" path="res://assets/btn.png" id="2_btn"]
-[ext_resource type="Texture2D" uid="uid://bvnmskadm1bmg" path="res://assets/cover_0.png" id="3_cover"]
+[ext_resource type="Texture2D" uid="uid://bmy2w2x3um4hw" path="res://assets/art/ui/screens/btn.png" id="2_btn"]
+[ext_resource type="Texture2D" uid="uid://bvnmskadm1bmg" path="res://assets/art/screens/title/cover_0.png" id="3_cover"]
 [ext_resource type="Texture2D" uid="uid://c56yim0xees0g" path="res://assets/art/ui/logo.png" id="5_logo"]
-[ext_resource type="Texture2D" uid="uid://4wr2irri54pd" path="res://assets/btn_skip.png" id="8_skip"]
+[ext_resource type="Texture2D" uid="uid://4wr2irri54pd" path="res://assets/art/ui/screens/btn_skip.png" id="8_skip"]
 [ext_resource type="FontFile" uid="uid://db5u741tm2yje" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="9_bold"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_start"]
