@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bdqnanpg1b21t"
-path="res://.godot/imported/end04.png-e795fd2256208007a33d8f8a3165d726.ctex"
+path="res://.godot/imported/end04.png-c1731ceae20158cc53fdaafb40b32558.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/end04.png"
-dest_files=["res://.godot/imported/end04.png-e795fd2256208007a33d8f8a3165d726.ctex"]
+source_file="res://assets/art/screens/ending/end04.png"
+dest_files=["res://.godot/imported/end04.png-c1731ceae20158cc53fdaafb40b32558.ctex"]
 
 [params]
 
