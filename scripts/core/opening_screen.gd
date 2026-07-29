@@ -4,7 +4,7 @@ signal continue_pressed
 signal skip_pressed
 
 const OPENING_DATA_PATH := "res://assets/dialogue/opening.json"
-const DEFAULT_BACKGROUND_PATH := "res://assets/curtain.jpg"
+const DEFAULT_BACKGROUND_PATH := "res://assets/art/background/curtain.jpg"
 const DEFAULT_NEXT_TEXT := "NEXT"
 const FINISH_TEXT := "START"
 const DEFAULT_SPEAKER := "旁白"

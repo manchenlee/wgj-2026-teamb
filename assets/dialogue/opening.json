@@ -2,7 +2,7 @@
   "chapter": "序章",
   "steps": [
     {
-      "background": "res://assets/curtain.jpg",
+      "background": "res://assets/art/background/curtain.jpg",
       "speaker": "店到店訊息",
       "text": "您的包裹已抵達。",
       "character": {

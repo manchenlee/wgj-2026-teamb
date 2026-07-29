@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://smt2dt6or873"]
 
 [ext_resource type="Script" uid="uid://frcwqljbelob" path="res://scripts/core/warning_screen.gd" id="1_warn"]
-[ext_resource type="Texture2D" uid="uid://dc7csqq8gypo5" path="res://assets/curtain.jpg" id="2_curtain"]
+[ext_resource type="Texture2D" uid="uid://dc7csqq8gypo5" path="res://assets/art/background/curtain.jpg" id="2_curtain"]
 [ext_resource type="Texture2D" uid="uid://csiddsncvaf8p" path="res://assets/art/ui/screens/warning.png" id="3_warning"]
 [ext_resource type="FontFile" uid="uid://cwkj3luqwe71h" path="res://assets/fonts/ShipporiMincho-SemiBold.ttf" id="4_i7tt6"]
 
