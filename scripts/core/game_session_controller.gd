@@ -34,6 +34,8 @@ signal bgm_requested(track_key: String, use_fade: bool)
 @onready var character_area = $CharacterAlignmentRoot/MainCharacterArea/CharacterArea
 @onready var character_prompt_region = %CharacterPromptRegion
 @onready var speech_bubble_anchor: Control = $CharacterAlignmentRoot/MainCharacterArea/SpeechBubbleAnchor
+@onready var left_choice_anchor_root: Control = $CharacterAlignmentRoot/MainCharacterArea/ChoiceAnchorRegion/LeftChoiceAnchors
+@onready var right_choice_anchor_root: Control = $CharacterAlignmentRoot/MainCharacterArea/ChoiceAnchorRegion/RightChoiceAnchors
 @onready var arousal_visualization = $CharacterAlignmentRoot/MainCharacterArea/CentralArousalVisualization
 @onready var dialogue_panel = $ConversationViewport
 @onready var choice_panel: ChoicePanel = %ChoicePanel
@@ -84,6 +86,10 @@ func _ready() -> void:
 	_apply_overlay_motion_set()
 	_bind_breathing_targets()
 	dialogue_panel.set_speech_bubble_anchor(speech_bubble_anchor)
+	choice_panel.set_choice_anchor_groups(
+		_get_choice_anchor_children(left_choice_anchor_root),
+		_get_choice_anchor_children(right_choice_anchor_root)
+	)
 	_update_layout_debug_regions()
 
 	if Engine.is_editor_hint():
@@ -167,6 +173,8 @@ func _apply_phase_by_index(phase_index: int, announce_phase: bool) -> void:
 	_apply_character_alignment()
 	if dialogue_panel != null:
 		dialogue_panel.refresh_active_dialogue_position()
+	if choice_panel != null:
+		choice_panel.refresh_choice_anchor_positions()
 	if spot_manager != null:
 		spot_manager.set_phase_config(active_phase_config)
 		_sync_spot_anchor_layout()
@@ -443,6 +451,8 @@ func _notification(what: int) -> void:
 		_apply_character_alignment()
 		if dialogue_panel != null:
 			dialogue_panel.refresh_active_dialogue_position()
+		if choice_panel != null:
+			choice_panel.refresh_choice_anchor_positions()
 		if not Engine.is_editor_hint():
 			_sync_spot_anchor_layout()
 	elif what == NOTIFICATION_PREDELETE:
@@ -807,6 +817,8 @@ func _update_layout_debug_regions() -> void:
 		character_prompt_region.set_debug_bounds_visible(debug_visible)
 	if speech_bubble_anchor != null:
 		speech_bubble_anchor.visible = debug_visible
+	_set_choice_anchor_debug_visible(left_choice_anchor_root, debug_visible)
+	_set_choice_anchor_debug_visible(right_choice_anchor_root, debug_visible)
 
 func _apply_character_alignment() -> void:
 	if character_alignment_root == null:
@@ -922,6 +934,22 @@ func _sync_spot_anchor_layout() -> void:
 		return
 	spot_manager.set_available_anchor_ids(character_prompt_region.get_interaction_spot_anchor_ids())
 	spot_manager.set_bounds_rect(_get_prompt_region_rect_in_prompt_layer())
+
+func _get_choice_anchor_children(anchor_root: Control) -> Array[Control]:
+	var anchors: Array[Control] = []
+	if anchor_root == null:
+		return anchors
+	for child in anchor_root.get_children():
+		if child is Control:
+			anchors.append(child as Control)
+	return anchors
+
+func _set_choice_anchor_debug_visible(anchor_root: Control, debug_visible: bool) -> void:
+	if anchor_root == null:
+		return
+	for child in anchor_root.get_children():
+		if child is Control:
+			(child as Control).visible = debug_visible
 
 func _get_prompt_region_rect_in_prompt_layer() -> Rect2:
 	var prompt_layer := character_area.get_node_or_null("PromptLayer") as Control

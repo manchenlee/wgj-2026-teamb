@@ -674,6 +674,169 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.28, 1, 0.78, 0.72)
 
+[node name="ChoiceAnchorRegion" type="Control" parent="CharacterAlignmentRoot/MainCharacterArea" unique_id=1428132180]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="LeftChoiceAnchors" type="Control" parent="CharacterAlignmentRoot/MainCharacterArea/ChoiceAnchorRegion" unique_id=723672102]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="LeftTop" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/ChoiceAnchorRegion/LeftChoiceAnchors" unique_id=1469269384]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -430.0
+offset_top = -152.0
+offset_right = -418.0
+offset_bottom = -140.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.25, 0.72, 1, 0.72)
+
+[node name="LeftUpperMiddle" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/ChoiceAnchorRegion/LeftChoiceAnchors" unique_id=991518932]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -454.0
+offset_top = 18.0
+offset_right = -442.0
+offset_bottom = 30.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.25, 0.72, 1, 0.72)
+
+[node name="LeftLowerMiddle" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/ChoiceAnchorRegion/LeftChoiceAnchors" unique_id=1289411278]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -430.0
+offset_top = 188.0
+offset_right = -418.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.25, 0.72, 1, 0.72)
+
+[node name="LeftBottom" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/ChoiceAnchorRegion/LeftChoiceAnchors" unique_id=948199575]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -390.0
+offset_top = 358.0
+offset_right = -378.0
+offset_bottom = 370.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.25, 0.72, 1, 0.72)
+
+[node name="RightChoiceAnchors" type="Control" parent="CharacterAlignmentRoot/MainCharacterArea/ChoiceAnchorRegion" unique_id=412165594]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="RightTop" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/ChoiceAnchorRegion/RightChoiceAnchors" unique_id=1909630421]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 418.0
+offset_top = -112.0
+offset_right = 430.0
+offset_bottom = -100.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0.52, 0.32, 0.72)
+
+[node name="RightUpperMiddle" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/ChoiceAnchorRegion/RightChoiceAnchors" unique_id=866533742]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 442.0
+offset_top = 58.0
+offset_right = 454.0
+offset_bottom = 70.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0.52, 0.32, 0.72)
+
+[node name="RightLowerMiddle" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/ChoiceAnchorRegion/RightChoiceAnchors" unique_id=276900283]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 418.0
+offset_top = 228.0
+offset_right = 430.0
+offset_bottom = 240.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0.52, 0.32, 0.72)
+
+[node name="RightBottom" type="ColorRect" parent="CharacterAlignmentRoot/MainCharacterArea/ChoiceAnchorRegion/RightChoiceAnchors" unique_id=768981744]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 378.0
+offset_top = 358.0
+offset_right = 390.0
+offset_bottom = 370.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0.52, 0.32, 0.72)
+
 [node name="ConversationViewport" type="Control" parent="." unique_id=1454768142]
 z_index = 4
 clip_contents = false
@@ -710,14 +873,11 @@ mouse_filter = 2
 [node name="ChoicePanel" parent="ChoiceLayer" unique_id=1272390169 instance=ExtResource("13_choice_panel")]
 unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -166.0
-offset_bottom = -20.0
 grow_horizontal = 2
-grow_vertical = 0
+grow_vertical = 2
 
 [node name="HudLayer" type="Control" parent="." unique_id=564354284]
 z_index = 4
