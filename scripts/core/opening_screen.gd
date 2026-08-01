@@ -4,6 +4,7 @@ signal continue_pressed
 signal skip_pressed
 
 const OPENING_DATA_PATH := "res://assets/dialogue/opening.json"
+const RULE_SCREEN_PATH := "res://scenes/screens/RuleScreen.tscn"
 const DEFAULT_BACKGROUND_PATH := "res://assets/art/background/curtain.jpg"
 const DEFAULT_NEXT_TEXT := "NEXT"
 const FINISH_TEXT := "START"
@@ -19,7 +20,8 @@ const DEFAULT_SPEAKER := "旁白"
 @onready var dialogue_label: RichTextLabel = $SafeArea/RootLayout/DialogueBox/DialogueLayout/DialogueLabel
 @onready var hint_label: Label = $SafeArea/RootLayout/DialogueBox/DialogueLayout/FooterRow/HintLabel
 @onready var next_button: Button = $SafeArea/RootLayout/DialogueBox/DialogueLayout/FooterRow/NextButton
-@onready var _skip_button: TextureButton = $SkipButton
+@onready var _skip_button_root: Control = $SkipButtonRoot
+@onready var _skip_button: Button = $SkipButtonRoot/SkipButton
 
 var _entries: Array = []
 var _current_entry_index := -1
@@ -32,15 +34,21 @@ var _character_texture_cache: Dictionary = {}
 var _shake_tween: Tween
 var _glow_tween: Tween
 var _fade_tween: Tween
+var _skip_hover_tween: Tween
 var _pivot_rest_position := Vector2.ZERO
 var _current_character_offset := Vector2.ZERO
 var _current_character_scale := Vector2.ONE
+var _skip_button_base_scale := Vector2.ONE
 
 func _ready() -> void:
 	_base_sprite = _create_stage_sprite("base")
 	_base_glow_sprite = _create_stage_sprite("base_glow", true)
 	next_button.pressed.connect(_advance_script)
-	_skip_button.pressed.connect(func() -> void: skip_pressed.emit())
+	_skip_button.mouse_entered.connect(_on_skip_mouse_entered)
+	_skip_button.mouse_exited.connect(_on_skip_mouse_exited)
+	_skip_button.pressed.connect(_on_skip_pressed)
+	_skip_button_base_scale = _skip_button_root.scale
+	_skip_button_root.pivot_offset = _skip_button_root.size * 0.5
 	resized.connect(_layout_character_stage)
 	_load_opening_script()
 	_layout_character_stage()
@@ -58,6 +66,27 @@ func _unhandled_input(event: InputEvent) -> void:
 func advance_input_handled() -> void:
 	get_viewport().set_input_as_handled()
 	_advance_script()
+
+func _on_skip_pressed() -> void:
+	get_viewport().set_input_as_handled()
+	if skip_pressed.get_connections().is_empty():
+		get_tree().change_scene_to_file(RULE_SCREEN_PATH)
+		return
+	skip_pressed.emit()
+
+func _on_skip_mouse_entered() -> void:
+	if _skip_hover_tween != null:
+		_skip_hover_tween.kill()
+	_skip_hover_tween = create_tween().set_trans(Tween.TRANS_SINE).set_parallel(true)
+	_skip_hover_tween.tween_property(_skip_button_root, "scale", _skip_button_base_scale * 1.04, 0.15)
+	_skip_hover_tween.tween_property(_skip_button_root, "modulate", Color(1.08, 1.08, 1.08, 1.0), 0.15)
+
+func _on_skip_mouse_exited() -> void:
+	if _skip_hover_tween != null:
+		_skip_hover_tween.kill()
+	_skip_hover_tween = create_tween().set_trans(Tween.TRANS_SINE).set_parallel(true)
+	_skip_hover_tween.tween_property(_skip_button_root, "scale", _skip_button_base_scale, 0.15)
+	_skip_hover_tween.tween_property(_skip_button_root, "modulate", Color.WHITE, 0.15)
 
 func _advance_script() -> void:
 	if _entries.is_empty():
