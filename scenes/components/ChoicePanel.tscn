@@ -5,20 +5,24 @@
 [ext_resource type="FontFile" uid="uid://db5u741tm2yje" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="3_choice_font"]
 
 [node name="ChoicePanel" type="Control"]
-layout_mode = 0
-offset_left = 804.0
-offset_top = 18.0
-offset_right = 1428.0
-offset_bottom = 164.0
-mouse_filter = 1
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("1_choice")
 
 [node name="DebugRegionTint" type="ColorRect" parent="."]
 visible = false
 z_index = -1
-layout_mode = 0
-offset_right = 624.0
-offset_bottom = 146.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 color = Color(0.98, 0.36, 0.62, 0.18)
 
@@ -49,15 +53,15 @@ theme_override_fonts/font = ExtResource("3_choice_font")
 theme_override_font_sizes/font_size = 22
 horizontal_alignment = 1
 vertical_alignment = 1
-autowrap_mode = 2
+autowrap_mode = 3
 mouse_filter = 2
 
 [node name="ChoiceButton2" type="TextureButton" parent="."]
 modulate = Color(0.42, 0.42, 0.42, 1)
 custom_minimum_size = Vector2(300, 146)
 layout_mode = 0
-offset_left = 324.0
-offset_right = 624.0
+offset_left = 340.0
+offset_right = 640.0
 offset_bottom = 146.0
 focus_mode = 0
 ignore_texture_size = true
@@ -80,5 +84,5 @@ theme_override_fonts/font = ExtResource("3_choice_font")
 theme_override_font_sizes/font_size = 22
 horizontal_alignment = 1
 vertical_alignment = 1
-autowrap_mode = 2
+autowrap_mode = 3
 mouse_filter = 2

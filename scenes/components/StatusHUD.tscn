@@ -1,26 +1,15 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/status_hud.gd" id="1_hud"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/heart.png" id="2_heart"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/musical.png" id="3_staff"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/Rectangle 7.png" id="4_bar"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/musical note.png" id="5_note"]
-[ext_resource type="PackedScene" path="res://scenes/components/ChoicePanel.tscn" id="6_choice_panel"]
-
 [node name="StatusHUD" type="Control"]
+custom_minimum_size = Vector2(820, 200)
 clip_contents = false
 mouse_filter = 2
 script = ExtResource("1_hud")
-
-[node name="HUDBackground" type="ColorRect" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0.160784, 0.0117647, 0.0823529, 1)
 
 [node name="ArousalMeter" type="Control" parent="."]
 layout_mode = 0
@@ -113,6 +102,3 @@ offset_top = 86.175
 offset_right = 87.6
 offset_bottom = 86.175
 mouse_filter = 2
-
-[node name="ChoicePanel" parent="." instance=ExtResource("6_choice_panel")]
-unique_name_in_owner = true

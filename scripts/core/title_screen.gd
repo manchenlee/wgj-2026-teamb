@@ -12,9 +12,9 @@ signal debug_requested
 @onready var _cover_overlay: TextureRect = $CoverOverlay
 @onready var _skip_button: TextureButton = $SkipButton
 
-const _COVER_1 := preload("res://assets/cover_1.png")
-const _COVER_2 := preload("res://assets/cover_2.png")
-const _COVER_3 := preload("res://assets/cover_3.png")
+const _COVER_1 := preload("res://assets/art/screens/title/cover_1.png")
+const _COVER_2 := preload("res://assets/art/screens/title/cover_2.png")
+const _COVER_3 := preload("res://assets/art/screens/title/cover_3.png")
 
 var _hover_tween: Tween
 var _transitioning := false

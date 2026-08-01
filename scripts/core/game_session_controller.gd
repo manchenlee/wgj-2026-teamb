@@ -20,27 +20,33 @@ signal bgm_requested(track_key: String, use_fade: bool)
 @export var show_phase2_editor_reference: bool = true
 @export var debug_start_phase_id: String = ""
 @export var safe_word: String = Config.SAFE_WORD_DEFAULT
+@export var shared_character_alignment_offset: Vector2 = Vector2.ZERO
 
-@onready var background_placeholder: TextureRect = $BackgroundAnchor/BackgroundPlaceholder
-@onready var overlay_animator = $BackgroundAnchor/OverlayAnimator
-@onready var breathing_controller = $BackgroundAnchor/BreathingController
-@onready var phase_2_background_layer: TextureRect = $BackgroundAnchor/Phase2BackgroundLayer
-@onready var phase_2_flush_layer: TextureRect = $BackgroundAnchor/Phase2FlushLayer
-@onready var phase_2_face_layer: TextureRect = $BackgroundAnchor/Phase2FaceLayer
-@onready var phase_2_gameover_overlay: TextureRect = $BackgroundAnchor/Phase2GameoverOverlay
-@onready var main_character_area: Control = $MainCharacterArea
-@onready var character_area = $MainCharacterArea/CharacterArea
+@onready var character_alignment_root: Control = $CharacterAlignmentRoot
+@onready var background_placeholder: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/BackgroundPlaceholder
+@onready var overlay_animator = $CharacterAlignmentRoot/BackgroundAnchor/OverlayAnimator
+@onready var breathing_controller = $CharacterAlignmentRoot/BackgroundAnchor/BreathingController
+@onready var phase_2_background_layer: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/Phase2BackgroundLayer
+@onready var phase_2_flush_layer: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/Phase2FlushLayer
+@onready var phase_2_face_layer: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/Phase2FaceLayer
+@onready var phase_2_gameover_overlay: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/Phase2GameoverOverlay
+@onready var main_character_area: Control = $CharacterAlignmentRoot/MainCharacterArea
+@onready var character_area = $CharacterAlignmentRoot/MainCharacterArea/CharacterArea
 @onready var character_prompt_region = %CharacterPromptRegion
-@onready var arousal_visualization = $MainCharacterArea/CentralArousalVisualization
+@onready var speech_bubble_anchor: Control = $CharacterAlignmentRoot/MainCharacterArea/SpeechBubbleAnchor
+@onready var left_choice_anchor_root: Control = $CharacterAlignmentRoot/MainCharacterArea/ChoiceAnchorRegion/LeftChoiceAnchors
+@onready var right_choice_anchor_root: Control = $CharacterAlignmentRoot/MainCharacterArea/ChoiceAnchorRegion/RightChoiceAnchors
+@onready var arousal_visualization = $CharacterAlignmentRoot/MainCharacterArea/CentralArousalVisualization
 @onready var dialogue_panel = $ConversationViewport
-@onready var status_hud = $BottomHUD
+@onready var choice_panel: ChoicePanel = %ChoicePanel
+@onready var status_hud: StatusHUD = %StatusHUD
 @onready var phase_debug_label: Label = $PhaseDebugLabel
 @onready var phase_skip_button: Button = $Phase2SkipButton
 @onready var layout_debug_regions := [
-	$MainCharacterArea/DebugRegionTint,
+	$CharacterAlignmentRoot/MainCharacterArea/DebugRegionTint,
 	$ConversationViewport/DebugRegionTint,
-	$BottomHUD/DebugRegionTint,
-	$BottomHUD/ChoicePanel/DebugRegionTint
+	$HudLayer/TopHudCenter/StatusHUD/DebugRegionTint,
+	$ChoiceLayer/ChoicePanel/DebugRegionTint
 ]
 @onready var feedback_timer: Timer = $FeedbackTimer
 @onready var spot_spawn_timer: Timer = $SpotSpawnTimer
@@ -68,6 +74,7 @@ var active_phase_config: PhaseConfig = null
 var active_character_profile = null
 var has_switched_to_game_bgm: bool = false
 var last_requested_bgm_key: String = ""
+var _resolved_character_alignment_offset: Vector2 = Vector2.ZERO
 
 # Telemetry from spot manager for debug readout
 var _last_spot_telemetry: Dictionary = {}
@@ -78,6 +85,11 @@ func _ready() -> void:
 	_update_character_visual_state()
 	_apply_overlay_motion_set()
 	_bind_breathing_targets()
+	dialogue_panel.set_speech_bubble_anchor(speech_bubble_anchor)
+	choice_panel.set_choice_anchor_groups(
+		_get_choice_anchor_children(left_choice_anchor_root),
+		_get_choice_anchor_children(right_choice_anchor_root)
+	)
 	_update_layout_debug_regions()
 
 	if Engine.is_editor_hint():
@@ -87,7 +99,7 @@ func _ready() -> void:
 
 	feedback_rng.randomize()
 	set_process_unhandled_input(true)
-	dialogue_panel.choice_selected.connect(_on_choice_selected)
+	choice_panel.choice_selected.connect(_on_choice_selected)
 	phase_skip_button.pressed.connect(_on_phase_2_skip_pressed)
 	feedback_timer.timeout.connect(_on_feedback_timer_timeout)
 	choice_timeout_timer.timeout.connect(_on_choice_timeout)
@@ -158,6 +170,11 @@ func _apply_phase_by_index(phase_index: int, announce_phase: bool) -> void:
 	_cache_character_visual_textures()
 	overlay_motion_set = _build_overlay_motion_set()
 	_apply_phase_visual_profile()
+	_apply_character_alignment()
+	if dialogue_panel != null:
+		dialogue_panel.refresh_active_dialogue_position()
+	if choice_panel != null:
+		choice_panel.refresh_choice_anchor_positions()
 	if spot_manager != null:
 		spot_manager.set_phase_config(active_phase_config)
 		_sync_spot_anchor_layout()
@@ -430,8 +447,14 @@ func _get_character_visual_texture(visual_state: String) -> Texture2D:
 # ---------------------------------------------------------------------------
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED and is_node_ready() and not Engine.is_editor_hint():
-		_sync_spot_anchor_layout()
+	if what == NOTIFICATION_RESIZED and is_node_ready():
+		_apply_character_alignment()
+		if dialogue_panel != null:
+			dialogue_panel.refresh_active_dialogue_position()
+		if choice_panel != null:
+			choice_panel.refresh_choice_anchor_positions()
+		if not Engine.is_editor_hint():
+			_sync_spot_anchor_layout()
 	elif what == NOTIFICATION_PREDELETE:
 		if not Engine.is_editor_hint() and overlay_animator != null:
 			overlay_animator.stop()
@@ -464,7 +487,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_dialogue_choice_input(index: int) -> void:
 	if not waiting_for_choice:
 		return
-	dialogue_panel.emit_choice_by_index(index)
+	choice_panel.emit_choice_by_index(index)
 
 # ---------------------------------------------------------------------------
 # Run lifecycle
@@ -552,7 +575,8 @@ func get_debug_state() -> Dictionary:
 		"spot_incr": "%.1f" % float(telemetry.get("incremental_gain", 0.0)),
 		"spot_bonus": "%.1f" % float(telemetry.get("completion_bonus", 0.0)),
 		"spot_penalty": "%.1f" % float(telemetry.get("penalty", 0.0)),
-		"spot_net": "%.1f" % float(telemetry.get("net_physical_change", 0.0))
+		"spot_net": "%.1f" % float(telemetry.get("net_physical_change", 0.0)),
+		"alignment_x": "%.1f" % _resolved_character_alignment_offset.x
 	}
 
 # ---------------------------------------------------------------------------
@@ -587,7 +611,7 @@ func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	choice_timeout_timer.stop()
 	dialogue_panel.append_history(choice_text, "player")
 	dialogue_panel.hide_prompt()
-	dialogue_panel.hide_choices()
+	choice_panel.clear_choices()
 	waiting_for_choice = false
 	var outcome := dialogue_controller.apply_choice(choice_quality, arousal_model)
 	var ending_type := str(outcome.get("ending_type", ""))
@@ -607,7 +631,7 @@ func _on_choice_timeout() -> void:
 		return
 	waiting_for_choice = false
 	dialogue_panel.hide_prompt()
-	dialogue_panel.hide_choices()
+	choice_panel.clear_choices()
 	character_area.show_ignored_reaction()
 	dialogue_panel.append_history(dialogue_controller.get_timeout_reply(), "companion")
 	_schedule_next_feedback_message()
@@ -622,14 +646,14 @@ func _push_next_dialogue_event() -> void:
 		waiting_for_choice = true
 		dialogue_panel.hide_prompt()
 		dialogue_panel.append_history(str(current_prompt.get("text", Config.FEEDBACK_MESSAGE_TEXT)), "companion")
-		dialogue_panel.show_choices(current_prompt.get("choices", {}))
+		choice_panel.show_choices(current_prompt.get("choices", {}))
 		feedback_timer.stop()
 		choice_timeout_timer.start(float(active_phase_config.choice_timeout_seconds))
 	else:
 		waiting_for_choice = false
 		dialogue_panel.hide_prompt()
 		dialogue_panel.append_history(str(current_prompt.get("text", Config.FEEDBACK_MESSAGE_TEXT)), "companion")
-		dialogue_panel.hide_choices()
+		choice_panel.clear_choices()
 		choice_timeout_timer.stop()
 		_schedule_next_feedback_message()
 
@@ -664,7 +688,7 @@ func _begin_phase_transition() -> void:
 	waiting_for_choice = false
 	current_prompt = {}
 	dialogue_panel.hide_prompt()
-	dialogue_panel.hide_choices()
+	choice_panel.clear_choices()
 	var transition_text := active_phase_config.transition_feedback_text
 	if not transition_text.is_empty():
 		dialogue_panel.append_history(transition_text, "system")
@@ -791,6 +815,98 @@ func _update_layout_debug_regions() -> void:
 		region.visible = debug_visible
 	if character_prompt_region != null:
 		character_prompt_region.set_debug_bounds_visible(debug_visible)
+	if speech_bubble_anchor != null:
+		speech_bubble_anchor.visible = debug_visible
+	_set_choice_anchor_debug_visible(left_choice_anchor_root, debug_visible)
+	_set_choice_anchor_debug_visible(right_choice_anchor_root, debug_visible)
+
+func _apply_character_alignment() -> void:
+	if character_alignment_root == null:
+		return
+	var phase_alignment_offset := _resolve_active_phase_alignment_offset()
+	_resolved_character_alignment_offset = Vector2(
+		shared_character_alignment_offset.x + phase_alignment_offset.x,
+		phase_alignment_offset.y
+	)
+	character_alignment_root.position = _resolved_character_alignment_offset
+
+func _resolve_active_phase_alignment_offset() -> Vector2:
+	if active_character_profile == null or character_alignment_root == null:
+		return Vector2.ZERO
+	var focus_layer := _get_character_alignment_focus_layer()
+	if focus_layer == null or focus_layer.texture == null:
+		return Vector2.ZERO
+	var focus_position := _get_texture_normalized_position_in_alignment_root(
+		focus_layer,
+		active_character_profile.character_visual_focus_normalized
+	)
+	var texture_size: Vector2 = focus_layer.texture.get_size()
+	var bottom_position := _get_texture_visible_normalized_position_in_alignment_root(
+		focus_layer,
+		Vector2(
+			active_character_profile.character_visual_focus_normalized.x,
+			active_character_profile.get_character_visual_bottom_normalized(texture_size)
+		)
+	)
+	var target_x := character_alignment_root.size.x * 0.5
+	var target_y := character_alignment_root.size.y
+	return Vector2(target_x - focus_position.x, target_y - bottom_position.y)
+
+func _get_character_alignment_focus_layer() -> TextureRect:
+	if _is_phase_2_visual_profile_active() and phase_2_background_layer != null and phase_2_background_layer.texture != null:
+		return phase_2_background_layer
+	return background_placeholder
+
+func _get_texture_normalized_position_in_alignment_root(texture_rect: TextureRect, normalized_position: Vector2) -> Vector2:
+	var texture := texture_rect.texture
+	if texture == null:
+		return Vector2.ZERO
+	var texture_size: Vector2 = texture.get_size()
+	if texture_size.x <= 0.0 or texture_size.y <= 0.0:
+		return Vector2.ZERO
+	var root_transform: Transform2D = character_alignment_root.get_global_transform_with_canvas()
+	var texture_transform: Transform2D = texture_rect.get_global_transform_with_canvas()
+	var root_to_texture: Transform2D = root_transform.affine_inverse() * texture_transform
+	var content_rect: Rect2 = _get_texture_content_rect(texture_rect, texture_size)
+	return root_to_texture.origin + content_rect.position + content_rect.size * normalized_position
+
+func _get_texture_visible_normalized_position_in_alignment_root(texture_rect: TextureRect, normalized_position: Vector2) -> Vector2:
+	var texture := texture_rect.texture
+	if texture == null:
+		return Vector2.ZERO
+	var texture_size: Vector2 = texture.get_size()
+	if texture_size.x <= 0.0 or texture_size.y <= 0.0:
+		return Vector2.ZERO
+	var root_transform: Transform2D = character_alignment_root.get_global_transform_with_canvas()
+	var texture_transform: Transform2D = texture_rect.get_global_transform_with_canvas()
+	var root_to_texture: Transform2D = root_transform.affine_inverse() * texture_transform
+	var content_rect: Rect2 = _get_texture_content_rect(texture_rect, texture_size)
+	var unclipped_position := content_rect.position + content_rect.size * normalized_position
+	var clipped_position := unclipped_position.clamp(Vector2.ZERO, texture_rect.size)
+	return root_to_texture.origin + clipped_position
+
+func _get_texture_content_rect(texture_rect: TextureRect, texture_size: Vector2) -> Rect2:
+	var rect_size: Vector2 = texture_rect.size
+	if rect_size.x <= 0.0 or rect_size.y <= 0.0:
+		return Rect2(Vector2.ZERO, Vector2.ZERO)
+	match texture_rect.stretch_mode:
+		TextureRect.STRETCH_KEEP_ASPECT_CENTERED:
+			var centered_scale: float = min(rect_size.x / texture_size.x, rect_size.y / texture_size.y)
+			var centered_size: Vector2 = texture_size * centered_scale
+			return Rect2((rect_size - centered_size) * 0.5, centered_size)
+		TextureRect.STRETCH_KEEP_ASPECT_COVERED:
+			var covered_scale: float = max(rect_size.x / texture_size.x, rect_size.y / texture_size.y)
+			var covered_size: Vector2 = texture_size * covered_scale
+			return Rect2((rect_size - covered_size) * 0.5, covered_size)
+		TextureRect.STRETCH_KEEP_CENTERED:
+			return Rect2((rect_size - texture_size) * 0.5, texture_size)
+		TextureRect.STRETCH_KEEP_ASPECT:
+			var aspect_scale: float = min(rect_size.x / texture_size.x, rect_size.y / texture_size.y)
+			return Rect2(Vector2.ZERO, texture_size * aspect_scale)
+		TextureRect.STRETCH_KEEP:
+			return Rect2(Vector2.ZERO, texture_size)
+		_:
+			return Rect2(Vector2.ZERO, rect_size)
 
 # ---------------------------------------------------------------------------
 # Timer helpers
@@ -806,6 +922,8 @@ func _stop_runtime_timers() -> void:
 		overlay_animator.stop()
 	if breathing_controller != null and breathing_controller.has_method("stop_breathing"):
 		breathing_controller.stop_breathing()
+	if choice_panel != null:
+		choice_panel.clear_choices()
 
 # ---------------------------------------------------------------------------
 # Misc helpers
@@ -816,6 +934,22 @@ func _sync_spot_anchor_layout() -> void:
 		return
 	spot_manager.set_available_anchor_ids(character_prompt_region.get_interaction_spot_anchor_ids())
 	spot_manager.set_bounds_rect(_get_prompt_region_rect_in_prompt_layer())
+
+func _get_choice_anchor_children(anchor_root: Control) -> Array[Control]:
+	var anchors: Array[Control] = []
+	if anchor_root == null:
+		return anchors
+	for child in anchor_root.get_children():
+		if child is Control:
+			anchors.append(child as Control)
+	return anchors
+
+func _set_choice_anchor_debug_visible(anchor_root: Control, debug_visible: bool) -> void:
+	if anchor_root == null:
+		return
+	for child in anchor_root.get_children():
+		if child is Control:
+			(child as Control).visible = debug_visible
 
 func _get_prompt_region_rect_in_prompt_layer() -> Rect2:
 	var prompt_layer := character_area.get_node_or_null("PromptLayer") as Control

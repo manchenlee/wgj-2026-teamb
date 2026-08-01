@@ -22,11 +22,11 @@ const DEFAULT_ENDING_TEXTS := {
 }
 
 const _BG_BY_TYPE := {
-	"peak_depletion_failure": preload("res://assets/end01.png"),
-	"physical_imbalance_failure": preload("res://assets/end02.png"),
-	"emotional_imbalance_failure": preload("res://assets/end03.png"),
-	"success": preload("res://assets/end04.png"),
-	"safeword_ignored_failure": preload("res://assets/end05.png"),
+	"peak_depletion_failure": preload("res://assets/art/screens/ending/end01.png"),
+	"physical_imbalance_failure": preload("res://assets/art/screens/ending/end02.png"),
+	"emotional_imbalance_failure": preload("res://assets/art/screens/ending/end03.png"),
+	"success": preload("res://assets/art/screens/ending/end04.png"),
+	"safeword_ignored_failure": preload("res://assets/art/screens/ending/end05.png"),
 }
 
 signal restart_pressed
