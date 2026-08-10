@@ -4,15 +4,16 @@ extends RefCounted
 # ---------------------------------------------------------------------------
 # InteractionSpotManager
 #
-# Supports multiple simultaneous active spots. Each spot is tracked
-# independently. Arousal changes fire per-spot via signal callbacks.
-# The spawn timer fires continuously; spots spawn up to SPOT_MAX_ACTIVE_COUNT
-# at a time. Each anchor is used at most once across all live spots.
+# Spawns one ordered checkpoint sequence at a time. Arousal changes are
+# applied here from normalized progress emitted by the interaction node.
 # ---------------------------------------------------------------------------
 
 const InteractionSpotScene := preload("res://scenes/components/InteractionSpot.tscn")
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
+
+const PATH_GENERATION_ATTEMPTS: int = 12
+const PATH_TURN_ANGLE: float = deg_to_rad(72.0)
 
 signal spot_scrub_started()
 signal spot_scrub_ended()
@@ -127,7 +128,7 @@ func force_complete_spot() -> void:
 	# Force-complete the most recently spawned live spot.
 	for i in range(_active_spots.size() - 1, -1, -1):
 		if is_instance_valid(_active_spots[i]):
-			_on_spot_completed(_active_spots[i])
+			_active_spots[i].force_complete()
 			return
 
 
@@ -136,7 +137,7 @@ func force_expire_spot() -> void:
 		return
 	for i in range(_active_spots.size() - 1, -1, -1):
 		if is_instance_valid(_active_spots[i]):
-			_on_spot_expired(0.0, _active_spots[i], false)
+			_active_spots[i].force_expire()
 			return
 
 
@@ -213,25 +214,31 @@ func _spawn_spot() -> void:
 		fallback_global_center
 	)
 
-	var radius: float = _get_config_value("spot_radius", Config.SPOT_RADIUS)
+	var radius: float = _get_config_value("spot_checkpoint_radius", Config.SPOT_CHECKPOINT_RADIUS)
 	var global_center: Vector2 = _pick_global_center_in_rect(global_rect, radius)
 	# Convert to PromptLayer local coordinates.
 	var local_center: Vector2 = _prompt_layer.get_global_transform_with_canvas().affine_inverse() * global_center
 	local_center = _clamp_center_to_bounds(local_center, radius)
-	var diameter := radius * 2.0
+	var checkpoint_count: int = int(_get_config_value("spot_required_checkpoint_count", Config.SPOT_REQUIRED_CHECKPOINT_COUNT))
+	var spacing: float = _get_config_value("spot_checkpoint_spacing", Config.SPOT_CHECKPOINT_SPACING)
+	var sequence_points := _generate_sequence_points(local_center, checkpoint_count, spacing, radius)
+	var path_rect := _get_path_rect(sequence_points, radius + 10.0)
+	var local_points := PackedVector2Array()
+	for point in sequence_points:
+		local_points.append(point - path_rect.position)
 
 	var spot := InteractionSpotScene.instantiate() as InteractionSpot
-	spot.setup(_build_spot_config())
-	spot.custom_minimum_size = Vector2(diameter, diameter)
-	spot.size = Vector2(diameter, diameter)
-	spot.pivot_offset = Vector2(radius, radius)
-	spot.position = local_center - Vector2(radius, radius)
+	spot.setup(_build_spot_config(local_points))
+	spot.custom_minimum_size = path_rect.size
+	spot.size = path_rect.size
+	spot.pivot_offset = path_rect.size * 0.5
+	spot.position = path_rect.position
 	# Tag the spot with its anchor so we can avoid re-using it while live.
 	spot.set_meta("anchor_id", anchor_id)
 
 	spot.scrub_started.connect(_on_spot_scrub_started)
 	spot.scrub_ended.connect(_on_spot_scrub_ended)
-	spot.scrubbed.connect(_on_spot_scrubbed.bind(spot))
+	spot.progressed.connect(_on_spot_progressed.bind(spot))
 	spot.completed.connect(_on_spot_completed.bind(spot))
 	spot.expired.connect(_on_spot_expired.bind(spot))
 
@@ -240,17 +247,80 @@ func _spawn_spot() -> void:
 	_last_anchor_id = anchor_id
 
 	print_debug(
-		"InteractionSpotManager: spawned spot anchor='%s' anchor_global=%s prompt_layer_global=%s bounds=%s local_center=%s spot_pos=%s radius=%.0f active=%d" % [
+		"InteractionSpotManager: spawned sequence anchor='%s' start=%s bounds=%s checkpoint_radius=%.0f active=%d" % [
 			anchor_id,
-			str(global_center),
-			str(_prompt_layer.get_global_rect().position),
-			str(_bounds_rect),
 			str(local_center),
-			str(spot.position),
+			str(_bounds_rect),
 			radius,
 			_active_spots.size()
 		]
 	)
+
+
+func _generate_sequence_points(
+	start_center: Vector2,
+	required_checkpoint_count: int,
+	spacing: float,
+	radius: float
+) -> PackedVector2Array:
+	var total_point_count := maxi(required_checkpoint_count + 1, 2)
+	var valid_rect := _bounds_rect.grow(-(radius + Config.ARROW_PROMPT_EDGE_MARGIN))
+	if valid_rect.size.x <= spacing or valid_rect.size.y <= spacing:
+		return _build_safe_fallback(total_point_count, spacing, radius)
+
+	for _attempt in range(PATH_GENERATION_ATTEMPTS):
+		var points := PackedVector2Array([start_center])
+		var direction := Vector2.RIGHT.rotated(_rng.randf_range(0.0, TAU))
+		var turn_sign := -1.0 if _rng.randi_range(0, 1) == 0 else 1.0
+		for point_index in range(1, total_point_count):
+			if point_index > 1:
+				direction = direction.rotated(PATH_TURN_ANGLE * turn_sign)
+				turn_sign *= -1.0
+			points.append(points[point_index - 1] + direction * spacing)
+		if _sequence_fits(points, valid_rect, radius):
+			return points
+
+	return _build_safe_fallback(total_point_count, spacing, radius)
+
+
+func _sequence_fits(points: PackedVector2Array, valid_rect: Rect2, radius: float) -> bool:
+	for point in points:
+		if not valid_rect.has_point(point):
+			return false
+	for first_index in range(points.size()):
+		for second_index in range(first_index + 1, points.size()):
+			if points[first_index].distance_to(points[second_index]) < radius * 2.1:
+				return false
+	return true
+
+
+func _build_safe_fallback(point_count: int, requested_spacing: float, radius: float) -> PackedVector2Array:
+	var valid_rect := _bounds_rect.grow(-(radius + Config.ARROW_PROMPT_EDGE_MARGIN))
+	if valid_rect.size.length_squared() <= 0.0:
+		valid_rect = Rect2(_bounds_rect.get_center() - Vector2(180.0, 180.0), Vector2(360.0, 360.0))
+	var center := valid_rect.get_center()
+	var spacing := minf(requested_spacing, minf(valid_rect.size.x / 3.2, valid_rect.size.y / 2.4))
+	spacing = maxf(spacing, radius * 2.2)
+	var template := [
+		Vector2(-1.2, 0.0),
+		Vector2(-0.4, -0.7),
+		Vector2(0.4, 0.7),
+		Vector2(1.2, 0.0),
+	]
+	var points := PackedVector2Array()
+	for index in range(point_count):
+		var template_point: Vector2 = template[index % template.size()]
+		points.append((center + template_point * spacing).clamp(valid_rect.position, valid_rect.end))
+	return points
+
+
+func _get_path_rect(points: PackedVector2Array, padding: float) -> Rect2:
+	if points.is_empty():
+		return Rect2(Vector2.ZERO, Vector2.ONE * padding * 2.0)
+	var path_rect := Rect2(points[0], Vector2.ZERO)
+	for point in points:
+		path_rect = path_rect.expand(point)
+	return path_rect.grow(padding)
 
 
 func _pick_global_center_in_rect(global_rect: Rect2, radius: float) -> Vector2:
@@ -315,11 +385,11 @@ func _on_spot_scrub_ended() -> void:
 	emit_signal("spot_scrub_ended")
 
 
-func _on_spot_scrubbed(distance: float, _spot: InteractionSpot) -> void:
+func _on_spot_progressed(progress_delta: float, _spot: InteractionSpot) -> void:
 	if _arousal_model == null:
 		return
-	var gain_per_px: float = _get_config_value("spot_physical_gain_per_px", Config.SPOT_PHYSICAL_GAIN_PER_PX)
-	var gain := distance * gain_per_px
+	var total_gain: float = _get_config_value("spot_progress_gain_total", Config.SPOT_PROGRESS_GAIN_TOTAL)
+	var gain := progress_delta * total_gain
 	_arousal_model.apply_physical(gain)
 	_arousal_model.refresh_physical_activity()
 	_telemetry_incremental_gain += gain
@@ -417,13 +487,11 @@ func get_debug_spot_state() -> String:
 # Config helpers
 # ---------------------------------------------------------------------------
 
-func _build_spot_config() -> Dictionary:
+func _build_spot_config(checkpoint_points: PackedVector2Array) -> Dictionary:
 	return {
-		"spot_lifetime":          _get_config_value("spot_lifetime",          Config.SPOT_LIFETIME),
-		"required_scrub_distance":_get_config_value("spot_required_scrub_distance", Config.SPOT_REQUIRED_SCRUB_DISTANCE),
-		"valid_motion_threshold": _get_config_value("spot_valid_motion_threshold",  Config.SPOT_VALID_MOTION_THRESHOLD),
-		"max_delta_per_event":    _get_config_value("spot_max_delta_per_event",     Config.SPOT_MAX_DELTA_PER_EVENT),
-		"spot_radius":            _get_config_value("spot_radius",            Config.SPOT_RADIUS)
+		"spot_lifetime": _get_config_value("spot_lifetime", Config.SPOT_LIFETIME),
+		"checkpoint_radius": _get_config_value("spot_checkpoint_radius", Config.SPOT_CHECKPOINT_RADIUS),
+		"checkpoints": checkpoint_points,
 	}
 
 

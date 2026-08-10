@@ -47,31 +47,26 @@ const PEAK_LOSS_RATE_IMBALANCED: float = 2.0
 # 當生理或心理停在 0 時，每個歸零狀態額外增加的整體興奮度下降速度；調大會讓放置不管的懲罰更明顯。
 const PEAK_ZERO_VALUE_EXTRA_LOSS_RATE: float = 3.0
 
-# --- Interaction Spot (Physical Arousal) ---
-# These replace the direction-sequence system for physical interaction.
+# --- Ordered checkpoint interaction (Physical Arousal) ---
 
-# Lifetime of one spot in seconds (authoritative Timer, not Tween).
+# Lifetime of one sequence in seconds (authoritative Timer, not Tween).
 const SPOT_LIFETIME: float = 7.0
 
-# Total pointer-movement distance (px) required to complete one spot.
-# At ~80 px/s steady scrub, 400 px takes ~5 s within the 7 s window.
-const SPOT_REQUIRED_SCRUB_DISTANCE: float = 600.0
+# Required checkpoints after the start marker.
+const SPOT_REQUIRED_CHECKPOINT_COUNT: int = 3
 
-# Minimum per-event pointer movement (px) that counts as valid scrubbing.
-# Prevents stationary holding from accumulating progress.
-const SPOT_VALID_MOTION_THRESHOLD: float = 3.0
+# Forgiving checkpoint hit radius in prompt-layer pixels.
+const SPOT_CHECKPOINT_RADIUS: float = 40.0
 
-# Maximum pointer movement distance (px) credited per single input event.
-# Prevents low-FPS or teleporting inputs from granting runaway progress.
-const SPOT_MAX_DELTA_PER_EVENT: float = 24.0
+# Center-to-center spacing used by the small path generator.
+const SPOT_CHECKPOINT_SPACING: float = 120.0
 
-# Physical Arousal gained per valid scrub pixel.
-# Applied by InteractionSpotManager on each scrubbed() signal — never inside InteractionSpot.
-# 400 px × 0.04 = +16 incremental from a full completion.
-const SPOT_PHYSICAL_GAIN_PER_PX: float = 0.01
+# Total incremental Physical Arousal earned across all checkpoints.
+# Applied by InteractionSpotManager from normalized checkpoint progress.
+# Three completed checkpoints grant +6 incremental in total.
+const SPOT_PROGRESS_GAIN_TOTAL: float = 6.0
 
-# Extra Physical Arousal bonus on spot completion (applied by InteractionSpotManager).
-# Full completion total: +16 incremental + +12 bonus = +28.
+# Extra Physical Arousal bonus on sequence completion.
 const SPOT_COMPLETION_BONUS: float = 5.0
 
 # Penalty when spot expires essentially ignored (progress_ratio < 0.1).
@@ -81,16 +76,12 @@ const SPOT_EXPIRY_PENALTY_IGNORED: float = 5.0
 const SPOT_EXPIRY_PENALTY_PARTIAL: float = 2.0
 # No penalty when progress_ratio >= 0.5.
 
-# Visual radius of the interaction spot circle (px).
-const SPOT_RADIUS: float = 80.0
-
-# Delay between a spot being resolved (completed or expired) and the next spawn.
+# Delay between spawn attempts.
 const SPOT_SPAWN_DELAY_MIN: float = 1.8
 const SPOT_SPAWN_DELAY_MAX: float = 3.2
 
-# Maximum number of interaction spots active on screen at the same time.
-# Requires enough anchors in the phase profile to fill all slots.
-const SPOT_MAX_ACTIVE_COUNT: int = 3
+# First playable version deliberately allows only one live sequence.
+const SPOT_MAX_ACTIVE_COUNT: int = 1
 
 # --- LEGACY: Direction-sequence physical interaction (disabled, kept for rollback) ---
 # Physical interaction tuning.

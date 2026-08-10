@@ -14,14 +14,13 @@ var emotional_activity_grace_seconds: float
 
 # Interaction Spot (Physical Arousal) — new system
 var spot_lifetime: float
-var spot_required_scrub_distance: float
-var spot_valid_motion_threshold: float
-var spot_max_delta_per_event: float
-var spot_physical_gain_per_px: float
+var spot_required_checkpoint_count: int
+var spot_checkpoint_radius: float
+var spot_checkpoint_spacing: float
+var spot_progress_gain_total: float
 var spot_completion_bonus: float
 var spot_expiry_penalty_ignored: float
 var spot_expiry_penalty_partial: float
-var spot_radius: float
 var spot_spawn_delay_min: float
 var spot_spawn_delay_max: float
 var spot_max_active_count: int
@@ -77,14 +76,13 @@ func _init(values: Dictionary = {}) -> void:
 	# Interaction Spot (Physical Arousal) — new system
 	# Defaults reference GameConfig constants so changing GameConfig.gd takes effect immediately.
 	spot_lifetime = float(values.get("spot_lifetime", Config.SPOT_LIFETIME))
-	spot_required_scrub_distance = float(values.get("spot_required_scrub_distance", Config.SPOT_REQUIRED_SCRUB_DISTANCE))
-	spot_valid_motion_threshold = float(values.get("spot_valid_motion_threshold", Config.SPOT_VALID_MOTION_THRESHOLD))
-	spot_max_delta_per_event = float(values.get("spot_max_delta_per_event", Config.SPOT_MAX_DELTA_PER_EVENT))
-	spot_physical_gain_per_px = float(values.get("spot_physical_gain_per_px", Config.SPOT_PHYSICAL_GAIN_PER_PX))
+	spot_required_checkpoint_count = int(values.get("spot_required_checkpoint_count", Config.SPOT_REQUIRED_CHECKPOINT_COUNT))
+	spot_checkpoint_radius = float(values.get("spot_checkpoint_radius", Config.SPOT_CHECKPOINT_RADIUS))
+	spot_checkpoint_spacing = float(values.get("spot_checkpoint_spacing", Config.SPOT_CHECKPOINT_SPACING))
+	spot_progress_gain_total = float(values.get("spot_progress_gain_total", Config.SPOT_PROGRESS_GAIN_TOTAL))
 	spot_completion_bonus = float(values.get("spot_completion_bonus", Config.SPOT_COMPLETION_BONUS))
 	spot_expiry_penalty_ignored = float(values.get("spot_expiry_penalty_ignored", Config.SPOT_EXPIRY_PENALTY_IGNORED))
 	spot_expiry_penalty_partial = float(values.get("spot_expiry_penalty_partial", Config.SPOT_EXPIRY_PENALTY_PARTIAL))
-	spot_radius = float(values.get("spot_radius", Config.SPOT_RADIUS))
 	spot_spawn_delay_min = float(values.get("spot_spawn_delay_min", Config.SPOT_SPAWN_DELAY_MIN))
 	spot_spawn_delay_max = float(values.get("spot_spawn_delay_max", Config.SPOT_SPAWN_DELAY_MAX))
 	spot_max_active_count = int(values.get("spot_max_active_count", Config.SPOT_MAX_ACTIVE_COUNT))

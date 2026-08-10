@@ -1,61 +1,31 @@
 class_name InteractionSpot
 extends Control
 
-# ---------------------------------------------------------------------------
-# InteractionSpot — scrub-input handler and lifetime keeper for one spot.
-#
-# Responsibilities:
-#   - Accept pointer / touch input and accumulate valid scrub distance.
-#   - Manage the spot's visible lifetime via a Timer node (gameplay authority).
-#   - Drive visual transitions via Tweens (visual only — no gameplay outcomes).
-#   - Emit signals; never modify ArousalModel directly.
-#
-# Signals consumed by InteractionSpotManager:
-#   scrub_started()          — first valid drag inside the circle
-#   scrub_ended()            — pointer released / left / spot freed
-#   scrubbed(distance)       — valid movement credited this event
-#   completed()              — required scrub distance reached
-#   expired(progress_ratio)  — lifetime elapsed before completion
-# ---------------------------------------------------------------------------
-
 signal scrub_started()
 signal scrub_ended()
-signal scrubbed(distance: float)
+signal progressed(progress_delta: float)
 signal completed()
 signal expired(progress_ratio: float)
 
-# Configuration — set by InteractionSpotManager before add_child().
 var spot_lifetime: float = 7.0
-var required_scrub_distance: float = 400.0
-var valid_motion_threshold: float = 3.0
-var max_delta_per_event: float = 24.0
-var spot_radius: float = 52.0
+var checkpoint_radius: float = 40.0
+var checkpoints: PackedVector2Array = PackedVector2Array()
 
-# Runtime state
-var _scrub_distance: float = 0.0
+var _next_checkpoint_index: int = 0
 var _resolved: bool = false
-var _scrub_active: bool = false  # true while pointer is held inside
+var _armed: bool = false
+var _interaction_active: bool = false
 var _suspended: bool = false
+var _has_pointer_sample: bool = false
+var _last_pointer_pos: Vector2 = Vector2.ZERO
+var _pointer_was_inside_target: bool = false
 
-var _mouse_held: bool = false
-var _touch_active: bool = false
-var _touch_index: int = -1
-var _last_pointer_pos: Vector2 = Vector2.INF
-
-var _center: Vector2 = Vector2.ZERO
-
-# Visual state
-var _spot_color: Color = Color(1.0, 0.85, 0.1, 1.0)   # golden yellow start
-var _spot_scale: float = 1.0
 @onready var lifetime_timer: Timer = $LifetimeTimer
 
 
 func _ready() -> void:
-	mouse_filter = Control.MOUSE_FILTER_STOP
-	# _center is based on spot_radius set via setup(), not on Control.size,
-	# because setup() is called before add_child() so size may not reflect
-	# the final value yet. spot_radius is always correct.
-	_center = Vector2(spot_radius, spot_radius)
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	set_process_input(true)
 	lifetime_timer.wait_time = spot_lifetime
 	lifetime_timer.one_shot = true
 	lifetime_timer.timeout.connect(_on_lifetime_timer_timeout)
@@ -66,10 +36,12 @@ func _ready() -> void:
 
 func setup(config: Dictionary) -> void:
 	spot_lifetime = float(config.get("spot_lifetime", 7.0))
-	required_scrub_distance = float(config.get("required_scrub_distance", 400.0))
-	valid_motion_threshold = float(config.get("valid_motion_threshold", 3.0))
-	max_delta_per_event = float(config.get("max_delta_per_event", 24.0))
-	spot_radius = float(config.get("spot_radius", 52.0))
+	checkpoint_radius = float(config.get("checkpoint_radius", 40.0))
+	var configured_checkpoints: Variant = config.get("checkpoints", PackedVector2Array())
+	if configured_checkpoints is PackedVector2Array:
+		checkpoints = configured_checkpoints
+	elif configured_checkpoints is Array:
+		checkpoints = PackedVector2Array(configured_checkpoints)
 
 
 func set_suspended(suspended: bool) -> void:
@@ -77,205 +49,224 @@ func set_suspended(suspended: bool) -> void:
 		return
 	_suspended = suspended
 	if suspended:
-		_end_scrub()
-	mouse_filter = Control.MOUSE_FILTER_IGNORE if suspended else Control.MOUSE_FILTER_STOP
+		_end_interaction()
+	_clear_pointer_sample()
 	visible = not suspended
+	set_process_input(not suspended)
 	set_process(not suspended)
 	if lifetime_timer != null:
 		lifetime_timer.set_paused(suspended)
 
 
-func _draw() -> void:
-	var draw_radius := spot_radius * _spot_scale
-	# Filled circle
-	draw_circle(_center, draw_radius, Color(_spot_color.r, _spot_color.g, _spot_color.b, _spot_color.a * 0.55))
-	# Outline ring
-	var ring_points: PackedVector2Array = PackedVector2Array()
-	var steps := 48
-	for i in range(steps + 1):
-		var angle := TAU * float(i) / float(steps)
-		ring_points.append(_center + Vector2.RIGHT.rotated(angle) * draw_radius)
-	draw_polyline(ring_points, Color(_spot_color.r, _spot_color.g, _spot_color.b, _spot_color.a), 3.0, true)
-	# Progress arc
-	if _scrub_distance > 0.0:
-		var progress := clampf(_scrub_distance / required_scrub_distance, 0.0, 1.0)
-		var arc_points: PackedVector2Array = PackedVector2Array()
-		var arc_steps := 48
-		var end_angle := -PI * 0.5 + TAU * progress
-		for i in range(arc_steps + 1):
-			var t := float(i) / float(arc_steps)
-			var angle := lerpf(-PI * 0.5, end_angle, t)
-			arc_points.append(_center + Vector2.RIGHT.rotated(angle) * (draw_radius + 6.0))
-		draw_polyline(arc_points, Color(1.0, 1.0, 1.0, 0.9), 4.0, true)
+func force_complete() -> void:
+	_resolve_completed()
+
+
+func force_expire() -> void:
+	_resolve_expired()
+
+
+func get_progress_ratio() -> float:
+	var required_count := maxi(checkpoints.size() - 1, 1)
+	var completed_count := maxi(_next_checkpoint_index - 1, 0) if _armed else 0
+	return clampf(float(completed_count) / float(required_count), 0.0, 1.0)
+
+
+func get_next_checkpoint_index() -> int:
+	return _next_checkpoint_index
+
+
+func is_armed() -> bool:
+	return _armed
+
+
+func _input(event: InputEvent) -> void:
+	if _resolved or _suspended or not visible:
+		return
+	if event is InputEventMouseMotion:
+		var mouse_motion := event as InputEventMouseMotion
+		var local_position: Vector2 = get_global_transform_with_canvas().affine_inverse() * mouse_motion.position
+		_process_pointer_move(local_position)
 
 
 func _process(_delta: float) -> void:
-	# Safety net: if the mouse button was released outside this node
-	# (no mouse-up event delivered), detect and clean up.
-	if _mouse_held and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		_end_scrub()
+	# Lifetime feedback is timer-driven, but must redraw while its time_left changes.
+	queue_redraw()
 
 
-func _gui_input(event: InputEvent) -> void:
-	if _resolved or _suspended:
+func _draw() -> void:
+	if checkpoints.is_empty():
 		return
 
-	# --- Mouse button ---
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		if event.pressed:
-			_mouse_held = true
-			_last_pointer_pos = event.position
-			_notify_scrub_started_if_inside(event.position)
-		else:
-			_end_scrub()
-		get_viewport().set_input_as_handled()
-		return
+	for index in range(checkpoints.size() - 1):
+		var segment_completed := _armed and index < _next_checkpoint_index - 1
+		var line_color := Color(1.0, 0.55, 0.18, 0.95) if segment_completed else Color(1.0, 0.88, 0.42, 0.42)
+		draw_line(checkpoints[index], checkpoints[index + 1], line_color, 6.0, true)
 
-	# --- Mouse motion ---
-	if event is InputEventMouseMotion and _mouse_held:
-		_process_pointer_move(event.position)
-		get_viewport().set_input_as_handled()
-		return
+	var target_index := _get_target_index()
+	for index in range(checkpoints.size()):
+		var is_start := index == 0
+		var is_completed := _armed if is_start else _armed and index < _next_checkpoint_index
+		var is_current := index == target_index
+		var fill_color := Color(0.28, 0.82, 0.46, 0.68) if is_completed else Color(1.0, 0.82, 0.16, 0.30)
+		var outline_color := Color(0.55, 1.0, 0.7, 1.0) if is_completed else Color(1.0, 0.9, 0.4, 0.72)
+		if is_current:
+			fill_color = Color(1.0, 0.48, 0.1, 0.68)
+			outline_color = Color(1.0, 1.0, 1.0, 1.0)
+		draw_circle(checkpoints[index], checkpoint_radius, fill_color)
+		draw_arc(checkpoints[index], checkpoint_radius, 0.0, TAU, 40, outline_color, 4.0, true)
+		if is_start:
+			draw_circle(checkpoints[index], checkpoint_radius * 0.28, outline_color)
 
-	# --- Touch begin / end ---
-	if event is InputEventScreenTouch:
-		if event.pressed:
-			_touch_active = true
-			_touch_index = event.index
-			_last_pointer_pos = event.position
-			_notify_scrub_started_if_inside(event.position)
-		else:
-			if event.index == _touch_index:
-				_end_scrub()
-		get_viewport().set_input_as_handled()
-		return
-
-	# --- Touch drag ---
-	if event is InputEventScreenDrag and _touch_active and event.index == _touch_index:
-		_process_pointer_move(event.position)
-		get_viewport().set_input_as_handled()
-
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_MOUSE_EXIT:
-		# Reset reference point so re-entry does not credit the off-spot gap.
-		_last_pointer_pos = Vector2.INF
-		# If mouse button was somehow lost while outside, clean up.
-		if _mouse_held and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-			_end_scrub()
-
-
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
-
-func _notify_scrub_started_if_inside(pos: Vector2) -> void:
-	if pos.distance_to(_center) <= spot_radius and not _scrub_active:
-		_scrub_active = true
-		emit_signal("scrub_started")
+	if target_index >= 0 and target_index < checkpoints.size() and lifetime_timer != null and not lifetime_timer.is_stopped():
+		var lifetime_ratio := clampf(lifetime_timer.time_left / maxf(spot_lifetime, 0.001), 0.0, 1.0)
+		draw_arc(
+			checkpoints[target_index],
+			checkpoint_radius + 8.0,
+			-PI * 0.5,
+			-PI * 0.5 + TAU * lifetime_ratio,
+			40,
+			Color(1.0, 1.0, 1.0, 0.9),
+			4.0,
+			true
+		)
 
 
 func _process_pointer_move(new_pos: Vector2) -> void:
-	if _last_pointer_pos == Vector2.INF:
+	if _resolved or _suspended or checkpoints.size() < 2:
+		return
+	if not _has_pointer_sample:
+		_has_pointer_sample = true
 		_last_pointer_pos = new_pos
+		_pointer_was_inside_target = _is_inside_target(new_pos)
 		return
 
-	var inside_now := new_pos.distance_to(_center) <= spot_radius
-	var inside_before := _last_pointer_pos.distance_to(_center) <= spot_radius
-
-	if not inside_now or not inside_before:
-		# Either endpoint is outside the circle — reset without crediting.
-		_last_pointer_pos = new_pos
-		return
-
-	_accumulate_scrub(new_pos)
-
-
-func _accumulate_scrub(new_pos: Vector2) -> void:
-	var raw := (new_pos - _last_pointer_pos).length()
+	var previous_pos := _last_pointer_pos
 	_last_pointer_pos = new_pos
+	var target_index := _get_target_index()
+	if target_index < 0 or target_index >= checkpoints.size():
+		return
 
-	if raw < valid_motion_threshold:
-		return  # too small — stationary hold, no credit
+	var target := checkpoints[target_index]
+	var intersects_target := _segment_intersects_circle(previous_pos, new_pos, target, checkpoint_radius)
+	var valid_crossing := not _pointer_was_inside_target and intersects_target
+	if valid_crossing:
+		_activate_current_target()
+		# The same motion event may never activate the newly selected target.
+		_pointer_was_inside_target = _is_inside_target(new_pos)
+		return
 
-	var credited := minf(raw, max_delta_per_event)
-	_scrub_distance += credited
+	_pointer_was_inside_target = new_pos.distance_squared_to(target) <= checkpoint_radius * checkpoint_radius
 
-	emit_signal("scrubbed", credited)
-	_update_visual_for_progress()
 
-	if _scrub_distance >= required_scrub_distance:
+func _activate_current_target() -> void:
+	_begin_interaction()
+	if not _armed:
+		_armed = true
+		_next_checkpoint_index = 1
+		queue_redraw()
+		return
+
+	if _next_checkpoint_index <= 0 or _next_checkpoint_index >= checkpoints.size():
+		return
+	_next_checkpoint_index += 1
+	var required_count := checkpoints.size() - 1
+	progressed.emit(1.0 / float(required_count))
+	_spawn_note_particle(checkpoints[_next_checkpoint_index - 1])
+	queue_redraw()
+	if _next_checkpoint_index >= checkpoints.size():
 		_resolve_completed()
 
 
-func _end_scrub() -> void:
-	var was_active := _scrub_active
-	_mouse_held = false
-	_touch_active = false
-	_touch_index = -1
-	_last_pointer_pos = Vector2.INF
-	_scrub_active = false
-	if was_active:
-		emit_signal("scrub_ended")
+func _get_target_index() -> int:
+	if not _armed:
+		return 0
+	return _next_checkpoint_index
+
+
+func _is_inside_target(position_to_test: Vector2) -> bool:
+	var target_index := _get_target_index()
+	if target_index < 0 or target_index >= checkpoints.size():
+		return false
+	return position_to_test.distance_squared_to(checkpoints[target_index]) <= checkpoint_radius * checkpoint_radius
+
+
+func _segment_intersects_circle(
+	segment_start: Vector2,
+	segment_end: Vector2,
+	circle_center: Vector2,
+	circle_radius: float
+) -> bool:
+	var segment := segment_end - segment_start
+	var segment_length_squared := segment.length_squared()
+	if segment_length_squared <= 0.0001:
+		return segment_start.distance_squared_to(circle_center) <= circle_radius * circle_radius
+	var projection := clampf((circle_center - segment_start).dot(segment) / segment_length_squared, 0.0, 1.0)
+	var closest_point := segment_start + segment * projection
+	return closest_point.distance_squared_to(circle_center) <= circle_radius * circle_radius
+
+
+func _begin_interaction() -> void:
+	if _interaction_active:
+		return
+	_interaction_active = true
+	scrub_started.emit()
+
+
+func _end_interaction() -> void:
+	if not _interaction_active:
+		return
+	_interaction_active = false
+	scrub_ended.emit()
+
+
+func _clear_pointer_sample() -> void:
+	_has_pointer_sample = false
+	_last_pointer_pos = Vector2.ZERO
+	_pointer_was_inside_target = false
 
 
 func _resolve_completed() -> void:
 	if _resolved:
 		return
 	_resolved = true
-	_end_scrub()
-	lifetime_timer.stop()
-	emit_signal("completed")
+	_end_interaction()
+	set_process_input(false)
+	if lifetime_timer != null:
+		lifetime_timer.stop()
+	completed.emit()
 	_play_success_visual()
 
 
-func _on_lifetime_timer_timeout() -> void:
+func _resolve_expired() -> void:
 	if _resolved:
 		return
 	_resolved = true
-	_end_scrub()
-	var ratio := clampf(_scrub_distance / required_scrub_distance, 0.0, 1.0)
-	emit_signal("expired", ratio)
+	_end_interaction()
+	set_process_input(false)
+	if lifetime_timer != null:
+		lifetime_timer.stop()
+	expired.emit(get_progress_ratio())
 	_play_expiry_visual()
 
 
-# ---------------------------------------------------------------------------
-# Visuals — Tweens only, no gameplay outcomes
-# ---------------------------------------------------------------------------
+func _on_lifetime_timer_timeout() -> void:
+	_resolve_expired()
+
 
 func _start_idle_visual_tween() -> void:
-	# Gently pulse alpha over time to draw attention.
 	var tween := create_tween().set_loops()
-	tween.tween_property(self, "modulate:a", 0.7, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tween.tween_property(self, "modulate:a", 1.0, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(self, "modulate:a", 0.78, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(self, "modulate:a", 1.0, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
-func _update_visual_for_progress() -> void:
-	var progress := clampf(_scrub_distance / required_scrub_distance, 0.0, 1.0)
-	# Transition from golden yellow → orange-red as progress rises.
-	_spot_color = Color(
-		lerpf(1.0, 0.9, progress),
-		lerpf(0.85, 0.25, progress),
-		lerpf(0.1, 0.05, progress),
-		lerpf(1.0, 0.75, progress)
-	)
-	_spot_scale = lerpf(1.0, 0.72, progress)
-	queue_redraw()
-
-	# Spawn a floating musical-note placeholder label.
-	if fmod(_scrub_distance, 60.0) < max_delta_per_event:
-		_spawn_note_particle()
-
-
-func _spawn_note_particle() -> void:
+func _spawn_note_particle(origin: Vector2) -> void:
 	var note := Label.new()
 	note.text = "♪"
 	note.add_theme_font_size_override("font_size", 22)
 	note.add_theme_color_override("font_color", Color(1.0, 0.95, 0.4, 1.0))
 	note.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# Position relative to this spot's local space so it appears beside the circle.
-	var offset_x := randf_range(-spot_radius * 0.5, spot_radius * 0.5)
-	note.position = _center + Vector2(offset_x, -spot_radius * 0.4)
+	note.position = origin + Vector2(randf_range(-12.0, 12.0), -checkpoint_radius * 0.5)
 	add_child(note)
 
 	var tween := note.create_tween().set_parallel(true)
@@ -285,16 +276,14 @@ func _spawn_note_particle() -> void:
 
 
 func _play_success_visual() -> void:
-	# Brief scale-up then fade out.
 	var tween := create_tween().set_parallel(true)
-	tween.tween_property(self, "scale", Vector2(1.5, 1.5), 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "scale", Vector2(1.12, 1.12), 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_property(self, "modulate:a", 0.0, 0.22).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.chain().tween_callback(queue_free)
 
 
 func _play_expiry_visual() -> void:
-	# Shrink and fade out.
 	var tween := create_tween().set_parallel(true)
-	tween.tween_property(self, "scale", Vector2(0.5, 0.5), 0.28).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tween.tween_property(self, "scale", Vector2(0.82, 0.82), 0.28).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.tween_property(self, "modulate:a", 0.0, 0.28).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.chain().tween_callback(queue_free)
