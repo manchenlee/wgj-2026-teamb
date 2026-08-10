@@ -57,6 +57,7 @@ enum InteractionMode {
 @onready var physiological_dialogue_timer: Timer = $PhysiologicalDialogueTimer
 @onready var spot_spawn_timer: Timer = $SpotSpawnTimer
 @onready var choice_timeout_timer: Timer = $ChoiceTimeoutTimer
+@onready var physiological_failure_flash: PhysiologicalFailureFlash = $FeedbackOverlayLayer/PhysiologicalFailureFlash
 @onready var phase_transition_overlay: ColorRect = $PhaseTransitionOverlay
 
 var arousal_model = ArousalModelClass.new()
@@ -142,6 +143,7 @@ func _setup_spot_manager() -> void:
 	spot_manager.spot_scrub_started.connect(_on_spot_scrub_started)
 	spot_manager.spot_scrub_ended.connect(_on_spot_scrub_ended)
 	spot_manager.spot_telemetry_updated.connect(_on_spot_telemetry_updated)
+	spot_manager.physiological_spot_failed.connect(_on_physiological_spot_failed)
 
 # ---------------------------------------------------------------------------
 # Phase management
@@ -645,6 +647,10 @@ func _on_spot_telemetry_updated(telemetry: Dictionary) -> void:
 	if debug_overlay != null:
 		debug_overlay.sync_live_readout(get_debug_state())
 
+func _on_physiological_spot_failed(_progress_ratio: float, _penalty: float) -> void:
+	if physiological_failure_flash != null:
+		physiological_failure_flash.play_flash()
+
 # ---------------------------------------------------------------------------
 # Dialogue
 # ---------------------------------------------------------------------------
@@ -1006,6 +1012,8 @@ func _stop_runtime_timers() -> void:
 	choice_timeout_timer.stop()
 	if spot_manager != null:
 		spot_manager.stop()
+	if physiological_failure_flash != null:
+		physiological_failure_flash.clear_flash()
 	if overlay_animator != null:
 		overlay_animator.stop()
 	if breathing_controller != null and breathing_controller.has_method("stop_breathing"):

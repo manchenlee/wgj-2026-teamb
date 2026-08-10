@@ -17,6 +17,7 @@ const Config := preload("res://scripts/gameplay/GameConfig.gd")
 signal spot_scrub_started()
 signal spot_scrub_ended()
 signal spot_telemetry_updated(telemetry: Dictionary)
+signal physiological_spot_failed(progress_ratio: float, penalty: float)
 
 # Set by GameSessionController before activation.
 var _arousal_model = null
@@ -135,7 +136,7 @@ func force_expire_spot() -> void:
 		return
 	for i in range(_active_spots.size() - 1, -1, -1):
 		if is_instance_valid(_active_spots[i]):
-			_on_spot_expired(0.0, _active_spots[i])
+			_on_spot_expired(0.0, _active_spots[i], false)
 			return
 
 
@@ -345,7 +346,7 @@ func _on_spot_completed(spot: InteractionSpot) -> void:
 	_emit_telemetry()
 
 
-func _on_spot_expired(progress_ratio: float, spot: InteractionSpot) -> void:
+func _on_spot_expired(progress_ratio: float, spot: InteractionSpot, is_timeout_failure: bool = true) -> void:
 	_active_spots = _active_spots.filter(func(s): return is_instance_valid(s) and s != spot)
 	var penalty := 0.0
 	if progress_ratio < 0.1:
@@ -357,6 +358,8 @@ func _on_spot_expired(progress_ratio: float, spot: InteractionSpot) -> void:
 	_telemetry_penalty += penalty
 	if _character_presenter != null:
 		_character_presenter.show_spot_reaction("mild")
+	if is_timeout_failure:
+		physiological_spot_failed.emit(progress_ratio, penalty)
 	print_debug(
 		"InteractionSpotManager telemetry [expired_%.2f]: incremental=+%.2f penalty=-%.2f net=%.2f active=%d" % [
 			progress_ratio, _telemetry_incremental_gain,

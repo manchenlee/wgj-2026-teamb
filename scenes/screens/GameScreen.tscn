@@ -14,6 +14,7 @@
 [ext_resource type="Script" uid="uid://c537cpupxlgv0" path="res://scripts/ui/prompt_anchor_region.gd" id="12_prompt_region"]
 [ext_resource type="PackedScene" path="res://scenes/components/ChoicePanel.tscn" id="13_choice_panel"]
 [ext_resource type="PackedScene" path="res://scenes/components/CurrentSpeechBubble.tscn" id="14_speech_bubble"]
+[ext_resource type="Script" path="res://scripts/presentation/physiological_failure_flash.gd" id="15_failure_flash"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_alg88"]
 load_path = "res://.godot/imported/draft.png-80a3863fe83a454b531da103f3e5f42e.ctex"
@@ -948,6 +949,28 @@ one_shot = true
 [node name="ChoiceTimeoutTimer" type="Timer" parent="." unique_id=292030748]
 wait_time = 4.2
 one_shot = true
+
+[node name="FeedbackOverlayLayer" type="Control" parent="."]
+z_index = 90
+z_as_relative = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PhysiologicalFailureFlash" type="ColorRect" parent="FeedbackOverlayLayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0.04, 0.02, 0)
+script = ExtResource("15_failure_flash")
 
 [node name="PhaseTransitionOverlay" type="ColorRect" parent="." unique_id=688982438]
 visible = false
