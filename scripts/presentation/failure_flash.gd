@@ -1,4 +1,4 @@
-class_name PhysiologicalFailureFlash
+class_name FailureFlash
 extends ColorRect
 
 @export_range(0.0, 1.0, 0.01) var peak_alpha: float = 0.32

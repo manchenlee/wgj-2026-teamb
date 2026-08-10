@@ -14,7 +14,7 @@
 [ext_resource type="Script" uid="uid://c537cpupxlgv0" path="res://scripts/ui/prompt_anchor_region.gd" id="12_prompt_region"]
 [ext_resource type="PackedScene" path="res://scenes/components/ChoicePanel.tscn" id="13_choice_panel"]
 [ext_resource type="PackedScene" path="res://scenes/components/CurrentSpeechBubble.tscn" id="14_speech_bubble"]
-[ext_resource type="Script" path="res://scripts/presentation/physiological_failure_flash.gd" id="15_failure_flash"]
+[ext_resource type="Script" path="res://scripts/presentation/failure_flash.gd" id="15_failure_flash"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_alg88"]
 load_path = "res://.godot/imported/draft.png-80a3863fe83a454b531da103f3e5f42e.ctex"
@@ -961,7 +961,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="PhysiologicalFailureFlash" type="ColorRect" parent="FeedbackOverlayLayer"]
+[node name="FailureFlash" type="ColorRect" parent="FeedbackOverlayLayer"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

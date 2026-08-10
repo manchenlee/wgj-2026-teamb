@@ -57,7 +57,7 @@ enum InteractionMode {
 @onready var physiological_dialogue_timer: Timer = $PhysiologicalDialogueTimer
 @onready var spot_spawn_timer: Timer = $SpotSpawnTimer
 @onready var choice_timeout_timer: Timer = $ChoiceTimeoutTimer
-@onready var physiological_failure_flash: PhysiologicalFailureFlash = $FeedbackOverlayLayer/PhysiologicalFailureFlash
+@onready var failure_flash: FailureFlash = $FeedbackOverlayLayer/FailureFlash
 @onready var phase_transition_overlay: ColorRect = $PhaseTransitionOverlay
 
 var arousal_model = ArousalModelClass.new()
@@ -648,8 +648,7 @@ func _on_spot_telemetry_updated(telemetry: Dictionary) -> void:
 		debug_overlay.sync_live_readout(get_debug_state())
 
 func _on_physiological_spot_failed(_progress_ratio: float, _penalty: float) -> void:
-	if physiological_failure_flash != null:
-		physiological_failure_flash.play_flash()
+	_play_failure_flash()
 
 # ---------------------------------------------------------------------------
 # Dialogue
@@ -675,6 +674,8 @@ func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	choice_panel.clear_choices()
 	var outcome := psychological_dialogue_controller.apply_choice(choice_quality, arousal_model)
 	var ending_type := str(outcome.get("ending_type", ""))
+	if bool(outcome.get("is_wrong_choice", false)):
+		_play_failure_flash()
 	arousal_model.refresh_emotional_activity()
 	var reply_text := str(outcome.get("reply", ""))
 	if not reply_text.is_empty():
@@ -1012,8 +1013,8 @@ func _stop_runtime_timers() -> void:
 	choice_timeout_timer.stop()
 	if spot_manager != null:
 		spot_manager.stop()
-	if physiological_failure_flash != null:
-		physiological_failure_flash.clear_flash()
+	if failure_flash != null:
+		failure_flash.clear_flash()
 	if overlay_animator != null:
 		overlay_animator.stop()
 	if breathing_controller != null and breathing_controller.has_method("stop_breathing"):
@@ -1030,6 +1031,10 @@ func _sync_spot_anchor_layout() -> void:
 		return
 	spot_manager.set_available_anchor_ids(character_prompt_region.get_interaction_spot_anchor_ids())
 	spot_manager.set_bounds_rect(_get_prompt_region_rect_in_prompt_layer())
+
+func _play_failure_flash() -> void:
+	if failure_flash != null:
+		failure_flash.play_flash()
 
 func _get_choice_anchor_children(anchor_root: Control) -> Array[Control]:
 	var anchors: Array[Control] = []

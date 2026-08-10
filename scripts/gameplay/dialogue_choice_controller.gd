@@ -53,6 +53,7 @@ func next_event(physical: float, emotional: float, force_safe_word: bool = false
 func apply_choice(choice_id: String, model) -> Dictionary:
 	var choice := _get_choice_definition(current_entry, choice_id)
 	var effect := str(choice.get("effect", ""))
+	var is_wrong_choice := _is_wrong_choice(choice_id, effect)
 	var delta_value := 0.0
 	match effect:
 		"positive":
@@ -80,7 +81,13 @@ func apply_choice(choice_id: String, model) -> Dictionary:
 	current_entry = {}
 	current_feedback_index = -1
 	choice_prompt_pending = false
-	return {"reply": reply, "delta": delta_value, "ending_type": ending_type}
+	return {
+		"reply": reply,
+		"delta": delta_value,
+		"ending_type": ending_type,
+		"choice_effect": effect,
+		"is_wrong_choice": is_wrong_choice
+	}
 
 func get_timeout_reply() -> String:
 	var reply := _get_current_feedback_line(current_entry)
@@ -249,6 +256,14 @@ func _get_choice_definition(entry: Dictionary, choice_id: String) -> Dictionary:
 		if str(choice.get("id", "")) == choice_id:
 			return choice
 	return {}
+
+func _is_wrong_choice(choice_id: String, effect: String) -> bool:
+	match effect:
+		"negative", "bad_ending":
+			return true
+		"positive":
+			return false
+	return choice_id == "bad"
 
 func _clear_current_sequence() -> void:
 	current_prompt = {}
