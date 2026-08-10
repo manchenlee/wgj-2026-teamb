@@ -35,6 +35,7 @@ var spot_radius: float = 52.0
 var _scrub_distance: float = 0.0
 var _resolved: bool = false
 var _scrub_active: bool = false  # true while pointer is held inside
+var _suspended: bool = false
 
 var _mouse_held: bool = false
 var _touch_active: bool = false
@@ -71,6 +72,19 @@ func setup(config: Dictionary) -> void:
 	spot_radius = float(config.get("spot_radius", 52.0))
 
 
+func set_suspended(suspended: bool) -> void:
+	if _suspended == suspended:
+		return
+	_suspended = suspended
+	if suspended:
+		_end_scrub()
+	mouse_filter = Control.MOUSE_FILTER_IGNORE if suspended else Control.MOUSE_FILTER_STOP
+	visible = not suspended
+	set_process(not suspended)
+	if lifetime_timer != null:
+		lifetime_timer.set_paused(suspended)
+
+
 func _draw() -> void:
 	var draw_radius := spot_radius * _spot_scale
 	# Filled circle
@@ -103,7 +117,7 @@ func _process(_delta: float) -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
-	if _resolved:
+	if _resolved or _suspended:
 		return
 
 	# --- Mouse button ---

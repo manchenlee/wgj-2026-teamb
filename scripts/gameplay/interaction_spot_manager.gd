@@ -33,6 +33,7 @@ var _last_anchor_id: String = ""
 # All currently live spots
 var _active_spots: Array[InteractionSpot] = []
 var _active: bool = false
+var _suspended: bool = false
 
 # Per-session rolling telemetry (accumulated across spots)
 var _telemetry_incremental_gain: float = 0.0
@@ -74,6 +75,8 @@ func set_bounds_rect(bounds_rect: Rect2) -> void:
 
 func start() -> void:
 	_active = true
+	_suspended = false
+	_spawn_timer.set_paused(false)
 	_telemetry_reset()
 	_telemetry_physical_at_session_start = _arousal_model.physical if _arousal_model != null else 0.0
 	_schedule_next_spot(0.5)  # brief initial delay before first spawn
@@ -81,12 +84,36 @@ func start() -> void:
 
 func stop() -> void:
 	_active = false
+	_suspended = false
+	_spawn_timer.set_paused(false)
 	_spawn_timer.stop()
 	for spot in _active_spots:
 		if is_instance_valid(spot):
 			_disconnect_spot(spot)
 			spot.queue_free()
 	_active_spots.clear()
+
+
+func suspend() -> void:
+	if not _active or _suspended:
+		return
+	_suspended = true
+	_spawn_timer.set_paused(true)
+	_active_spots = _active_spots.filter(func(spot): return is_instance_valid(spot))
+	for spot in _active_spots:
+		spot.set_suspended(true)
+
+
+func resume() -> void:
+	if not _active or not _suspended:
+		return
+	_suspended = false
+	for spot in _active_spots:
+		if is_instance_valid(spot):
+			spot.set_suspended(false)
+	_spawn_timer.set_paused(false)
+	if _spawn_timer.is_stopped():
+		_schedule_next_spot()
 
 
 func force_spawn_spot() -> void:
@@ -117,7 +144,7 @@ func force_expire_spot() -> void:
 # ---------------------------------------------------------------------------
 
 func _on_spawn_timer_timeout() -> void:
-	if not _active:
+	if not _active or _suspended:
 		return
 	_spawn_spot()
 	# Keep scheduling: timer fires repeatedly until max active count is reached.
@@ -126,7 +153,7 @@ func _on_spawn_timer_timeout() -> void:
 
 
 func _schedule_next_spot(override_delay: float = -1.0) -> void:
-	if not _active:
+	if not _active or _suspended:
 		return
 	var delay: float
 	if override_delay >= 0.0:
@@ -151,6 +178,8 @@ func _get_occupied_anchor_ids() -> Array[String]:
 
 
 func _spawn_spot() -> void:
+	if not _active or _suspended:
+		return
 	# Prune any stale references first.
 	_active_spots = _active_spots.filter(func(s): return is_instance_valid(s))
 

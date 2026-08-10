@@ -16,6 +16,11 @@ const TITLE_SCENE := preload("res://scenes/screens/TitleScreen.tscn")
 signal ending_requested(ending_type: String)
 signal bgm_requested(track_key: String, use_fade: bool)
 
+enum InteractionMode {
+	PSYCHOLOGICAL,
+	PHYSIOLOGICAL,
+}
+
 @export var show_layout_debug_bounds: bool = false
 @export var show_phase2_editor_reference: bool = true
 @export var debug_start_phase_id: String = ""
@@ -74,6 +79,7 @@ var active_phase_config: PhaseConfig = null
 var active_character_profile = null
 var has_switched_to_game_bgm: bool = false
 var last_requested_bgm_key: String = ""
+var interaction_mode: InteractionMode = InteractionMode.PSYCHOLOGICAL
 var _resolved_character_alignment_offset: Vector2 = Vector2.ZERO
 
 # Telemetry from spot manager for debug readout
@@ -477,6 +483,12 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if Engine.is_editor_hint() or not run_active:
 		return
+	if event.is_action_pressed("toggle_interaction_mode"):
+		get_viewport().set_input_as_handled()
+		_toggle_interaction_mode()
+		return
+	if interaction_mode != InteractionMode.PSYCHOLOGICAL:
+		return
 	if event.is_action_pressed("dialogue_left"):
 		get_viewport().set_input_as_handled()
 		_on_dialogue_choice_input(0)
@@ -485,9 +497,36 @@ func _unhandled_input(event: InputEvent) -> void:
 		_on_dialogue_choice_input(1)
 
 func _on_dialogue_choice_input(index: int) -> void:
-	if not waiting_for_choice:
+	if interaction_mode != InteractionMode.PSYCHOLOGICAL or not waiting_for_choice:
 		return
 	choice_panel.emit_choice_by_index(index)
+
+func _toggle_interaction_mode() -> void:
+	var next_mode := InteractionMode.PHYSIOLOGICAL
+	if interaction_mode == InteractionMode.PHYSIOLOGICAL:
+		next_mode = InteractionMode.PSYCHOLOGICAL
+	_set_interaction_mode(next_mode)
+
+func _set_interaction_mode(next_mode: InteractionMode, force_sync: bool = false) -> void:
+	if interaction_mode == next_mode and not force_sync:
+		return
+	interaction_mode = next_mode
+	_sync_interaction_mode_state()
+
+func _sync_interaction_mode_state() -> void:
+	var psychological_active := interaction_mode == InteractionMode.PSYCHOLOGICAL
+	if choice_panel != null:
+		choice_panel.visible = psychological_active
+	if waiting_for_choice and not choice_timeout_timer.is_stopped():
+		choice_timeout_timer.set_paused(not psychological_active)
+	elif psychological_active:
+		choice_timeout_timer.set_paused(false)
+	if spot_manager == null:
+		return
+	if psychological_active:
+		spot_manager.suspend()
+	else:
+		spot_manager.resume()
 
 # ---------------------------------------------------------------------------
 # Run lifecycle
@@ -519,6 +558,7 @@ func _reset_run_for_phase_index(phase_index: int) -> void:
 	last_requested_bgm_key = ""
 	current_prompt = {}
 	waiting_for_choice = false
+	interaction_mode = InteractionMode.PSYCHOLOGICAL
 	_last_spot_telemetry = {}
 	_stop_runtime_timers()
 	dialogue_panel.clear_history()
@@ -532,6 +572,7 @@ func _reset_run_for_phase_index(phase_index: int) -> void:
 	_push_next_dialogue_event()
 	if spot_manager != null:
 		spot_manager.start()
+	_sync_interaction_mode_state()
 	_update_presentation()
 
 # ---------------------------------------------------------------------------
@@ -591,7 +632,7 @@ func _on_spot_scrub_started() -> void:
 func _on_spot_scrub_ended() -> void:
 	# Resume dialogue choice timer when scrub ends.
 	if waiting_for_choice:
-		choice_timeout_timer.set_paused(false)
+		choice_timeout_timer.set_paused(interaction_mode != InteractionMode.PSYCHOLOGICAL)
 
 func _on_spot_telemetry_updated(telemetry: Dictionary) -> void:
 	_last_spot_telemetry = telemetry
@@ -656,6 +697,7 @@ func _push_next_dialogue_event() -> void:
 		choice_panel.clear_choices()
 		choice_timeout_timer.stop()
 		_schedule_next_feedback_message()
+	_sync_interaction_mode_state()
 
 func _schedule_next_feedback_message() -> void:
 	var wait_time := feedback_rng.randf_range(
