@@ -933,7 +933,11 @@ text = "Skip to Phase 2"
 
 [node name="AudioPlaceholders" type="Node" parent="." unique_id=1725971575]
 
-[node name="FeedbackTimer" type="Timer" parent="." unique_id=833369606]
+[node name="PsychologicalDialogueTimer" type="Timer" parent="." unique_id=833369606]
+wait_time = 2.0
+one_shot = true
+
+[node name="PhysiologicalDialogueTimer" type="Timer" parent="."]
 wait_time = 2.0
 one_shot = true
 

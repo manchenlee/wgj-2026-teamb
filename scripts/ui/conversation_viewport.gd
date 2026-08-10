@@ -54,6 +54,9 @@ func append_history(line: String, speaker_type: String = "companion") -> void:
 	if _is_character_speaker(speaker_type):
 		_show_current_character_line(cleaned_line)
 
+func restore_current_character_line(line: String) -> void:
+	_show_current_character_line(line.strip_edges())
+
 func set_choice_timeout_progress(_progress: float) -> void:
 	pass
 

@@ -53,19 +53,19 @@ enum InteractionMode {
 	$HudLayer/TopHudCenter/StatusHUD/DebugRegionTint,
 	$ChoiceLayer/ChoicePanel/DebugRegionTint
 ]
-@onready var feedback_timer: Timer = $FeedbackTimer
+@onready var psychological_dialogue_timer: Timer = $PsychologicalDialogueTimer
+@onready var physiological_dialogue_timer: Timer = $PhysiologicalDialogueTimer
 @onready var spot_spawn_timer: Timer = $SpotSpawnTimer
 @onready var choice_timeout_timer: Timer = $ChoiceTimeoutTimer
 @onready var phase_transition_overlay: ColorRect = $PhaseTransitionOverlay
 
 var arousal_model = ArousalModelClass.new()
-var dialogue_controller = DialogueChoiceControllerClass.new()
+var psychological_dialogue_controller = DialogueChoiceControllerClass.new()
+var physiological_dialogue_controller = DialogueChoiceControllerClass.new()
 var spot_manager: InteractionSpotManager = null
 var feedback_rng := RandomNumberGenerator.new()
-var current_prompt: Dictionary = {}
 var debug_overlay = null
 var run_active: bool = true
-var waiting_for_choice: bool = false
 var character_visual_textures: Dictionary = {}
 var character_layer_textures: Dictionary = {}
 var character_visual_warnings_printed: Dictionary = {}
@@ -86,6 +86,8 @@ var _resolved_character_alignment_offset: Vector2 = Vector2.ZERO
 var _last_spot_telemetry: Dictionary = {}
 
 func _ready() -> void:
+	psychological_dialogue_controller.configure("psychological_dialogue_data_source", true)
+	physiological_dialogue_controller.configure("physiological_dialogue_data_source", false)
 	_build_phase_sequence()
 	_apply_phase_by_index(_get_initial_phase_index(), false)
 	_update_character_visual_state()
@@ -107,7 +109,8 @@ func _ready() -> void:
 	set_process_unhandled_input(true)
 	choice_panel.choice_selected.connect(_on_choice_selected)
 	phase_skip_button.pressed.connect(_on_phase_2_skip_pressed)
-	feedback_timer.timeout.connect(_on_feedback_timer_timeout)
+	psychological_dialogue_timer.timeout.connect(_on_psychological_dialogue_timer_timeout)
+	physiological_dialogue_timer.timeout.connect(_on_physiological_dialogue_timer_timeout)
 	choice_timeout_timer.timeout.connect(_on_choice_timeout)
 	_setup_spot_manager()
 	reset_run()
@@ -171,8 +174,10 @@ func _apply_phase_by_index(phase_index: int, announce_phase: bool) -> void:
 	active_phase_config = phase_sequence[phase_index]
 	active_character_profile = active_phase_config.character_profile
 	arousal_model.set_phase_config(active_phase_config)
-	dialogue_controller.set_phase_config(active_phase_config)
-	dialogue_controller.set_safe_word(safe_word)
+	psychological_dialogue_controller.set_phase_config(active_phase_config)
+	psychological_dialogue_controller.set_safe_word(safe_word)
+	physiological_dialogue_controller.set_phase_config(active_phase_config)
+	physiological_dialogue_controller.set_safe_word(safe_word)
 	_cache_character_visual_textures()
 	overlay_motion_set = _build_overlay_motion_set()
 	_apply_phase_visual_profile()
@@ -497,7 +502,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_on_dialogue_choice_input(1)
 
 func _on_dialogue_choice_input(index: int) -> void:
-	if interaction_mode != InteractionMode.PSYCHOLOGICAL or not waiting_for_choice:
+	if interaction_mode != InteractionMode.PSYCHOLOGICAL or not _has_pending_psychological_choice():
 		return
 	choice_panel.emit_choice_by_index(index)
 
@@ -517,16 +522,18 @@ func _sync_interaction_mode_state() -> void:
 	var psychological_active := interaction_mode == InteractionMode.PSYCHOLOGICAL
 	if choice_panel != null:
 		choice_panel.visible = psychological_active
-	if waiting_for_choice and not choice_timeout_timer.is_stopped():
+	psychological_dialogue_timer.set_paused(not psychological_active)
+	physiological_dialogue_timer.set_paused(psychological_active)
+	if _has_pending_psychological_choice() and not choice_timeout_timer.is_stopped():
 		choice_timeout_timer.set_paused(not psychological_active)
 	elif psychological_active:
 		choice_timeout_timer.set_paused(false)
-	if spot_manager == null:
-		return
-	if psychological_active:
-		spot_manager.suspend()
-	else:
-		spot_manager.resume()
+	if spot_manager != null:
+		if psychological_active:
+			spot_manager.suspend()
+		else:
+			spot_manager.resume()
+	_restore_or_initialize_active_dialogue()
 
 # ---------------------------------------------------------------------------
 # Run lifecycle
@@ -556,20 +563,19 @@ func _reset_run_for_phase_index(phase_index: int) -> void:
 	has_left_overall_init_visual = false
 	has_switched_to_game_bgm = false
 	last_requested_bgm_key = ""
-	current_prompt = {}
-	waiting_for_choice = false
 	interaction_mode = InteractionMode.PSYCHOLOGICAL
 	_last_spot_telemetry = {}
 	_stop_runtime_timers()
 	dialogue_panel.clear_history()
 	_apply_phase_by_index(phase_index, false)
 	arousal_model.reset()
-	dialogue_controller.reset()
+	psychological_dialogue_controller.reset()
+	physiological_dialogue_controller.reset()
 	if overlay_animator != null:
 		overlay_animator.play_idle()
 	if breathing_controller != null and breathing_controller.has_method("start_breathing"):
 		breathing_controller.start_breathing()
-	_push_next_dialogue_event()
+	_push_next_dialogue_event(InteractionMode.PSYCHOLOGICAL)
 	if spot_manager != null:
 		spot_manager.start()
 	_sync_interaction_mode_state()
@@ -626,12 +632,12 @@ func get_debug_state() -> Dictionary:
 
 func _on_spot_scrub_started() -> void:
 	# Pause dialogue choice timer while player is actively scrubbing a spot.
-	if waiting_for_choice and not choice_timeout_timer.is_stopped():
+	if _has_pending_psychological_choice() and not choice_timeout_timer.is_stopped():
 		choice_timeout_timer.set_paused(true)
 
 func _on_spot_scrub_ended() -> void:
 	# Resume dialogue choice timer when scrub ends.
-	if waiting_for_choice:
+	if _has_pending_psychological_choice():
 		choice_timeout_timer.set_paused(interaction_mode != InteractionMode.PSYCHOLOGICAL)
 
 func _on_spot_telemetry_updated(telemetry: Dictionary) -> void:
@@ -643,18 +649,25 @@ func _on_spot_telemetry_updated(telemetry: Dictionary) -> void:
 # Dialogue
 # ---------------------------------------------------------------------------
 
-func _on_feedback_timer_timeout() -> void:
-	if not run_active or waiting_for_choice:
+func _on_psychological_dialogue_timer_timeout() -> void:
+	if not run_active or interaction_mode != InteractionMode.PSYCHOLOGICAL \
+			or _has_pending_psychological_choice():
 		return
-	_push_next_dialogue_event()
+	_push_next_dialogue_event(InteractionMode.PSYCHOLOGICAL)
+
+func _on_physiological_dialogue_timer_timeout() -> void:
+	if not run_active or interaction_mode != InteractionMode.PHYSIOLOGICAL:
+		return
+	_push_next_dialogue_event(InteractionMode.PHYSIOLOGICAL)
 
 func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
+	if interaction_mode != InteractionMode.PSYCHOLOGICAL or not _has_pending_psychological_choice():
+		return
 	choice_timeout_timer.stop()
 	dialogue_panel.append_history(choice_text, "player")
 	dialogue_panel.hide_prompt()
 	choice_panel.clear_choices()
-	waiting_for_choice = false
-	var outcome := dialogue_controller.apply_choice(choice_quality, arousal_model)
+	var outcome := psychological_dialogue_controller.apply_choice(choice_quality, arousal_model)
 	var ending_type := str(outcome.get("ending_type", ""))
 	arousal_model.refresh_emotional_activity()
 	var reply_text := str(outcome.get("reply", ""))
@@ -664,47 +677,81 @@ func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	if not ending_type.is_empty():
 		_begin_ending_transition(ending_type)
 		return
-	_schedule_next_feedback_message()
+	_schedule_next_dialogue_message(InteractionMode.PSYCHOLOGICAL)
 	_update_presentation()
 
 func _on_choice_timeout() -> void:
-	if not run_active or not waiting_for_choice:
+	if not run_active or interaction_mode != InteractionMode.PSYCHOLOGICAL \
+			or not _has_pending_psychological_choice():
 		return
-	waiting_for_choice = false
 	dialogue_panel.hide_prompt()
 	choice_panel.clear_choices()
 	character_area.show_ignored_reaction()
-	dialogue_panel.append_history(dialogue_controller.get_timeout_reply(), "companion")
-	_schedule_next_feedback_message()
+	dialogue_panel.append_history(psychological_dialogue_controller.get_timeout_reply(), "companion")
+	_schedule_next_dialogue_message(InteractionMode.PSYCHOLOGICAL)
 	_update_presentation()
 
-func _push_next_dialogue_event() -> void:
-	var should_force_safe_word := dialogue_controller.has_safe_word_event() and feedback_rng.randf() < Config.SAFE_WORD_EVENT_CHANCE
-	current_prompt = dialogue_controller.next_event(arousal_model.physical, arousal_model.emotional, should_force_safe_word)
-	if current_prompt.is_empty():
+func _push_next_dialogue_event(mode: InteractionMode) -> void:
+	if interaction_mode != mode:
 		return
-	if current_prompt.has("choices"):
-		waiting_for_choice = true
+	var controller: DialogueChoiceController = _get_dialogue_controller(mode)
+	var should_force_safe_word: bool = mode == InteractionMode.PSYCHOLOGICAL \
+			and controller.has_safe_word_event() \
+			and feedback_rng.randf() < Config.SAFE_WORD_EVENT_CHANCE
+	var prompt: Dictionary = controller.next_event(
+		arousal_model.physical,
+		arousal_model.emotional,
+		should_force_safe_word
+	)
+	if prompt.is_empty():
+		return
+	if mode == InteractionMode.PHYSIOLOGICAL and prompt.has("choices"):
+		push_warning("Physiological dialogue attempted to expose choices; choices were ignored.")
+		prompt.erase("choices")
+	var prompt_text := str(prompt.get("text", Config.FEEDBACK_MESSAGE_TEXT))
+	if mode == InteractionMode.PSYCHOLOGICAL and prompt.has("choices"):
 		dialogue_panel.hide_prompt()
-		dialogue_panel.append_history(str(current_prompt.get("text", Config.FEEDBACK_MESSAGE_TEXT)), "companion")
-		choice_panel.show_choices(current_prompt.get("choices", {}))
-		feedback_timer.stop()
+		dialogue_panel.append_history(prompt_text, "companion")
+		choice_panel.show_choices(prompt.get("choices", {}))
+		psychological_dialogue_timer.stop()
 		choice_timeout_timer.start(float(active_phase_config.choice_timeout_seconds))
 	else:
-		waiting_for_choice = false
 		dialogue_panel.hide_prompt()
-		dialogue_panel.append_history(str(current_prompt.get("text", Config.FEEDBACK_MESSAGE_TEXT)), "companion")
-		choice_panel.clear_choices()
-		choice_timeout_timer.stop()
-		_schedule_next_feedback_message()
-	_sync_interaction_mode_state()
+		dialogue_panel.append_history(prompt_text, "companion")
+		if mode == InteractionMode.PSYCHOLOGICAL:
+			choice_panel.clear_choices()
+			choice_timeout_timer.stop()
+		_schedule_next_dialogue_message(mode)
 
-func _schedule_next_feedback_message() -> void:
+func _schedule_next_dialogue_message(mode: InteractionMode) -> void:
 	var wait_time := feedback_rng.randf_range(
 		float(active_phase_config.feedback_message_interval_min),
 		float(active_phase_config.feedback_message_interval_max)
 	)
-	feedback_timer.start(wait_time)
+	var timer := _get_dialogue_timer(mode)
+	timer.start(wait_time)
+	timer.set_paused(interaction_mode != mode)
+
+func _restore_or_initialize_active_dialogue() -> void:
+	var controller: DialogueChoiceController = _get_dialogue_controller(interaction_mode)
+	var current_line: String = controller.get_current_line()
+	if current_line.is_empty():
+		_push_next_dialogue_event(interaction_mode)
+		return
+	dialogue_panel.restore_current_character_line(current_line)
+
+func _get_dialogue_controller(mode: InteractionMode) -> DialogueChoiceController:
+	if mode == InteractionMode.PHYSIOLOGICAL:
+		return physiological_dialogue_controller
+	return psychological_dialogue_controller
+
+func _get_dialogue_timer(mode: InteractionMode) -> Timer:
+	if mode == InteractionMode.PHYSIOLOGICAL:
+		return physiological_dialogue_timer
+	return psychological_dialogue_timer
+
+func _has_pending_psychological_choice() -> bool:
+	return psychological_dialogue_controller.choice_prompt_pending
 
 # ---------------------------------------------------------------------------
 # Ending and phase transitions
@@ -727,8 +774,6 @@ func _begin_phase_transition() -> void:
 	phase_transition_in_progress = true
 	run_active = false
 	_stop_runtime_timers()
-	waiting_for_choice = false
-	current_prompt = {}
 	dialogue_panel.hide_prompt()
 	choice_panel.clear_choices()
 	var transition_text := active_phase_config.transition_feedback_text
@@ -818,7 +863,7 @@ func _update_presentation() -> void:
 		debug_overlay.sync_live_readout(get_debug_state())
 
 func _update_choice_timer_visual() -> void:
-	if waiting_for_choice and not choice_timeout_timer.is_stopped():
+	if _has_pending_psychological_choice() and not choice_timeout_timer.is_stopped():
 		var progress := choice_timeout_timer.time_left / float(active_phase_config.choice_timeout_seconds)
 		dialogue_panel.set_choice_timeout_progress(progress)
 		return
@@ -955,7 +1000,8 @@ func _get_texture_content_rect(texture_rect: TextureRect, texture_size: Vector2)
 # ---------------------------------------------------------------------------
 
 func _stop_runtime_timers() -> void:
-	feedback_timer.stop()
+	psychological_dialogue_timer.stop()
+	physiological_dialogue_timer.stop()
 	spot_spawn_timer.stop()
 	choice_timeout_timer.stop()
 	if spot_manager != null:

@@ -77,7 +77,8 @@ func _init() -> void:
 				"emotional_cap": 100.0,
 				"emotional_counterpart_below": 20.0
 			},
-			"dialogue_data_source": "res://assets/dialogue/feedback.json",
+			"psychological_dialogue_data_source": "res://assets/dialogue/feedback.json",
+			"physiological_dialogue_data_source": "res://assets/dialogue/physiological_feedback.json",
 			"character_profile": profile,
 			"overlay_animation_set": profile.overlay_animation_set,
 			"prompt_anchor_profile_id": profile.profile_id,

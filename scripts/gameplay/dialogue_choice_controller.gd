@@ -11,9 +11,18 @@ var choice_prompt_pending: bool = false
 var entries: Array = []
 var rng := RandomNumberGenerator.new()
 var safe_word: String = Config.SAFE_WORD_DEFAULT
+var current_line: String = ""
+var _data_source_property: String = "psychological_dialogue_data_source"
+var _choices_enabled: bool = true
 
 func _init() -> void:
 	rng.randomize()
+
+func configure(data_source_property: String, choices_enabled: bool) -> void:
+	_data_source_property = data_source_property
+	_choices_enabled = choices_enabled
+	if phase_config != null:
+		_load_feedback_entries()
 
 func set_phase_config(next_phase_config) -> void:
 	phase_config = next_phase_config
@@ -29,6 +38,7 @@ func reset() -> void:
 	current_entry = {}
 	current_feedback_index = -1
 	choice_prompt_pending = false
+	current_line = ""
 
 func next_event(physical: float, emotional: float, force_safe_word: bool = false) -> Dictionary:
 	if choice_prompt_pending:
@@ -37,6 +47,7 @@ func next_event(physical: float, emotional: float, force_safe_word: bool = false
 		current_entry = _select_entry(physical, emotional, force_safe_word)
 		current_feedback_index = -1
 	current_prompt = _build_next_prompt(current_entry)
+	current_line = str(current_prompt.get("text", ""))
 	return current_prompt
 
 func apply_choice(choice_id: String, model) -> Dictionary:
@@ -64,6 +75,7 @@ func apply_choice(choice_id: String, model) -> Dictionary:
 	if effect == "bad_ending":
 		ending_type = Config.SAFEWORD_IGNORED_FAILURE_ENDING
 	var reply := _get_choice_response(choice_id, current_entry, ending_type.is_empty())
+	current_line = reply
 	current_prompt = {}
 	current_entry = {}
 	current_feedback_index = -1
@@ -72,11 +84,15 @@ func apply_choice(choice_id: String, model) -> Dictionary:
 
 func get_timeout_reply() -> String:
 	var reply := _get_current_feedback_line(current_entry)
+	current_line = reply
 	current_prompt = {}
 	current_entry = {}
 	current_feedback_index = -1
 	choice_prompt_pending = false
 	return reply
+
+func get_current_line() -> String:
+	return current_line
 
 func has_safe_word_event() -> bool:
 	for entry_variant in entries:
@@ -114,7 +130,14 @@ func _load_feedback_entries() -> void:
 
 	for entry_variant in parsed_entries as Array:
 		if typeof(entry_variant) == TYPE_DICTIONARY:
-			entries.append((entry_variant as Dictionary).duplicate(true))
+			var entry := (entry_variant as Dictionary).duplicate(true)
+			if not _choices_enabled and entry.has("choice"):
+				push_warning(
+					"Dialogue stream '%s' does not allow choices; authored choice was ignored."
+					% _data_source_property
+				)
+				entry.erase("choice")
+			entries.append(entry)
 
 func _select_entry(physical: float, emotional: float, force_safe_word: bool = false) -> Dictionary:
 	if force_safe_word:
@@ -200,6 +223,8 @@ func _get_feedback_lines(entry: Dictionary) -> Array:
 
 func _build_choices(entry: Dictionary) -> Array[Dictionary]:
 	var choices: Array[Dictionary] = []
+	if not _choices_enabled:
+		return choices
 	for choice_variant in entry.get("choice", []):
 		var choice := choice_variant as Dictionary
 		var choice_id := str(choice.get("id", ""))
@@ -261,7 +286,7 @@ func _get_phase_number() -> int:
 	return -1
 
 func _get_feedback_data_path() -> String:
-	return String(_get_phase_value("dialogue_data_source", "res://assets/dialogue/feedback.json"))
+	return String(_get_phase_value(_data_source_property, ""))
 
 func _get_choice_reward_values() -> Dictionary:
 	return _get_phase_value("choice_reward_values", {"good": 10.0, "neutral": 3.0})

@@ -57,7 +57,8 @@ var peak_loss_rate_imbalanced: float
 var peak_zero_value_extra_loss_rate: float
 var success_condition: Dictionary
 var failure_thresholds: Dictionary
-var dialogue_data_source: String
+var psychological_dialogue_data_source: String
+var physiological_dialogue_data_source: String
 var character_profile
 var overlay_animation_set: Dictionary
 var prompt_anchor_profile_id: String
@@ -128,7 +129,8 @@ func _init(values: Dictionary = {}) -> void:
 			"emotional_counterpart_below": minimum_active_threshold
 		}
 	).duplicate(true)
-	dialogue_data_source = String(values.get("dialogue_data_source", ""))
+	psychological_dialogue_data_source = String(values.get("psychological_dialogue_data_source", ""))
+	physiological_dialogue_data_source = String(values.get("physiological_dialogue_data_source", ""))
 	character_profile = values.get("character_profile", null)
 	overlay_animation_set = values.get("overlay_animation_set", {}).duplicate(true)
 	prompt_anchor_profile_id = String(values.get("prompt_anchor_profile_id", phase_id))
