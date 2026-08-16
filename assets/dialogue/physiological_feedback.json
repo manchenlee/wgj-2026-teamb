@@ -4,42 +4,42 @@
     {
       "id": "phase1_physical_low_emotional_low",
       "condition": {"phase": 1, "physical": "low", "emotional": "low"},
-      "feedback": ["你的動作很輕……", "可以再靠近一點。"]
+      "feedback": ["生理生理生理生理生理", "生理生理生理生理生理"]
     },
     {
       "id": "phase1_physical_low_emotional_high",
       "condition": {"phase": 1, "physical": "low", "emotional": "high"},
-      "feedback": ["我感覺得到你的手。", "保持這個節奏就好。"]
+      "feedback": ["生理生理生理生理生理", "生理生理生理生理生理"]
     },
     {
       "id": "phase1_physical_high_emotional_low",
       "condition": {"phase": 1, "physical": "high", "emotional": "low"},
-      "feedback": ["稍微慢一點……", "讓我跟上你的動作。"]
+      "feedback": ["生理生理生理生理生理", "生理生理生理生理生理"]
     },
     {
       "id": "phase1_physical_high_emotional_high",
       "condition": {"phase": 1, "physical": "high", "emotional": "high"},
-      "feedback": ["嗯……就是這裡。", "不要停下來。"]
+      "feedback": ["生理生理生理生理生理", "生理生理生理生理生理"]
     },
     {
       "id": "phase2_physical_low_emotional_low",
       "condition": {"phase": 2, "physical": "low", "emotional": "low"},
-      "feedback": ["我還在適應你的觸碰。", "先慢慢來吧。"]
+      "feedback": ["生理生理生理生理生理", "生理生理生理生理生理"]
     },
     {
       "id": "phase2_physical_low_emotional_high",
       "condition": {"phase": 2, "physical": "low", "emotional": "high"},
-      "feedback": ["這樣的距離剛剛好。", "我會告訴你我的感覺。"]
+      "feedback": ["生理生理生理生理生理", "生理生理生理生理生理"]
     },
     {
       "id": "phase2_physical_high_emotional_low",
       "condition": {"phase": 2, "physical": "high", "emotional": "low"},
-      "feedback": ["等等，讓我喘口氣。", "再溫柔一些。"]
+      "feedback": ["生理生理生理生理生理", "生理生理生理生理生理"]
     },
     {
       "id": "phase2_physical_high_emotional_high",
       "condition": {"phase": 2, "physical": "high", "emotional": "high"},
-      "feedback": ["我能跟上你的節奏。", "繼續這樣就好。"]
+      "feedback": ["生理生理生理生理生理", "生理生理生理生理生理"]
     }
   ]
 }
