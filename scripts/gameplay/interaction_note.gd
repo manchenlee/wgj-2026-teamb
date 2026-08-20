@@ -8,6 +8,7 @@ signal completed()
 signal expired(progress_ratio: float)
 
 var spot_lifetime: float = 7.0
+var approach_start_scale: float = 2.0
 
 var _resolved: bool = false
 var _suspended: bool = false
@@ -28,6 +29,7 @@ func _ready() -> void:
 
 func setup(config: Dictionary) -> void:
 	spot_lifetime = float(config.get("spot_lifetime", 7.0))
+	approach_start_scale = float(config.get("approach_start_scale", 2.0))
 
 
 func set_suspended(suspended: bool) -> void:
@@ -58,9 +60,53 @@ func get_progress_ratio() -> float:
 	return 0.0
 
 
+func _restart_lifetime() -> void:
+	if _resolved or lifetime_timer == null:
+		return
+	lifetime_timer.start(spot_lifetime)
+	queue_redraw()
+
+
 func _process(_delta: float) -> void:
 	# Lifetime feedback is timer-driven, but must redraw while its time_left changes.
 	queue_redraw()
+
+
+func _draw_approach_circle() -> void:
+	if lifetime_timer == null or lifetime_timer.is_stopped():
+		return
+	var target_radius := _get_approach_target_radius()
+	if target_radius <= 0.0:
+		return
+	var remaining_ratio := clampf(lifetime_timer.time_left / maxf(spot_lifetime, 0.001), 0.0, 1.0)
+	var approach_radius := _calculate_approach_radius(remaining_ratio)
+	draw_arc(
+		_get_approach_center(),
+		approach_radius,
+		0.0,
+		TAU,
+		48,
+		Color(1.0, 1.0, 1.0, 0.9),
+		4.0,
+		true
+	)
+
+
+func _calculate_approach_radius(remaining_ratio: float) -> float:
+	var target_radius := _get_approach_target_radius()
+	return lerpf(
+		target_radius,
+		target_radius * approach_start_scale,
+		clampf(remaining_ratio, 0.0, 1.0)
+	)
+
+
+func _get_approach_center() -> Vector2:
+	return Vector2.ZERO
+
+
+func _get_approach_target_radius() -> float:
+	return 0.0
 
 
 func _begin_interaction() -> void:

@@ -14,7 +14,7 @@
 [ext_resource type="Script" uid="uid://c537cpupxlgv0" path="res://scripts/ui/prompt_anchor_region.gd" id="12_prompt_region"]
 [ext_resource type="PackedScene" path="res://scenes/components/ChoicePanel.tscn" id="13_choice_panel"]
 [ext_resource type="PackedScene" path="res://scenes/components/CurrentSpeechBubble.tscn" id="14_speech_bubble"]
-[ext_resource type="Script" path="res://scripts/presentation/failure_flash.gd" id="15_failure_flash"]
+[ext_resource type="Script" uid="uid://1hkwnhoxho74" path="res://scripts/presentation/failure_flash.gd" id="15_failure_flash"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_alg88"]
 load_path = "res://.godot/imported/draft.png-80a3863fe83a454b531da103f3e5f42e.ctex"
@@ -47,6 +47,10 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 178.29327
+offset_top = 140.0
+offset_right = 178.29321
+offset_bottom = 140.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
@@ -840,7 +844,6 @@ color = Color(1, 0.52, 0.32, 0.72)
 
 [node name="ConversationViewport" type="Control" parent="." unique_id=1454768142]
 z_index = 4
-clip_contents = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -859,7 +862,9 @@ color = Color(0.98, 0.66, 0.2, 0.18)
 
 [node name="CurrentSpeechBubble" parent="ConversationViewport" unique_id=2114528285 instance=ExtResource("14_speech_bubble")]
 visible = false
+custom_minimum_size = Vector2(420, 72)
 layout_mode = 0
+offset_bottom = 72.0
 
 [node name="ChoiceLayer" type="Control" parent="." unique_id=1469734437]
 z_index = 5
@@ -874,11 +879,6 @@ mouse_filter = 2
 [node name="ChoicePanel" parent="ChoiceLayer" unique_id=1272390169 instance=ExtResource("13_choice_panel")]
 unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 
 [node name="HudLayer" type="Control" parent="." unique_id=564354284]
 z_index = 4
@@ -938,7 +938,7 @@ text = "Skip to Phase 2"
 wait_time = 2.0
 one_shot = true
 
-[node name="PhysiologicalDialogueTimer" type="Timer" parent="."]
+[node name="PhysiologicalDialogueTimer" type="Timer" parent="." unique_id=1760229138]
 wait_time = 2.0
 one_shot = true
 
@@ -950,7 +950,7 @@ one_shot = true
 wait_time = 4.2
 one_shot = true
 
-[node name="FeedbackOverlayLayer" type="Control" parent="."]
+[node name="FeedbackOverlayLayer" type="Control" parent="." unique_id=1157570693]
 z_index = 90
 z_as_relative = false
 layout_mode = 1
@@ -961,7 +961,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="FailureFlash" type="ColorRect" parent="FeedbackOverlayLayer"]
+[node name="FailureFlash" type="ColorRect" parent="FeedbackOverlayLayer" unique_id=1725183679]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

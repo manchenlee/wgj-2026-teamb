@@ -4,16 +4,26 @@ extends RefCounted
 # ---------------------------------------------------------------------------
 # InteractionSpotManager
 #
-# Spawns one SlideNote at a time. Arousal changes are applied here from
-# normalized progress emitted through the common InteractionNote boundary.
+# Spawns a weighted, non-overlapping set of physiological notes. Arousal changes are
+# applied here from normalized progress emitted through the common InteractionNote boundary.
 # ---------------------------------------------------------------------------
 
+enum NoteType {
+	CLICK,
+	SLIDE,
+	RUB,
+}
+
 const SlideNoteScene := preload("res://scenes/components/SlideNote.tscn")
+const ClickNoteScene := preload("res://scenes/components/ClickNote.tscn")
+const RubNoteScene := preload("res://scenes/components/RubNote.tscn")
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
 const PATH_GENERATION_ATTEMPTS: int = 12
 const PATH_TURN_ANGLE: float = deg_to_rad(72.0)
+const PLACEMENT_ATTEMPTS_PER_ANCHOR: int = 12
+const NOTE_SEPARATION: float = 8.0
 
 signal spot_scrub_started()
 signal spot_scrub_ended()
@@ -31,7 +41,6 @@ var _rng := RandomNumberGenerator.new()
 var _bounds_rect := Rect2()
 
 var _available_anchor_ids: Array[String] = []
-var _last_anchor_id: String = ""
 # All currently live spots
 var _active_spots: Array[InteractionNote] = []
 var _active: bool = false
@@ -81,7 +90,7 @@ func start() -> void:
 	_spawn_timer.set_paused(false)
 	_telemetry_reset()
 	_telemetry_physical_at_session_start = _arousal_model.physical if _arousal_model != null else 0.0
-	_schedule_next_spot(0.5)  # brief initial delay before first spawn
+	_schedule_next_spot(Config.SPOT_INITIAL_SPAWN_DELAY)
 
 
 func stop() -> void:
@@ -91,6 +100,10 @@ func stop() -> void:
 	_spawn_timer.stop()
 	for spot in _active_spots:
 		if is_instance_valid(spot):
+			# End held input and pause the authoritative lifetime before queue_free.
+			# The node remains alive until the end of the frame, so disconnect every
+			# outcome signal to make phase/reset cleanup non-scoring and non-failing.
+			spot.set_suspended(true)
 			_disconnect_spot(spot)
 			spot.queue_free()
 	_active_spots.clear()
@@ -119,7 +132,15 @@ func resume() -> void:
 
 
 func force_spawn_spot() -> void:
-	_spawn_spot()
+	_spawn_note_type(NoteType.SLIDE)
+
+
+func force_spawn_click_note() -> void:
+	_spawn_note_type(NoteType.CLICK)
+
+
+func force_spawn_rub_note() -> void:
+	_spawn_note_type(NoteType.RUB)
 
 
 func force_complete_spot() -> void:
@@ -148,7 +169,7 @@ func force_expire_spot() -> void:
 func _on_spawn_timer_timeout() -> void:
 	if not _active or _suspended:
 		return
-	_spawn_spot()
+	_spawn_note_type()
 	# Keep scheduling: timer fires repeatedly until max active count is reached.
 	# If already at max, schedule a check after the minimum delay.
 	_schedule_next_spot()
@@ -179,7 +200,7 @@ func _get_occupied_anchor_ids() -> Array[String]:
 	return occupied
 
 
-func _spawn_spot() -> void:
+func _spawn_note_type(requested_note_type: int = -1) -> void:
 	if not _active or _suspended:
 		return
 	# Prune any stale references first.
@@ -202,39 +223,74 @@ func _spawn_spot() -> void:
 	if available_now.is_empty():
 		return  # all anchors occupied
 
-	var anchor_id := _pick_anchor_id_from(available_now)
 	if _anchor_region == null or not _anchor_region.has_method("get_interaction_spot_global_rect"):
 		push_warning("InteractionSpotManager: anchor region is unavailable. Cannot spawn spot.")
 		return
 
-	var fallback_global_center := _get_fallback_global_center()
-	var global_rect: Rect2 = _anchor_region.call(
-		"get_interaction_spot_global_rect",
-		StringName(anchor_id),
-		fallback_global_center
+	var note_type: int = requested_note_type
+	if note_type < 0:
+		note_type = _select_weighted_note_type()
+
+	var is_circular_note := note_type == NoteType.CLICK or note_type == NoteType.RUB
+	var radius: float = (
+		Config.RUB_TARGET_RADIUS
+		if note_type == NoteType.RUB
+		else _get_config_value("spot_checkpoint_radius", Config.SPOT_CHECKPOINT_RADIUS)
 	)
-
-	var radius: float = _get_config_value("spot_checkpoint_radius", Config.SPOT_CHECKPOINT_RADIUS)
-	var global_center: Vector2 = _pick_global_center_in_rect(global_rect, radius)
-	# Convert to PromptLayer local coordinates.
-	var local_center: Vector2 = _prompt_layer.get_global_transform_with_canvas().affine_inverse() * global_center
-	local_center = _clamp_center_to_bounds(local_center, radius)
-	var checkpoint_count: int = int(_get_config_value("spot_required_checkpoint_count", Config.SPOT_REQUIRED_CHECKPOINT_COUNT))
-	var spacing: float = _get_config_value("spot_checkpoint_spacing", Config.SPOT_CHECKPOINT_SPACING)
-	var sequence_points := _generate_sequence_points(local_center, checkpoint_count, spacing, radius)
-	var path_rect := _get_path_rect(sequence_points, radius + 10.0)
-	var local_points := PackedVector2Array()
-	for point in sequence_points:
-		local_points.append(point - path_rect.position)
-
-	var spot := SlideNoteScene.instantiate() as SlideNote
-	spot.setup(_build_spot_config(local_points))
-	spot.custom_minimum_size = path_rect.size
-	spot.size = path_rect.size
-	spot.pivot_offset = path_rect.size * 0.5
-	spot.position = path_rect.position
+	var placement_radius := radius * 2.0 + 4.0 if is_circular_note else radius
+	var placement := _find_clear_placement(note_type, available_now, placement_radius, radius)
+	if placement.is_empty():
+		print_debug("InteractionSpotManager: no non-overlapping placement available for %s." % _note_type_name(note_type))
+		return
+	var anchor_id: String = placement.anchor_id
+	var local_center: Vector2 = placement.center
+	var placement_rect: Rect2 = placement.rect
+	var spot: InteractionNote
+	if note_type == NoteType.CLICK:
+		var click_extent := placement_radius
+		var click_size := Vector2.ONE * click_extent * 2.0
+		spot = ClickNoteScene.instantiate() as InteractionNote
+		spot.setup({
+			"spot_lifetime": _get_config_value("click_note_lifetime", Config.CLICK_NOTE_LIFETIME),
+			"target_center": click_size * 0.5,
+			"target_radius": radius,
+		})
+		spot.custom_minimum_size = click_size
+		spot.size = click_size
+		spot.pivot_offset = click_size * 0.5
+		spot.position = local_center - click_size * 0.5
+	elif note_type == NoteType.RUB:
+		var rub_extent := placement_radius
+		var rub_size := Vector2.ONE * rub_extent * 2.0
+		spot = RubNoteScene.instantiate() as InteractionNote
+		spot.setup({
+			"spot_lifetime": _get_config_value("rub_note_lifetime", Config.RUB_NOTE_LIFETIME),
+			"required_scrub_distance": Config.RUB_REQUIRED_SCRUB_DISTANCE,
+			"valid_motion_threshold": Config.RUB_VALID_MOTION_THRESHOLD,
+			"max_delta_per_event": Config.RUB_MAX_DELTA_PER_EVENT,
+			"target_center": rub_size * 0.5,
+			"target_radius": radius,
+		})
+		spot.custom_minimum_size = rub_size
+		spot.size = rub_size
+		spot.pivot_offset = rub_size * 0.5
+		spot.position = local_center - rub_size * 0.5
+	else:
+		var sequence_points: PackedVector2Array = placement.points
+		var path_rect: Rect2 = placement_rect
+		var local_points := PackedVector2Array()
+		for point in sequence_points:
+			local_points.append(point - path_rect.position)
+		spot = SlideNoteScene.instantiate() as InteractionNote
+		spot.setup(_build_spot_config(local_points))
+		spot.custom_minimum_size = path_rect.size
+		spot.size = path_rect.size
+		spot.pivot_offset = path_rect.size * 0.5
+		spot.position = path_rect.position
 	# Tag the spot with its anchor so we can avoid re-using it while live.
 	spot.set_meta("anchor_id", anchor_id)
+	spot.set_meta("note_type", note_type)
+	spot.set_meta("placement_rect", placement_rect)
 
 	spot.interaction_started.connect(_on_spot_scrub_started)
 	spot.interaction_ended.connect(_on_spot_scrub_ended)
@@ -244,10 +300,10 @@ func _spawn_spot() -> void:
 
 	_prompt_layer.add_child(spot)
 	_active_spots.append(spot)
-	_last_anchor_id = anchor_id
 
 	print_debug(
-		"InteractionSpotManager: spawned sequence anchor='%s' start=%s bounds=%s checkpoint_radius=%.0f active=%d" % [
+		"InteractionSpotManager: spawned %s anchor='%s' start=%s bounds=%s radius=%.0f active=%d" % [
+			_note_type_name(note_type),
 			anchor_id,
 			str(local_center),
 			str(_bounds_rect),
@@ -255,6 +311,116 @@ func _spawn_spot() -> void:
 			_active_spots.size()
 		]
 	)
+
+
+func _find_clear_placement(
+	note_type: int,
+	available_anchor_ids: Array[String],
+	placement_radius: float,
+	target_radius: float
+) -> Dictionary:
+	var anchor_ids := available_anchor_ids.duplicate()
+	_shuffle_strings(anchor_ids)
+	var fallback_global_center := _get_fallback_global_center()
+	var inverse_prompt_transform := _prompt_layer.get_global_transform_with_canvas().affine_inverse()
+	for anchor_id in anchor_ids:
+		var global_rect: Rect2 = _anchor_region.call(
+			"get_interaction_spot_global_rect",
+			StringName(anchor_id),
+			fallback_global_center
+		)
+		for _attempt in range(PLACEMENT_ATTEMPTS_PER_ANCHOR):
+			var global_center := _pick_global_center_in_rect(global_rect, placement_radius)
+			var local_center: Vector2 = inverse_prompt_transform * global_center
+			local_center = _clamp_center_to_bounds(local_center, placement_radius)
+			var candidate_rect: Rect2
+			var points := PackedVector2Array()
+			if note_type == NoteType.SLIDE:
+				var checkpoint_count: int = int(_get_config_value(
+					"spot_required_checkpoint_count",
+					Config.SPOT_REQUIRED_CHECKPOINT_COUNT
+				))
+				var spacing: float = _get_config_value("spot_checkpoint_spacing", Config.SPOT_CHECKPOINT_SPACING)
+				points = _generate_sequence_points(local_center, checkpoint_count, spacing, target_radius)
+				# Include every checkpoint's fully expanded approach circle.
+				candidate_rect = _get_path_rect(points, target_radius * 2.0 + 4.0)
+			else:
+				candidate_rect = Rect2(
+					local_center - Vector2.ONE * placement_radius,
+					Vector2.ONE * placement_radius * 2.0
+				)
+			if _is_placement_clear(candidate_rect):
+				return {
+					"anchor_id": anchor_id,
+					"center": local_center,
+					"rect": candidate_rect,
+					"points": points,
+				}
+	return {}
+
+
+func _is_placement_clear(candidate_rect: Rect2) -> bool:
+	for active_spot in _active_spots:
+		if not is_instance_valid(active_spot):
+			continue
+		var active_rect := Rect2(active_spot.position, active_spot.size)
+		if active_spot.has_meta("placement_rect"):
+			active_rect = active_spot.get_meta("placement_rect") as Rect2
+		if candidate_rect.grow(NOTE_SEPARATION).intersects(active_rect, true):
+			return false
+	return true
+
+
+func _shuffle_strings(values: Array[String]) -> void:
+	for index in range(values.size() - 1, 0, -1):
+		var swap_index := _rng.randi_range(0, index)
+		var previous := values[index]
+		values[index] = values[swap_index]
+		values[swap_index] = previous
+
+
+func _select_weighted_note_type() -> int:
+	var click_weight: float = maxf(0.0, float(_get_config_value("click_note_weight", Config.CLICK_NOTE_WEIGHT)))
+	var slide_weight: float = maxf(0.0, float(_get_config_value("slide_note_weight", Config.SLIDE_NOTE_WEIGHT)))
+	var rub_weight: float = maxf(0.0, float(_get_config_value("rub_note_weight", Config.RUB_NOTE_WEIGHT)))
+	var total_weight := click_weight + slide_weight + rub_weight
+	if total_weight <= 0.0:
+		push_warning("InteractionSpotManager: all note weights are zero; falling back to ClickNote.")
+		return NoteType.CLICK
+	return _select_note_type_for_roll(_rng.randf() * total_weight, click_weight, slide_weight, rub_weight)
+
+
+func _select_note_type_for_roll(
+	roll: float,
+	click_weight: float,
+	slide_weight: float,
+	rub_weight: float
+) -> int:
+	var safe_click_weight := maxf(0.0, click_weight)
+	var safe_slide_weight := maxf(0.0, slide_weight)
+	var safe_rub_weight := maxf(0.0, rub_weight)
+	var total_weight := safe_click_weight + safe_slide_weight + safe_rub_weight
+	if total_weight <= 0.0:
+		push_warning("InteractionSpotManager: all note weights are zero; falling back to ClickNote.")
+		return NoteType.CLICK
+	var safe_roll := maxf(0.0, roll)
+	if safe_roll >= total_weight:
+		safe_roll = total_weight * 0.9999999
+	if safe_roll < safe_click_weight:
+		return NoteType.CLICK
+	if safe_roll < safe_click_weight + safe_slide_weight:
+		return NoteType.SLIDE
+	return NoteType.RUB
+
+
+func _note_type_name(note_type: int) -> StringName:
+	match note_type:
+		NoteType.CLICK:
+			return &"click"
+		NoteType.RUB:
+			return &"rub"
+		_:
+			return &"slide"
 
 
 func _generate_sequence_points(
@@ -363,16 +529,6 @@ func _clamp_center_to_bounds(center: Vector2, radius: float) -> Vector2:
 	)
 
 
-func _pick_anchor_id_from(candidates: Array[String]) -> String:
-	if candidates.size() == 1:
-		return candidates[0]
-	var pick := candidates[_rng.randi_range(0, candidates.size() - 1)]
-	# Avoid repeating last anchor if possible.
-	if pick == _last_anchor_id and candidates.size() > 1:
-		pick = candidates[_rng.randi_range(0, candidates.size() - 1)]
-	return pick
-
-
 # ---------------------------------------------------------------------------
 # Signal handlers — all arousal changes happen here, never inside InteractionNote
 # ---------------------------------------------------------------------------
@@ -398,6 +554,7 @@ func _on_spot_progressed(progress_delta: float, _spot: InteractionNote) -> void:
 
 func _on_spot_completed(spot: InteractionNote) -> void:
 	_active_spots = _active_spots.filter(func(s): return is_instance_valid(s) and s != spot)
+	_disconnect_spot(spot)
 	var bonus: float = _get_config_value("spot_completion_bonus", Config.SPOT_COMPLETION_BONUS)
 	if _arousal_model != null:
 		_arousal_model.apply_physical(bonus)
@@ -418,6 +575,7 @@ func _on_spot_completed(spot: InteractionNote) -> void:
 
 func _on_spot_expired(progress_ratio: float, spot: InteractionNote, is_timeout_failure: bool = true) -> void:
 	_active_spots = _active_spots.filter(func(s): return is_instance_valid(s) and s != spot)
+	_disconnect_spot(spot)
 	var penalty := 0.0
 	if progress_ratio < 0.1:
 		penalty = _get_config_value("spot_expiry_penalty_ignored", Config.SPOT_EXPIRY_PENALTY_IGNORED)
@@ -446,6 +604,15 @@ func _disconnect_spot(spot: InteractionNote) -> void:
 		spot.interaction_started.disconnect(_on_spot_scrub_started)
 	if spot.interaction_ended.is_connected(_on_spot_scrub_ended):
 		spot.interaction_ended.disconnect(_on_spot_scrub_ended)
+	var progressed_callback := _on_spot_progressed.bind(spot)
+	if spot.progressed.is_connected(progressed_callback):
+		spot.progressed.disconnect(progressed_callback)
+	var completed_callback := _on_spot_completed.bind(spot)
+	if spot.completed.is_connected(completed_callback):
+		spot.completed.disconnect(completed_callback)
+	var expired_callback := _on_spot_expired.bind(spot)
+	if spot.expired.is_connected(expired_callback):
+		spot.expired.disconnect(expired_callback)
 
 
 # ---------------------------------------------------------------------------
@@ -472,7 +639,9 @@ func _build_telemetry_dict(outcome: String) -> Dictionary:
 		"penalty": _telemetry_penalty,
 		"physical_now": physical_now,
 		"net_physical_change": _telemetry_incremental_gain + _telemetry_completion_bonus - _telemetry_penalty,
-		"active_spots": _active_spots.size()
+		"active_spots": _active_spots.size(),
+		"active_note_type": _get_active_note_type_name(),
+		"active_note_types": _get_active_note_type_names(),
 	}
 
 
@@ -480,7 +649,22 @@ func get_debug_spot_state() -> String:
 	_active_spots = _active_spots.filter(func(s): return is_instance_valid(s))
 	if _active_spots.is_empty():
 		return "none"
-	return "active=%d" % _active_spots.size()
+	return "active=%d types=%s" % [_active_spots.size(), ",".join(_get_active_note_type_names())]
+
+
+func _get_active_note_type_name() -> StringName:
+	for spot in _active_spots:
+		if is_instance_valid(spot) and spot.has_meta("note_type"):
+			return _note_type_name(int(spot.get_meta("note_type")))
+	return &"none"
+
+
+func _get_active_note_type_names() -> PackedStringArray:
+	var note_types := PackedStringArray()
+	for spot in _active_spots:
+		if is_instance_valid(spot) and spot.has_meta("note_type"):
+			note_types.append(String(_note_type_name(int(spot.get_meta("note_type")))))
+	return note_types
 
 
 # ---------------------------------------------------------------------------
@@ -489,7 +673,7 @@ func get_debug_spot_state() -> String:
 
 func _build_spot_config(checkpoint_points: PackedVector2Array) -> Dictionary:
 	return {
-		"spot_lifetime": _get_config_value("spot_lifetime", Config.SPOT_LIFETIME),
+		"spot_lifetime": _get_config_value("slide_checkpoint_time_limit", Config.SLIDE_CHECKPOINT_TIME_LIMIT),
 		"checkpoint_radius": _get_config_value("spot_checkpoint_radius", Config.SPOT_CHECKPOINT_RADIUS),
 		"checkpoints": checkpoint_points,
 	}

@@ -9,6 +9,8 @@ var _armed: bool = false
 var _has_pointer_sample: bool = false
 var _last_pointer_pos: Vector2 = Vector2.ZERO
 var _pointer_was_inside_target: bool = false
+var _mouse_held: bool = false
+var _active_touch_index: int = -1
 
 
 func _ready() -> void:
@@ -40,13 +42,42 @@ func is_armed() -> bool:
 	return _armed
 
 
+func is_dragging() -> bool:
+	return _mouse_held or _active_touch_index >= 0
+
+
 func _input(event: InputEvent) -> void:
 	if _resolved or _suspended or not visible:
 		return
-	if event is InputEventMouseMotion:
+	if event is InputEventMouseButton:
+		var mouse_button := event as InputEventMouseButton
+		if mouse_button.button_index != MOUSE_BUTTON_LEFT:
+			return
+		var local_position := _to_local_pointer_position(mouse_button.position)
+		if mouse_button.pressed:
+			if _active_touch_index < 0:
+				_start_drag(local_position, -1)
+		elif _mouse_held:
+			_stop_dragging()
+		return
+	if event is InputEventMouseMotion and _mouse_held:
 		var mouse_motion := event as InputEventMouseMotion
-		var local_position: Vector2 = get_global_transform_with_canvas().affine_inverse() * mouse_motion.position
+		var local_position := _to_local_pointer_position(mouse_motion.position)
 		_process_pointer_move(local_position)
+		return
+	if event is InputEventScreenTouch:
+		var screen_touch := event as InputEventScreenTouch
+		var local_position := _to_local_pointer_position(screen_touch.position)
+		if screen_touch.pressed:
+			if not _mouse_held and _active_touch_index < 0:
+				_start_drag(local_position, screen_touch.index)
+		elif screen_touch.index == _active_touch_index:
+			_stop_dragging()
+		return
+	if event is InputEventScreenDrag:
+		var screen_drag := event as InputEventScreenDrag
+		if screen_drag.index == _active_touch_index:
+			_process_pointer_move(_to_local_pointer_position(screen_drag.position))
 
 
 func _draw() -> void:
@@ -73,22 +104,11 @@ func _draw() -> void:
 		if is_start:
 			draw_circle(checkpoints[index], checkpoint_radius * 0.28, outline_color)
 
-	if target_index >= 0 and target_index < checkpoints.size() and lifetime_timer != null and not lifetime_timer.is_stopped():
-		var lifetime_ratio := clampf(lifetime_timer.time_left / maxf(spot_lifetime, 0.001), 0.0, 1.0)
-		draw_arc(
-			checkpoints[target_index],
-			checkpoint_radius + 8.0,
-			-PI * 0.5,
-			-PI * 0.5 + TAU * lifetime_ratio,
-			40,
-			Color(1.0, 1.0, 1.0, 0.9),
-			4.0,
-			true
-		)
+	_draw_approach_circle()
 
 
 func _process_pointer_move(new_pos: Vector2) -> void:
-	if _resolved or _suspended or checkpoints.size() < 2:
+	if _resolved or _suspended or not is_dragging() or checkpoints.size() < 2:
 		return
 	if not _has_pointer_sample:
 		_has_pointer_sample = true
@@ -119,6 +139,7 @@ func _activate_current_target() -> void:
 	if not _armed:
 		_armed = true
 		_next_checkpoint_index = 1
+		_restart_lifetime()
 		queue_redraw()
 		return
 
@@ -131,12 +152,25 @@ func _activate_current_target() -> void:
 	queue_redraw()
 	if _next_checkpoint_index >= checkpoints.size():
 		_resolve_completed()
+	else:
+		_restart_lifetime()
 
 
 func _get_target_index() -> int:
 	if not _armed:
 		return 0
 	return _next_checkpoint_index
+
+
+func _get_approach_center() -> Vector2:
+	var target_index := _get_target_index()
+	if target_index < 0 or target_index >= checkpoints.size():
+		return Vector2.ZERO
+	return checkpoints[target_index]
+
+
+func _get_approach_target_radius() -> float:
+	return checkpoint_radius
 
 
 func _is_inside_target(position_to_test: Vector2) -> bool:
@@ -162,15 +196,49 @@ func _segment_intersects_circle(
 
 
 func _set_note_input_enabled(enabled: bool) -> void:
+	if not enabled:
+		_stop_dragging()
 	set_process_input(enabled)
 
 
 func _on_suspended() -> void:
-	_clear_pointer_sample()
+	_stop_dragging()
 
 
 func _on_resumed() -> void:
+	_stop_dragging()
+
+
+func _start_drag(local_position: Vector2, touch_index: int) -> void:
+	if checkpoints.is_empty() or not _is_inside_drag_start(local_position):
+		return
+	_mouse_held = touch_index < 0
+	_active_touch_index = touch_index
+	_has_pointer_sample = true
+	_last_pointer_pos = local_position
+	_pointer_was_inside_target = _is_inside_target(local_position)
+	_begin_interaction()
+	if not _armed:
+		_activate_current_target()
+		_pointer_was_inside_target = _is_inside_target(local_position)
+
+
+func _stop_dragging() -> void:
+	_mouse_held = false
+	_active_touch_index = -1
 	_clear_pointer_sample()
+	_end_interaction()
+
+
+func _is_inside_drag_start(position_to_test: Vector2) -> bool:
+	var drag_start_index := 0 if not _armed else _next_checkpoint_index - 1
+	if drag_start_index < 0 or drag_start_index >= checkpoints.size():
+		return false
+	return position_to_test.distance_squared_to(checkpoints[drag_start_index]) <= checkpoint_radius * checkpoint_radius
+
+
+func _to_local_pointer_position(global_position: Vector2) -> Vector2:
+	return get_global_transform_with_canvas().affine_inverse() * global_position
 
 
 func _clear_pointer_sample() -> void:

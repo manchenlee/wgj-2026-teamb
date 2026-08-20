@@ -51,6 +51,9 @@ const PEAK_ZERO_VALUE_EXTRA_LOSS_RATE: float = 3.0
 
 # Lifetime of one sequence in seconds (authoritative Timer, not Tween).
 const SPOT_LIFETIME: float = 7.0
+const CLICK_NOTE_LIFETIME: float = 2.0
+const SLIDE_CHECKPOINT_TIME_LIMIT: float = 2.0
+const RUB_NOTE_LIFETIME: float = 4.0
 
 # Required checkpoints after the start marker.
 const SPOT_REQUIRED_CHECKPOINT_COUNT: int = 3
@@ -61,13 +64,19 @@ const SPOT_CHECKPOINT_RADIUS: float = 40.0
 # Center-to-center spacing used by the small path generator.
 const SPOT_CHECKPOINT_SPACING: float = 120.0
 
+# Rub Note tuning.
+const RUB_REQUIRED_SCRUB_DISTANCE: float = 600.0
+const RUB_VALID_MOTION_THRESHOLD: float = 3.0
+const RUB_MAX_DELTA_PER_EVENT: float = 24.0
+const RUB_TARGET_RADIUS: float = 80.0
+
 # Total incremental Physical Arousal earned across all checkpoints.
 # Applied by InteractionSpotManager from normalized checkpoint progress.
-# Three completed checkpoints grant +6 incremental in total.
-const SPOT_PROGRESS_GAIN_TOTAL: float = 6.0
+# Three completed checkpoints grant +1 incremental in total.
+const SPOT_PROGRESS_GAIN_TOTAL: float = 1.0
 
 # Extra Physical Arousal bonus on sequence completion.
-const SPOT_COMPLETION_BONUS: float = 5.0
+const SPOT_COMPLETION_BONUS: float = 2.0
 
 # Penalty when spot expires essentially ignored (progress_ratio < 0.1).
 const SPOT_EXPIRY_PENALTY_IGNORED: float = 5.0
@@ -77,11 +86,17 @@ const SPOT_EXPIRY_PENALTY_PARTIAL: float = 2.0
 # No penalty when progress_ratio >= 0.5.
 
 # Delay between spawn attempts.
-const SPOT_SPAWN_DELAY_MIN: float = 1.8
-const SPOT_SPAWN_DELAY_MAX: float = 3.2
+const SPOT_INITIAL_SPAWN_DELAY: float = 1.0
+const SPOT_SPAWN_DELAY_MIN: float = 1.1
+const SPOT_SPAWN_DELAY_MAX: float = 1.6
 
-# First playable version deliberately allows only one live sequence.
-const SPOT_MAX_ACTIVE_COUNT: int = 1
+# A single spawn schedule may overlap a small, one-cursor-manageable set of notes.
+const SPOT_MAX_ACTIVE_COUNT: int = 3
+
+# Relative production spawn weights for physiological note types.
+const CLICK_NOTE_WEIGHT: float = 6.0
+const SLIDE_NOTE_WEIGHT: float = 3.0
+const RUB_NOTE_WEIGHT: float = 1.0
 
 # --- LEGACY: Direction-sequence physical interaction (disabled, kept for rollback) ---
 # Physical interaction tuning.

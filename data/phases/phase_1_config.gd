@@ -16,6 +16,9 @@ func _init() -> void:
 			"emotional_activity_grace_seconds": 2.8,
 			# Interaction Spot — values reference GameConfig so editing GameConfig.gd takes effect immediately.
 			"spot_lifetime":                Config.SPOT_LIFETIME,
+			"click_note_lifetime":          Config.CLICK_NOTE_LIFETIME,
+			"slide_checkpoint_time_limit":  Config.SLIDE_CHECKPOINT_TIME_LIMIT,
+			"rub_note_lifetime":            Config.RUB_NOTE_LIFETIME,
 			"spot_required_checkpoint_count": Config.SPOT_REQUIRED_CHECKPOINT_COUNT,
 			"spot_checkpoint_radius":       Config.SPOT_CHECKPOINT_RADIUS,
 			"spot_checkpoint_spacing":      Config.SPOT_CHECKPOINT_SPACING,
@@ -26,6 +29,9 @@ func _init() -> void:
 			"spot_spawn_delay_min":         Config.SPOT_SPAWN_DELAY_MIN,
 			"spot_spawn_delay_max":         Config.SPOT_SPAWN_DELAY_MAX,
 			"spot_max_active_count":        Config.SPOT_MAX_ACTIVE_COUNT,
+			"click_note_weight":            Config.CLICK_NOTE_WEIGHT,
+			"slide_note_weight":            Config.SLIDE_NOTE_WEIGHT,
+			"rub_note_weight":              Config.RUB_NOTE_WEIGHT,
 			# LEGACY: direction-sequence (disabled, retained for rollback)
 			"direction_sequence_length_min": 3,
 			"direction_sequence_length_max": 4,

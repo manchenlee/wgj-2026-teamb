@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/components/InteractionNote.tscn" id="1_note"]
+[ext_resource type="Script" path="res://scripts/gameplay/rub_note.gd" id="2_rub"]
+
+[node name="RubNote" instance=ExtResource("1_note")]
+custom_minimum_size = Vector2(424, 424)
+script = ExtResource("2_rub")

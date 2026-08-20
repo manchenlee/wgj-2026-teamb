@@ -14,6 +14,9 @@ var emotional_activity_grace_seconds: float
 
 # Interaction Spot (Physical Arousal) — new system
 var spot_lifetime: float
+var click_note_lifetime: float
+var slide_checkpoint_time_limit: float
+var rub_note_lifetime: float
 var spot_required_checkpoint_count: int
 var spot_checkpoint_radius: float
 var spot_checkpoint_spacing: float
@@ -24,6 +27,9 @@ var spot_expiry_penalty_partial: float
 var spot_spawn_delay_min: float
 var spot_spawn_delay_max: float
 var spot_max_active_count: int
+var click_note_weight: float
+var slide_note_weight: float
+var rub_note_weight: float
 
 # LEGACY: Direction-sequence physical interaction (disabled, retained for rollback)
 var direction_sequence_length_min: int
@@ -76,6 +82,9 @@ func _init(values: Dictionary = {}) -> void:
 	# Interaction Spot (Physical Arousal) — new system
 	# Defaults reference GameConfig constants so changing GameConfig.gd takes effect immediately.
 	spot_lifetime = float(values.get("spot_lifetime", Config.SPOT_LIFETIME))
+	click_note_lifetime = float(values.get("click_note_lifetime", Config.CLICK_NOTE_LIFETIME))
+	slide_checkpoint_time_limit = float(values.get("slide_checkpoint_time_limit", Config.SLIDE_CHECKPOINT_TIME_LIMIT))
+	rub_note_lifetime = float(values.get("rub_note_lifetime", Config.RUB_NOTE_LIFETIME))
 	spot_required_checkpoint_count = int(values.get("spot_required_checkpoint_count", Config.SPOT_REQUIRED_CHECKPOINT_COUNT))
 	spot_checkpoint_radius = float(values.get("spot_checkpoint_radius", Config.SPOT_CHECKPOINT_RADIUS))
 	spot_checkpoint_spacing = float(values.get("spot_checkpoint_spacing", Config.SPOT_CHECKPOINT_SPACING))
@@ -86,6 +95,9 @@ func _init(values: Dictionary = {}) -> void:
 	spot_spawn_delay_min = float(values.get("spot_spawn_delay_min", Config.SPOT_SPAWN_DELAY_MIN))
 	spot_spawn_delay_max = float(values.get("spot_spawn_delay_max", Config.SPOT_SPAWN_DELAY_MAX))
 	spot_max_active_count = int(values.get("spot_max_active_count", Config.SPOT_MAX_ACTIVE_COUNT))
+	click_note_weight = float(values.get("click_note_weight", Config.CLICK_NOTE_WEIGHT))
+	slide_note_weight = float(values.get("slide_note_weight", Config.SLIDE_NOTE_WEIGHT))
+	rub_note_weight = float(values.get("rub_note_weight", Config.RUB_NOTE_WEIGHT))
 
 	# LEGACY: direction-sequence fields — disabled, retained for rollback
 	direction_sequence_length_min = int(values.get("direction_sequence_length_min", 3))
