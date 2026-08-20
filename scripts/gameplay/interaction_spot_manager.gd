@@ -4,11 +4,11 @@ extends RefCounted
 # ---------------------------------------------------------------------------
 # InteractionSpotManager
 #
-# Spawns one ordered checkpoint sequence at a time. Arousal changes are
-# applied here from normalized progress emitted by the interaction node.
+# Spawns one SlideNote at a time. Arousal changes are applied here from
+# normalized progress emitted through the common InteractionNote boundary.
 # ---------------------------------------------------------------------------
 
-const InteractionSpotScene := preload("res://scenes/components/InteractionSpot.tscn")
+const SlideNoteScene := preload("res://scenes/components/SlideNote.tscn")
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
@@ -33,7 +33,7 @@ var _bounds_rect := Rect2()
 var _available_anchor_ids: Array[String] = []
 var _last_anchor_id: String = ""
 # All currently live spots
-var _active_spots: Array[InteractionSpot] = []
+var _active_spots: Array[InteractionNote] = []
 var _active: bool = false
 var _suspended: bool = false
 
@@ -227,7 +227,7 @@ func _spawn_spot() -> void:
 	for point in sequence_points:
 		local_points.append(point - path_rect.position)
 
-	var spot := InteractionSpotScene.instantiate() as InteractionSpot
+	var spot := SlideNoteScene.instantiate() as SlideNote
 	spot.setup(_build_spot_config(local_points))
 	spot.custom_minimum_size = path_rect.size
 	spot.size = path_rect.size
@@ -236,8 +236,8 @@ func _spawn_spot() -> void:
 	# Tag the spot with its anchor so we can avoid re-using it while live.
 	spot.set_meta("anchor_id", anchor_id)
 
-	spot.scrub_started.connect(_on_spot_scrub_started)
-	spot.scrub_ended.connect(_on_spot_scrub_ended)
+	spot.interaction_started.connect(_on_spot_scrub_started)
+	spot.interaction_ended.connect(_on_spot_scrub_ended)
 	spot.progressed.connect(_on_spot_progressed.bind(spot))
 	spot.completed.connect(_on_spot_completed.bind(spot))
 	spot.expired.connect(_on_spot_expired.bind(spot))
@@ -374,7 +374,7 @@ func _pick_anchor_id_from(candidates: Array[String]) -> String:
 
 
 # ---------------------------------------------------------------------------
-# Signal handlers — all arousal changes happen here, never inside InteractionSpot
+# Signal handlers — all arousal changes happen here, never inside InteractionNote
 # ---------------------------------------------------------------------------
 
 func _on_spot_scrub_started() -> void:
@@ -385,7 +385,7 @@ func _on_spot_scrub_ended() -> void:
 	emit_signal("spot_scrub_ended")
 
 
-func _on_spot_progressed(progress_delta: float, _spot: InteractionSpot) -> void:
+func _on_spot_progressed(progress_delta: float, _spot: InteractionNote) -> void:
 	if _arousal_model == null:
 		return
 	var total_gain: float = _get_config_value("spot_progress_gain_total", Config.SPOT_PROGRESS_GAIN_TOTAL)
@@ -396,7 +396,7 @@ func _on_spot_progressed(progress_delta: float, _spot: InteractionSpot) -> void:
 	_emit_telemetry()
 
 
-func _on_spot_completed(spot: InteractionSpot) -> void:
+func _on_spot_completed(spot: InteractionNote) -> void:
 	_active_spots = _active_spots.filter(func(s): return is_instance_valid(s) and s != spot)
 	var bonus: float = _get_config_value("spot_completion_bonus", Config.SPOT_COMPLETION_BONUS)
 	if _arousal_model != null:
@@ -416,7 +416,7 @@ func _on_spot_completed(spot: InteractionSpot) -> void:
 	_emit_telemetry()
 
 
-func _on_spot_expired(progress_ratio: float, spot: InteractionSpot, is_timeout_failure: bool = true) -> void:
+func _on_spot_expired(progress_ratio: float, spot: InteractionNote, is_timeout_failure: bool = true) -> void:
 	_active_spots = _active_spots.filter(func(s): return is_instance_valid(s) and s != spot)
 	var penalty := 0.0
 	if progress_ratio < 0.1:
@@ -441,11 +441,11 @@ func _on_spot_expired(progress_ratio: float, spot: InteractionSpot, is_timeout_f
 	_emit_telemetry()
 
 
-func _disconnect_spot(spot: InteractionSpot) -> void:
-	if spot.scrub_started.is_connected(_on_spot_scrub_started):
-		spot.scrub_started.disconnect(_on_spot_scrub_started)
-	if spot.scrub_ended.is_connected(_on_spot_scrub_ended):
-		spot.scrub_ended.disconnect(_on_spot_scrub_ended)
+func _disconnect_spot(spot: InteractionNote) -> void:
+	if spot.interaction_started.is_connected(_on_spot_scrub_started):
+		spot.interaction_started.disconnect(_on_spot_scrub_started)
+	if spot.interaction_ended.is_connected(_on_spot_scrub_ended):
+		spot.interaction_ended.disconnect(_on_spot_scrub_ended)
 
 
 # ---------------------------------------------------------------------------

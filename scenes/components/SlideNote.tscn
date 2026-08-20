@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3 uid="uid://dq3kxvpyb6nj7"]
+
+[ext_resource type="PackedScene" path="res://scenes/components/InteractionNote.tscn" id="1_note"]
+[ext_resource type="Script" path="res://scripts/gameplay/slide_note.gd" id="2_slide"]
+
+[node name="SlideNote" instance=ExtResource("1_note")]
+script = ExtResource("2_slide")

@@ -1,69 +1,29 @@
-class_name InteractionSpot
-extends Control
+class_name SlideNote
+extends InteractionNote
 
-signal scrub_started()
-signal scrub_ended()
-signal progressed(progress_delta: float)
-signal completed()
-signal expired(progress_ratio: float)
-
-var spot_lifetime: float = 7.0
 var checkpoint_radius: float = 40.0
 var checkpoints: PackedVector2Array = PackedVector2Array()
 
 var _next_checkpoint_index: int = 0
-var _resolved: bool = false
 var _armed: bool = false
-var _interaction_active: bool = false
-var _suspended: bool = false
 var _has_pointer_sample: bool = false
 var _last_pointer_pos: Vector2 = Vector2.ZERO
 var _pointer_was_inside_target: bool = false
 
-@onready var lifetime_timer: Timer = $LifetimeTimer
-
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	set_process_input(true)
-	lifetime_timer.wait_time = spot_lifetime
-	lifetime_timer.one_shot = true
-	lifetime_timer.timeout.connect(_on_lifetime_timer_timeout)
-	lifetime_timer.start()
-	_start_idle_visual_tween()
-	queue_redraw()
+	super._ready()
 
 
 func setup(config: Dictionary) -> void:
-	spot_lifetime = float(config.get("spot_lifetime", 7.0))
+	super.setup(config)
 	checkpoint_radius = float(config.get("checkpoint_radius", 40.0))
 	var configured_checkpoints: Variant = config.get("checkpoints", PackedVector2Array())
 	if configured_checkpoints is PackedVector2Array:
 		checkpoints = configured_checkpoints
 	elif configured_checkpoints is Array:
 		checkpoints = PackedVector2Array(configured_checkpoints)
-
-
-func set_suspended(suspended: bool) -> void:
-	if _suspended == suspended:
-		return
-	_suspended = suspended
-	if suspended:
-		_end_interaction()
-	_clear_pointer_sample()
-	visible = not suspended
-	set_process_input(not suspended)
-	set_process(not suspended)
-	if lifetime_timer != null:
-		lifetime_timer.set_paused(suspended)
-
-
-func force_complete() -> void:
-	_resolve_completed()
-
-
-func force_expire() -> void:
-	_resolve_expired()
 
 
 func get_progress_ratio() -> float:
@@ -87,11 +47,6 @@ func _input(event: InputEvent) -> void:
 		var mouse_motion := event as InputEventMouseMotion
 		var local_position: Vector2 = get_global_transform_with_canvas().affine_inverse() * mouse_motion.position
 		_process_pointer_move(local_position)
-
-
-func _process(_delta: float) -> void:
-	# Lifetime feedback is timer-driven, but must redraw while its time_left changes.
-	queue_redraw()
 
 
 func _draw() -> void:
@@ -206,58 +161,22 @@ func _segment_intersects_circle(
 	return closest_point.distance_squared_to(circle_center) <= circle_radius * circle_radius
 
 
-func _begin_interaction() -> void:
-	if _interaction_active:
-		return
-	_interaction_active = true
-	scrub_started.emit()
+func _set_note_input_enabled(enabled: bool) -> void:
+	set_process_input(enabled)
 
 
-func _end_interaction() -> void:
-	if not _interaction_active:
-		return
-	_interaction_active = false
-	scrub_ended.emit()
+func _on_suspended() -> void:
+	_clear_pointer_sample()
+
+
+func _on_resumed() -> void:
+	_clear_pointer_sample()
 
 
 func _clear_pointer_sample() -> void:
 	_has_pointer_sample = false
 	_last_pointer_pos = Vector2.ZERO
 	_pointer_was_inside_target = false
-
-
-func _resolve_completed() -> void:
-	if _resolved:
-		return
-	_resolved = true
-	_end_interaction()
-	set_process_input(false)
-	if lifetime_timer != null:
-		lifetime_timer.stop()
-	completed.emit()
-	_play_success_visual()
-
-
-func _resolve_expired() -> void:
-	if _resolved:
-		return
-	_resolved = true
-	_end_interaction()
-	set_process_input(false)
-	if lifetime_timer != null:
-		lifetime_timer.stop()
-	expired.emit(get_progress_ratio())
-	_play_expiry_visual()
-
-
-func _on_lifetime_timer_timeout() -> void:
-	_resolve_expired()
-
-
-func _start_idle_visual_tween() -> void:
-	var tween := create_tween().set_loops()
-	tween.tween_property(self, "modulate:a", 0.78, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tween.tween_property(self, "modulate:a", 1.0, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 func _spawn_note_particle(origin: Vector2) -> void:
@@ -273,17 +192,3 @@ func _spawn_note_particle(origin: Vector2) -> void:
 	tween.tween_property(note, "position:y", note.position.y - 40.0, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tween.tween_property(note, "modulate:a", 0.0, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.chain().tween_callback(note.queue_free)
-
-
-func _play_success_visual() -> void:
-	var tween := create_tween().set_parallel(true)
-	tween.tween_property(self, "scale", Vector2(1.12, 1.12), 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tween.tween_property(self, "modulate:a", 0.0, 0.22).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tween.chain().tween_callback(queue_free)
-
-
-func _play_expiry_visual() -> void:
-	var tween := create_tween().set_parallel(true)
-	tween.tween_property(self, "scale", Vector2(0.82, 0.82), 0.28).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tween.tween_property(self, "modulate:a", 0.0, 0.28).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tween.chain().tween_callback(queue_free)
