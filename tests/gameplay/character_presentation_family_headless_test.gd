@@ -101,7 +101,6 @@ func _test_live_family_crossing_preserves_gameplay_state() -> void:
 	_assert(_capture_timer_state(game) == timer_state_before, "A presentation-family crossing changed runtime timer state.")
 	_assert(game.active_phase_index == phase_index_before, "A presentation-family crossing changed the gameplay phase.")
 	_assert(game.phase_transition_overlay.visible == fade_visible_before, "A presentation-family crossing started a phase fade.")
-	_assert(not game.phase_transition_in_progress, "A presentation-family crossing started the legacy phase transition.")
 	_assert(not game.ending_transition_started and ending_count.value == 0, "A presentation-family crossing evaluated or routed an ending.")
 
 	game.arousal_model.physical = 49.0

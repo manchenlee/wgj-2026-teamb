@@ -958,8 +958,6 @@ focus_mode = 0
 theme_override_font_sizes/font_size = 14
 text = "Skip to Phase 2"
 
-[node name="AudioPlaceholders" type="Node" parent="." unique_id=1725971575]
-
 [node name="PsychologicalDialogueTimer" type="Timer" parent="." unique_id=833369606]
 wait_time = 2.0
 one_shot = true

@@ -50,7 +50,7 @@ func _test_good_and_bad_choice_paths() -> void:
 	_assert(game._psychological_expression_round_pending, "Good reaction was not marked active for its dialogue round.")
 	_assert(game.psychological_dialogue_controller.current_feedback_index == -1, "Choice response incorrectly remained in the pre-choice feedback sequence.")
 	_assert(game.arousal_model.physical == initial_physical and game.current_visual_band == initial_band, "Good expression request changed physical score or visual band.")
-	_assert(game.active_phase_index == initial_phase and not game.phase_transition_in_progress, "Good expression request changed gameplay phase.")
+	_assert(game.active_phase_index == initial_phase, "Good expression request changed gameplay config.")
 	_assert(not game.ending_transition_started and game.last_requested_bgm_key == initial_bgm_key, "Good expression request changed ending or BGM state.")
 	game.queue_free()
 	await process_frame

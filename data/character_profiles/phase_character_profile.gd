@@ -80,13 +80,6 @@ func get_texture_path(state_name: String) -> String:
 		return String(gameover_state_textures[state_name])
 	return String(base_state_textures.get(state_name, ""))
 
-func get_anchor_layout_ids() -> Array[String]:
-	var ids: Array[String] = []
-	for anchor_id_variant in prompt_anchor_layout.keys():
-		ids.append(String(anchor_id_variant))
-	ids.sort()
-	return ids
-
 func get_interaction_spot_anchor_ids() -> Array[String]:
 	var ids: Array[String] = []
 	for anchor_id_variant in interaction_spot_anchor_layout.keys():

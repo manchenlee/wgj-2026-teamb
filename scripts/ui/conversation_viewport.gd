@@ -32,9 +32,6 @@ func set_speech_bubble_anchor(anchor: Control) -> void:
 func refresh_active_dialogue_position() -> void:
 	_position_active_bubble()
 
-func show_prompt(_text_value: String) -> void:
-	pass
-
 func hide_prompt() -> void:
 	pass
 
@@ -62,11 +59,6 @@ func set_choice_timeout_progress(_progress: float) -> void:
 
 func get_dialogue_history() -> Array[Dictionary]:
 	return _history.duplicate(true)
-
-func get_active_dialogue_global_rect() -> Rect2:
-	if current_speech_bubble == null or not current_speech_bubble.visible:
-		return Rect2()
-	return current_speech_bubble.get_global_rect()
 
 func _show_current_character_line(line: String) -> void:
 	_active_character_line = line

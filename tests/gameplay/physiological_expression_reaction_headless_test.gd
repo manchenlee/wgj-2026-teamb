@@ -61,7 +61,7 @@ func _test_crossing_direction_hearts_and_ordering() -> void:
 	_assert(_request_for(game, PHYSIOLOGICAL_SOURCE).get("expression") == NEGATIVE, "Downward crossing did not request PHYSIOLOGICAL/NEGATIVE.")
 	_assert(game.character_area.prompt_layer.get_child_count() == heart_count, "Downward crossing incorrectly triggered hearts.")
 	_assert([game.arousal_model.emotional, game.arousal_model.peak] == initial_scores, "Expression integration changed emotional or peak scoring.")
-	_assert(game.active_phase_index == initial_phase and not game.phase_transition_in_progress, "Expression integration changed phase behavior.")
+	_assert(game.active_phase_index == initial_phase, "Expression integration changed gameplay config.")
 	_assert(not game.ending_transition_started and game.last_requested_bgm_key == initial_bgm, "Expression integration changed ending or BGM behavior.")
 	await _free_game(game)
 

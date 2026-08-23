@@ -5,10 +5,8 @@ const MAX_VALUE: float = 100.0
 
 # Shared dialogue defaults.
 const FEEDBACK_MESSAGE_TEXT: String = "……"
-const CHOICE_PROMPT_TEXT: String = "……"
 const RESPONSE_BUTTON_TEXT: String = "……"
 const SAFE_WORD_DEFAULT: String = "紅色"
-const FEEDBACK_BRANCH_THRESHOLD: float = 45.0
 const SAFE_WORD_EVENT_CHANCE: float = 0.15
 
 # Core arousal values.
@@ -18,39 +16,12 @@ const INITIAL_PHYSICAL: float = 40.0
 const INITIAL_EMOTIONAL: float = 40.0
 # 遊戲開始時的高潮值；調大會縮短達成結局所需時間，調小會拉長累積過程。
 const INITIAL_PEAK: float = 0.0
-# 啟動高潮累積所需的最低活躍門檻；調大表示玩家需要把雙方狀態維持得更高才會開始累積。
-const MINIMUM_ACTIVE_THRESHOLD: float = 20.0
-# 身體與情感可接受的差距範圍；調大會降低失衡失敗的機率，調小則更要求兩者保持同步。
-const BALANCE_TOLERANCE: float = 15.0
-
 # Passive progression.
-# 身體值每秒自然下降量；調大會讓身體狀態掉得更快，玩家需要更頻繁操作。
-const PHYSICAL_DECAY_PER_SECOND: float = 2.0
-# 情感值每秒自然下降量；調大會讓情感更難維持，玩家需要更常做出正確選擇。
-const EMOTIONAL_DECAY_PER_SECOND: float = 0.5
-# 身體互動後暫停自然衰減的寬限時間；調大會讓連續輸入壓力變小，調小則更吃節奏。
-const PHYSICAL_ACTIVITY_GRACE_SECONDS: float = 1.4
-# 情感互動後暫停自然衰減的寬限時間；調大可讓選項成功的保護期更長，調小則維持難度更高。
-const EMOTIONAL_ACTIVITY_GRACE_SECONDS: float = 2.8
-# 生理與心理差值在這個範圍內時，整體興奮度以最快速度上升。
-const PEAK_BALANCE_BEST_DIFF: float = 5.0
-# 生理與心理差值超過最佳區後，整體興奮度仍可上升，但會一路趨近於 0。
-const PEAK_BALANCE_OK_DIFF: float = 15.0
-# 生理與心理差值超過這個範圍後，整體興奮度會進入明顯下降區。
-const PEAK_BALANCE_FAIL_DIFF: float = 30.0
-# 最平衡時的整體興奮度最大上升速度。
-const PEAK_GAIN_RATE_MAX: float = 5.0
-# 離開最佳平衡區後仍可維持的最低上升速度。
-const PEAK_GAIN_RATE_MIN: float = 1.0
-# 差值過大時的基礎下降速度。
-const PEAK_LOSS_RATE_IMBALANCED: float = 2.0
-# 當生理或心理停在 0 時，每個歸零狀態額外增加的整體興奮度下降速度；調大會讓放置不管的懲罰更明顯。
-const PEAK_ZERO_VALUE_EXTRA_LOSS_RATE: float = 3.0
+# 最平衡且兩項分數皆為 100 時，整體興奮度的最大上升速度。
+const MAX_POSITIVE_PEAK_GAIN_RATE: float = 1.5
 
 # --- Ordered checkpoint interaction (Physical Arousal) ---
 
-# Lifetime of one sequence in seconds (authoritative Timer, not Tween).
-const SPOT_LIFETIME: float = 7.0
 const CLICK_NOTE_LIFETIME: float = 2.0
 const SLIDE_CHECKPOINT_TIME_LIMIT: float = 2.0
 const RUB_NOTE_LIFETIME: float = 4.0
@@ -153,18 +124,6 @@ const FEEDBACK_PHYSICAL_HIGH_THRESHOLD: float = 45.0
 const FEEDBACK_EMOTIONAL_LOW_THRESHOLD: float = 38.0
 # 對話事件中，心理高於這個值時視為「高心理」。
 const FEEDBACK_EMOTIONAL_HIGH_THRESHOLD: float = 52.0
-# 選到最佳選項時增加的情感值；調大會讓正確判斷更容易穩住情感，調小則成長較慢。
-const EMOTIONAL_GAIN_GOOD_CHOICE: float = 10.0
-# 選到中性選項時增加的情感值；調大會降低判斷失誤的成本，調小則更需要選到最佳答案。
-const EMOTIONAL_GAIN_NEUTRAL_CHOICE: float = 3.0
-# 選到不佳選項時扣除的情感值；調大會讓錯選更傷，調小則玩家較能承受試錯。
-const EMOTIONAL_PENALTY_BAD_CHOICE: float = 5.0
-# 情感選項的作答時限；調大會給玩家更多閱讀與思考時間，調小則節奏更急迫。
-const CHOICE_TIMEOUT_SECONDS: float = 5.0
-# 回饋訊息出現的最短間隔；調大會讓情感事件較不密集，調小則更頻繁打斷玩家。
-const FEEDBACK_MESSAGE_INTERVAL_MIN: float = 2.0
-# 回饋訊息出現的最長間隔；調大會拉大事件間距波動，調小則情感互動節奏更固定。
-const FEEDBACK_MESSAGE_INTERVAL_MAX: float = 4.0
 
 # Presentation tuning.
 const PHYSIOLOGICAL_EXPRESSION_DURATION_SECONDS: float = 1.5
@@ -184,9 +143,6 @@ const PEAK_LABEL_OFFSET_Y: float = 228.0
 const PEAK_LABEL_OFFSET_X: float = -40.0
 # 回饋標籤相對錨點的垂直位移；調大（負值絕對值增大）會讓標籤更往上，調小則更靠近提示點。
 const FEEDBACK_LABEL_OFFSET_Y: float = -74.0
-# 切換桌面版配置的畫面寬度門檻；調大會讓更多裝置維持手機/窄版排版，調小則更早套用桌面版。
-const DESKTOP_BREAKPOINT: float = 1080.0
-
 const SUCCESS_ENDING: String = "success"
 const PEAK_DEPLETION_FAILURE_ENDING: String = "peak_depletion_failure"
 const PHYSICAL_IMBALANCE_FAILURE_ENDING: String = "physical_imbalance_failure"

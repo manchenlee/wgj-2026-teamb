@@ -149,6 +149,12 @@ func _load_feedback_entries() -> void:
 func _select_entry(physical: float, emotional: float, force_safe_word: bool = false) -> Dictionary:
 	if force_safe_word:
 		return _select_safe_word_entry()
+	var matches := _get_matching_entries(physical, emotional)
+	if matches.is_empty():
+		return {}
+	return matches[rng.randi_range(0, matches.size() - 1)].duplicate(true)
+
+func _get_matching_entries(physical: float, emotional: float) -> Array[Dictionary]:
 
 	var target_physical := _classify_state(
 		physical,
@@ -160,25 +166,34 @@ func _select_entry(physical: float, emotional: float, force_safe_word: bool = fa
 		float(_get_phase_value("feedback_emotional_low_threshold", Config.FEEDBACK_EMOTIONAL_LOW_THRESHOLD)),
 		float(_get_phase_value("feedback_emotional_high_threshold", Config.FEEDBACK_EMOTIONAL_HIGH_THRESHOLD))
 	)
-	var phase_number := _get_phase_number()
-	if target_physical.is_empty() or target_emotional.is_empty() or phase_number < 1:
-		return {}
+	if target_physical.is_empty() or target_emotional.is_empty():
+		return []
 
 	var matches: Array[Dictionary] = []
+	var seen_signatures: Dictionary = {}
 	for entry_variant in entries:
 		var entry := entry_variant as Dictionary
 		var condition := entry.get("condition", {}) as Dictionary
-		if int(condition.get("phase", -1)) != phase_number:
-			continue
 		if str(condition.get("physical", "")) != target_physical:
 			continue
 		if str(condition.get("emotional", "")) != target_emotional:
 			continue
+		# Legacy phase variants share one condition-based pool. Collapse only exact
+		# semantic duplicates so placeholder copies do not receive extra weight.
+		var signature := _get_phase_independent_entry_signature(entry)
+		if seen_signatures.has(signature):
+			continue
+		seen_signatures[signature] = true
 		matches.append(entry)
+	return matches
 
-	if matches.is_empty():
-		return {}
-	return matches[rng.randi_range(0, matches.size() - 1)].duplicate(true)
+func _get_phase_independent_entry_signature(entry: Dictionary) -> String:
+	var semantic_entry := entry.duplicate(true)
+	semantic_entry.erase("id")
+	var condition := semantic_entry.get("condition", {}) as Dictionary
+	condition.erase("phase")
+	semantic_entry["condition"] = condition
+	return JSON.stringify(semantic_entry)
 
 func _select_safe_word_entry() -> Dictionary:
 	var matches: Array[Dictionary] = []
@@ -291,14 +306,6 @@ func _classify_state(value: float, low_threshold: float, high_threshold: float) 
 
 func _format_text(text_value: String) -> String:
 	return text_value.replace("{safe_word}", safe_word)
-
-func _get_phase_number() -> int:
-	if phase_config == null:
-		return -1
-	var phase_id := String(phase_config.phase_id)
-	if phase_id.begins_with("phase_"):
-		return int(phase_id.trim_prefix("phase_"))
-	return -1
 
 func _get_feedback_data_path() -> String:
 	return String(_get_phase_value(_data_source_property, ""))

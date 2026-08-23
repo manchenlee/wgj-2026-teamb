@@ -28,11 +28,6 @@ func set_dialogue_text(text_value: String) -> void:
 	text_label.text = text_value.strip_edges()
 	_refresh_layout()
 
-func get_dialogue_text() -> String:
-	if not is_node_ready():
-		return ""
-	return text_label.text
-
 func resolve_size() -> Vector2:
 	if not is_node_ready():
 		return size

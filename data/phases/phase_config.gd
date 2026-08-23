@@ -13,7 +13,6 @@ var physical_activity_grace_seconds: float
 var emotional_activity_grace_seconds: float
 
 # Interaction Spot (Physical Arousal) — new system
-var spot_lifetime: float
 var click_note_lifetime: float
 var slide_checkpoint_time_limit: float
 var rub_note_lifetime: float
@@ -56,18 +55,13 @@ var overall_peak_threshold: float
 var peak_balance_best_diff: float
 var peak_balance_ok_diff: float
 var peak_balance_fail_diff: float
-var peak_gain_rate_max: float
-var peak_gain_rate_min: float
+var max_positive_peak_gain_rate: float
 var peak_loss_rate_imbalanced: float
 var peak_zero_value_extra_loss_rate: float
 var success_condition: Dictionary
 var failure_thresholds: Dictionary
 var psychological_dialogue_data_source: String
 var physiological_dialogue_data_source: String
-var character_profile
-var overlay_animation_set: Dictionary
-var prompt_anchor_profile_id: String
-var transition_feedback_text: String
 
 func _init(values: Dictionary = {}) -> void:
 	phase_id = String(values.get("phase_id", "phase"))
@@ -81,7 +75,6 @@ func _init(values: Dictionary = {}) -> void:
 
 	# Interaction Spot (Physical Arousal) — new system
 	# Defaults reference GameConfig constants so changing GameConfig.gd takes effect immediately.
-	spot_lifetime = float(values.get("spot_lifetime", Config.SPOT_LIFETIME))
 	click_note_lifetime = float(values.get("click_note_lifetime", Config.CLICK_NOTE_LIFETIME))
 	slide_checkpoint_time_limit = float(values.get("slide_checkpoint_time_limit", Config.SLIDE_CHECKPOINT_TIME_LIMIT))
 	rub_note_lifetime = float(values.get("rub_note_lifetime", Config.RUB_NOTE_LIFETIME))
@@ -124,8 +117,10 @@ func _init(values: Dictionary = {}) -> void:
 	peak_balance_best_diff = float(values.get("peak_balance_best_diff", 5.0))
 	peak_balance_ok_diff = float(values.get("peak_balance_ok_diff", 15.0))
 	peak_balance_fail_diff = float(values.get("peak_balance_fail_diff", 30.0))
-	peak_gain_rate_max = float(values.get("peak_gain_rate_max", 5.0))
-	peak_gain_rate_min = float(values.get("peak_gain_rate_min", 1.0))
+	max_positive_peak_gain_rate = float(values.get(
+		"max_positive_peak_gain_rate",
+		Config.MAX_POSITIVE_PEAK_GAIN_RATE
+	))
 	peak_loss_rate_imbalanced = float(values.get("peak_loss_rate_imbalanced", 2.0))
 	peak_zero_value_extra_loss_rate = float(values.get("peak_zero_value_extra_loss_rate", 3.0))
 	success_condition = values.get("success_condition", {"type": "peak_at_or_above", "value": overall_peak_threshold}).duplicate(true)
@@ -141,7 +136,3 @@ func _init(values: Dictionary = {}) -> void:
 	).duplicate(true)
 	psychological_dialogue_data_source = String(values.get("psychological_dialogue_data_source", ""))
 	physiological_dialogue_data_source = String(values.get("physiological_dialogue_data_source", ""))
-	character_profile = values.get("character_profile", null)
-	overlay_animation_set = values.get("overlay_animation_set", {}).duplicate(true)
-	prompt_anchor_profile_id = String(values.get("prompt_anchor_profile_id", phase_id))
-	transition_feedback_text = String(values.get("transition_feedback_text", ""))

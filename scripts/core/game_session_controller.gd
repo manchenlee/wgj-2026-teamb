@@ -93,7 +93,6 @@ var character_visual_warnings_printed: Dictionary = {}
 var overlay_motion_set: Dictionary = {}
 var ending_transition_started: bool = false
 var has_left_overall_init_visual: bool = false
-var phase_transition_in_progress: bool = false
 var phase_sequence: Array = []
 var active_phase_index: int = 0
 var active_phase_config: PhaseConfig = null
@@ -120,7 +119,7 @@ func _ready() -> void:
 	psychological_dialogue_controller.configure("psychological_dialogue_data_source", true)
 	physiological_dialogue_controller.configure("physiological_dialogue_data_source", false)
 	_build_phase_sequence()
-	_apply_phase_by_index(_get_initial_phase_index(), false)
+	_apply_phase_by_index(_get_initial_phase_index())
 	_update_character_visual_state()
 	_apply_overlay_motion_set()
 	_bind_breathing_targets()
@@ -201,7 +200,7 @@ func _apply_character_background() -> void:
 		return
 	background_placeholder.texture = character_background
 
-func _apply_phase_by_index(phase_index: int, announce_phase: bool) -> void:
+func _apply_phase_by_index(phase_index: int) -> void:
 	if phase_index < 0 or phase_index >= phase_sequence.size():
 		push_error("GameSessionController: invalid phase index %d." % phase_index)
 		return
@@ -222,8 +221,6 @@ func _apply_phase_by_index(phase_index: int, announce_phase: bool) -> void:
 	if spot_manager != null:
 		spot_manager.set_phase_config(active_phase_config)
 		_sync_spot_anchor_layout()
-	if announce_phase and not Engine.is_editor_hint():
-		dialogue_panel.append_history(active_phase_config.transition_feedback_text, "system")
 	_update_phase_debug_label()
 
 func _apply_character_presentation_profile() -> void:
@@ -816,7 +813,6 @@ func _reset_run_for_phase_id(phase_id: String) -> void:
 
 func _reset_run_for_phase_index(phase_index: int) -> void:
 	_reset_physiological_expression_reaction()
-	phase_transition_in_progress = false
 	run_active = true
 	ending_transition_started = false
 	has_left_overall_init_visual = false
@@ -826,7 +822,7 @@ func _reset_run_for_phase_index(phase_index: int) -> void:
 	_last_spot_telemetry = {}
 	_stop_runtime_timers()
 	dialogue_panel.clear_history()
-	_apply_phase_by_index(phase_index, false)
+	_apply_phase_by_index(phase_index)
 	arousal_model.reset()
 	_sync_physiological_visual_band(false)
 	psychological_dialogue_controller.reset()
@@ -852,9 +848,6 @@ func apply_debug_values(value: float) -> void:
 	_update_presentation()
 
 func force_ending(ending_type: String) -> void:
-	if ending_type == Config.SUCCESS_ENDING and _has_next_phase():
-		_begin_phase_transition()
-		return
 	_begin_ending_transition(ending_type)
 
 func force_spawn_spot() -> void:
@@ -1048,37 +1041,16 @@ func _has_pending_psychological_choice() -> bool:
 	return psychological_dialogue_controller.choice_prompt_pending
 
 # ---------------------------------------------------------------------------
-# Ending and phase transitions
+# Ending transition
 # ---------------------------------------------------------------------------
 
 func _check_ending() -> void:
-	if ending_transition_started or phase_transition_in_progress:
+	if ending_transition_started:
 		return
 	var ending_type := EndingEvaluatorClass.evaluate(arousal_model, active_phase_config)
 	if ending_type.is_empty():
 		return
-	if ending_type == Config.SUCCESS_ENDING and _has_next_phase():
-		_begin_phase_transition()
-		return
 	_begin_ending_transition(ending_type)
-
-func _begin_phase_transition() -> void:
-	if phase_transition_in_progress:
-		return
-	phase_transition_in_progress = true
-	run_active = false
-	_stop_runtime_timers()
-	dialogue_panel.hide_prompt()
-	choice_panel.clear_choices()
-	var transition_text := active_phase_config.transition_feedback_text
-	if not transition_text.is_empty():
-		dialogue_panel.append_history(transition_text, "system")
-	_play_phase_transition_fade(Color(1, 1, 1, 0), true)
-
-func _complete_phase_transition() -> void:
-	if not is_inside_tree():
-		return
-	_reset_run_for_phase_index(active_phase_index + 1)
 
 func _begin_ending_transition(ending_type: String) -> void:
 	if ending_transition_started:
@@ -1087,27 +1059,20 @@ func _begin_ending_transition(ending_type: String) -> void:
 	_stop_runtime_timers()
 	run_active = false
 	_update_character_visual_state(ending_type)
-	_play_phase_transition_fade(Color(0, 0, 0, 0), false, ending_type)
+	_play_ending_transition_fade(ending_type)
 
-func _play_phase_transition_fade(overlay_start_color: Color, is_phase_transition: bool, ending_type: String = "") -> void:
+func _play_ending_transition_fade(ending_type: String) -> void:
 	if phase_transition_overlay == null:
-		if is_phase_transition:
-			_complete_phase_transition()
-		else:
-			_request_ending_transition(ending_type)
+		_request_ending_transition(ending_type)
 		return
+	var overlay_start_color := Color(0, 0, 0, 0)
 	var opaque_color := Color(overlay_start_color.r, overlay_start_color.g, overlay_start_color.b, 1.0)
 	phase_transition_overlay.color = overlay_start_color
 	phase_transition_overlay.visible = true
 	var tween := create_tween()
 	tween.tween_property(phase_transition_overlay, "color", opaque_color, 1.0)
 	tween.tween_interval(1.0)
-	if is_phase_transition:
-		tween.tween_callback(_complete_phase_transition)
-		tween.tween_property(phase_transition_overlay, "color", overlay_start_color, 1.0)
-		tween.tween_callback(func() -> void: phase_transition_overlay.visible = false)
-	else:
-		tween.tween_callback(func() -> void: _request_ending_transition(ending_type))
+	tween.tween_callback(func() -> void: _request_ending_transition(ending_type))
 
 func _request_ending_transition(ending_type: String) -> void:
 	if ending_requested.get_connections().size() > 0:
@@ -1187,7 +1152,7 @@ func _update_phase_debug_label() -> void:
 	phase_debug_label.text = "Phase: %s" % _get_active_phase_id()
 	phase_debug_label.visible = debug_overlay != null and debug_overlay.visible
 	if phase_skip_button != null:
-		var can_skip := _get_active_phase_id() != "phase_2" and not phase_transition_in_progress
+		var can_skip := _get_active_phase_id() != "phase_2"
 		phase_skip_button.visible = debug_overlay != null and debug_overlay.visible and can_skip
 		phase_skip_button.disabled = not can_skip
 
@@ -1381,10 +1346,7 @@ func _get_active_phase_id() -> String:
 		return "phase_unknown"
 	return String(active_phase_config.phase_id)
 
-func _has_next_phase() -> bool:
-	return active_phase_index + 1 < phase_sequence.size()
-
 func _on_phase_2_skip_pressed() -> void:
-	if _get_active_phase_id() == "phase_2" or phase_transition_in_progress:
+	if _get_active_phase_id() == "phase_2":
 		return
 	_reset_run_for_phase_id("phase_2")

@@ -1,9 +1,6 @@
 extends PhaseConfig
 
-const Phase2CharacterProfile := preload("res://data/character_profiles/phase_2_character_profile.gd")
-
 func _init() -> void:
-	var profile = Phase2CharacterProfile.new()
 	super._init(
 		{
 			"phase_id": "phase_2",
@@ -15,7 +12,6 @@ func _init() -> void:
 			"physical_activity_grace_seconds": 1.4,
 			"emotional_activity_grace_seconds": 2.8,
 			# Interaction Spot — values reference GameConfig so editing GameConfig.gd takes effect immediately.
-			"spot_lifetime":                Config.SPOT_LIFETIME,
 			"click_note_lifetime":          Config.CLICK_NOTE_LIFETIME,
 			"slide_checkpoint_time_limit":  Config.SLIDE_CHECKPOINT_TIME_LIMIT,
 			"rub_note_lifetime":            Config.RUB_NOTE_LIFETIME,
@@ -67,8 +63,7 @@ func _init() -> void:
 			"peak_balance_best_diff": 5.0,
 			"peak_balance_ok_diff": 15.0,
 			"peak_balance_fail_diff": 30.0,
-			"peak_gain_rate_max": 5.0,
-			"peak_gain_rate_min": 1.0,
+			"max_positive_peak_gain_rate": Config.MAX_POSITIVE_PEAK_GAIN_RATE,
 			"peak_loss_rate_imbalanced": 2.0,
 			"peak_zero_value_extra_loss_rate": 3.0,
 			"success_condition": {
@@ -83,10 +78,6 @@ func _init() -> void:
 				"emotional_counterpart_below": 20.0
 			},
 			"psychological_dialogue_data_source": "res://assets/dialogue/feedback.json",
-			"physiological_dialogue_data_source": "res://assets/dialogue/physiological_feedback.json",
-			"character_profile": profile,
-			"overlay_animation_set": profile.overlay_animation_set,
-			"prompt_anchor_profile_id": profile.profile_id,
-			"transition_feedback_text": "演奏暫時告一段落。"
+			"physiological_dialogue_data_source": "res://assets/dialogue/physiological_feedback.json"
 		}
 	)
