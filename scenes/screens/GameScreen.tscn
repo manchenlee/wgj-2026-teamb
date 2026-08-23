@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" path="res://scenes/components/ChoicePanel.tscn" id="13_choice_panel"]
 [ext_resource type="PackedScene" path="res://scenes/components/CurrentSpeechBubble.tscn" id="14_speech_bubble"]
 [ext_resource type="Script" uid="uid://1hkwnhoxho74" path="res://scripts/presentation/failure_flash.gd" id="15_failure_flash"]
+[ext_resource type="PackedScene" path="res://scenes/components/InteractionModeToggle.tscn" id="16_mode_toggle"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_alg88"]
 load_path = "res://.godot/imported/draft.png-80a3863fe83a454b531da103f3e5f42e.ctex"
@@ -221,6 +222,7 @@ mouse_filter = 2
 color = Color(0.18, 0.48, 0.9, 0.18)
 
 [node name="CentralArousalVisualization" type="Control" parent="CharacterAlignmentRoot/MainCharacterArea" unique_id=401470020]
+visible = false
 z_index = 1
 z_as_relative = false
 layout_mode = 1
@@ -902,6 +904,30 @@ mouse_filter = 2
 unique_name_in_owner = true
 layout_mode = 2
 
+[node name="ModeToggleArea" type="Control" parent="HudLayer"]
+z_index = 3
+layout_mode = 0
+offset_left = 24.0
+offset_top = 116.0
+offset_right = 204.0
+offset_bottom = 328.0
+mouse_filter = 2
+
+[node name="ModeToggleStack" type="VBoxContainer" parent="HudLayer/ModeToggleArea"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="InteractionModeToggle" parent="HudLayer/ModeToggleArea/ModeToggleStack" instance=ExtResource("16_mode_toggle")]
+unique_name_in_owner = true
+layout_mode = 2
+
 [node name="DebugRegionTint" type="ColorRect" parent="HudLayer/TopHudCenter/StatusHUD" unique_id=74340883]
 visible = false
 z_index = -1
@@ -948,6 +974,9 @@ one_shot = true
 
 [node name="ChoiceTimeoutTimer" type="Timer" parent="." unique_id=292030748]
 wait_time = 4.2
+one_shot = true
+
+[node name="PhysiologicalExpressionTimer" type="Timer" parent="."]
 one_shot = true
 
 [node name="FeedbackOverlayLayer" type="Control" parent="." unique_id=1157570693]

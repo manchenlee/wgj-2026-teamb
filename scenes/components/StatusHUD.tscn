@@ -12,6 +12,7 @@ mouse_filter = 2
 script = ExtResource("1_hud")
 
 [node name="ArousalMeter" type="Control" parent="."]
+visible = false
 layout_mode = 0
 offset_left = 16.0
 offset_top = 8.0
@@ -102,3 +103,57 @@ offset_top = 86.175
 offset_right = 87.6
 offset_bottom = 86.175
 mouse_filter = 2
+
+[node name="NumericScores" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 210.0
+offset_top = 12.0
+offset_right = 610.0
+offset_bottom = 126.0
+mouse_filter = 2
+theme_override_constants/separation = 56
+alignment = 1
+
+[node name="PhysicalScore" type="VBoxContainer" parent="NumericScores"]
+custom_minimum_size = Vector2(150, 104)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Title" type="Label" parent="NumericScores/PhysicalScore"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.62, 0.62, 1)
+theme_override_font_sizes/font_size = 18
+text = "生理"
+horizontal_alignment = 1
+
+[node name="Value" type="Label" parent="NumericScores/PhysicalScore"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.94, 0.9, 1)
+theme_override_font_sizes/font_size = 42
+text = "0"
+horizontal_alignment = 1
+
+[node name="EmotionalScore" type="VBoxContainer" parent="NumericScores"]
+custom_minimum_size = Vector2(150, 104)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Title" type="Label" parent="NumericScores/EmotionalScore"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.84, 0.46, 1)
+theme_override_font_sizes/font_size = 18
+text = "心理"
+horizontal_alignment = 1
+
+[node name="Value" type="Label" parent="NumericScores/EmotionalScore"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.97, 0.86, 1)
+theme_override_font_sizes/font_size = 42
+text = "0"
+horizontal_alignment = 1

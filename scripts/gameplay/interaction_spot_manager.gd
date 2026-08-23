@@ -84,6 +84,21 @@ func set_bounds_rect(bounds_rect: Rect2) -> void:
 	_bounds_rect = bounds_rect
 
 
+func capture_active_note_global_positions() -> Dictionary:
+	var positions: Dictionary = {}
+	for spot in _active_spots:
+		if is_instance_valid(spot):
+			positions[spot] = spot.global_position
+	return positions
+
+
+func restore_active_note_global_positions(positions: Dictionary) -> void:
+	for spot_variant in positions.keys():
+		var spot := spot_variant as InteractionNote
+		if is_instance_valid(spot):
+			spot.global_position = positions[spot_variant]
+
+
 func start() -> void:
 	_active = true
 	_suspended = false

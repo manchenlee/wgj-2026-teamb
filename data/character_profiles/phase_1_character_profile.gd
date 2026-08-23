@@ -56,5 +56,10 @@ func _init() -> void:
 		},
 		Rect2(0.34, 0.5, 0.28, 0.35),
 		Vector2(0.403963, 0.5),
-		0.0
+		0.0,
+		{
+			0: {ExpressionState.NEUTRAL: {"base_state_key": "overall_init"}},
+			1: {ExpressionState.NEUTRAL: {"base_state_key": "overall_init"}},
+			2: {ExpressionState.NEUTRAL: {"base_state_key": "overall_init"}},
+		}
 	)

@@ -167,6 +167,7 @@ const FEEDBACK_MESSAGE_INTERVAL_MIN: float = 2.0
 const FEEDBACK_MESSAGE_INTERVAL_MAX: float = 4.0
 
 # Presentation tuning.
+const PHYSIOLOGICAL_EXPRESSION_DURATION_SECONDS: float = 1.5
 # 圓形 UI 的最小半徑；調大會讓小尺寸狀態下也較醒目，調小則更節省空間。
 const CIRCLE_RADIUS_MIN: float = 100.0
 # 圓形 UI 的最大半徑；調大會讓高狀態時的視覺膨脹更誇張，調小則變化較收斂。

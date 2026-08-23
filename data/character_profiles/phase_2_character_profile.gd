@@ -70,7 +70,21 @@ func _init() -> void:
 		},
 		Rect2(0.214, 0.296, 0.487, 0.319),
 		Vector2(0.403963, 0.5),
-		0.0
+		0.0,
+		{
+			3: {ExpressionState.NEUTRAL: {
+				"base_state_key": "overall_init",
+				"face_state_key": "overall_init",
+			}},
+			4: {ExpressionState.NEUTRAL: {
+				"base_state_key": "overall_init",
+				"face_state_key": "overall_init",
+			}},
+			5: {ExpressionState.NEUTRAL: {
+				"base_state_key": "overall_init",
+				"face_state_key": "overall_init",
+			}},
+		}
 	)
 
 func get_layer_texture_paths() -> Dictionary:

@@ -1,10 +1,17 @@
 class_name PhaseCharacterProfile
 extends RefCounted
 
+enum ExpressionState {
+	NEUTRAL,
+	POSITIVE,
+	NEGATIVE,
+}
+
 var profile_id: String
 var base_state_textures: Dictionary
 var gameover_state_textures: Dictionary
 var overlay_animation_set: Dictionary
+var visual_state_mapping: Dictionary
 var prompt_anchor_layout: Dictionary
 var interaction_spot_anchor_layout: Dictionary
 var breathing_region_rect: Rect2
@@ -22,12 +29,14 @@ func _init(
 	interaction_spot_anchor_layout_value: Dictionary = {},
 	breathing_region_rect_value: Rect2 = Rect2(0.34, 0.5, 0.28, 0.35),
 	character_visual_focus_normalized_value: Vector2 = Vector2(0.5, 0.5),
-	character_visual_bottom_inset_pixels_value: float = 0.0
+	character_visual_bottom_inset_pixels_value: float = 0.0,
+	visual_state_mapping_value: Dictionary = {}
 ) -> void:
 	profile_id = profile_id_value
 	base_state_textures = base_state_textures_value.duplicate(true)
 	gameover_state_textures = gameover_state_textures_value.duplicate(true)
 	overlay_animation_set = overlay_animation_set_value.duplicate(true)
+	visual_state_mapping = visual_state_mapping_value.duplicate(true)
 	prompt_anchor_layout = prompt_anchor_layout_value.duplicate(true)
 	interaction_spot_anchor_layout = interaction_spot_anchor_layout_value.duplicate(true)
 	if interaction_spot_anchor_layout.is_empty():
@@ -35,6 +44,24 @@ func _init(
 	breathing_region_rect = breathing_region_rect_value
 	character_visual_focus_normalized = character_visual_focus_normalized_value
 	character_visual_bottom_inset_pixels = character_visual_bottom_inset_pixels_value
+
+func resolve_visual_state(visual_band: int, expression: ExpressionState) -> Dictionary:
+	var clamped_band := clampi(visual_band, 0, 5)
+	var band_mapping: Dictionary = visual_state_mapping.get(clamped_band, {})
+	var neutral_mapping: Dictionary = band_mapping.get(ExpressionState.NEUTRAL, {})
+	var resolved_expression := expression
+	var resolved_mapping: Dictionary = band_mapping.get(expression, {})
+	if resolved_mapping.is_empty():
+		resolved_expression = ExpressionState.NEUTRAL
+		resolved_mapping = neutral_mapping
+	return {
+		"profile_id": profile_id,
+		"visual_band": clamped_band,
+		"requested_expression": expression,
+		"resolved_expression": resolved_expression,
+		"base_state_key": String(resolved_mapping.get("base_state_key", "overall_init")),
+		"face_state_key": String(resolved_mapping.get("face_state_key", "")),
+	}
 
 func get_character_visual_bottom_normalized(texture_size: Vector2) -> float:
 	if texture_size.y <= 0.0:
