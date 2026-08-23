@@ -10,10 +10,10 @@ const DIRECTION_ICON_PADDING := 12.0
 const TIMER_RING_TEXTURE_SIZE := 256
 const TIMER_RING_BASE_PHASE_STEP := 0.73
 const TIMER_RING_COLOR := Color(0.83, 0.73, 0.42, 1.0)
-const SUCCESS_NOTE_GLYPHS := ["♪", "♫"]
-const SUCCESS_NOTE_COUNT := 3
-const SUCCESS_NOTE_RISE_DISTANCE := 52.0
-const SUCCESS_NOTE_LIFETIME := 0.72
+const SUCCESS_HEART_GLYPHS := ["♥", "❤"]
+const SUCCESS_HEART_COUNT := 5
+const SUCCESS_HEART_RISE_DISTANCE := 52.0
+const SUCCESS_HEART_LIFETIME := 0.72
 
 @onready var character_placeholder: TextureRect = $CharacterVisualAnchor/CharacterPlaceholder
 @onready var prompt_layer: Control = $PromptLayer
@@ -173,9 +173,14 @@ func show_correct_reaction() -> void:
 	_pulse(Color(0.85, 0.24, 0.24, 1.0), 1.08)
 
 func show_success_note_burst(prompt_id: int) -> void:
-	var origin := _get_success_note_origin(prompt_id)
-	for note_index in range(SUCCESS_NOTE_COUNT):
-		_spawn_success_note_particle(origin, note_index)
+	show_success_heart_burst(_get_success_note_origin(prompt_id))
+
+
+func show_success_heart_burst(origin: Vector2 = Vector2.ZERO) -> void:
+	if origin == Vector2.ZERO:
+		origin = _get_feedback_anchor_center()
+	for heart_index in range(SUCCESS_HEART_COUNT):
+		_spawn_success_heart_particle(origin, heart_index)
 
 func show_mistake_reaction() -> void:
 	_set_reaction("?")
@@ -325,30 +330,30 @@ func _pulse(color: Color, scale_multiplier: float) -> void:
 func _apply_style(_texture_rect: TextureRect, _color: Color) -> void:
 	return
 
-func _spawn_success_note_particle(origin: Vector2, note_index: int) -> void:
-	var note := Label.new()
-	note.text = SUCCESS_NOTE_GLYPHS[note_index % SUCCESS_NOTE_GLYPHS.size()]
-	note.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	note.z_index = 3
-	note.pivot_offset = Vector2(12.0, 12.0)
-	note.position = origin + Vector2(randf_range(-22.0, 22.0), randf_range(-12.0, 10.0))
-	note.rotation = deg_to_rad(randf_range(-16.0, 16.0))
-	note.scale = Vector2.ONE * randf_range(0.82, 1.08)
-	note.modulate = Color(1.0, 0.97, 0.68, 0.0)
-	note.add_theme_font_size_override("font_size", 26 + (note_index * 2))
-	note.add_theme_color_override("font_color", Color(1.0, 0.96, 0.72, 1.0))
-	note.add_theme_color_override("font_outline_color", Color(1.0, 0.82, 0.28, 0.85))
-	note.add_theme_constant_override("outline_size", 4)
-	prompt_layer.add_child(note)
+func _spawn_success_heart_particle(origin: Vector2, heart_index: int) -> void:
+	var heart := Label.new()
+	heart.text = SUCCESS_HEART_GLYPHS[heart_index % SUCCESS_HEART_GLYPHS.size()]
+	heart.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	heart.z_index = 3
+	heart.pivot_offset = Vector2(12.0, 12.0)
+	heart.position = origin + Vector2(randf_range(-28.0, 28.0), randf_range(-12.0, 10.0))
+	heart.rotation = deg_to_rad(randf_range(-16.0, 16.0))
+	heart.scale = Vector2.ONE * randf_range(0.82, 1.08)
+	heart.modulate = Color(1.0, 0.42, 0.58, 0.0)
+	heart.add_theme_font_size_override("font_size", 24 + (heart_index * 2))
+	heart.add_theme_color_override("font_color", Color(1.0, 0.32, 0.48, 1.0))
+	heart.add_theme_color_override("font_outline_color", Color(1.0, 0.82, 0.88, 0.9))
+	heart.add_theme_constant_override("outline_size", 4)
+	prompt_layer.add_child(heart)
 
-	var end_position := note.position + Vector2(randf_range(-12.0, 12.0), -SUCCESS_NOTE_RISE_DISTANCE - randf_range(0.0, 18.0))
-	var tween := note.create_tween()
+	var end_position := heart.position + Vector2(randf_range(-14.0, 14.0), -SUCCESS_HEART_RISE_DISTANCE - randf_range(0.0, 18.0))
+	var tween := heart.create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(note, "modulate:a", 1.0, 0.08).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tween.tween_property(note, "position", end_position, SUCCESS_NOTE_LIFETIME).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tween.tween_property(note, "scale", note.scale * 1.18, SUCCESS_NOTE_LIFETIME * 0.55).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tween.tween_property(note, "modulate:a", 0.0, SUCCESS_NOTE_LIFETIME).set_delay(0.08).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tween.chain().tween_callback(note.queue_free)
+	tween.tween_property(heart, "modulate:a", 1.0, 0.08).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(heart, "position", end_position, SUCCESS_HEART_LIFETIME).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(heart, "scale", heart.scale * 1.18, SUCCESS_HEART_LIFETIME * 0.55).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(heart, "modulate:a", 0.0, SUCCESS_HEART_LIFETIME).set_delay(0.08).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tween.chain().tween_callback(heart.queue_free)
 
 func _get_success_note_origin(prompt_id: int) -> Vector2:
 	var prompt_icon := _prompt_nodes.get(prompt_id) as TextureRect

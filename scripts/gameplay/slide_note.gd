@@ -148,7 +148,7 @@ func _activate_current_target() -> void:
 	_next_checkpoint_index += 1
 	var required_count := checkpoints.size() - 1
 	progressed.emit(1.0 / float(required_count))
-	_spawn_note_particle(checkpoints[_next_checkpoint_index - 1])
+	_spawn_heart_particle(checkpoints[_next_checkpoint_index - 1])
 	queue_redraw()
 	if _next_checkpoint_index >= checkpoints.size():
 		_resolve_completed()
@@ -247,16 +247,18 @@ func _clear_pointer_sample() -> void:
 	_pointer_was_inside_target = false
 
 
-func _spawn_note_particle(origin: Vector2) -> void:
-	var note := Label.new()
-	note.text = "♪"
-	note.add_theme_font_size_override("font_size", 22)
-	note.add_theme_color_override("font_color", Color(1.0, 0.95, 0.4, 1.0))
-	note.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	note.position = origin + Vector2(randf_range(-12.0, 12.0), -checkpoint_radius * 0.5)
-	add_child(note)
+func _spawn_heart_particle(origin: Vector2) -> void:
+	var heart := Label.new()
+	heart.text = "♥"
+	heart.add_theme_font_size_override("font_size", 22)
+	heart.add_theme_color_override("font_color", Color(1.0, 0.32, 0.48, 1.0))
+	heart.add_theme_color_override("font_outline_color", Color(1.0, 0.82, 0.88, 0.9))
+	heart.add_theme_constant_override("outline_size", 3)
+	heart.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	heart.position = origin + Vector2(randf_range(-12.0, 12.0), -checkpoint_radius * 0.5)
+	add_child(heart)
 
-	var tween := note.create_tween().set_parallel(true)
-	tween.tween_property(note, "position:y", note.position.y - 40.0, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tween.tween_property(note, "modulate:a", 0.0, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tween.chain().tween_callback(note.queue_free)
+	var tween := heart.create_tween().set_parallel(true)
+	tween.tween_property(heart, "position:y", heart.position.y - 40.0, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(heart, "modulate:a", 0.0, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tween.chain().tween_callback(heart.queue_free)

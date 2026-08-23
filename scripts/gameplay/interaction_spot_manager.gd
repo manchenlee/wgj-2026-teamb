@@ -562,6 +562,7 @@ func _on_spot_completed(spot: InteractionNote) -> void:
 	_telemetry_completion_bonus += bonus
 	if _character_presenter != null:
 		_character_presenter.show_spot_reaction("strong")
+		_character_presenter.show_success_heart_burst(spot.position + (spot.size * 0.5))
 	print_debug(
 		"InteractionSpotManager telemetry [completed]: incremental=+%.2f bonus=+%.2f penalty=-%.2f net=%.2f active=%d" % [
 			_telemetry_incremental_gain, _telemetry_completion_bonus,

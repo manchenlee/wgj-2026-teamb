@@ -3,7 +3,7 @@ extends ColorRect
 
 @export_range(0.0, 1.0, 0.01) var peak_alpha: float = 0.32
 @export_range(0.01, 1.0, 0.01) var fade_in_duration: float = 0.08
-@export_range(0.01, 1.0, 0.01) var fade_out_duration: float = 0.18
+@export_range(0.01, 1.0, 0.01) var fade_out_duration: float = 0.30
 
 var _flash_tween: Tween = null
 

@@ -126,7 +126,7 @@ func _process_pointer_move(new_pos: Vector2) -> void:
 	progressed.emit(credited_distance / maxf(required_scrub_distance, 0.001))
 	queue_redraw()
 	if fmod(accumulated_scrub_distance, 60.0) < credited_distance:
-		_spawn_note_particle()
+		_spawn_heart_particle()
 	if accumulated_scrub_distance >= required_scrub_distance:
 		_resolve_completed()
 
@@ -152,21 +152,23 @@ func _stop_rubbing() -> void:
 	_end_interaction()
 
 
-func _spawn_note_particle() -> void:
-	var note := Label.new()
-	note.text = "♪"
-	note.add_theme_font_size_override("font_size", 22)
-	note.add_theme_color_override("font_color", Color(1.0, 0.95, 0.4, 1.0))
-	note.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	note.position = target_center + Vector2(
+func _spawn_heart_particle() -> void:
+	var heart := Label.new()
+	heart.text = "♥"
+	heart.add_theme_font_size_override("font_size", 22)
+	heart.add_theme_color_override("font_color", Color(1.0, 0.32, 0.48, 1.0))
+	heart.add_theme_color_override("font_outline_color", Color(1.0, 0.82, 0.88, 0.9))
+	heart.add_theme_constant_override("outline_size", 3)
+	heart.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	heart.position = target_center + Vector2(
 		randf_range(-target_radius * 0.5, target_radius * 0.5),
 		-target_radius * 0.4
 	)
-	add_child(note)
-	var tween := note.create_tween().set_parallel(true)
-	tween.tween_property(note, "position:y", note.position.y - 40.0, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tween.tween_property(note, "modulate:a", 0.0, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tween.chain().tween_callback(note.queue_free)
+	add_child(heart)
+	var tween := heart.create_tween().set_parallel(true)
+	tween.tween_property(heart, "position:y", heart.position.y - 40.0, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(heart, "modulate:a", 0.0, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tween.chain().tween_callback(heart.queue_free)
 
 
 func _get_approach_center() -> Vector2:

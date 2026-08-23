@@ -676,6 +676,8 @@ func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	var ending_type := str(outcome.get("ending_type", ""))
 	if bool(outcome.get("is_wrong_choice", false)):
 		_play_failure_flash()
+	else:
+		character_area.show_success_heart_burst()
 	arousal_model.refresh_emotional_activity()
 	var reply_text := str(outcome.get("reply", ""))
 	if not reply_text.is_empty():
