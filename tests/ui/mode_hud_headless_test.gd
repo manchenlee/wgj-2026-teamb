@@ -16,6 +16,7 @@ func _initialize() -> void:
 func _run() -> void:
 	await _test_shared_mode_toggle_boundary()
 	await _test_numeric_hud_and_legacy_visibility()
+	await _test_combo_hud_presentation()
 	await _test_warning_presentation_apis()
 	if _failures.is_empty():
 		print("Mode toggle and temporary HUD headless tests passed.")
@@ -107,6 +108,46 @@ func _test_numeric_hud_and_legacy_visibility() -> void:
 	_assert(legacy_meter.visible, "Legacy StatusHUD meter cannot be re-enabled through its presentation API.")
 	hud.set_legacy_meter_visible(false)
 	_assert(not legacy_meter.visible, "Legacy StatusHUD meter could not be hidden again.")
+
+	hud.queue_free()
+	await process_frame
+
+
+func _test_combo_hud_presentation() -> void:
+	var hud: StatusHUD = STATUS_HUD_SCENE.instantiate()
+	root.add_child(hud)
+	await process_frame
+	var combo_label: Label = hud.get_node("ComboLabel")
+	var physical_label: Label = hud.get_node("NumericScores/PhysicalScore/Value")
+	var emotional_label: Label = hud.get_node("NumericScores/EmotionalScore/Value")
+	var legacy_meter: Control = hud.get_node("ArousalMeter")
+	hud.update_values(42.4, 67.6, 25.0)
+
+	_assert(not combo_label.visible, "Combo HUD was visible at zero.")
+	hud.update_combo(1, true)
+	_assert(not combo_label.visible, "Combo HUD was visible at one.")
+	_assert(hud._combo_pulse_tween == null, "A hidden combo started a pulse tween.")
+	hud.update_combo(2)
+	_assert(combo_label.visible and combo_label.text == "2 COMBO", "Combo HUD did not show the threshold value.")
+	hud.update_combo(12)
+	_assert(combo_label.text == "12 COMBO", "Combo HUD did not render a higher value.")
+
+	hud.update_combo(3, true)
+	var first_pulse: Tween = hud._combo_pulse_tween
+	_assert(first_pulse != null and first_pulse.is_valid(), "Visible combo increment did not request a pulse tween.")
+	hud.update_combo(4, true)
+	var replacement_pulse: Tween = hud._combo_pulse_tween
+	_assert(replacement_pulse != null and replacement_pulse != first_pulse, "Rapid combo update did not replace the prior pulse tween.")
+	_assert(not first_pulse.is_valid(), "Replaced combo pulse tween remained active.")
+	_assert(combo_label.scale == Vector2.ONE, "Rapid combo updates accumulated label scale.")
+
+	hud.set_score_warnings(true, false)
+	hud.update_combo(0)
+	_assert(not combo_label.visible, "Combo break did not hide the label.")
+	_assert(combo_label.scale == Vector2.ONE and hud._combo_pulse_tween == null, "Combo break did not restore neutral pulse state.")
+	_assert(hud.is_physical_low_warning_active() and not hud.is_emotional_low_warning_active(), "Combo presentation interfered with score-warning state.")
+	_assert(physical_label.text == "42" and emotional_label.text == "68", "Combo presentation changed numeric score labels.")
+	_assert(not legacy_meter.visible, "Combo presentation changed legacy-meter visibility.")
 
 	hud.queue_free()
 	await process_frame

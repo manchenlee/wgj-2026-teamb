@@ -28,6 +28,7 @@ const NOTE_SEPARATION: float = 8.0
 signal spot_scrub_started()
 signal spot_scrub_ended()
 signal spot_telemetry_updated(telemetry: Dictionary)
+signal physiological_spot_completed()
 signal physiological_spot_failed(progress_ratio: float, penalty: float)
 
 # Set by GameSessionController before activation.
@@ -587,6 +588,7 @@ func _on_spot_completed(spot: InteractionNote) -> void:
 		]
 	)
 	_emit_telemetry()
+	physiological_spot_completed.emit()
 
 
 func _on_spot_expired(progress_ratio: float, spot: InteractionNote, is_timeout_failure: bool = true) -> void:

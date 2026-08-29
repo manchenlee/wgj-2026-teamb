@@ -21,6 +21,7 @@ func _run() -> void:
 	await _test_forced_success_routes_directly()
 	await _test_continuous_band_progression_and_dialogue_pool()
 	await _test_failure_routes_and_peak_depletion()
+	await _test_physiological_combo_lifecycle()
 	await _test_explicit_new_run_reset()
 	await _test_actual_ending_fade_remains()
 	if _failures.is_empty():
@@ -138,6 +139,95 @@ func _test_failure_routes_and_peak_depletion() -> void:
 	game.phase_transition_overlay = null
 	game.force_ending(CONFIG.SAFEWORD_IGNORED_FAILURE_ENDING)
 	_assert(endings == [CONFIG.SAFEWORD_IGNORED_FAILURE_ENDING], "Safe-word forced failure route changed.")
+	await _free_game(game)
+
+
+func _test_physiological_combo_lifecycle() -> void:
+	var game = await _create_game()
+	_assert(game.current_combo == 0 and game.max_combo == 0, "A new run did not initialize both combo counters to zero.")
+	game.set_interaction_mode(PHYSIOLOGICAL_MODE)
+
+	game.spot_manager.force_spawn_click_note()
+	game.spot_manager.force_complete_spot()
+	_assert(game.current_combo == 1 and game.max_combo == 1, "First Click completion did not establish combo 1.")
+	game.spot_manager.force_spawn_spot()
+	game.spot_manager.force_complete_spot()
+	_assert(game.current_combo == 2 and game.max_combo == 2, "Second whole-note completion did not establish combo 2.")
+	game.spot_manager.force_spawn_rub_note()
+	game.spot_manager.force_complete_spot()
+	_assert(game.current_combo == 3 and game.max_combo == 3, "Click, Slide, and Rub did not share one combo sequence.")
+
+	game.set_interaction_mode(PSYCHOLOGICAL_MODE)
+	game.set_interaction_mode(PHYSIOLOGICAL_MODE)
+	_assert(game.current_combo == 3 and game.max_combo == 3, "Mode switching changed combo state.")
+	game.arousal_model.physical = _score_inside_band(3)
+	game._sync_physiological_visual_band()
+	game.arousal_model.physical = _score_inside_band(2)
+	game._sync_physiological_visual_band()
+	_assert(game.current_combo == 3 and game.max_combo == 3, "Visual-band or presentation-family switching changed combo state.")
+
+	game.set_interaction_mode(PSYCHOLOGICAL_MODE)
+	game.psychological_dialogue_controller.current_entry = {
+		"choice": [{"id": "good", "effect": "positive"}],
+		"response": {"good": ["combo-neutral good reply"]},
+	}
+	game.psychological_dialogue_controller.choice_prompt_pending = true
+	game._on_choice_selected("good", "combo-neutral good choice")
+	_assert(game.current_combo == 3 and game.max_combo == 3, "A good dialogue choice changed combo state.")
+	game.psychological_dialogue_controller.current_entry = {
+		"choice": [{"id": "bad", "effect": "negative"}],
+		"response": {"bad": ["combo-neutral bad reply"]},
+	}
+	game.psychological_dialogue_controller.choice_prompt_pending = true
+	game._on_choice_selected("bad", "combo-neutral bad choice")
+	_assert(game.current_combo == 3 and game.max_combo == 3, "A bad dialogue choice changed combo state.")
+
+	game.set_interaction_mode(PHYSIOLOGICAL_MODE)
+	game.spot_manager.force_spawn_spot()
+	var partial_slide := game.spot_manager._active_spots.back() as SlideNote
+	var required_count := maxi(partial_slide.checkpoints.size() - 1, 1)
+	var completed_count := clampi(ceili(float(required_count) * 0.5), 1, required_count - 1)
+	partial_slide._armed = true
+	partial_slide._next_checkpoint_index = completed_count + 1
+	var partial_ratio := partial_slide.get_progress_ratio()
+	var physical_before_partial_expiry: float = game.arousal_model.physical
+	game.spot_manager.force_expire_spot()
+	_assert(partial_ratio >= 0.5 and partial_ratio < 1.0, "Zero-penalty partial-expiry setup did not produce unresolved progress at or above 50%.")
+	_assert(is_equal_approx(game.arousal_model.physical, physical_before_partial_expiry), "Zero-penalty partial expiry changed physiological scoring.")
+	_assert(game.current_combo == 0 and game.max_combo == 3, "Zero-penalty partial expiry did not break only the current combo.")
+
+	game.spot_manager.force_spawn_click_note()
+	game.spot_manager.force_spawn_click_note()
+	game.spot_manager.force_spawn_click_note()
+	var ordered_notes: Array = game.spot_manager._active_spots.duplicate()
+	_assert(ordered_notes.size() == 3, "Multiple-active-note combo test could not create three notes.")
+	if ordered_notes.size() == 3:
+		(ordered_notes[0] as InteractionNote).force_complete()
+		_assert(game.current_combo == 1, "First same-frame ordered outcome did not produce combo 1.")
+		(ordered_notes[1] as InteractionNote).force_complete()
+		_assert(game.current_combo == 2, "Second same-frame ordered outcome did not produce combo 2.")
+		(ordered_notes[2] as InteractionNote).force_expire()
+		_assert(game.current_combo == 0 and game.max_combo == 3, "Later same-frame expiry did not break combo in normal signal order.")
+
+	for expected_combo in range(1, 5):
+		game.spot_manager.force_spawn_click_note()
+		game.spot_manager.force_complete_spot()
+		_assert(game.current_combo == expected_combo, "Post-break success did not continue from combo %d." % expected_combo)
+		_assert(game.max_combo == maxi(3, expected_combo), "max_combo changed without a new record at combo %d." % expected_combo)
+
+	game.spot_manager.force_spawn_click_note()
+	game.spot_manager.force_expire_spot()
+	_assert(game.current_combo == 0 and game.max_combo == 4, "A genuine miss did not preserve the existing max combo.")
+	game.spot_manager.force_spawn_click_note()
+	game.spot_manager.force_complete_spot()
+	game.spot_manager.force_spawn_rub_note()
+	var combo_before_ending: int = game.current_combo
+	var max_combo_before_ending: int = game.max_combo
+	game.force_ending(CONFIG.SUCCESS_ENDING)
+	_assert(game.current_combo == combo_before_ending and game.max_combo == max_combo_before_ending, "Ending teardown fabricated an outcome or reset combo state.")
+
+	game.reset_run()
+	_assert(game.current_combo == 0 and game.max_combo == 0, "Genuine new-run reset did not clear both combo counters.")
 	await _free_game(game)
 
 

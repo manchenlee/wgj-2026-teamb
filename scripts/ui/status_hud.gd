@@ -16,6 +16,7 @@ const WARNING_PULSE_SPEED: float = 4.0
 @onready var legacy_arousal_meter: Control = $ArousalMeter
 @onready var physical_value_label: Label = $NumericScores/PhysicalScore/Value
 @onready var emotional_value_label: Label = $NumericScores/EmotionalScore/Value
+@onready var combo_label: Label = $ComboLabel
 
 @export var show_legacy_meter: bool = false
 
@@ -23,12 +24,14 @@ var _peak_value: float = 0.0
 var _physical_low_warning_active: bool = false
 var _emotional_low_warning_active: bool = false
 var _warning_pulse_time: float = 0.0
+var _combo_pulse_tween: Tween = null
 
 func _ready() -> void:
 	legacy_arousal_meter.visible = show_legacy_meter
 	_apply_meter_fill(_peak_value)
 	set_process(false)
 	_apply_score_warning_presentation()
+	update_combo(0)
 
 
 func _process(delta: float) -> void:
@@ -47,6 +50,20 @@ func update_values(physical: float, emotional: float, peak: float) -> void:
 	_apply_meter_fill(_peak_value)
 
 
+func update_combo(combo: int, pulse: bool = false) -> void:
+	_cancel_combo_pulse()
+	combo_label.text = "%d COMBO" % combo
+	combo_label.visible = combo >= 2
+	combo_label.pivot_offset = combo_label.size * 0.5
+	if not combo_label.visible or not pulse:
+		return
+	_combo_pulse_tween = create_tween()
+	_combo_pulse_tween.tween_property(combo_label, "scale", Vector2(1.16, 1.16), 0.1) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_combo_pulse_tween.tween_property(combo_label, "scale", Vector2.ONE, 0.12) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+
 func set_score_warnings(physical_low: bool, emotional_low: bool) -> void:
 	if (
 		_physical_low_warning_active == physical_low
@@ -58,6 +75,13 @@ func set_score_warnings(physical_low: bool, emotional_low: bool) -> void:
 	_warning_pulse_time = 0.0
 	set_process(physical_low or emotional_low)
 	_apply_score_warning_presentation()
+
+
+func _cancel_combo_pulse() -> void:
+	if _combo_pulse_tween != null and _combo_pulse_tween.is_valid():
+		_combo_pulse_tween.kill()
+	_combo_pulse_tween = null
+	combo_label.scale = Vector2.ONE
 
 
 func is_physical_low_warning_active() -> bool:

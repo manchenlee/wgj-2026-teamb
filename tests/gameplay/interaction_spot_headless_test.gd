@@ -166,10 +166,13 @@ func _test_click_input_and_scoring() -> void:
 	var manager := SPOT_MANAGER_SCRIPT.new()
 	var model := FakeArousalModel.new()
 	manager._arousal_model = model
+	var normalized_counts := {"completed": 0}
+	manager.physiological_spot_completed.connect(func() -> void: normalized_counts.completed += 1)
 	scoring_note.progressed.connect(manager._on_spot_progressed.bind(scoring_note))
 	scoring_note.completed.connect(manager._on_spot_completed.bind(scoring_note))
 	scoring_note._gui_input(_mouse_button_event(scoring_note.target_center, true))
 	_assert(absf(model.physical - 43.0) < 0.001, "ClickNote did not apply the current +1 progress and +2 completion reward once.")
+	_assert(normalized_counts.completed == 1, "ClickNote did not emit exactly one normalized physiological completion.")
 	scoring_note.queue_free()
 	await process_frame
 
@@ -271,6 +274,10 @@ func _test_click_force_resolution() -> void:
 
 func _test_rub_input_and_progress() -> void:
 	var note := _make_rub_note(30.0, 100.0)
+	var manager := SPOT_MANAGER_SCRIPT.new()
+	var normalized_counts := {"completed": 0}
+	manager.physiological_spot_completed.connect(func() -> void: normalized_counts.completed += 1)
+	note.completed.connect(manager._on_spot_completed.bind(note))
 	var counts := {"started": 0, "ended": 0, "progress": 0, "delta": 0.0}
 	note.interaction_started.connect(func() -> void: counts.started += 1)
 	note.interaction_ended.connect(func() -> void: counts.ended += 1)
@@ -303,6 +310,7 @@ func _test_rub_input_and_progress() -> void:
 	note._gui_input(_mouse_motion_event(center + Vector2(10.0, 0.0)))
 	_assert(absf(note.accumulated_scrub_distance - 52.0) < 0.001, "Fresh inside movement after re-entry did not progress.")
 	_assert(absf(counts.delta - 0.52) < 0.001, "RubNote emitted incorrect normalized progress deltas.")
+	_assert(normalized_counts.completed == 0, "Rub progress emitted a normalized physiological completion.")
 
 	note._gui_input(_mouse_button_event(center, false))
 	_assert(not note.is_rubbing(), "Primary release did not stop RubNote.")
@@ -318,6 +326,8 @@ func _test_rub_completion_and_scoring() -> void:
 	var manager := SPOT_MANAGER_SCRIPT.new()
 	var model := FakeArousalModel.new()
 	manager._arousal_model = model
+	var normalized_counts := {"completed": 0}
+	manager.physiological_spot_completed.connect(func() -> void: normalized_counts.completed += 1)
 	var counts := {"completed": 0, "expired": 0, "progress_delta": 0.0}
 	note.progressed.connect(func(delta: float) -> void: counts.progress_delta += delta)
 	note.progressed.connect(manager._on_spot_progressed.bind(note))
@@ -333,6 +343,7 @@ func _test_rub_completion_and_scoring() -> void:
 	note._gui_input(_mouse_button_event(center, false))
 	_assert(absf(counts.progress_delta - 1.0) < 0.001, "Completed Rub progress deltas did not total 1.0.")
 	_assert(counts.completed == 1, "RubNote did not complete exactly once.")
+	_assert(normalized_counts.completed == 1, "RubNote did not emit exactly one normalized physiological completion.")
 	_assert(counts.expired == 0, "Completed RubNote also expired.")
 	_assert(absf(model.physical - 43.0) < 0.001, "RubNote did not apply the current +1 progress and +2 completion reward once.")
 	note.force_complete()
@@ -388,17 +399,21 @@ func _test_rub_timeout_and_failure() -> void:
 	var partial_manager := SPOT_MANAGER_SCRIPT.new()
 	var partial_model := FakeArousalModel.new()
 	partial_manager._arousal_model = partial_model
-	var partial_counts := {"expired": 0, "ratio": -1.0}
+	var partial_counts := {"expired": 0, "failed": 0, "ratio": -1.0}
 	partial_note.expired.connect(func(ratio: float) -> void:
 		partial_counts.expired += 1
 		partial_counts.ratio = ratio
 	)
 	partial_note.progressed.connect(partial_manager._on_spot_progressed.bind(partial_note))
 	partial_note.expired.connect(partial_manager._on_spot_expired.bind(partial_note))
+	partial_manager.physiological_spot_failed.connect(
+		func(_ratio: float, _penalty: float) -> void: partial_counts.failed += 1
+	)
 	partial_note._gui_input(_mouse_button_event(partial_note.target_center, true))
 	partial_note._gui_input(_mouse_motion_event(partial_note.target_center + Vector2(30.0, 0.0)))
 	await create_timer(0.12).timeout
 	_assert(partial_counts.expired == 1, "Partially rubbed note did not expire once.")
+	_assert(partial_counts.failed == 1, "Partial Rub timeout did not emit one normalized physiological failure.")
 	_assert(absf(partial_counts.ratio - 0.24) < 0.001, "Partial Rub timeout reported incorrect normalized progress.")
 	_assert(absf(partial_model.physical - 38.24) < 0.001, "Partial Rub scoring or penalty routing changed unexpectedly.")
 	partial_note.queue_free()
@@ -526,6 +541,10 @@ func _test_shared_approach_circle_geometry() -> void:
 
 func _test_ordered_progression_and_fast_crossing() -> void:
 	var spot := _make_spot()
+	var manager := SPOT_MANAGER_SCRIPT.new()
+	var normalized_counts := {"completed": 0}
+	manager.physiological_spot_completed.connect(func() -> void: normalized_counts.completed += 1)
+	spot.completed.connect(manager._on_spot_completed.bind(spot))
 	var counts := {"progress": 0, "completed": 0}
 	spot.progressed.connect(func(_delta: float) -> void: counts.progress += 1)
 	spot.completed.connect(func() -> void: counts.completed += 1)
@@ -550,6 +569,7 @@ func _test_ordered_progression_and_fast_crossing() -> void:
 	spot._input(_mouse_motion_event(Vector2(220.0, 20.0)))
 	spot._input(_mouse_motion_event(Vector2(220.0, 300.0)))
 	_assert(counts.progress == 1, "One motion event advanced more than one checkpoint.")
+	_assert(normalized_counts.completed == 0, "An intermediate Slide checkpoint emitted normalized completion.")
 	_assert(spot.get_next_checkpoint_index() == 2, "Checkpoint 1 did not select checkpoint 2.")
 	_assert(absf(spot.get_progress_ratio() - 1.0 / 3.0) < 0.001, "Checkpoint 1 progress was not normalized to 1/3.")
 
@@ -563,12 +583,14 @@ func _test_ordered_progression_and_fast_crossing() -> void:
 	spot._input(_mouse_motion_event(Vector2(220.0, 140.0)))
 	spot._input(_mouse_motion_event(Vector2(220.0, 300.0)))
 	_assert(counts.progress == 2, "Fast segment crossing checkpoint 2 was missed.")
+	_assert(normalized_counts.completed == 0, "Slide progress emitted normalized completion before the final checkpoint.")
 	_assert(absf(spot.get_progress_ratio() - 2.0 / 3.0) < 0.001, "Checkpoint 2 progress was not normalized to 2/3.")
 	spot._input(_mouse_motion_event(Vector2(20.0, 300.0)))
 	spot._input(_mouse_motion_event(Vector2(20.0, 220.0)))
 	spot._input(_mouse_motion_event(Vector2(180.0, 220.0)))
 	_assert(counts.progress == 3, "Checkpoint 3 did not grant final progress.")
 	_assert(counts.completed == 1, "Completing checkpoint 3 did not resolve success once.")
+	_assert(normalized_counts.completed == 1, "Full Slide did not emit exactly one normalized physiological completion.")
 	spot.force_complete()
 	_assert(counts.completed == 1, "Resolved success emitted more than once.")
 	spot.queue_free()
@@ -870,8 +892,9 @@ func _test_manager_stop_cleanup_and_restart() -> void:
 	manager.set_phase_config(phase_config)
 	manager.set_available_anchor_ids(["test_anchor_a", "test_anchor_b", "test_anchor_c", "test_anchor_d"])
 	manager.set_bounds_rect(Rect2(Vector2.ZERO, Vector2(1200.0, 1200.0)))
-	var failure_count := 0
-	manager.physiological_spot_failed.connect(func(_ratio: float, _penalty: float) -> void: failure_count += 1)
+	var outcome_counts := {"completed": 0, "failed": 0}
+	manager.physiological_spot_completed.connect(func() -> void: outcome_counts.completed += 1)
+	manager.physiological_spot_failed.connect(func(_ratio: float, _penalty: float) -> void: outcome_counts.failed += 1)
 	var physical_before_stop := model.physical
 	for note_type in [manager.NoteType.CLICK, manager.NoteType.SLIDE, manager.NoteType.RUB]:
 		manager.start()
@@ -903,7 +926,8 @@ func _test_manager_stop_cleanup_and_restart() -> void:
 			note.force_complete()
 		await process_frame
 	_assert(absf(model.physical - physical_before_stop) < 0.001, "A cleaned-up note produced a late score or penalty.")
-	_assert(failure_count == 0, "Manager cleanup emitted a false physiological failure.")
+	_assert(outcome_counts.completed == 0, "Manager suspension/stop cleanup emitted a physiological completion.")
+	_assert(outcome_counts.failed == 0, "Manager cleanup emitted a false physiological failure.")
 
 	phase_config.click_note_weight = 1.0
 	phase_config.slide_note_weight = 0.0

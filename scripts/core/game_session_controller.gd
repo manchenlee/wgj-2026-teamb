@@ -117,6 +117,8 @@ var physical_low_warning_active: bool = false
 var emotional_low_warning_active: bool = false
 var imbalance_warning_active: bool = false
 var lower_score_mode: int = -1
+var current_combo: int = 0
+var max_combo: int = 0
 
 # Telemetry from spot manager for debug readout
 var _last_spot_telemetry: Dictionary = {}
@@ -181,6 +183,7 @@ func _setup_spot_manager() -> void:
 	spot_manager.spot_scrub_started.connect(_on_spot_scrub_started)
 	spot_manager.spot_scrub_ended.connect(_on_spot_scrub_ended)
 	spot_manager.spot_telemetry_updated.connect(_on_spot_telemetry_updated)
+	spot_manager.physiological_spot_completed.connect(_on_physiological_spot_completed)
 	spot_manager.physiological_spot_failed.connect(_on_physiological_spot_failed)
 
 # ---------------------------------------------------------------------------
@@ -819,6 +822,8 @@ func _reset_run_for_phase_id(phase_id: String) -> void:
 
 func _reset_run_for_phase_index(phase_index: int) -> void:
 	_reset_physiological_expression_reaction()
+	current_combo = 0
+	max_combo = 0
 	run_active = true
 	ending_transition_started = false
 	has_left_overall_init_visual = false
@@ -841,6 +846,7 @@ func _reset_run_for_phase_index(phase_index: int) -> void:
 	if spot_manager != null:
 		spot_manager.start()
 	_set_interaction_mode(interaction_mode, true)
+	status_hud.update_combo(current_combo)
 	_update_presentation()
 
 # ---------------------------------------------------------------------------
@@ -904,7 +910,16 @@ func _on_spot_telemetry_updated(telemetry: Dictionary) -> void:
 	if debug_overlay != null:
 		debug_overlay.sync_live_readout(get_debug_state())
 
+
+func _on_physiological_spot_completed() -> void:
+	current_combo += 1
+	max_combo = maxi(max_combo, current_combo)
+	status_hud.update_combo(current_combo, true)
+
+
 func _on_physiological_spot_failed(_progress_ratio: float, _penalty: float) -> void:
+	current_combo = 0
+	status_hud.update_combo(current_combo)
 	_play_failure_flash()
 
 # ---------------------------------------------------------------------------
