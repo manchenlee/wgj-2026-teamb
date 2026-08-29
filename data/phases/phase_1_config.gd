@@ -73,9 +73,9 @@ func _init() -> void:
 			"failure_thresholds": {
 				"peak_depletion_requires_activation": true,
 				"physical_cap": 100.0,
-				"physical_counterpart_below": 20.0,
+				"physical_counterpart_below": 70.0,
 				"emotional_cap": 100.0,
-				"emotional_counterpart_below": 20.0
+				"emotional_counterpart_below": 70.0
 			},
 			"psychological_dialogue_data_source": "res://assets/dialogue/feedback.json",
 			"physiological_dialogue_data_source": "res://assets/dialogue/physiological_feedback.json"

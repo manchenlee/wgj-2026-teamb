@@ -129,9 +129,9 @@ func _init(values: Dictionary = {}) -> void:
 		{
 			"peak_depletion_requires_activation": true,
 			"physical_cap": 100.0,
-			"physical_counterpart_below": minimum_active_threshold,
+			"physical_counterpart_below": 70.0,
 			"emotional_cap": 100.0,
-			"emotional_counterpart_below": minimum_active_threshold
+			"emotional_counterpart_below": 70.0
 		}
 	).duplicate(true)
 	psychological_dialogue_data_source = String(values.get("psychological_dialogue_data_source", ""))

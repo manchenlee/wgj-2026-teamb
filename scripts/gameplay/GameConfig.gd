@@ -3,6 +3,10 @@ extends RefCounted
 
 const MAX_VALUE: float = 100.0
 
+# Temporary ending policy. Set false to restore the legacy peak-depletion
+# predicate without changing peak calculation or any of its other consumers.
+const USE_PHYSICAL_FOR_DEPLETION_FAILURE: bool = true
+
 # Temporary score-warning presentation tuning. These thresholds are independent
 # from ending evaluation and do not affect authoritative gameplay values.
 const LOW_SCORE_WARNING_THRESHOLD: float = 20.0

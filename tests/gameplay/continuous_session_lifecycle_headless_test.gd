@@ -130,15 +130,51 @@ func _test_continuous_band_progression_and_dialogue_pool() -> void:
 
 
 func _test_failure_routes_and_peak_depletion() -> void:
-	await _assert_failure_route(CONFIG.PEAK_DEPLETION_FAILURE_ENDING, 50.0, 50.0, 0.0, true)
+	await _assert_failure_route(CONFIG.PEAK_DEPLETION_FAILURE_ENDING, 0.0, 50.0, 50.0, false)
 	await _assert_failure_route(CONFIG.PHYSICAL_IMBALANCE_FAILURE_ENDING, 100.0, 10.0, 0.0, false)
 	await _assert_failure_route(CONFIG.EMOTIONAL_IMBALANCE_FAILURE_ENDING, 10.0, 100.0, 0.0, false)
+	await _assert_runtime_decay_depletion()
+	await _assert_runtime_penalty_depletion()
 	var game = await _create_game()
 	var endings: Array[String] = []
 	game.ending_requested.connect(func(ending_type: String) -> void: endings.append(ending_type))
 	game.phase_transition_overlay = null
 	game.force_ending(CONFIG.SAFEWORD_IGNORED_FAILURE_ENDING)
 	_assert(endings == [CONFIG.SAFEWORD_IGNORED_FAILURE_ENDING], "Safe-word forced failure route changed.")
+	await _free_game(game)
+
+
+func _assert_runtime_decay_depletion() -> void:
+	var game = await _create_game()
+	var endings: Array[String] = []
+	game.ending_requested.connect(func(result: String) -> void: endings.append(result))
+	game.phase_transition_overlay = null
+	game.arousal_model.physical = 0.5
+	game.arousal_model.emotional = 50.0
+	game.arousal_model.peak = 50.0
+	game.arousal_model.peak_has_activated = true
+	game.arousal_model.physical_activity_grace_remaining = 0.0
+	game._process(1.0)
+	_assert(game.arousal_model.physical == 0.0, "Runtime decay setup did not reach physiological zero.")
+	_assert(endings == [CONFIG.PEAK_DEPLETION_FAILURE_ENDING], "Runtime decay did not route physiological depletion: %s" % str(endings))
+	await _free_game(game)
+
+
+func _assert_runtime_penalty_depletion() -> void:
+	var game = await _create_game()
+	var endings: Array[String] = []
+	game.ending_requested.connect(func(result: String) -> void: endings.append(result))
+	game.phase_transition_overlay = null
+	game.arousal_model.physical = 5.0
+	game.arousal_model.emotional = 50.0
+	game.arousal_model.peak = 50.0
+	game.arousal_model.peak_has_activated = true
+	game.set_interaction_mode(PHYSIOLOGICAL_MODE)
+	game.spot_manager.force_spawn_click_note()
+	game.force_expire_spot()
+	game._process(0.0)
+	_assert(game.arousal_model.physical == 0.0, "Physiological expiry penalty setup did not reach zero.")
+	_assert(endings == [CONFIG.PEAK_DEPLETION_FAILURE_ENDING], "Physiological expiry penalty did not route depletion: %s" % str(endings))
 	await _free_game(game)
 
 
