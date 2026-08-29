@@ -20,6 +20,8 @@ signal ending_requested(ending_type: String)
 signal bgm_requested(track_key: String, use_fade: bool)
 signal interaction_mode_changed(mode: int)
 signal physiological_visual_band_changed(previous_band: int, current_band: int, direction: int)
+signal score_warning_changed(physical_low: bool, emotional_low: bool)
+signal score_imbalance_changed(active: bool, lower_mode: int)
 
 const PHYSIOLOGICAL_VISUAL_BAND_COUNT: int = 6
 const PHYSIOLOGICAL_VISUAL_BAND_MIN: int = 0
@@ -111,6 +113,10 @@ var _physiological_expression_request_token: int = -1
 var _psychological_expression_round_pending: bool = false
 var _psychological_expression_request_token: int = -1
 var _resolved_character_alignment_offset: Vector2 = Vector2.ZERO
+var physical_low_warning_active: bool = false
+var emotional_low_warning_active: bool = false
+var imbalance_warning_active: bool = false
+var lower_score_mode: int = -1
 
 # Telemetry from spot manager for debug readout
 var _last_spot_telemetry: Dictionary = {}
@@ -1118,9 +1124,55 @@ func _update_presentation() -> void:
 	character_area.update_emotion_state(arousal_model.get_emotion_state())
 	arousal_visualization.set_values(arousal_model.physical, arousal_model.emotional, arousal_model.peak)
 	status_hud.update_values(arousal_model.physical, arousal_model.emotional, arousal_model.peak)
+	_update_score_warning_state()
 	_update_phase_debug_label()
 	if debug_overlay != null:
 		debug_overlay.sync_live_readout(get_debug_state())
+
+
+func _update_score_warning_state() -> void:
+	var next_physical_low: bool = arousal_model.physical <= Config.LOW_SCORE_WARNING_THRESHOLD
+	var next_emotional_low: bool = arousal_model.emotional <= Config.LOW_SCORE_WARNING_THRESHOLD
+	var low_warning_changed: bool = (
+		physical_low_warning_active != next_physical_low
+		or emotional_low_warning_active != next_emotional_low
+	)
+	if low_warning_changed:
+		physical_low_warning_active = next_physical_low
+		emotional_low_warning_active = next_emotional_low
+		if status_hud != null:
+			status_hud.set_score_warnings(
+				physical_low_warning_active,
+				emotional_low_warning_active
+			)
+		score_warning_changed.emit(
+			physical_low_warning_active,
+			emotional_low_warning_active
+		)
+
+	var difference: float = absf(arousal_model.physical - arousal_model.emotional)
+	var next_imbalance_active: bool = (
+		difference >= Config.SCORE_IMBALANCE_WARNING_THRESHOLD
+		and not is_equal_approx(arousal_model.physical, arousal_model.emotional)
+	)
+	var next_lower_mode: int = -1
+	if next_imbalance_active:
+		next_lower_mode = InteractionMode.PHYSIOLOGICAL \
+				if arousal_model.physical < arousal_model.emotional \
+				else InteractionMode.PSYCHOLOGICAL
+	var imbalance_changed: bool = (
+		imbalance_warning_active != next_imbalance_active
+		or lower_score_mode != next_lower_mode
+	)
+	if imbalance_changed:
+		imbalance_warning_active = next_imbalance_active
+		lower_score_mode = next_lower_mode
+		if interaction_mode_toggle != null:
+			interaction_mode_toggle.set_imbalance_warning(
+				imbalance_warning_active,
+				lower_score_mode
+			)
+		score_imbalance_changed.emit(imbalance_warning_active, lower_score_mode)
 
 func _update_choice_timer_visual() -> void:
 	if _has_pending_psychological_choice() and not choice_timeout_timer.is_stopped():

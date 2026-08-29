@@ -3,6 +3,11 @@ extends RefCounted
 
 const MAX_VALUE: float = 100.0
 
+# Temporary score-warning presentation tuning. These thresholds are independent
+# from ending evaluation and do not affect authoritative gameplay values.
+const LOW_SCORE_WARNING_THRESHOLD: float = 20.0
+const SCORE_IMBALANCE_WARNING_THRESHOLD: float = 20.0
+
 # Shared dialogue defaults.
 const FEEDBACK_MESSAGE_TEXT: String = "……"
 const RESPONSE_BUTTON_TEXT: String = "……"
