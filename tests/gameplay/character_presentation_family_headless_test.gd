@@ -38,7 +38,9 @@ func _test_band_family_mapping_and_rebuild_guard() -> void:
 	var controller = GAME_SESSION_CONTROLLER_SCRIPT.new()
 	_assert(controller._sync_character_presentation_family_for_visual_band(0), "Initial early-family synchronization did not apply.")
 	var early_profile = controller.active_character_profile
+	var early_texture = controller.character_visual_textures.get("overall_init")
 	_assert(early_profile.profile_id == "phase_1_profile", "Bands 0-2 did not select the existing Phase 1 profile.")
+	_assert(early_texture != null, "Initial early-family texture was not cached.")
 	_assert(not controller._sync_character_presentation_family_for_visual_band(1), "Band 0 to 1 unnecessarily rebuilt the early family.")
 	_assert(controller.active_character_profile == early_profile, "Same-family movement replaced the early profile cache.")
 	_assert(controller._sync_character_presentation_family_for_visual_band(3), "Band 2 to 3 did not apply the late family.")
@@ -48,6 +50,10 @@ func _test_band_family_mapping_and_rebuild_guard() -> void:
 	_assert(controller.active_character_profile == late_profile, "Same-family movement replaced the late profile cache.")
 	_assert(controller._sync_character_presentation_family_for_visual_band(2), "Band 3 to 2 did not restore the early family.")
 	_assert(controller.active_character_profile == early_profile, "Downward switching did not reuse the cached early profile.")
+	_assert(
+		controller.character_visual_textures.get("overall_init") == early_texture,
+		"Downward switching reloaded the early-family texture instead of reusing it."
+	)
 	controller.free()
 
 
@@ -55,6 +61,7 @@ func _test_live_family_crossing_preserves_gameplay_state() -> void:
 	var game = GAME_SCREEN_SCENE.instantiate()
 	root.add_child(game)
 	await process_frame
+	await _wait_for_late_presentation_prefetch(game)
 
 	_assert(game.current_visual_band == 2, "Initial physical score did not synchronize visual band 2.")
 	_assert(game.current_character_presentation_family == EARLY_FAMILY, "Initialization did not silently select the early family.")
@@ -117,6 +124,7 @@ func _test_reset_and_legacy_phase_compatibility() -> void:
 	var game = GAME_SCREEN_SCENE.instantiate()
 	root.add_child(game)
 	await process_frame
+	await _wait_for_late_presentation_prefetch(game)
 	game.arousal_model.physical = 75.0
 	game._sync_physiological_visual_band(false)
 	_assert(game.current_character_presentation_family == LATE_FAMILY, "Reset setup did not select the late family.")
@@ -131,6 +139,14 @@ func _test_reset_and_legacy_phase_compatibility() -> void:
 	_assert(game.active_character_profile.profile_id == "phase_1_profile", "Gameplay phase still owns the character profile after reset.")
 	game.queue_free()
 	await process_frame
+
+
+func _wait_for_late_presentation_prefetch(game) -> void:
+	for _frame in range(300):
+		if bool(game._presentation_prefetch_ready.get(LATE_FAMILY, false)):
+			return
+		await process_frame
+	_assert(false, "Late-family texture prefetch did not finish within 300 frames.")
 
 
 func _capture_gameplay_state(game) -> Dictionary:

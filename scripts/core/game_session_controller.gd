@@ -28,6 +28,7 @@ const PHYSIOLOGICAL_VISUAL_BAND_MIN: int = 0
 const PHYSIOLOGICAL_VISUAL_BAND_MAX: int = PHYSIOLOGICAL_VISUAL_BAND_COUNT - 1
 const CHARACTER_PRESENTATION_FAMILY_EARLY: int = 0
 const CHARACTER_PRESENTATION_FAMILY_LATE: int = 1
+const PRESENTATION_PREFETCH_RESOURCES_PER_FRAME: int = 1
 
 enum InteractionMode {
 	PSYCHOLOGICAL,
@@ -93,6 +94,10 @@ var character_visual_textures: Dictionary = {}
 var character_layer_textures: Dictionary = {}
 var character_visual_warnings_printed: Dictionary = {}
 var overlay_motion_set: Dictionary = {}
+var _prefetched_character_textures: Dictionary = {}
+var _presentation_prefetch_pending: Dictionary = {}
+var _presentation_prefetch_ready: Dictionary = {}
+var _presentation_prefetch_failed_paths: Dictionary = {}
 var ending_transition_started: bool = false
 var has_left_overall_init_visual: bool = false
 var phase_sequence: Array = []
@@ -128,6 +133,7 @@ func _ready() -> void:
 	physiological_dialogue_controller.configure("physiological_dialogue_data_source", false)
 	_build_phase_sequence()
 	_apply_phase_by_index(_get_initial_phase_index())
+	_begin_character_presentation_prefetch(CHARACTER_PRESENTATION_FAMILY_LATE)
 	_update_character_visual_state()
 	_apply_overlay_motion_set()
 	_bind_breathing_targets()
@@ -273,9 +279,17 @@ func _cache_texture_paths_into_cache(texture_paths: Dictionary, cache: Dictionar
 		cache[state_name] = texture
 
 func _load_texture_from_asset_path(asset_path: String) -> Texture2D:
+	if _prefetched_character_textures.has(asset_path):
+		return _prefetched_character_textures[asset_path] as Texture2D
+	if _presentation_prefetch_failed_paths.has(asset_path):
+		return null
 	if ResourceLoader.exists(asset_path):
 		var resource_texture := load(asset_path) as Texture2D
 		if resource_texture != null:
+			# Keep textures from both presentation families alive for the whole run.
+			# Otherwise switching families clears the active dictionaries and a
+			# reverse switch can synchronously decode the previous family's images.
+			_prefetched_character_textures[asset_path] = resource_texture
 			return resource_texture
 	var absolute_asset_path := ProjectSettings.globalize_path(asset_path)
 	if not FileAccess.file_exists(absolute_asset_path):
@@ -283,7 +297,95 @@ func _load_texture_from_asset_path(asset_path: String) -> Texture2D:
 	var image := Image.load_from_file(absolute_asset_path)
 	if image == null or image.is_empty():
 		return null
-	return ImageTexture.create_from_image(image)
+	var image_texture := ImageTexture.create_from_image(image)
+	_prefetched_character_textures[asset_path] = image_texture
+	return image_texture
+
+
+func _begin_character_presentation_prefetch(presentation_family: int) -> void:
+	if _presentation_prefetch_pending.has(presentation_family) \
+			or bool(_presentation_prefetch_ready.get(presentation_family, false)):
+		return
+	var profile = _get_character_presentation_profile(presentation_family)
+	if profile == null:
+		return
+	var path_set: Dictionary = {}
+	_collect_texture_resource_paths(profile.get_all_texture_paths(), path_set)
+	_collect_texture_resource_paths(profile.get_layer_texture_paths(), path_set)
+	_collect_texture_resource_paths(profile.get_face_texture_paths(), path_set)
+	_collect_texture_resource_paths(profile.overlay_animation_set, path_set)
+	_collect_texture_resource_paths(profile.get_phase2_overlay_profile_config(), path_set)
+	var pending_paths: Array[String] = []
+	for path_variant in path_set.keys():
+		var asset_path := String(path_variant)
+		if ResourceLoader.has_cached(asset_path):
+			var cached_texture := ResourceLoader.get_cached_ref(asset_path) as Texture2D
+			if cached_texture != null:
+				_prefetched_character_textures[asset_path] = cached_texture
+				continue
+		var request_error := ResourceLoader.load_threaded_request(asset_path, "Texture2D", false)
+		if request_error == OK or request_error == ERR_BUSY:
+			pending_paths.append(asset_path)
+		else:
+			_presentation_prefetch_failed_paths[asset_path] = true
+			_warn_character_visual_once(
+				"prefetch_failed:%s" % asset_path,
+				"Character texture prefetch could not start: %s" % asset_path
+			)
+	_presentation_prefetch_pending[presentation_family] = pending_paths
+	_presentation_prefetch_ready[presentation_family] = pending_paths.is_empty()
+
+
+func _collect_texture_resource_paths(value: Variant, path_set: Dictionary) -> void:
+	match typeof(value):
+		TYPE_STRING:
+			var asset_path := String(value)
+			if asset_path.begins_with("res://") and ResourceLoader.exists(asset_path, "Texture2D"):
+				path_set[asset_path] = true
+		TYPE_DICTIONARY:
+			for child_value in (value as Dictionary).values():
+				_collect_texture_resource_paths(child_value, path_set)
+		TYPE_ARRAY:
+			for child_value in (value as Array):
+				_collect_texture_resource_paths(child_value, path_set)
+
+
+func _poll_character_presentation_prefetch() -> void:
+	var finalized_count := 0
+	for family_variant in _presentation_prefetch_pending.keys():
+		if finalized_count >= PRESENTATION_PREFETCH_RESOURCES_PER_FRAME:
+			return
+		var presentation_family := int(family_variant)
+		var pending_paths: Array = _presentation_prefetch_pending[presentation_family]
+		for path_index in range(pending_paths.size()):
+			var asset_path := String(pending_paths[path_index])
+			var status := ResourceLoader.load_threaded_get_status(asset_path)
+			if status == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+				continue
+			if status == ResourceLoader.THREAD_LOAD_LOADED:
+				var texture := ResourceLoader.load_threaded_get(asset_path) as Texture2D
+				if texture != null:
+					_prefetched_character_textures[asset_path] = texture
+				else:
+					_presentation_prefetch_failed_paths[asset_path] = true
+			elif ResourceLoader.has_cached(asset_path):
+				var cached_texture := ResourceLoader.get_cached_ref(asset_path) as Texture2D
+				if cached_texture != null:
+					_prefetched_character_textures[asset_path] = cached_texture
+				else:
+					_presentation_prefetch_failed_paths[asset_path] = true
+			else:
+				_presentation_prefetch_failed_paths[asset_path] = true
+				_warn_character_visual_once(
+					"prefetch_failed:%s" % asset_path,
+					"Character texture prefetch failed: %s" % asset_path
+				)
+			pending_paths.remove_at(path_index)
+			finalized_count += 1
+			break
+		_presentation_prefetch_pending[presentation_family] = pending_paths
+		if pending_paths.is_empty():
+			_presentation_prefetch_ready[presentation_family] = true
 
 func _build_overlay_motion_set() -> Dictionary:
 	var motion_set: Dictionary = {}
@@ -602,6 +704,7 @@ func _notification(what: int) -> void:
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
+	_poll_character_presentation_prefetch()
 	if not run_active:
 		_update_phase_debug_label()
 		return
@@ -635,6 +738,10 @@ static func visual_band_to_character_presentation_family(visual_band: int) -> in
 func _sync_character_presentation_family_for_visual_band(visual_band: int) -> bool:
 	var next_family := visual_band_to_character_presentation_family(visual_band)
 	if current_character_presentation_family == next_family and active_character_profile != null:
+		return false
+	if is_inside_tree() and next_family == CHARACTER_PRESENTATION_FAMILY_LATE \
+			and not bool(_presentation_prefetch_ready.get(next_family, false)):
+		_begin_character_presentation_prefetch(next_family)
 		return false
 	var next_profile = _get_character_presentation_profile(next_family)
 	if next_profile == null:
