@@ -35,23 +35,24 @@ func _run() -> void:
 
 func _test_success_routes_directly_without_reset() -> void:
 	var game = await _create_game()
-	var success_threshold := float(game.active_phase_config.success_condition.get("value", 100.0))
-	game.arousal_model.physical = 64.0
-	game.arousal_model.emotional = 62.0
-	game.arousal_model.peak = success_threshold - 0.001
+	var physical_threshold := float(game.active_phase_config.success_condition.get("physical_value", 100.0))
+	var emotional_threshold := float(game.active_phase_config.success_condition.get("emotional_value", 70.0))
+	game.arousal_model.physical = physical_threshold - 0.001
+	game.arousal_model.emotional = emotional_threshold
+	game.arousal_model.peak = 100.0
 	game.arousal_model.peak_has_activated = true
 	game._check_ending()
-	_assert(not game.ending_transition_started and game.run_active, "Peak below the success threshold ended the run.")
+	_assert(not game.ending_transition_started and game.run_active, "Physical below the success threshold ended the run.")
 
 	game.dialogue_panel.append_history("continuous history marker", "companion")
 	var history_before: Array = game.dialogue_panel.get_dialogue_history()
 	var phase_before: int = game.active_phase_index
 	var config_before = game.active_phase_config
-	var scores_before := [game.arousal_model.physical, game.arousal_model.emotional, success_threshold]
+	game.arousal_model.physical = physical_threshold
+	var scores_before := [physical_threshold, emotional_threshold, game.arousal_model.peak]
 	var endings: Array[String] = []
 	game.ending_requested.connect(func(ending_type: String) -> void: endings.append(ending_type))
 	game.phase_transition_overlay = null
-	game.arousal_model.peak = success_threshold
 	game._check_ending()
 
 	_assert(endings == [CONFIG.SUCCESS_ENDING], "Threshold success did not route directly to the final success ending: %s" % str(endings))
@@ -114,6 +115,11 @@ func _test_continuous_band_progression_and_dialogue_pool() -> void:
 	game.arousal_model.physical = 49.0
 	game._sync_physiological_visual_band()
 	_assert(game.current_visual_band == 2, "Band 3 to 2 reversal failed.")
+	_assert(game._get_active_phase_id() == "phase_1", "Physical 49 did not return to Phase 1.")
+	game.arousal_model.physical = 50.0
+	game._sync_physiological_visual_band()
+	_assert(game.current_visual_band == 3, "Physical 50 did not enter the first Phase 2 band.")
+	_assert(game._get_active_phase_id() == "phase_2", "Physical 50 did not enter Phase 2.")
 	_assert(game.psychological_dialogue_controller.entries == dialogue_entries_before, "Band-family crossing reloaded/changed the psychological pool.")
 	_assert(game.physiological_dialogue_controller.entries == physiological_entries_before, "Band-family crossing reloaded/changed the physiological pool.")
 	_assert(_capture_continuous_state(game, spots_before) == preserved_before, "Band-family progression reset continuous history/dialogue/timers/notes/mode/BGM/expression state.")
@@ -123,7 +129,8 @@ func _test_continuous_band_progression_and_dialogue_pool() -> void:
 	game.phase_transition_overlay = null
 	var endings: Array[String] = []
 	game.ending_requested.connect(func(ending_type: String) -> void: endings.append(ending_type))
-	game.arousal_model.peak = float(game.active_phase_config.success_condition.get("value", 100.0))
+	game.arousal_model.physical = float(game.active_phase_config.success_condition.get("physical_value", 100.0))
+	game.arousal_model.emotional = float(game.active_phase_config.success_condition.get("emotional_value", 70.0))
 	game._check_ending()
 	_assert(endings == [CONFIG.SUCCESS_ENDING], "Deterministic continuous flow did not finish at final success.")
 	await _free_game(game)
@@ -292,9 +299,9 @@ func _test_explicit_new_run_reset() -> void:
 	game.request_character_expression(COMPATIBILITY_SOURCE, PROFILE_SCRIPT.ExpressionState.NEGATIVE)
 	game.force_spawn_spot()
 	game.reset_run()
-	_assert([game.arousal_model.physical, game.arousal_model.emotional, game.arousal_model.peak] == [40.0, 40.0, 0.0], "Explicit new run did not restore configured starting scores.")
+	_assert([game.arousal_model.physical, game.arousal_model.emotional, game.arousal_model.peak] == [20.0, 20.0, 0.0], "Explicit new run did not restore the Phase 1 starting scores.")
 	_assert(not game.arousal_model.peak_has_activated, "Explicit new run retained peak activation.")
-	_assert(game.current_visual_band == 2 and game.current_character_presentation_family == 0, "Explicit new run did not derive early presentation from starting physical.")
+	_assert(game.current_visual_band == 1 and game.current_character_presentation_family == 0, "Explicit new run did not derive early presentation from starting physical.")
 	_assert(game.interaction_mode == PSYCHOLOGICAL_MODE, "Explicit new run did not restore psychological interaction mode.")
 	_assert(not game.get_character_expression_request_state().requests.has(COMPATIBILITY_SOURCE), "Explicit new run retained expression requests.")
 	_assert(not _history_contains(game.dialogue_panel.get_dialogue_history(), "must be cleared"), "Explicit new run retained prior dialogue history.")

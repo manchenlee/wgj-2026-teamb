@@ -4,6 +4,7 @@ extends RefCounted
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
 var phase_id: String
+var entry_physical_threshold: float
 var starting_physical_value: float
 var starting_emotional_value: float
 var starting_peak_value: float
@@ -65,12 +66,13 @@ var physiological_dialogue_data_source: String
 
 func _init(values: Dictionary = {}) -> void:
 	phase_id = String(values.get("phase_id", "phase"))
-	starting_physical_value = float(values.get("starting_physical_value", 40.0))
-	starting_emotional_value = float(values.get("starting_emotional_value", 40.0))
+	entry_physical_threshold = float(values.get("entry_physical_threshold", 0.0))
+	starting_physical_value = float(values.get("starting_physical_value", 0.0))
+	starting_emotional_value = float(values.get("starting_emotional_value", 0.0))
 	starting_peak_value = float(values.get("starting_peak_value", 0.0))
-	physical_decay_rate = float(values.get("physical_decay_rate", 2.0))
+	physical_decay_rate = float(values.get("physical_decay_rate", 1.0))
 	emotional_decay_rate = float(values.get("emotional_decay_rate", 0.5))
-	physical_activity_grace_seconds = float(values.get("physical_activity_grace_seconds", 1.4))
+	physical_activity_grace_seconds = float(values.get("physical_activity_grace_seconds", 2.8))
 	emotional_activity_grace_seconds = float(values.get("emotional_activity_grace_seconds", 2.8))
 
 	# Interaction Spot (Physical Arousal) — new system
@@ -99,10 +101,22 @@ func _init(values: Dictionary = {}) -> void:
 	next_prompt_reveal_delay = float(values.get("next_prompt_reveal_delay", 0.9))
 	prompt_spawn_delay_min = float(values.get("prompt_spawn_delay_min", 1.1))
 	prompt_spawn_delay_max = float(values.get("prompt_spawn_delay_max", 1.5))
-	direction_reward_values = values.get("direction_reward_values", {}).duplicate(true)
-	direction_penalty_values = values.get("direction_penalty_values", {}).duplicate(true)
-	choice_reward_values = values.get("choice_reward_values", {}).duplicate(true)
-	choice_penalty_values = values.get("choice_penalty_values", {}).duplicate(true)
+	direction_reward_values = values.get(
+		"direction_reward_values",
+		{"correct_input": 1.0, "sequence_complete_bonus": 5.0}
+	).duplicate(true)
+	direction_penalty_values = values.get(
+		"direction_penalty_values",
+		{"wrong_input": 2.0}
+	).duplicate(true)
+	choice_reward_values = values.get(
+		"choice_reward_values",
+		{"good": 10.0, "neutral": 3.0}
+	).duplicate(true)
+	choice_penalty_values = values.get(
+		"choice_penalty_values",
+		{"bad": 5.0}
+	).duplicate(true)
 	choice_timeout_seconds = float(values.get("choice_timeout_seconds", 5.0))
 	feedback_message_interval_min = float(values.get("feedback_message_interval_min", 2.0))
 	feedback_message_interval_max = float(values.get("feedback_message_interval_max", 4.0))
@@ -111,8 +125,8 @@ func _init(values: Dictionary = {}) -> void:
 	feedback_emotional_low_threshold = float(values.get("feedback_emotional_low_threshold", 38.0))
 	feedback_emotional_high_threshold = float(values.get("feedback_emotional_high_threshold", 52.0))
 	minimum_active_threshold = float(values.get("minimum_active_threshold", 20.0))
-	overall_medium_threshold = float(values.get("overall_medium_threshold", minimum_active_threshold))
-	overall_high_threshold = float(values.get("overall_high_threshold", feedback_emotional_high_threshold))
+	overall_medium_threshold = float(values.get("overall_medium_threshold", 15.0))
+	overall_high_threshold = float(values.get("overall_high_threshold", 45.0))
 	overall_peak_threshold = float(values.get("overall_peak_threshold", 100.0))
 	peak_balance_best_diff = float(values.get("peak_balance_best_diff", 5.0))
 	peak_balance_ok_diff = float(values.get("peak_balance_ok_diff", 15.0))
@@ -123,7 +137,14 @@ func _init(values: Dictionary = {}) -> void:
 	))
 	peak_loss_rate_imbalanced = float(values.get("peak_loss_rate_imbalanced", 2.0))
 	peak_zero_value_extra_loss_rate = float(values.get("peak_zero_value_extra_loss_rate", 3.0))
-	success_condition = values.get("success_condition", {"type": "peak_at_or_above", "value": overall_peak_threshold}).duplicate(true)
+	success_condition = values.get(
+		"success_condition",
+		{
+			"type": "physical_and_emotional_at_or_above",
+			"physical_value": Config.MAX_VALUE,
+			"emotional_value": 70.0
+		}
+	).duplicate(true)
 	failure_thresholds = values.get(
 		"failure_thresholds",
 		{
@@ -134,5 +155,11 @@ func _init(values: Dictionary = {}) -> void:
 			"emotional_counterpart_below": 70.0
 		}
 	).duplicate(true)
-	psychological_dialogue_data_source = String(values.get("psychological_dialogue_data_source", ""))
-	physiological_dialogue_data_source = String(values.get("physiological_dialogue_data_source", ""))
+	psychological_dialogue_data_source = String(values.get(
+		"psychological_dialogue_data_source",
+		"res://assets/dialogue/feedback.json"
+	))
+	physiological_dialogue_data_source = String(values.get(
+		"physiological_dialogue_data_source",
+		"res://assets/dialogue/physiological_feedback.json"
+	))

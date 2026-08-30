@@ -202,7 +202,7 @@ func _build_phase_sequence() -> void:
 		push_error("GameSessionController: phase sequence is empty.")
 
 func _get_initial_phase_index() -> int:
-	if debug_start_phase_id.is_empty():
+	if debug_start_phase_id.is_empty() or debug_start_phase_id == "phase_2":
 		return 0
 	for index in range(phase_sequence.size()):
 		if String(phase_sequence[index].phase_id) == debug_start_phase_id:
@@ -913,23 +913,36 @@ func _sync_interaction_mode_state() -> void:
 
 func reset_run() -> void:
 	clear_all_character_expression_requests()
+	if debug_start_phase_id == "phase_2":
+		_reset_run_at_phase_2_threshold()
+		return
 	_reset_run_for_phase_index(_get_initial_phase_index())
 
 func start_direct_in_phase_2() -> void:
 	clear_all_character_expression_requests()
-	_reset_run_for_phase_id("phase_2")
+	_reset_run_at_phase_2_threshold()
 
 func start_in_phase_for_debug(phase_id: String) -> void:
 	clear_all_character_expression_requests()
 	_reset_run_for_phase_id(phase_id)
 
 func _reset_run_for_phase_id(phase_id: String) -> void:
+	if phase_id == "phase_2":
+		_reset_run_at_phase_2_threshold()
+		return
 	for index in range(phase_sequence.size()):
 		if String(phase_sequence[index].phase_id) == phase_id:
 			_reset_run_for_phase_index(index)
 			return
 	push_warning("Unknown phase id '%s' for debug start." % phase_id)
 	_reset_run_for_phase_index(0)
+
+
+func _reset_run_at_phase_2_threshold() -> void:
+	_reset_run_for_phase_index(0)
+	arousal_model.physical = _get_phase_2_entry_physical_threshold()
+	_sync_physiological_visual_band(false)
+	_update_presentation()
 
 func _reset_run_for_phase_index(phase_index: int) -> void:
 	_reset_physiological_expression_reaction()
@@ -1520,11 +1533,18 @@ func _get_phase_value(property_name: String, fallback: Variant) -> Variant:
 	return fallback
 
 func _get_active_phase_id() -> String:
-	if active_phase_config == null:
-		return "phase_unknown"
-	return String(active_phase_config.phase_id)
+	if arousal_model.physical >= _get_phase_2_entry_physical_threshold():
+		return "phase_2"
+	return "phase_1"
+
+
+func _get_phase_2_entry_physical_threshold() -> float:
+	for phase_config in phase_sequence:
+		if String(phase_config.phase_id) == "phase_2":
+			return float(phase_config.entry_physical_threshold)
+	return 50.0
 
 func _on_phase_2_skip_pressed() -> void:
 	if _get_active_phase_id() == "phase_2":
 		return
-	_reset_run_for_phase_id("phase_2")
+	_reset_run_at_phase_2_threshold()

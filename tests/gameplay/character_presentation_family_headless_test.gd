@@ -17,7 +17,7 @@ func _initialize() -> void:
 func _run() -> void:
 	_test_band_family_mapping_and_rebuild_guard()
 	await _test_live_family_crossing_preserves_gameplay_state()
-	await _test_reset_and_legacy_phase_compatibility()
+	await _test_reset_and_phase_2_threshold_start()
 	if _failures.is_empty():
 		print("Character presentation-family headless tests passed.")
 		quit(0)
@@ -63,7 +63,7 @@ func _test_live_family_crossing_preserves_gameplay_state() -> void:
 	await process_frame
 	await _wait_for_late_presentation_prefetch(game)
 
-	_assert(game.current_visual_band == 2, "Initial physical score did not synchronize visual band 2.")
+	_assert(game.current_visual_band == 1, "Initial Phase 1 physical score did not synchronize visual band 1.")
 	_assert(game.current_character_presentation_family == EARLY_FAMILY, "Initialization did not silently select the early family.")
 	_assert(game.active_character_profile.profile_id == "phase_1_profile", "Initialization selected the wrong profile.")
 
@@ -126,7 +126,7 @@ func _test_live_family_crossing_preserves_gameplay_state() -> void:
 	await process_frame
 
 
-func _test_reset_and_legacy_phase_compatibility() -> void:
+func _test_reset_and_phase_2_threshold_start() -> void:
 	var game = GAME_SCREEN_SCENE.instantiate()
 	root.add_child(game)
 	await process_frame
@@ -135,14 +135,15 @@ func _test_reset_and_legacy_phase_compatibility() -> void:
 	game._sync_physiological_visual_band(false)
 	_assert(game.current_character_presentation_family == LATE_FAMILY, "Reset setup did not select the late family.")
 	game.reset_run()
-	_assert(game.current_visual_band == 2, "Reset did not derive band 2 from starting physical 40.")
+	_assert(game.current_visual_band == 1, "Reset did not derive band 1 from the Phase 1 starting physical 20.")
 	_assert(game.current_character_presentation_family == EARLY_FAMILY, "Reset did not re-synchronize the early family from physical score.")
 
 	game.start_direct_in_phase_2()
-	_assert(game.active_phase_index == 1, "Legacy direct Phase 2 start no longer selected gameplay Phase 2.")
-	_assert(game.current_visual_band == 2, "Legacy Phase 2 reset did not retain the configured physical-score band.")
-	_assert(game.current_character_presentation_family == EARLY_FAMILY, "Gameplay Phase 2 incorrectly overrode the band-derived presentation family.")
-	_assert(game.active_character_profile.profile_id == "phase_1_profile", "Gameplay phase still owns the character profile after reset.")
+	_assert(game.active_phase_index == 0, "Direct Phase 2 start replaced the shared Phase 1 gameplay config.")
+	_assert(game.arousal_model.physical == 50.0, "Direct Phase 2 start did not use the physiological entry threshold.")
+	_assert(game.current_visual_band == 3, "Direct Phase 2 start did not reach the first late visual band.")
+	_assert(game.current_character_presentation_family == LATE_FAMILY, "Direct Phase 2 start did not select the late presentation family.")
+	_assert(game.active_character_profile.profile_id == "phase_2_profile", "Direct Phase 2 start did not apply the Phase 2 profile.")
 	game.queue_free()
 	await process_frame
 

@@ -8,7 +8,11 @@ static func evaluate(
 		phase_config = null,
 		use_physical_for_depletion_failure: bool = Config.USE_PHYSICAL_FOR_DEPLETION_FAILURE
 ) -> String:
-	var success_condition := {"type": "peak_at_or_above", "value": Config.MAX_VALUE}
+	var success_condition := {
+		"type": "physical_and_emotional_at_or_above",
+		"physical_value": Config.MAX_VALUE,
+		"emotional_value": 70.0
+	}
 	var failure_thresholds := {
 		"peak_depletion_requires_activation": true,
 		"physical_cap": Config.MAX_VALUE,
@@ -20,7 +24,9 @@ static func evaluate(
 		success_condition = phase_config.success_condition
 		failure_thresholds = phase_config.failure_thresholds
 
-	if str(success_condition.get("type", "")) == "peak_at_or_above" and model.peak >= float(success_condition.get("value", Config.MAX_VALUE)):
+	if str(success_condition.get("type", "")) == "physical_and_emotional_at_or_above" \
+			and model.physical >= float(success_condition.get("physical_value", Config.MAX_VALUE)) \
+			and model.emotional >= float(success_condition.get("emotional_value", 70.0)):
 		return Config.SUCCESS_ENDING
 	var depletion_failure: bool = model.physical <= 0.0 if use_physical_for_depletion_failure else (
 		bool(failure_thresholds.get("peak_depletion_requires_activation", true))
