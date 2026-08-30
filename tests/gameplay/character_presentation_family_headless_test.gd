@@ -103,6 +103,12 @@ func _test_live_family_crossing_preserves_gameplay_state() -> void:
 	_assert(game.current_visual_band == 3, "The upward crossing did not reach band 3.")
 	_assert(game.current_character_presentation_family == LATE_FAMILY, "Band 3 did not select the late family.")
 	_assert(game.active_character_profile.profile_id == "phase_2_profile", "Band 3 did not apply the existing Phase 2 profile.")
+	_assert(not game.overlay_animator._tracks.is_empty(), "Band 3 did not create Phase 2 overlay tracks.")
+	for track_variant in game.overlay_animator._tracks.values():
+		var track: Dictionary = track_variant
+		var layer := track.get("layer") as TextureRect
+		_assert(String(track.get("mode", "")) == "idle", "A Phase 2 overlay track was not started after switching.")
+		_assert(layer != null and layer.visible and layer.texture != null, "A Phase 2 overlay track remained hidden after switching.")
 	_assert(_capture_gameplay_state(game) == state_before, "A presentation-family crossing mutated gameplay/dialogue/choice state.")
 	_assert(_capture_note_state(active_spots) == note_state_before, "A presentation-family crossing moved, recreated, or reset an active note.")
 	_assert(_capture_timer_state(game) == timer_state_before, "A presentation-family crossing changed runtime timer state.")

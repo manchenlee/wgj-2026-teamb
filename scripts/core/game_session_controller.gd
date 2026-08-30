@@ -755,6 +755,10 @@ func _sync_character_presentation_family_for_visual_band(visual_band: int) -> bo
 	_cache_character_visual_textures()
 	overlay_motion_set = _build_overlay_motion_set()
 	_apply_character_presentation_profile()
+	# set_motion_set() rebuilds every overlay track in a stopped and hidden state.
+	# A runtime family switch must restart playback after the new tracks exist.
+	if not Engine.is_editor_hint() and overlay_animator != null and run_active:
+		overlay_animator.play_idle()
 	_apply_character_alignment()
 	if not Engine.is_editor_hint() and dialogue_panel != null:
 		dialogue_panel.refresh_active_dialogue_position()
