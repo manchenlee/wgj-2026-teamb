@@ -4,12 +4,12 @@ func _init() -> void:
 	super._init(
 		{
 			"phase_id": "phase_1",
-			"starting_physical_value": 40.0,
-			"starting_emotional_value": 40.0,
+			"starting_physical_value": 20.0,
+			"starting_emotional_value": 20.0,
 			"starting_peak_value": 0.0,
-			"physical_decay_rate": 2.0,
+			"physical_decay_rate": 1.0,
 			"emotional_decay_rate": 0.5,
-			"physical_activity_grace_seconds": 1.4,
+			"physical_activity_grace_seconds": 2.8,
 			"emotional_activity_grace_seconds": 2.8,
 			# Interaction Spot — values reference GameConfig so editing GameConfig.gd takes effect immediately.
 			"click_note_lifetime":          Config.CLICK_NOTE_LIFETIME,
