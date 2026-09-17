@@ -322,7 +322,14 @@ func _test_explicit_new_run_reset() -> void:
 	game.set_interaction_mode(PHYSIOLOGICAL_MODE)
 	game.dialogue_panel.append_history("must be cleared", "companion")
 	game.request_character_expression(COMPATIBILITY_SOURCE, PROFILE_SCRIPT.ExpressionState.NEGATIVE)
-	game.force_spawn_spot()
+	game.spot_manager.force_spawn_click_note()
+	game.spot_manager.force_spawn_click_note()
+	if game.spot_manager._active_spots.size() != 2:
+		_assert(false, "Explicit reset stale-signal test could not create two active notes.")
+		await _free_game(game)
+		return
+	var stale_completion_note := game.spot_manager._active_spots[0] as InteractionNote
+	var stale_expiration_note := game.spot_manager._active_spots[1] as InteractionNote
 	game.reset_run()
 	_assert([game.arousal_model.physical, game.arousal_model.emotional, game.arousal_model.peak] == [20.0, 20.0, 0.0], "Explicit new run did not restore the Phase 1 starting scores.")
 	_assert(not game.arousal_model.peak_has_activated, "Explicit new run retained peak activation.")
@@ -331,6 +338,30 @@ func _test_explicit_new_run_reset() -> void:
 	_assert(not game.get_character_expression_request_state().requests.has(COMPATIBILITY_SOURCE), "Explicit new run retained expression requests.")
 	_assert(not _history_contains(game.dialogue_panel.get_dialogue_history(), "must be cleared"), "Explicit new run retained prior dialogue history.")
 	_assert(game.spot_manager._active_spots.is_empty(), "Explicit new run retained active interaction notes.")
+
+	var reset_values := [game.arousal_model.physical, game.arousal_model.emotional, game.arousal_model.peak]
+	var endings: Array[String] = []
+	var completed_outcomes: Array[bool] = []
+	var failed_outcomes: Array[Dictionary] = []
+	var telemetry_updates: Array[Dictionary] = []
+	game.ending_requested.connect(func(ending_type: String) -> void: endings.append(ending_type))
+	game.spot_manager.physiological_spot_completed.connect(func() -> void: completed_outcomes.append(true))
+	game.spot_manager.physiological_spot_failed.connect(
+		func(progress_ratio: float, penalty: float) -> void:
+			failed_outcomes.append({"progress_ratio": progress_ratio, "penalty": penalty})
+	)
+	game.spot_manager.spot_telemetry_updated.connect(
+		func(telemetry: Dictionary) -> void: telemetry_updates.append(telemetry)
+	)
+	stale_completion_note.force_complete()
+	stale_expiration_note.force_expire()
+
+	_assert([game.arousal_model.physical, game.arousal_model.emotional, game.arousal_model.peak] == reset_values, "A stale pre-reset note changed reset-run arousal values.")
+	_assert(game.current_combo == 0 and game.max_combo == 0, "A stale pre-reset note changed reset-run combo state.")
+	_assert(game.run_active and not game.ending_transition_started and endings.is_empty(), "A stale pre-reset note changed reset-run failure/ending state.")
+	_assert(game.spot_manager._active_spots.is_empty(), "A stale pre-reset note re-entered active-note state.")
+	_assert(completed_outcomes.is_empty() and failed_outcomes.is_empty(), "A stale pre-reset note emitted a manager completion/expiration outcome.")
+	_assert(telemetry_updates.is_empty() and game._last_spot_telemetry.is_empty(), "A stale pre-reset note recorded completion/expiration telemetry.")
 	await _free_game(game)
 
 

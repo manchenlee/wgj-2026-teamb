@@ -17,6 +17,7 @@ func _initialize() -> void:
 	_test_minimum_active_threshold()
 	_test_negative_loss_is_not_level_scaled()
 	_test_zero_score_penalties()
+	_test_physical_and_emotional_clamping()
 	_test_peak_clamping_and_activation()
 	_test_delta_integration()
 	_test_phase_formula_parity()
@@ -103,6 +104,21 @@ func _test_zero_score_penalties() -> void:
 	one_zero_model.peak_has_activated = true
 	one_zero_model.update_peak(1.0)
 	_assert_approx(one_zero_model.peak, 7.0, EPSILON, "One zero-score penalty")
+
+
+func _test_physical_and_emotional_clamping() -> void:
+	var model = AROUSAL_MODEL_SCRIPT.new()
+	model.physical = 90.0
+	model.apply_physical(20.0)
+	_assert_approx(model.physical, 100.0, EPSILON, "Upper physical clamp")
+	model.apply_physical(-120.0)
+	_assert_approx(model.physical, 0.0, EPSILON, "Lower physical clamp")
+
+	model.emotional = 90.0
+	model.apply_emotional(20.0)
+	_assert_approx(model.emotional, 100.0, EPSILON, "Upper emotional clamp")
+	model.apply_emotional(-120.0)
+	_assert_approx(model.emotional, 0.0, EPSILON, "Lower emotional clamp")
 
 
 func _test_peak_clamping_and_activation() -> void:
