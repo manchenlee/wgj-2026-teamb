@@ -2,6 +2,9 @@ class_name SlideNote
 extends InteractionNote
 
 const HEART_TEXTURE := preload("res://assets/art/ui/gameplay/img_heart.png")
+const SLIDE_COLOR := Color(1.0, 0.42, 0.47, 0.88)
+const SLIDE_COMPLETED_COLOR := Color(0.93, 0.29, 0.42, 0.96)
+const TENTACLE_VISUAL_SIZE := Vector2(180.0, 180.0)
 
 var checkpoint_radius: float = 40.0
 var checkpoints: PackedVector2Array = PackedVector2Array()
@@ -18,6 +21,7 @@ var _active_touch_index: int = -1
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	super._ready()
+	_position_tentacle_at_chain_end()
 
 
 func setup(config: Dictionary) -> void:
@@ -28,6 +32,8 @@ func setup(config: Dictionary) -> void:
 		checkpoints = configured_checkpoints
 	elif configured_checkpoints is Array:
 		checkpoints = PackedVector2Array(configured_checkpoints)
+	_position_tentacle_at_chain_end()
+	queue_redraw()
 
 
 func get_progress_ratio() -> float:
@@ -88,25 +94,49 @@ func _draw() -> void:
 
 	for index in range(checkpoints.size() - 1):
 		var segment_completed := _armed and index < _next_checkpoint_index - 1
-		var line_color := Color(1.0, 0.55, 0.18, 0.95) if segment_completed else Color(1.0, 0.88, 0.42, 0.42)
-		draw_line(checkpoints[index], checkpoints[index + 1], line_color, 6.0, true)
+		var line_color := SLIDE_COMPLETED_COLOR if segment_completed else Color(1.0, 0.32, 0.36, 0.72)
+		draw_line(checkpoints[index], checkpoints[index + 1], line_color, 18.0, true)
 
 	var target_index := _get_target_index()
-	for index in range(checkpoints.size()):
+	# The tentacle is the physical end-cap of the chain, so only the preceding
+	# checkpoints use circular slide markers.
+	for index in range(maxi(checkpoints.size() - 1, 0)):
 		var is_start := index == 0
 		var is_completed := _armed if is_start else _armed and index < _next_checkpoint_index
 		var is_current := index == target_index
-		var fill_color := Color(0.28, 0.82, 0.46, 0.68) if is_completed else Color(1.0, 0.82, 0.16, 0.30)
-		var outline_color := Color(0.55, 1.0, 0.7, 1.0) if is_completed else Color(1.0, 0.9, 0.4, 0.72)
+		var fill_color := SLIDE_COMPLETED_COLOR if is_completed else SLIDE_COLOR
+		var outline_color := Color(1.0, 0.85, 0.78, 1.0)
 		if is_current:
-			fill_color = Color(1.0, 0.48, 0.1, 0.68)
+			fill_color = Color(1.0, 0.48, 0.52, 0.96)
 			outline_color = Color(1.0, 1.0, 1.0, 1.0)
 		draw_circle(checkpoints[index], checkpoint_radius, fill_color)
 		draw_arc(checkpoints[index], checkpoint_radius, 0.0, TAU, 40, outline_color, 4.0, true)
-		if is_start:
-			draw_circle(checkpoints[index], checkpoint_radius * 0.28, outline_color)
+		var font := ThemeDB.fallback_font
+		var font_size := maxi(16, int(round(checkpoint_radius * 0.58)))
+		var label_size := font.get_string_size("slide", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size)
+		draw_string(
+			font,
+			checkpoints[index] + Vector2(-label_size.x * 0.5, label_size.y * 0.34),
+			"slide",
+			HORIZONTAL_ALIGNMENT_LEFT,
+			-1.0,
+			font_size,
+			Color.WHITE
+		)
 
 	_draw_approach_circle()
+
+
+func _position_tentacle_at_chain_end() -> void:
+	var tentacle_visual := get_node_or_null("TentacleVisual") as TextureRect
+	if tentacle_visual == null:
+		return
+	tentacle_visual.size = TENTACLE_VISUAL_SIZE
+	if checkpoints.is_empty():
+		tentacle_visual.visible = false
+		return
+	tentacle_visual.visible = true
+	tentacle_visual.position = checkpoints[checkpoints.size() - 1] - TENTACLE_VISUAL_SIZE * 0.5
 
 
 func _process_pointer_move(new_pos: Vector2) -> void:

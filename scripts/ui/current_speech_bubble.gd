@@ -50,10 +50,9 @@ func _refresh_layout() -> void:
 	text_label.size.x = label_width
 	text_label.update_minimum_size()
 
-	var label_minimum := text_label.get_combined_minimum_size()
 	var resolved_size := Vector2(
-		maxf(minimum_bubble_size.x, minf(max_width, label_minimum.x + horizontal_margin)),
-		maxf(minimum_bubble_size.y, label_minimum.y + vertical_margin)
+		maxf(minimum_bubble_size.x, max_width),
+		minimum_bubble_size.y
 	)
 	custom_minimum_size = resolved_size
 	size = resolved_size

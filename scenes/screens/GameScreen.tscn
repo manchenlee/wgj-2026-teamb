@@ -864,9 +864,10 @@ color = Color(0.98, 0.66, 0.2, 0.18)
 
 [node name="CurrentSpeechBubble" parent="ConversationViewport" unique_id=2114528285 instance=ExtResource("14_speech_bubble")]
 visible = false
-custom_minimum_size = Vector2(420, 72)
+custom_minimum_size = Vector2(1000, 247)
 layout_mode = 0
-offset_bottom = 72.0
+offset_right = 1000.0
+offset_bottom = 247.0
 
 [node name="ChoiceLayer" type="Control" parent="." unique_id=1469734437]
 z_index = 5

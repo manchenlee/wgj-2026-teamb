@@ -86,7 +86,7 @@ func _draw_approach_circle() -> void:
 		0.0,
 		TAU,
 		48,
-		Color(1.0, 1.0, 1.0, 0.9),
+		Color(1.0, 0.32, 0.36, 0.92),
 		4.0,
 		true
 	)

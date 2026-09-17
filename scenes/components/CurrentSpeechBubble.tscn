@@ -5,16 +5,16 @@
 [ext_resource type="FontFile" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="3_font"]
 
 [node name="CurrentSpeechBubble" type="Control"]
-custom_minimum_size = Vector2(360, 96)
+custom_minimum_size = Vector2(1000, 247)
 layout_mode = 3
 anchors_preset = 0
-offset_right = 760.0
-offset_bottom = 188.0
+offset_right = 1000.0
+offset_bottom = 247.0
 mouse_filter = 2
 script = ExtResource("1_script")
-max_width = 760.0
-minimum_bubble_size = Vector2(360, 96)
-text_margins = Vector4(38, 22, 38, 24)
+max_width = 1000.0
+minimum_bubble_size = Vector2(1000, 247)
+text_margins = Vector4(50, 34, 50, 38)
 
 [node name="BubbleTexture" type="TextureRect" parent="."]
 layout_mode = 1
@@ -29,16 +29,16 @@ expand_mode = 1
 
 [node name="SpeakerLabel" type="Label" parent="."]
 layout_mode = 0
-offset_left = 2.0
-offset_top = -48.0
+offset_left = 0.0
+offset_top = -58.0
 offset_right = 242.0
-offset_bottom = -4.0
+offset_bottom = -8.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0.12, 0.04, 0.03, 0.9)
 theme_override_constants/outline_size = 4
 theme_override_fonts/font = ExtResource("3_font")
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 30
 text = "小提琴"
 vertical_alignment = 1
 
@@ -50,10 +50,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/margin_left = 38
-theme_override_constants/margin_top = 22
-theme_override_constants/margin_right = 38
-theme_override_constants/margin_bottom = 24
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 34
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 38
 
 [node name="TextLabel" type="Label" parent="MarginContainer"]
 layout_mode = 2
@@ -62,7 +62,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
 theme_override_constants/outline_size = 0
 theme_override_fonts/font = ExtResource("3_font")
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "Dialogue"
 horizontal_alignment = 1
 vertical_alignment = 1

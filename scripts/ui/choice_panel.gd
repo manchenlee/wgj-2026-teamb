@@ -5,12 +5,12 @@ signal choice_selected(choice_quality: String, choice_text: String)
 
 const CHOICE_ENABLED_MODULATE := Color(1.0, 1.0, 1.0, 1.0)
 const CHOICE_DISABLED_MODULATE := Color(0.42, 0.42, 0.42, 1.0)
-const BUTTON_WIDTH := 520.0
-const BUTTON_MIN_HEIGHT := 101.0
-const BUTTON_TEXT_MARGIN_LEFT := 26.0
-const BUTTON_TEXT_MARGIN_TOP := 10.0
-const BUTTON_TEXT_MARGIN_RIGHT := 20.0
-const BUTTON_TEXT_MARGIN_BOTTOM := 10.0
+const BUTTON_WIDTH := 720.0
+const BUTTON_MIN_HEIGHT := 140.0
+const BUTTON_TEXT_MARGIN_LEFT := 34.0
+const BUTTON_TEXT_MARGIN_TOP := 18.0
+const BUTTON_TEXT_MARGIN_RIGHT := 34.0
+const BUTTON_TEXT_MARGIN_BOTTOM := 18.0
 const REQUIRED_ANCHORS_PER_SIDE := 4
 
 @export var use_fixed_choice_anchor_seed: bool = false
@@ -209,11 +209,7 @@ func _resize_choice_button(button: TextureButton, label: Label) -> void:
 	label.position = Vector2(BUTTON_TEXT_MARGIN_LEFT, BUTTON_TEXT_MARGIN_TOP)
 	label.size.x = label.custom_minimum_size.x
 	label.update_minimum_size()
-	var label_minimum := label.get_combined_minimum_size()
-	var button_height := maxf(
-		BUTTON_MIN_HEIGHT,
-		label_minimum.y + BUTTON_TEXT_MARGIN_TOP + BUTTON_TEXT_MARGIN_BOTTOM
-	)
+	var button_height := BUTTON_MIN_HEIGHT
 	button.custom_minimum_size = Vector2(BUTTON_WIDTH, button_height)
 	button.size = Vector2(BUTTON_WIDTH, button_height)
 	label.size = Vector2(
@@ -226,7 +222,7 @@ func _attach_left_button_to_anchor(button: TextureButton, anchor: Control) -> vo
 		return
 	button.position = Vector2(
 		maxf(20.0, size.x - button.size.x - 28.0),
-		clampf(size.y * 0.53, 160.0, size.y - button.size.y * 2.0 - 52.0)
+		clampf(size.y * 0.48, 160.0, size.y - button.size.y * 2.0 - 40.0)
 	)
 
 func _attach_right_button_to_anchor(button: TextureButton, anchor: Control) -> void:
@@ -234,7 +230,7 @@ func _attach_right_button_to_anchor(button: TextureButton, anchor: Control) -> v
 		return
 	button.position = Vector2(
 		maxf(20.0, size.x - button.size.x - 28.0),
-		clampf(size.y * 0.53 + button.size.y + 12.0, 273.0, size.y - button.size.y - 28.0)
+		clampf(size.y * 0.48 + button.size.y - 8.0, 273.0, size.y - button.size.y - 28.0)
 	)
 
 func _anchor_center_in_panel_space(anchor: Control) -> Vector2:

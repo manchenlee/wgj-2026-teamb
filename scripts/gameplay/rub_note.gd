@@ -21,6 +21,8 @@ func _ready() -> void:
 	super._ready()
 	var friction_hint := get_node_or_null("FrictionHint") as TextureRect
 	if friction_hint != null:
+		friction_hint.size = Vector2.ONE * target_radius * 0.95
+		friction_hint.position = target_center - friction_hint.size * 0.5
 		var rest_x := friction_hint.position.x
 		var tween := friction_hint.create_tween().set_loops()
 		tween.tween_property(friction_hint, "position:x", rest_x + 12.0, 0.42).set_trans(Tween.TRANS_SINE)
@@ -34,6 +36,11 @@ func setup(config: Dictionary) -> void:
 	max_delta_per_event = float(config.get("max_delta_per_event", 24.0))
 	target_center = config.get("target_center", Vector2(212.0, 212.0)) as Vector2
 	target_radius = float(config.get("target_radius", 104.0))
+	if is_node_ready():
+		var friction_hint := get_node_or_null("FrictionHint") as TextureRect
+		if friction_hint != null:
+			friction_hint.size = Vector2.ONE * target_radius * 0.95
+			friction_hint.position = target_center - friction_hint.size * 0.5
 
 
 func get_progress_ratio() -> float:
@@ -94,18 +101,22 @@ func _draw() -> void:
 	var progress := get_progress_ratio()
 	var target_scale := lerpf(1.0, 0.72, progress)
 	var draw_radius := target_radius * target_scale
-	var target_color := Color(
-		lerpf(1.0, 0.9, progress),
-		lerpf(0.85, 0.25, progress),
-		lerpf(0.1, 0.05, progress),
-		lerpf(1.0, 0.75, progress)
-	)
+	var target_color := Color(1.0, 0.42, 0.47, lerpf(0.90, 0.68, progress))
 	draw_circle(
 		target_center,
 		draw_radius,
-		Color(target_color.r, target_color.g, target_color.b, target_color.a * 0.55)
+		Color(target_color.r, target_color.g, target_color.b, target_color.a * 0.88)
 	)
-	draw_arc(target_center, draw_radius, 0.0, TAU, 48, target_color, 3.0, true)
+	draw_arc(
+		target_center,
+		draw_radius,
+		0.0,
+		TAU,
+		48,
+		Color(1.0, 0.86, 0.78, 1.0),
+		5.0,
+		true
+	)
 	_draw_approach_circle()
 
 
