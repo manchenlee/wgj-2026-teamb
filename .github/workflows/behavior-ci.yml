@@ -1,0 +1,49 @@
+name: Behavior CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  headless-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.6.0
+          use-dotnet: false
+          include-templates: false
+
+      - name: Import project resources
+        run: godot --headless --path . --import
+
+      - name: Run headless behavior tests
+        shell: bash
+        run: |
+          failed=0
+          mapfile -t tests < <(
+            find tests/gameplay tests/ui -type f -name '*_headless_test.gd' -print | sort
+          )
+
+          if (( ${#tests[@]} == 0 )); then
+            echo "No headless tests found."
+            exit 1
+          fi
+
+          for test_file in "${tests[@]}"; do
+            echo "Running ${test_file}"
+            if ! godot --headless --path . --script "res://${test_file}"; then
+              failed=1
+            fi
+          done
+
+          exit "${failed}"
