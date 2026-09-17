@@ -884,7 +884,11 @@ func set_legacy_arousal_visualization_visible(legacy_visible: bool) -> void:
 func _set_interaction_mode(next_mode: InteractionMode, force_sync: bool = false) -> void:
 	if interaction_mode == next_mode and not force_sync:
 		return
+	var entering_psychological_mode := interaction_mode != next_mode \
+			and next_mode == InteractionMode.PSYCHOLOGICAL
 	interaction_mode = next_mode
+	if entering_psychological_mode:
+		_start_new_psychological_dialogue()
 	_sync_interaction_mode_state()
 	interaction_mode_changed.emit(interaction_mode)
 
@@ -1166,6 +1170,28 @@ func _schedule_next_dialogue_message(mode: InteractionMode) -> void:
 	var timer := _get_dialogue_timer(mode)
 	timer.start(wait_time)
 	timer.set_paused(interaction_mode != mode)
+
+func _start_new_psychological_dialogue() -> void:
+	psychological_dialogue_timer.stop()
+	choice_timeout_timer.stop()
+	var psychological_request: Dictionary = _character_expression_requests.get(
+		CharacterExpressionSource.PSYCHOLOGICAL,
+		{}
+	)
+	if not psychological_request.is_empty():
+		clear_character_expression(
+			CharacterExpressionSource.PSYCHOLOGICAL,
+			int(psychological_request.get("token", -1))
+		)
+	_psychological_expression_round_pending = false
+	_psychological_expression_request_token = -1
+	psychological_dialogue_controller.reset()
+	if dialogue_panel != null:
+		dialogue_panel.clear_history()
+		dialogue_panel.hide_prompt()
+	if choice_panel != null:
+		choice_panel.clear_choices()
+	_push_next_dialogue_event(InteractionMode.PSYCHOLOGICAL)
 
 func _restore_or_initialize_active_dialogue() -> void:
 	if interaction_mode == InteractionMode.PHYSIOLOGICAL:

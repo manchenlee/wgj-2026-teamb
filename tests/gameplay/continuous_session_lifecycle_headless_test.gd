@@ -20,6 +20,7 @@ func _run() -> void:
 	await _test_success_routes_directly_without_reset()
 	await _test_forced_success_routes_directly()
 	await _test_continuous_band_progression_and_dialogue_pool()
+	await _test_psychological_mode_starts_new_dialogue()
 	await _test_failure_routes_and_peak_depletion()
 	await _test_physiological_combo_lifecycle()
 	await _test_explicit_new_run_reset()
@@ -133,6 +134,30 @@ func _test_continuous_band_progression_and_dialogue_pool() -> void:
 	game.arousal_model.emotional = float(game.active_phase_config.success_condition.get("emotional_value", 70.0))
 	game._check_ending()
 	_assert(endings == [CONFIG.SUCCESS_ENDING], "Deterministic continuous flow did not finish at final success.")
+	await _free_game(game)
+
+
+func _test_psychological_mode_starts_new_dialogue() -> void:
+	var game = await _create_game()
+	game.dialogue_panel.append_history("stale dialogue marker", "companion")
+	game.psychological_dialogue_controller.current_line = "stale dialogue marker"
+	game.psychological_dialogue_controller.current_entry = {"marker": "stale dialogue"}
+	game.psychological_dialogue_controller.current_prompt = {"text": "stale dialogue marker"}
+	game.psychological_dialogue_controller.choice_prompt_pending = true
+	game.choice_panel.show_choices([
+		{"id": "good", "text": "stale left choice"},
+		{"id": "bad", "text": "stale right choice"},
+	])
+	game.choice_timeout_timer.start(4.0)
+
+	game.set_interaction_mode(PHYSIOLOGICAL_MODE)
+	game.set_interaction_mode(PSYCHOLOGICAL_MODE)
+
+	var history: Array[Dictionary] = game.dialogue_panel.get_dialogue_history()
+	_assert(history.size() == 1, "Returning from physiological mode did not begin a one-line fresh dialogue.")
+	_assert(not _history_contains(history, "stale dialogue marker"), "Returning from physiological mode retained old dialogue history.")
+	_assert(game.psychological_dialogue_controller.current_line != "stale dialogue marker", "Returning from physiological mode retained the old current line.")
+	_assert(game.psychological_dialogue_controller.current_entry.get("marker", "") != "stale dialogue", "Returning from physiological mode retained the old dialogue entry.")
 	await _free_game(game)
 
 

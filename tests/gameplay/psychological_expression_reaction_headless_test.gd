@@ -85,12 +85,11 @@ func _test_round_boundary_and_mode_pause() -> void:
 	_assert(game._psychological_expression_request_token == token, "Paused/manual timeout prematurely cleared the reaction.")
 
 	game.set_interaction_mode(PSYCHOLOGICAL_MODE)
-	_assert(not game.psychological_dialogue_timer.paused, "Returning to psychological mode did not resume the round timer.")
-	_assert(game.current_expression_state == POSITIVE, "Returning to psychological mode lost the reaction state.")
-	game._on_psychological_dialogue_timer_timeout()
-	_assert(not game._psychological_expression_round_pending, "Round-completion boundary did not clear the reaction marker.")
-	_assert(not game.get_character_expression_request_state().requests.has(PSYCHOLOGICAL_SOURCE), "Round completion did not clear the psychological request.")
-	_assert(game.current_expression_state == NEUTRAL, "Next round did not begin neutral.")
+	_assert(not game._psychological_expression_round_pending, "Returning to psychological mode retained the previous dialogue round marker.")
+	_assert(not game.get_character_expression_request_state().requests.has(PSYCHOLOGICAL_SOURCE), "Returning to psychological mode retained the previous dialogue reaction.")
+	_assert(game.current_expression_state == NEUTRAL, "A new psychological dialogue did not begin neutral.")
+	_assert(not game.psychological_dialogue_controller.current_line.is_empty(), "A new psychological dialogue did not produce an opening line.")
+	_assert(game.dialogue_panel.get_dialogue_history().size() == 1, "A new psychological dialogue did not replace the previous history with one opening line.")
 	game.queue_free()
 	await process_frame
 

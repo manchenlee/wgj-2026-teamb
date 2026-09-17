@@ -23,7 +23,7 @@ func _run() -> void:
 	await _test_crossing_direction_hearts_and_ordering()
 	await _test_timeout_rearm_and_stale_tokens()
 	await _test_passive_decay_and_large_jumps()
-	await _test_mode_switch_and_psychological_coexistence()
+	await _test_mode_switch_starts_new_psychological_dialogue()
 	await _test_initialization_and_reset()
 	if _failures.is_empty():
 		print("Physiological expression-reaction headless tests passed.")
@@ -129,9 +129,9 @@ func _test_passive_decay_and_large_jumps() -> void:
 	await _free_game(game)
 
 
-func _test_mode_switch_and_psychological_coexistence() -> void:
+func _test_mode_switch_starts_new_psychological_dialogue() -> void:
 	var game = await _create_game()
-	var psychological_token: int = game.request_character_expression(PSYCHOLOGICAL_SOURCE, NEGATIVE)
+	game.request_character_expression(PSYCHOLOGICAL_SOURCE, NEGATIVE)
 	game.arousal_model.physical = 50.0
 	game._sync_physiological_visual_band()
 	var state: Dictionary = game.get_character_expression_request_state()
@@ -142,8 +142,8 @@ func _test_mode_switch_and_psychological_coexistence() -> void:
 	await create_timer(CONFIG.PHYSIOLOGICAL_EXPRESSION_DURATION_SECONDS + 0.1).timeout
 	state = game.get_character_expression_request_state()
 	_assert(not state.requests.has(PHYSIOLOGICAL_SOURCE), "Physiological request survived its lifetime after mode switching.")
-	_assert(state.requests.has(PSYCHOLOGICAL_SOURCE) and state.presentation_expression == NEGATIVE, "Physiological expiry cleared or changed the psychological request.")
-	game.clear_character_expression(PSYCHOLOGICAL_SOURCE, psychological_token)
+	_assert(not state.requests.has(PSYCHOLOGICAL_SOURCE), "Starting a new psychological dialogue retained the previous dialogue reaction.")
+	_assert(state.presentation_expression == PROFILE_SCRIPT.ExpressionState.NEUTRAL, "A new psychological dialogue did not restore the neutral expression.")
 	await _free_game(game)
 
 
