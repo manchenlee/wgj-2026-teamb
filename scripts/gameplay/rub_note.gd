@@ -99,25 +99,12 @@ func _notification(what: int) -> void:
 
 func _draw() -> void:
 	var progress := get_progress_ratio()
-	var target_scale := lerpf(1.0, 0.72, progress)
-	var draw_radius := target_radius * target_scale
-	var target_color := Color(1.0, 0.42, 0.47, lerpf(0.90, 0.68, progress))
-	draw_circle(
-		target_center,
-		draw_radius,
-		Color(target_color.r, target_color.g, target_color.b, target_color.a * 0.88)
-	)
-	draw_arc(
-		target_center,
-		draw_radius,
-		0.0,
-		TAU,
-		48,
-		Color(1.0, 0.86, 0.78, 1.0),
-		5.0,
-		true
-	)
 	_draw_approach_circle()
+	_draw_note_circle(
+		target_center,
+		target_radius,
+		Color(1.0, 0.73, 0.22, lerpf(0.94, 0.76, progress))
+	)
 
 
 func _process_pointer_move(new_pos: Vector2) -> void:
@@ -196,6 +183,10 @@ func _get_approach_center() -> Vector2:
 
 func _get_approach_target_radius() -> float:
 	return target_radius
+
+
+func _get_approach_color() -> Color:
+	return Color(1.0, 0.72, 0.24, 0.98)
 
 
 func _set_note_input_enabled(enabled: bool) -> void:

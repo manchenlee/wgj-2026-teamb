@@ -39,7 +39,7 @@ const RUB_NOTE_LIFETIME: float = 4.0
 const SPOT_REQUIRED_CHECKPOINT_COUNT: int = 3
 
 # Forgiving checkpoint hit radius in prompt-layer pixels.
-const SPOT_CHECKPOINT_RADIUS: float = 40.0
+const SPOT_CHECKPOINT_RADIUS: float = 52.0
 
 # Center-to-center spacing used by the small path generator.
 const SPOT_CHECKPOINT_SPACING: float = 120.0

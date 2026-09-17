@@ -80,16 +80,80 @@ func _draw_approach_circle() -> void:
 		return
 	var remaining_ratio := clampf(lifetime_timer.time_left / maxf(spot_lifetime, 0.001), 0.0, 1.0)
 	var approach_radius := _calculate_approach_radius(remaining_ratio)
+	var center := _get_approach_center()
+	var mask_width := maxf(approach_radius - target_radius, 0.0)
+	if mask_width > 0.5:
+		# A translucent white annulus separates the shrinking timing ring from
+		# the solid note, matching the UI reference instead of leaving a clear gap.
+		draw_arc(
+			center,
+			target_radius + mask_width * 0.5,
+			0.0,
+			TAU,
+			64,
+			Color(1.0, 1.0, 1.0, 0.14),
+			mask_width,
+			true
+		)
+	var approach_color := _get_approach_color()
 	draw_arc(
-		_get_approach_center(),
+		center,
 		approach_radius,
 		0.0,
 		TAU,
 		48,
-		Color(1.0, 0.32, 0.36, 0.92),
-		4.0,
+		approach_color,
+		3.0,
 		true
 	)
+
+
+func _draw_note_circle(center: Vector2, radius: float, fill_color: Color) -> void:
+	# The bloom inherits the note color; only the fine rim remains white.
+	_draw_continuous_ring_glow(center, radius, 14.0, fill_color, 0.38)
+	draw_circle(center, radius, fill_color)
+	draw_arc(center, radius, 0.0, TAU, 64, Color(1.0, 1.0, 1.0, 0.96), 2.5, true)
+
+
+func _draw_continuous_ring_glow(
+	center: Vector2,
+	radius: float,
+	glow_width: float,
+	color: Color,
+	peak_alpha: float
+) -> void:
+	if radius <= 0.0 or glow_width <= 0.0 or peak_alpha <= 0.0:
+		return
+	var segment_count := 96
+	var inner_radius := maxf(0.0, radius - glow_width)
+	var outer_radius := radius + glow_width
+	var transparent := Color(color.r, color.g, color.b, 0.0)
+	var peak := Color(color.r, color.g, color.b, peak_alpha)
+	for index in range(segment_count):
+		var angle_a := TAU * float(index) / float(segment_count)
+		var angle_b := TAU * float(index + 1) / float(segment_count)
+		var direction_a := Vector2.from_angle(angle_a)
+		var direction_b := Vector2.from_angle(angle_b)
+		# Two radial strips meet at the ring. Vertex colors are interpolated by
+		# the renderer, producing one smooth bloom instead of stacked bands.
+		draw_polygon(
+			PackedVector2Array([
+				center + direction_a * inner_radius,
+				center + direction_a * radius,
+				center + direction_b * radius,
+				center + direction_b * inner_radius,
+			]),
+			PackedColorArray([transparent, peak, peak, transparent])
+		)
+		draw_polygon(
+			PackedVector2Array([
+				center + direction_a * radius,
+				center + direction_a * outer_radius,
+				center + direction_b * outer_radius,
+				center + direction_b * radius,
+			]),
+			PackedColorArray([peak, transparent, transparent, peak])
+		)
 
 
 func _calculate_approach_radius(remaining_ratio: float) -> float:
@@ -107,6 +171,10 @@ func _get_approach_center() -> Vector2:
 
 func _get_approach_target_radius() -> float:
 	return 0.0
+
+
+func _get_approach_color() -> Color:
+	return Color(1.0, 0.32, 0.36, 0.96)
 
 
 func _begin_interaction() -> void:

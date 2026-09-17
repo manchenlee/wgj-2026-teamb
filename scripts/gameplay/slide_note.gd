@@ -92,25 +92,23 @@ func _draw() -> void:
 	if checkpoints.is_empty():
 		return
 
+	_draw_approach_circle()
+
 	for index in range(checkpoints.size() - 1):
 		var segment_completed := _armed and index < _next_checkpoint_index - 1
 		var line_color := SLIDE_COMPLETED_COLOR if segment_completed else Color(1.0, 0.32, 0.36, 0.72)
-		draw_line(checkpoints[index], checkpoints[index + 1], line_color, 18.0, true)
+		draw_line(checkpoints[index], checkpoints[index + 1], line_color, 9.0, true)
 
 	var target_index := _get_target_index()
 	# The tentacle is the physical end-cap of the chain, so only the preceding
 	# checkpoints use circular slide markers.
 	for index in range(maxi(checkpoints.size() - 1, 0)):
-		var is_start := index == 0
-		var is_completed := _armed if is_start else _armed and index < _next_checkpoint_index
+		var is_completed := _armed if index == 0 else _armed and index < _next_checkpoint_index
 		var is_current := index == target_index
 		var fill_color := SLIDE_COMPLETED_COLOR if is_completed else SLIDE_COLOR
-		var outline_color := Color(1.0, 0.85, 0.78, 1.0)
 		if is_current:
 			fill_color = Color(1.0, 0.48, 0.52, 0.96)
-			outline_color = Color(1.0, 1.0, 1.0, 1.0)
-		draw_circle(checkpoints[index], checkpoint_radius, fill_color)
-		draw_arc(checkpoints[index], checkpoint_radius, 0.0, TAU, 40, outline_color, 4.0, true)
+		_draw_note_circle(checkpoints[index], checkpoint_radius, fill_color)
 		var font := ThemeDB.fallback_font
 		var font_size := maxi(16, int(round(checkpoint_radius * 0.58)))
 		var label_size := font.get_string_size("slide", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size)
@@ -123,9 +121,6 @@ func _draw() -> void:
 			font_size,
 			Color.WHITE
 		)
-
-	_draw_approach_circle()
-
 
 func _position_tentacle_at_chain_end() -> void:
 	var tentacle_visual := get_node_or_null("TentacleVisual") as TextureRect
