@@ -11,7 +11,11 @@ const TALK_WARNING := preload("res://assets/art/ui/gameplay/btn_talk_warning.png
 const MUSIC_CLICKED := preload("res://assets/art/ui/gameplay/btn_music_clicked.png")
 const MUSIC_UNCLICKED := preload("res://assets/art/ui/gameplay/btn_music_unclicked.png")
 const MUSIC_WARNING := preload("res://assets/art/ui/gameplay/btn_music_warning.png")
-const WARNING_PULSE_SPEED: float = 3.5
+const WARNING_PULSE_SPEED: float = 6.0
+const WARNING_ALPHA_MIN: float = 0.25
+const WARNING_ALPHA_MAX: float = 1.0
+const WARNING_SCALE_MIN: float = 0.96
+const WARNING_SCALE_MAX: float = 1.08
 
 @onready var toggle_button: Button = $ToggleButton
 @onready var mode_label: Label = $ModeLabel
@@ -28,17 +32,24 @@ func _ready() -> void:
 	toggle_button.pressed.connect(_on_toggle_button_pressed)
 	talk_button.pressed.connect(_on_talk_button_pressed)
 	music_button.pressed.connect(_on_music_button_pressed)
+	talk_button.pivot_offset = talk_button.size * 0.5
+	music_button.pivot_offset = music_button.size * 0.5
 	_sync_presentation()
 	set_process(false)
 
 
 func _process(delta: float) -> void:
 	_warning_pulse_time += delta
-	var warning_alpha := 0.72 + ((sin(_warning_pulse_time * WARNING_PULSE_SPEED) + 1.0) * 0.14)
+	var pulse_ratio := (cos(_warning_pulse_time * WARNING_PULSE_SPEED) + 1.0) * 0.5
+	var warning_alpha := lerpf(WARNING_ALPHA_MIN, WARNING_ALPHA_MAX, pulse_ratio)
+	var warning_scale := lerpf(WARNING_SCALE_MIN, WARNING_SCALE_MAX, pulse_ratio)
+	var warning_scale_vector := Vector2.ONE * warning_scale
 	if _lower_score_mode == PSYCHOLOGICAL_MODE:
 		talk_button.modulate.a = warning_alpha
+		talk_button.scale = warning_scale_vector
 	elif _lower_score_mode == PHYSIOLOGICAL_MODE:
 		music_button.modulate.a = warning_alpha
+		music_button.scale = warning_scale_vector
 
 
 func set_interaction_mode(mode: int) -> void:
@@ -103,6 +114,7 @@ func _sync_presentation() -> void:
 		talk_button.texture_hover = TALK_CLICKED
 		talk_button.texture_pressed = TALK_CLICKED
 		talk_button.modulate = Color.WHITE
+		talk_button.scale = Vector2.ONE
 	if music_button != null:
 		music_button.texture_normal = MUSIC_WARNING if _is_warning_for(PHYSIOLOGICAL_MODE) else (
 			MUSIC_CLICKED if _interaction_mode == PHYSIOLOGICAL_MODE else MUSIC_UNCLICKED
@@ -110,6 +122,7 @@ func _sync_presentation() -> void:
 		music_button.texture_hover = MUSIC_CLICKED
 		music_button.texture_pressed = MUSIC_CLICKED
 		music_button.modulate = Color.WHITE
+		music_button.scale = Vector2.ONE
 
 func _is_warning_for(mode: int) -> bool:
 	return _imbalance_warning_active and _lower_score_mode == mode

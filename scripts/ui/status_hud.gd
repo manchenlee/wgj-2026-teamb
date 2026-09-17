@@ -6,7 +6,6 @@ const WARNING_OUTLINE_COLOR := Color(1.0, 0.18, 0.12, 0.95)
 const WARNING_MODULATE_MIN := Color(1.0, 0.72, 0.68, 1.0)
 const WARNING_MODULATE_MAX := Color(1.0, 1.0, 1.0, 1.0)
 const WARNING_PULSE_SPEED: float = 4.0
-const REFERENCE_TRACK_WIDTH: float = 800.0
 
 @onready var heart_value_label: Label = $ArousalMeter/HeartValueLabel
 @onready var arousal_fill_bar: TextureRect = $ArousalMeter/ArousalFillBar
@@ -18,12 +17,13 @@ const REFERENCE_TRACK_WIDTH: float = 800.0
 @onready var physical_value_label: Label = $NumericScores/PhysicalScore/Value
 @onready var emotional_value_label: Label = $NumericScores/EmotionalScore/Value
 @onready var combo_label: Label = $ComboLabel
+@onready var reference_track: ColorRect = $ReferenceMeter/Track
 @onready var reference_fill: ColorRect = $ReferenceMeter/Track/Fill
 @onready var peak_value_label: Label = $ReferenceMeter/PeakValueLabel
 
 @export var show_legacy_meter: bool = false
 
-var _peak_value: float = 0.0
+var _affection_value: float = 0.0
 var _physical_low_warning_active: bool = false
 var _emotional_low_warning_active: bool = false
 var _warning_pulse_time: float = 0.0
@@ -31,7 +31,7 @@ var _combo_pulse_tween: Tween = null
 
 func _ready() -> void:
 	legacy_arousal_meter.visible = show_legacy_meter
-	_apply_meter_fill(_peak_value)
+	_apply_affection_value(_affection_value)
 	set_process(false)
 	_apply_score_warning_presentation()
 	update_combo(0)
@@ -43,15 +43,15 @@ func _process(delta: float) -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready():
-		_apply_meter_fill(_peak_value)
+		_apply_affection_value(_affection_value)
 
-func update_values(physical: float, emotional: float, peak: float) -> void:
+func update_values(physical: float, emotional: float, affection_value: float) -> void:
 	physical_value_label.text = str(int(round(Config.clamp_value(physical))))
 	emotional_value_label.text = str(int(round(Config.clamp_value(emotional))))
-	_peak_value = Config.clamp_value(peak)
-	heart_value_label.text = str(int(round(_peak_value)))
-	peak_value_label.text = "%d/100" % int(round(_peak_value))
-	_apply_meter_fill(_peak_value)
+	_affection_value = Config.clamp_value(affection_value)
+	heart_value_label.text = str(int(round(_affection_value)))
+	peak_value_label.text = "%d/100" % int(round(_affection_value))
+	_apply_affection_value(_affection_value)
 
 
 func update_combo(combo: int, pulse: bool = false) -> void:
@@ -101,11 +101,11 @@ func set_legacy_meter_visible(legacy_visible: bool) -> void:
 	if is_node_ready():
 		legacy_arousal_meter.visible = legacy_visible
 
-func _apply_meter_fill(peak: float) -> void:
+func _apply_affection_value(affection_value: float) -> void:
 	if not is_node_ready():
 		return
-	var fill_ratio := Config.clamp_value(peak) / Config.MAX_VALUE
-	reference_fill.size.x = REFERENCE_TRACK_WIDTH * fill_ratio
+	var fill_ratio := Config.clamp_value(affection_value) / Config.MAX_VALUE
+	reference_fill.size.x = reference_track.size.x * fill_ratio
 	var fill_start := fill_start_marker.position
 	var fill_end := fill_end_marker.position
 	var fill_width := maxf(fill_end.x - fill_start.x, 0.0)

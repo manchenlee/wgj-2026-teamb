@@ -51,7 +51,7 @@ layout_mode = 0
 offset_right = 0.0
 offset_bottom = 14.0
 mouse_filter = 2
-color = Color(1, 0.34, 0.27, 1)
+color = Color(1, 0.76, 0.24, 1)
 
 [node name="PeakValueLabel" type="Label" parent="ReferenceMeter"]
 layout_mode = 0

@@ -88,18 +88,34 @@ func _test_numeric_hud_and_legacy_visibility() -> void:
 	var physical_label: Label = hud.get_node("NumericScores/PhysicalScore/Value")
 	var emotional_label: Label = hud.get_node("NumericScores/EmotionalScore/Value")
 	var legacy_meter: Control = hud.get_node("ArousalMeter")
+	var affection_track: ColorRect = hud.get_node("ReferenceMeter/Track")
+	var affection_fill: ColorRect = hud.get_node("ReferenceMeter/Track/Fill")
+	var affection_label: Label = hud.get_node("ReferenceMeter/PeakValueLabel")
 
-	hud.update_values(0.0, 100.0, 50.0)
+	hud.update_values(0.0, 100.0, 0.0)
 	_assert(physical_label.text == "0", "Physical HUD did not render zero.")
 	_assert(emotional_label.text == "100", "Emotional HUD did not render 100 independently.")
+	_assert(affection_label.text == "0/100", "Affection HUD did not render zero.")
+	_assert(is_zero_approx(affection_fill.size.x), "Affection bar was not empty at zero.")
 
-	hud.update_values(42.4, 67.6, 25.0)
+	hud.update_values(42.4, 67.6, 50.0)
 	_assert(physical_label.text == "42", "Physical HUD middle-value rounding is incorrect.")
 	_assert(emotional_label.text == "68", "Emotional HUD middle-value rounding is incorrect.")
+	_assert(affection_label.text == "50/100", "Affection HUD did not render its midpoint.")
+	_assert(
+		is_equal_approx(affection_fill.size.x, affection_track.size.x * 0.5),
+		"Affection bar did not fill to its midpoint."
+	)
+	_assert(affection_fill.color == Color(1, 0.76, 0.24, 1), "Affection bar is not yellow.")
 
-	hud.update_values(100.0, 0.0, 75.0)
+	hud.update_values(100.0, 0.0, 100.0)
 	_assert(physical_label.text == "100", "Physical HUD did not render 100.")
 	_assert(emotional_label.text == "0", "Emotional HUD did not render zero independently.")
+	_assert(affection_label.text == "100/100", "Affection HUD did not render its maximum.")
+	_assert(
+		is_equal_approx(affection_fill.size.x, affection_track.size.x),
+		"Affection bar did not fill the complete track at 100."
+	)
 	_assert(not legacy_meter.visible, "Legacy StatusHUD meter is not hidden by default.")
 	_assert(legacy_meter.has_node("HeartIcon"), "Legacy heart meter node was removed.")
 	_assert(legacy_meter.has_node("ArousalFillBar"), "Legacy fill calculation node was removed.")
@@ -182,6 +198,11 @@ func _test_warning_presentation_apis() -> void:
 	game.set_process(false)
 	var mode_toggle: InteractionModeToggle = game.get_node("%InteractionModeToggle")
 	var mode_label: Label = mode_toggle.get_node("ModeLabel")
+	var talk_button: TextureButton = mode_toggle.get_node("TalkButton")
+	var music_button: TextureButton = mode_toggle.get_node("MusicButton")
+	var affection_track: ColorRect = game.get_node("%StatusHUD/ReferenceMeter/Track")
+	var affection_fill: ColorRect = game.get_node("%StatusHUD/ReferenceMeter/Track/Fill")
+	var affection_label: Label = game.get_node("%StatusHUD/ReferenceMeter/PeakValueLabel")
 	var original_physical: float = game.arousal_model.physical
 	var original_emotional: float = game.arousal_model.emotional
 	var psychological_label_text: String = mode_label.text
@@ -193,6 +214,13 @@ func _test_warning_presentation_apis() -> void:
 	_assert(mode_toggle.is_imbalance_warning_active(), "Mode-toggle warning API did not activate.")
 	_assert(mode_toggle.get_lower_score_mode() == PHYSIOLOGICAL_MODE, "Mode-toggle warning did not store the lower side.")
 	_assert(mode_label.text == psychological_label_text, "Warning changed the authoritative psychological mode label.")
+	mode_toggle._warning_pulse_time = 0.0
+	mode_toggle._process(0.0)
+	var warning_alpha_max: float = music_button.modulate.a
+	var warning_scale_max: float = music_button.scale.x
+	mode_toggle._process(PI / InteractionModeToggle.WARNING_PULSE_SPEED)
+	_assert(warning_alpha_max - music_button.modulate.a >= 0.7, "Mode-toggle warning alpha pulse is not visually distinct enough.")
+	_assert(warning_scale_max - music_button.scale.x >= 0.1, "Mode-toggle warning scale pulse is not visually distinct enough.")
 	mode_toggle.get_node("ToggleButton").emit_signal("pressed")
 	_assert(transition_counts.mode == 1, "Clicking a glowing toggle did not perform exactly one mode change.")
 	_assert(game.interaction_mode == PHYSIOLOGICAL_MODE, "Clicking a glowing toggle changed to the wrong mode.")
@@ -208,10 +236,24 @@ func _test_warning_presentation_apis() -> void:
 	_assert(game.arousal_model.physical == original_physical, "Warning animation or mode switching changed physical score.")
 	_assert(game.arousal_model.emotional == original_emotional, "Warning animation or mode switching changed emotional score.")
 
+	game.arousal_model.physical = 60.0
+	game.arousal_model.emotional = 20.0
+	game._update_presentation()
+	_assert(affection_label.text == "60/100", "Live affection HUD did not display the physical score.")
+	_assert(
+		is_equal_approx(affection_fill.size.x, affection_track.size.x * 0.6),
+		"Live affection bar did not react to physical-score changes."
+	)
+	game.arousal_model.emotional = 80.0
+	game._update_presentation()
+	_assert(affection_label.text == "60/100", "Emotional score incorrectly changed affection HUD.")
+
 	mode_toggle.set_imbalance_warning(false, -1)
 	_assert(not mode_toggle.is_imbalance_warning_active(), "Mode-toggle warning API did not deactivate.")
 	_assert(mode_toggle.get_lower_score_mode() == -1, "Deactivated toggle warning retained its lower side.")
 	_assert(not mode_toggle.is_processing(), "Mode-toggle warning animation kept processing after clear.")
+	_assert(talk_button.modulate == Color.WHITE and music_button.modulate == Color.WHITE, "Cleared toggle warning retained alpha modulation.")
+	_assert(talk_button.scale == Vector2.ONE and music_button.scale == Vector2.ONE, "Cleared toggle warning retained pulse scale.")
 	game.queue_free()
 	await process_frame
 

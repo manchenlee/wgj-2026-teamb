@@ -1295,7 +1295,11 @@ func _update_presentation() -> void:
 	_update_bgm_state()
 	character_area.update_emotion_state(arousal_model.get_emotion_state())
 	arousal_visualization.set_values(arousal_model.physical, arousal_model.emotional, arousal_model.peak)
-	status_hud.update_values(arousal_model.physical, arousal_model.emotional, arousal_model.peak)
+	status_hud.update_values(
+		arousal_model.physical,
+		arousal_model.emotional,
+		arousal_model.physical
+	)
 	_update_score_warning_state()
 	_update_phase_debug_label()
 	if debug_overlay != null:
