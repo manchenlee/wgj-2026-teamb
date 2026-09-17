@@ -110,7 +110,14 @@ func _test_live_family_crossing_preserves_gameplay_state() -> void:
 		_assert(String(track.get("mode", "")) == "idle", "A Phase 2 overlay track was not started after switching.")
 		_assert(layer != null and layer.visible and layer.texture != null, "A Phase 2 overlay track remained hidden after switching.")
 	_assert(_capture_gameplay_state(game) == state_before, "A presentation-family crossing mutated gameplay/dialogue/choice state.")
-	_assert(_capture_note_state(active_spots) == note_state_before, "A presentation-family crossing moved, recreated, or reset an active note.")
+	var note_state_after := _capture_note_state(active_spots)
+	_assert(
+		_note_states_match(note_state_before, note_state_after),
+		"A presentation-family crossing moved, recreated, or reset an active note. Before: %s After: %s" % [
+			str(note_state_before),
+			str(note_state_after),
+		]
+	)
 	_assert(_capture_timer_state(game) == timer_state_before, "A presentation-family crossing changed runtime timer state.")
 	_assert(game.active_phase_index == phase_index_before, "A presentation-family crossing changed the gameplay phase.")
 	_assert(game.phase_transition_overlay.visible == fade_visible_before, "A presentation-family crossing started a phase fade.")
@@ -194,6 +201,28 @@ func _capture_note_state(spots: Array) -> Array[Dictionary]:
 			"lifetime_left": spot.lifetime_timer.time_left,
 		})
 	return result
+
+
+func _note_states_match(before: Array[Dictionary], after: Array[Dictionary]) -> bool:
+	if before.size() != after.size():
+		return false
+	for index in range(before.size()):
+		var before_note := before[index]
+		var after_note := after[index]
+		if before_note.has("invalid") or after_note.has("invalid"):
+			if before_note != after_note:
+				return false
+			continue
+		if before_note.instance_id != after_note.instance_id \
+				or before_note.lifetime_paused != after_note.lifetime_paused \
+				or before_note.lifetime_stopped != after_note.lifetime_stopped:
+			return false
+		if not (before_note.position as Vector2).is_equal_approx(after_note.position as Vector2) \
+				or not (before_note.global_position as Vector2).is_equal_approx(after_note.global_position as Vector2) \
+				or not is_equal_approx(float(before_note.progress), float(after_note.progress)) \
+				or not is_equal_approx(float(before_note.lifetime_left), float(after_note.lifetime_left)):
+			return false
+	return true
 
 
 func _capture_timer_state(game) -> Dictionary:
