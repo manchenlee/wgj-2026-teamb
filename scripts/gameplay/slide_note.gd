@@ -2,6 +2,7 @@ class_name SlideNote
 extends InteractionNote
 
 const HEART_TEXTURE := preload("res://assets/art/ui/gameplay/img_heart.png")
+const NOTE_LABEL_FONT := preload("res://assets/fonts/ShipporiMincho-Bold.ttf")
 const SLIDE_COLOR := Color(1.0, 0.42, 0.47, 0.88)
 const SLIDE_COMPLETED_COLOR := Color(0.93, 0.29, 0.42, 0.96)
 const TENTACLE_VISUAL_SIZE := Vector2(180.0, 180.0)
@@ -109,11 +110,12 @@ func _draw() -> void:
 		if is_current:
 			fill_color = Color(1.0, 0.48, 0.52, 0.96)
 		_draw_note_circle(checkpoints[index], checkpoint_radius, fill_color)
-		var font := ThemeDB.fallback_font
 		var font_size := maxi(16, int(round(checkpoint_radius * 0.58)))
-		var label_size := font.get_string_size("slide", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size)
+		var label_size := NOTE_LABEL_FONT.get_string_size(
+			"slide", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size
+		)
 		draw_string(
-			font,
+			NOTE_LABEL_FONT,
 			checkpoints[index] + Vector2(-label_size.x * 0.5, label_size.y * 0.34),
 			"slide",
 			HORIZONTAL_ALIGNMENT_LEFT,
