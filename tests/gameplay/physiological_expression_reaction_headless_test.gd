@@ -11,6 +11,7 @@ const PHYSIOLOGICAL_SOURCE := CONTROLLER_SCRIPT.CharacterExpressionSource.PHYSIO
 const PSYCHOLOGICAL_SOURCE := CONTROLLER_SCRIPT.CharacterExpressionSource.PSYCHOLOGICAL
 const POSITIVE := PROFILE_SCRIPT.ExpressionState.POSITIVE
 const NEGATIVE := PROFILE_SCRIPT.ExpressionState.NEGATIVE
+const LATE_FAMILY := 1
 
 var _failures: Array[String] = []
 
@@ -105,7 +106,7 @@ func _test_passive_decay_and_large_jumps() -> void:
 	var game = await _create_game()
 	game.arousal_model.physical = 50.01
 	game._sync_physiological_visual_band(false)
-	game.arousal_model.apply_decay(0.01)
+	game.arousal_model.apply_decay(1.0)
 	game._sync_physiological_visual_band()
 	_assert(game.current_visual_band == 2 and _request_for(game, PHYSIOLOGICAL_SOURCE).get("expression") == NEGATIVE, "Passive-decay crossing did not use normal NEGATIVE behavior.")
 	game._reset_physiological_expression_reaction()
@@ -168,9 +169,18 @@ func _create_game():
 	var game = GAME_SCREEN_SCENE.instantiate()
 	root.add_child(game)
 	await process_frame
+	await _wait_for_late_presentation_prefetch(game)
 	game.set_process(false)
 	game._stop_runtime_timers()
 	return game
+
+
+func _wait_for_late_presentation_prefetch(game) -> void:
+	for _frame in range(300):
+		if bool(game._presentation_prefetch_ready.get(LATE_FAMILY, false)):
+			return
+		await process_frame
+	_assert(false, "Late-family texture prefetch did not finish within 300 frames.")
 
 
 func _free_game(game) -> void:

@@ -9,6 +9,7 @@ const PHASE_2_PROFILE_SCRIPT := preload("res://data/character_profiles/phase_2_c
 const NEUTRAL := PROFILE_SCRIPT.ExpressionState.NEUTRAL
 const POSITIVE := PROFILE_SCRIPT.ExpressionState.POSITIVE
 const NEGATIVE := PROFILE_SCRIPT.ExpressionState.NEGATIVE
+const LATE_FAMILY := 1
 
 var _failures: Array[String] = []
 
@@ -74,6 +75,7 @@ func _test_live_crossing_compatibility() -> void:
 	var game = GAME_SCREEN_SCENE.instantiate()
 	root.add_child(game)
 	await process_frame
+	await _wait_for_late_presentation_prefetch(game)
 	game.set_character_expression_state(NEGATIVE)
 	game.arousal_model.physical = 49.0
 	game.arousal_model.emotional = 61.0
@@ -97,6 +99,14 @@ func _test_live_crossing_compatibility() -> void:
 	_assert(resolved.get("resolved_expression") == NEUTRAL, "Live missing negative art did not fall back safely.")
 	game.queue_free()
 	await process_frame
+
+
+func _wait_for_late_presentation_prefetch(game) -> void:
+	for _frame in range(300):
+		if bool(game._presentation_prefetch_ready.get(LATE_FAMILY, false)):
+			return
+		await process_frame
+	_assert(false, "Late-family texture prefetch did not finish within 300 frames.")
 
 
 func _assert(condition: bool, message: String) -> void:

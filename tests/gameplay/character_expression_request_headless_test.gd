@@ -9,6 +9,7 @@ const PSYCHOLOGICAL := CONTROLLER_SCRIPT.CharacterExpressionSource.PSYCHOLOGICAL
 const NEUTRAL := PROFILE_SCRIPT.ExpressionState.NEUTRAL
 const POSITIVE := PROFILE_SCRIPT.ExpressionState.POSITIVE
 const NEGATIVE := PROFILE_SCRIPT.ExpressionState.NEGATIVE
+const LATE_FAMILY := 1
 
 var _failures: Array[String] = []
 
@@ -69,6 +70,7 @@ func _test_reset_family_and_gameplay_isolation() -> void:
 	var game = GAME_SCREEN_SCENE.instantiate()
 	root.add_child(game)
 	await process_frame
+	await _wait_for_late_presentation_prefetch(game)
 	var scores_before := [game.arousal_model.physical, game.arousal_model.emotional, game.arousal_model.peak]
 	var gameplay_before := [game.active_phase_index, game.interaction_mode, game.run_active]
 	var token: int = game.request_character_expression(PSYCHOLOGICAL, POSITIVE)
@@ -105,6 +107,14 @@ func _test_reset_family_and_gameplay_isolation() -> void:
 	_assert(game.get_character_expression_request_state().requests.size() == 1, "Dialogue timer automatically created or removed an expression request.")
 	game.queue_free()
 	await process_frame
+
+
+func _wait_for_late_presentation_prefetch(game) -> void:
+	for _frame in range(300):
+		if bool(game._presentation_prefetch_ready.get(LATE_FAMILY, false)):
+			return
+		await process_frame
+	_assert(false, "Late-family texture prefetch did not finish within 300 frames.")
 
 
 func _assert(condition: bool, message: String) -> void:
