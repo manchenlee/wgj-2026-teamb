@@ -892,10 +892,13 @@ func _sync_interaction_mode_state() -> void:
 	var psychological_active := interaction_mode == InteractionMode.PSYCHOLOGICAL
 	if interaction_mode_toggle != null:
 		interaction_mode_toggle.set_interaction_mode(interaction_mode)
+	if dialogue_panel != null:
+		dialogue_panel.visible = psychological_active
 	if choice_panel != null:
 		choice_panel.visible = psychological_active
 	psychological_dialogue_timer.set_paused(not psychological_active)
-	physiological_dialogue_timer.set_paused(psychological_active)
+	# Physiological mode is interaction-only and no longer presents dialogue.
+	physiological_dialogue_timer.stop()
 	if _has_pending_psychological_choice() and not choice_timeout_timer.is_stopped():
 		choice_timeout_timer.set_paused(not psychological_active)
 	elif psychological_active:
@@ -905,7 +908,8 @@ func _sync_interaction_mode_state() -> void:
 			spot_manager.suspend()
 		else:
 			spot_manager.resume()
-	_restore_or_initialize_active_dialogue()
+	if psychological_active:
+		_restore_or_initialize_active_dialogue()
 
 # ---------------------------------------------------------------------------
 # Run lifecycle
@@ -1059,9 +1063,8 @@ func _on_psychological_dialogue_timer_timeout() -> void:
 	_push_next_dialogue_event(InteractionMode.PSYCHOLOGICAL)
 
 func _on_physiological_dialogue_timer_timeout() -> void:
-	if not run_active or interaction_mode != InteractionMode.PHYSIOLOGICAL:
-		return
-	_push_next_dialogue_event(InteractionMode.PHYSIOLOGICAL)
+	# Kept as a connected no-op so older scenes remain load-compatible.
+	physiological_dialogue_timer.stop()
 
 func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	if interaction_mode != InteractionMode.PSYCHOLOGICAL or not _has_pending_psychological_choice():
@@ -1124,7 +1127,7 @@ func _on_choice_timeout() -> void:
 	_update_presentation()
 
 func _push_next_dialogue_event(mode: InteractionMode) -> void:
-	if interaction_mode != mode:
+	if interaction_mode != mode or mode == InteractionMode.PHYSIOLOGICAL:
 		return
 	var controller: DialogueChoiceController = _get_dialogue_controller(mode)
 	var should_force_safe_word: bool = mode == InteractionMode.PSYCHOLOGICAL \
@@ -1165,6 +1168,10 @@ func _schedule_next_dialogue_message(mode: InteractionMode) -> void:
 	timer.set_paused(interaction_mode != mode)
 
 func _restore_or_initialize_active_dialogue() -> void:
+	if interaction_mode == InteractionMode.PHYSIOLOGICAL:
+		if dialogue_panel != null:
+			dialogue_panel.visible = false
+		return
 	var controller: DialogueChoiceController = _get_dialogue_controller(interaction_mode)
 	var current_line: String = controller.get_current_line()
 	if current_line.is_empty():
