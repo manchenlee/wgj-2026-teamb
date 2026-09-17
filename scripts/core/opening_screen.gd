@@ -4,7 +4,7 @@ signal continue_pressed
 signal skip_pressed
 
 const OPENING_DATA_PATH := "res://assets/dialogue/opening.json"
-const RULE_SCREEN_PATH := "res://scenes/screens/RuleScreen.tscn"
+const SAFE_WORD_SCREEN_PATH := "res://scenes/screens/SafeWordScreen.tscn"
 const DEFAULT_BACKGROUND_PATH := "res://assets/art/background/curtain.jpg"
 const DEFAULT_NEXT_TEXT := "NEXT"
 const FINISH_TEXT := "START"
@@ -70,7 +70,7 @@ func advance_input_handled() -> void:
 func _on_skip_pressed() -> void:
 	get_viewport().set_input_as_handled()
 	if skip_pressed.get_connections().is_empty():
-		get_tree().change_scene_to_file(RULE_SCREEN_PATH)
+		get_tree().change_scene_to_file(SAFE_WORD_SCREEN_PATH)
 		return
 	skip_pressed.emit()
 

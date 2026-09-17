@@ -38,9 +38,8 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _draw() -> void:
-	draw_circle(target_center, target_radius, Color(1.0, 0.48, 0.1, 0.68))
-	draw_arc(target_center, target_radius, 0.0, TAU, 40, Color(1.0, 0.9, 0.4, 1.0), 4.0, true)
-	draw_circle(target_center, target_radius * 0.24, Color(1.0, 1.0, 1.0, 0.95))
+	draw_circle(target_center, target_radius, Color(1.0, 0.42, 0.47, 0.86))
+	draw_arc(target_center, target_radius, 0.0, TAU, 40, Color(1.0, 0.32, 0.36, 1.0), 4.0, true)
 	_draw_approach_circle()
 
 

@@ -4,7 +4,7 @@ const Config := preload("res://scripts/gameplay/GameConfig.gd")
 const TITLE_SCENE := preload("res://scenes/screens/TitleScreen.tscn")
 const WARNING_SCENE := preload("res://scenes/screens/WarningScreen.tscn")
 const OPENING_SCENE := preload("res://scenes/screens/OpeningScreen.tscn")
-const RULE_SCENE := preload("res://scenes/screens/RuleScreen.tscn")
+const SAFE_WORD_SCENE := preload("res://scenes/screens/SafeWordScreen.tscn")
 const GAME_SCENE := preload("res://scenes/screens/GameScreen.tscn")
 const ENDING_SCENE := preload("res://scenes/screens/EndingScreen.tscn")
 const BGM_DEFAULT := preload("res://assets/audio/bgm/default.mp3")
@@ -64,7 +64,7 @@ func _show_title() -> void:
 	current_screen_id = Config.SCREEN_TITLE
 	var screen := TITLE_SCENE.instantiate()
 	screen.start_pressed.connect(_show_warning)
-	screen.skip_pressed.connect(_show_rule)
+	screen.skip_pressed.connect(_show_safe_word)
 	screen.debug_requested.connect(func() -> void: debug_overlay.visible = true)
 	_swap_screen(screen)
 	_play_bgm("default", false)
@@ -79,14 +79,14 @@ func _show_warning() -> void:
 func _show_opening() -> void:
 	current_screen_id = Config.SCREEN_OPENING
 	var screen := OPENING_SCENE.instantiate()
-	screen.continue_pressed.connect(_show_rule)
-	screen.skip_pressed.connect(_show_rule)
+	screen.continue_pressed.connect(_show_safe_word)
+	screen.skip_pressed.connect(_show_safe_word)
 	_swap_screen(screen)
 	_play_bgm("default", false)
 
-func _show_rule() -> void:
-	current_screen_id = "rule"
-	var screen := RULE_SCENE.instantiate()
+func _show_safe_word() -> void:
+	current_screen_id = Config.SCREEN_SAFE_WORD
+	var screen := SAFE_WORD_SCENE.instantiate()
 	screen.continue_pressed.connect(_show_game)
 	_swap_screen(screen)
 	_play_bgm("default", false)

@@ -80,11 +80,13 @@ func _position_active_bubble() -> void:
 	if current_speech_bubble == null or _speech_bubble_anchor == null or _active_character_line.is_empty():
 		return
 	current_speech_bubble.resolve_size()
-	var anchor_global_position := _speech_bubble_anchor.get_global_rect().get_center()
-	var local_anchor_position := get_global_transform_with_canvas().affine_inverse() * anchor_global_position
-
-	# The editor marker represents the bubble's preferred bottom-right corner.
-	var target_position := local_anchor_position - current_speech_bubble.size
+	# The reference layout uses one stable lower-third dialogue box. Keeping the
+	# anchor dependency preserves the existing presentation API while the box is
+	# centered independently of character animation and phase-specific offsets.
+	var target_position := Vector2(
+		(size.x - current_speech_bubble.size.x) * 0.5,
+		size.y - current_speech_bubble.size.y - 28.0
+	)
 	var safe_rect := Rect2(
 		Vector2(VIEWPORT_SAFE_MARGIN, TOP_SAFE_MARGIN),
 		Vector2(

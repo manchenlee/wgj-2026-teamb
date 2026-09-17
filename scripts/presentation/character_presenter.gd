@@ -10,7 +10,7 @@ const DIRECTION_ICON_PADDING := 12.0
 const TIMER_RING_TEXTURE_SIZE := 256
 const TIMER_RING_BASE_PHASE_STEP := 0.73
 const TIMER_RING_COLOR := Color(0.83, 0.73, 0.42, 1.0)
-const SUCCESS_HEART_GLYPHS := ["♥", "❤"]
+const SUCCESS_HEART_TEXTURE := preload("res://assets/art/ui/gameplay/img_heart.png")
 const SUCCESS_HEART_COUNT := 5
 const SUCCESS_HEART_RISE_DISTANCE := 52.0
 const SUCCESS_HEART_LIFETIME := 0.72
@@ -331,19 +331,18 @@ func _apply_style(_texture_rect: TextureRect, _color: Color) -> void:
 	return
 
 func _spawn_success_heart_particle(origin: Vector2, heart_index: int) -> void:
-	var heart := Label.new()
-	heart.text = SUCCESS_HEART_GLYPHS[heart_index % SUCCESS_HEART_GLYPHS.size()]
+	var heart := TextureRect.new()
+	heart.texture = SUCCESS_HEART_TEXTURE
+	heart.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	heart.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	heart.size = Vector2.ONE * (48.0 + heart_index * 4.0)
 	heart.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	heart.z_index = 3
-	heart.pivot_offset = Vector2(12.0, 12.0)
-	heart.position = origin + Vector2(randf_range(-28.0, 28.0), randf_range(-12.0, 10.0))
+	heart.pivot_offset = heart.size * 0.5
+	heart.position = origin - (heart.size * 0.5) + Vector2(randf_range(-28.0, 28.0), randf_range(-12.0, 10.0))
 	heart.rotation = deg_to_rad(randf_range(-16.0, 16.0))
 	heart.scale = Vector2.ONE * randf_range(0.82, 1.08)
-	heart.modulate = Color(1.0, 0.42, 0.58, 0.0)
-	heart.add_theme_font_size_override("font_size", 24 + (heart_index * 2))
-	heart.add_theme_color_override("font_color", Color(1.0, 0.32, 0.48, 1.0))
-	heart.add_theme_color_override("font_outline_color", Color(1.0, 0.82, 0.88, 0.9))
-	heart.add_theme_constant_override("outline_size", 4)
+	heart.modulate = Color(1.0, 1.0, 1.0, 0.0)
 	prompt_layer.add_child(heart)
 
 	var end_position := heart.position + Vector2(randf_range(-14.0, 14.0), -SUCCESS_HEART_RISE_DISTANCE - randf_range(0.0, 18.0))

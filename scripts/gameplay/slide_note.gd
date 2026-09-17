@@ -1,6 +1,8 @@
 class_name SlideNote
 extends InteractionNote
 
+const HEART_TEXTURE := preload("res://assets/art/ui/gameplay/img_heart.png")
+
 var checkpoint_radius: float = 40.0
 var checkpoints: PackedVector2Array = PackedVector2Array()
 
@@ -248,14 +250,14 @@ func _clear_pointer_sample() -> void:
 
 
 func _spawn_heart_particle(origin: Vector2) -> void:
-	var heart := Label.new()
-	heart.text = "♥"
-	heart.add_theme_font_size_override("font_size", 22)
-	heart.add_theme_color_override("font_color", Color(1.0, 0.32, 0.48, 1.0))
-	heart.add_theme_color_override("font_outline_color", Color(1.0, 0.82, 0.88, 0.9))
-	heart.add_theme_constant_override("outline_size", 3)
+	var heart := TextureRect.new()
+	heart.texture = HEART_TEXTURE
+	heart.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	heart.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	heart.size = Vector2(48.0, 48.0)
+	heart.pivot_offset = heart.size * 0.5
 	heart.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	heart.position = origin + Vector2(randf_range(-12.0, 12.0), -checkpoint_radius * 0.5)
+	heart.position = origin - (heart.size * 0.5) + Vector2(randf_range(-12.0, 12.0), -checkpoint_radius * 0.5)
 	add_child(heart)
 
 	var tween := heart.create_tween().set_parallel(true)

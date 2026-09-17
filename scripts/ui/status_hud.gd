@@ -6,6 +6,7 @@ const WARNING_OUTLINE_COLOR := Color(1.0, 0.18, 0.12, 0.95)
 const WARNING_MODULATE_MIN := Color(1.0, 0.72, 0.68, 1.0)
 const WARNING_MODULATE_MAX := Color(1.0, 1.0, 1.0, 1.0)
 const WARNING_PULSE_SPEED: float = 4.0
+const REFERENCE_TRACK_WIDTH: float = 800.0
 
 @onready var heart_value_label: Label = $ArousalMeter/HeartValueLabel
 @onready var arousal_fill_bar: TextureRect = $ArousalMeter/ArousalFillBar
@@ -17,6 +18,8 @@ const WARNING_PULSE_SPEED: float = 4.0
 @onready var physical_value_label: Label = $NumericScores/PhysicalScore/Value
 @onready var emotional_value_label: Label = $NumericScores/EmotionalScore/Value
 @onready var combo_label: Label = $ComboLabel
+@onready var reference_fill: ColorRect = $ReferenceMeter/Track/Fill
+@onready var peak_value_label: Label = $ReferenceMeter/PeakValueLabel
 
 @export var show_legacy_meter: bool = false
 
@@ -47,6 +50,7 @@ func update_values(physical: float, emotional: float, peak: float) -> void:
 	emotional_value_label.text = str(int(round(Config.clamp_value(emotional))))
 	_peak_value = Config.clamp_value(peak)
 	heart_value_label.text = str(int(round(_peak_value)))
+	peak_value_label.text = "%d/100" % int(round(_peak_value))
 	_apply_meter_fill(_peak_value)
 
 
@@ -101,6 +105,7 @@ func _apply_meter_fill(peak: float) -> void:
 	if not is_node_ready():
 		return
 	var fill_ratio := Config.clamp_value(peak) / Config.MAX_VALUE
+	reference_fill.size.x = REFERENCE_TRACK_WIDTH * fill_ratio
 	var fill_start := fill_start_marker.position
 	var fill_end := fill_end_marker.position
 	var fill_width := maxf(fill_end.x - fill_start.x, 0.0)

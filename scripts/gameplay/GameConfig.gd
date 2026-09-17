@@ -163,6 +163,7 @@ const SAFEWORD_IGNORED_FAILURE_ENDING: String = "safeword_ignored_failure"
 const SCREEN_TITLE: String = "title"
 const SCREEN_WARNING: String = "warning"
 const SCREEN_OPENING: String = "opening"
+const SCREEN_SAFE_WORD: String = "safe_word"
 const SCREEN_GAME: String = "game"
 const SCREEN_ENDING: String = "ending"
 

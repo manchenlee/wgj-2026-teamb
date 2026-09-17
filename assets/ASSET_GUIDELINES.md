@@ -13,6 +13,7 @@
 - `art/screens/title/`：標題畫面素材。
 - `art/screens/ending/`：結局畫面素材。
 - `art/ui/`：介面元件、按鈕、圖示、文字框、條狀元件。
+- `art/ui/gameplay/`：遊戲主畫面的 HUD、模式切換、對話選項與互動提示。
 - `art/ui/screens/`：特定 UI 畫面會用到的介面圖片。
 - `audio/bgm/`：背景音樂與長音訊。
 - `audio/sfx/`：短音效。若之後加入音效，請建立此資料夾。
@@ -160,6 +161,20 @@ assets/theme/dialogue_theme.tres
 - 同組素材的前綴、狀態名、編號格式一致。
 - Godot 重新匯入後，`.import` 檔已同步更新。
 - 若改名既有資源，已確認場景、腳本與資源引用仍正常。
+
+## 2026-09-17 UI/UX 素材對應
+
+`art/ui/gameplay/` 內這批素材依 1920×1080 參考稿分工如下：
+
+- `btn_talk_clicked.png`、`btn_talk_unclicked.png`、`btn_talk_warning.png`：心理／對話模式按鈕的選取、未選取、失衡警告狀態。
+- `btn_music_clicked.png`、`btn_music_unclicked.png`、`btn_music_warning.png`：生理／調音模式按鈕的選取、未選取、失衡警告狀態。
+- `img_score.png`：遊戲畫面左上角好感度計量圖示，搭配橫向進度條與 `/100` 數值。
+- `img_dialogue.png`：心理階段下方角色台詞框。
+- `btn_choose.png`、`btn_unchoose.png`：心理階段對話選項的 hover／按下與一般狀態。
+- `img_tentacle.png`、`btn_friction.png`：生理階段摩擦互動目標與左右摩擦提示。
+- `img_heart.png`：生理互動成功、路徑節點完成及角色正向回饋粒子。
+
+安全詞畫面不使用這批遊戲內 HUD 素材；它沿用 `art/background/curtain.jpg` 與角色圖，並在前導劇情之後以 `SafeWordScreen.tscn` 顯示置中輸入視窗。專案流程不再包含規則書畫面，規則資訊由前導劇情自然帶出。
 
 ## 既有例外
 

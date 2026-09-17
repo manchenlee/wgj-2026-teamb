@@ -5,11 +5,11 @@ signal choice_selected(choice_quality: String, choice_text: String)
 
 const CHOICE_ENABLED_MODULATE := Color(1.0, 1.0, 1.0, 1.0)
 const CHOICE_DISABLED_MODULATE := Color(0.42, 0.42, 0.42, 1.0)
-const BUTTON_WIDTH := 300.0
-const BUTTON_MIN_HEIGHT := 146.0
-const BUTTON_TEXT_MARGIN_LEFT := 14.0
-const BUTTON_TEXT_MARGIN_TOP := 12.0
-const BUTTON_TEXT_MARGIN_RIGHT := 14.0
+const BUTTON_WIDTH := 520.0
+const BUTTON_MIN_HEIGHT := 101.0
+const BUTTON_TEXT_MARGIN_LEFT := 26.0
+const BUTTON_TEXT_MARGIN_TOP := 10.0
+const BUTTON_TEXT_MARGIN_RIGHT := 20.0
 const BUTTON_TEXT_MARGIN_BOTTOM := 10.0
 const REQUIRED_ANCHORS_PER_SIDE := 4
 
@@ -224,14 +224,18 @@ func _resize_choice_button(button: TextureButton, label: Label) -> void:
 func _attach_left_button_to_anchor(button: TextureButton, anchor: Control) -> void:
 	if button == null or anchor == null:
 		return
-	var marker_position := _anchor_center_in_panel_space(anchor)
-	button.position = marker_position - Vector2(button.size.x, button.size.y * 0.5)
+	button.position = Vector2(
+		maxf(20.0, size.x - button.size.x - 28.0),
+		clampf(size.y * 0.53, 160.0, size.y - button.size.y * 2.0 - 52.0)
+	)
 
 func _attach_right_button_to_anchor(button: TextureButton, anchor: Control) -> void:
 	if button == null or anchor == null:
 		return
-	var marker_position := _anchor_center_in_panel_space(anchor)
-	button.position = marker_position - Vector2(0.0, button.size.y * 0.5)
+	button.position = Vector2(
+		maxf(20.0, size.x - button.size.x - 28.0),
+		clampf(size.y * 0.53 + button.size.y + 12.0, 273.0, size.y - button.size.y - 28.0)
+	)
 
 func _anchor_center_in_panel_space(anchor: Control) -> Vector2:
 	var anchor_global_center := anchor.get_global_rect().get_center()

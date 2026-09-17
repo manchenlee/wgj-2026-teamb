@@ -1,6 +1,8 @@
 class_name RubNote
 extends InteractionNote
 
+const HEART_TEXTURE := preload("res://assets/art/ui/gameplay/img_heart.png")
+
 var required_scrub_distance: float = 600.0
 var valid_motion_threshold: float = 3.0
 var max_delta_per_event: float = 24.0
@@ -17,6 +19,12 @@ var _last_pointer_pos: Vector2 = Vector2.ZERO
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	super._ready()
+	var friction_hint := get_node_or_null("FrictionHint") as TextureRect
+	if friction_hint != null:
+		var rest_x := friction_hint.position.x
+		var tween := friction_hint.create_tween().set_loops()
+		tween.tween_property(friction_hint, "position:x", rest_x + 12.0, 0.42).set_trans(Tween.TRANS_SINE)
+		tween.tween_property(friction_hint, "position:x", rest_x - 12.0, 0.42).set_trans(Tween.TRANS_SINE)
 
 
 func setup(config: Dictionary) -> void:
@@ -153,14 +161,14 @@ func _stop_rubbing() -> void:
 
 
 func _spawn_heart_particle() -> void:
-	var heart := Label.new()
-	heart.text = "♥"
-	heart.add_theme_font_size_override("font_size", 22)
-	heart.add_theme_color_override("font_color", Color(1.0, 0.32, 0.48, 1.0))
-	heart.add_theme_color_override("font_outline_color", Color(1.0, 0.82, 0.88, 0.9))
-	heart.add_theme_constant_override("outline_size", 3)
+	var heart := TextureRect.new()
+	heart.texture = HEART_TEXTURE
+	heart.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	heart.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	heart.size = Vector2(54.0, 54.0)
+	heart.pivot_offset = heart.size * 0.5
 	heart.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	heart.position = target_center + Vector2(
+	heart.position = target_center - (heart.size * 0.5) + Vector2(
 		randf_range(-target_radius * 0.5, target_radius * 0.5),
 		-target_radius * 0.4
 	)
