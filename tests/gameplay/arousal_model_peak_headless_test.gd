@@ -76,9 +76,9 @@ func _test_balance_curve() -> void:
 
 
 func _test_minimum_active_threshold() -> void:
-	_assert_approx(_measure_rate(19.0, 19.0), 0.0, EPSILON, "Both scores below the active threshold")
-	_assert_approx(_measure_rate(19.0, 20.0), 0.0, EPSILON, "One score below the active threshold")
-	_assert_approx(_measure_rate(20.0, 20.0), 0.06, EPSILON, "Inclusive active threshold")
+	_assert_approx(_measure_rate(14.0, 14.0), 0.0, EPSILON, "Both scores below the active threshold")
+	_assert_approx(_measure_rate(14.0, 15.0), 0.0, EPSILON, "One score below the active threshold")
+	_assert_approx(_measure_rate(15.0, 15.0), 0.03375, EPSILON, "Inclusive active threshold")
 
 
 func _test_negative_loss_is_not_level_scaled() -> void:

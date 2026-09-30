@@ -47,7 +47,7 @@ func apply_decay(delta: float) -> void:
 
 func update_peak(delta: float) -> void:
 	var difference := absf(physical - emotional)
-	var minimum_active_threshold: float = float(_get_config_value("minimum_active_threshold", 20.0))
+	var minimum_active_threshold: float = float(_get_config_value("minimum_active_threshold", 15.0))
 	var both_active: bool = physical >= minimum_active_threshold and emotional >= minimum_active_threshold
 	var zero_value_count := 0
 	if physical <= 0.0:

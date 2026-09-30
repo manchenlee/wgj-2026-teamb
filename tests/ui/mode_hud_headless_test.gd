@@ -34,11 +34,13 @@ func _test_shared_mode_toggle_boundary() -> void:
 
 	var mode_toggle: InteractionModeToggle = game.get_node("%InteractionModeToggle")
 	var choice_panel: ChoicePanel = game.get_node("%ChoicePanel")
+	var overall_arousal_label: Label = game.get_node("%StatusHUD/ReferenceMeter/PeakValueLabel")
 	var legacy_rings: Control = game.get_node("CharacterAlignmentRoot/MainCharacterArea/CentralArousalVisualization")
 	var counts := {"transitions": 0}
 	game.interaction_mode_changed.connect(func(_mode: int) -> void: counts.transitions += 1)
 
 	_assert(game.interaction_mode == PSYCHOLOGICAL_MODE, "Game did not start in psychological mode.")
+	_assert(overall_arousal_label.text == "0/100", "Overall-arousal HUD did not show the Phase 1 initial value.")
 	_assert(mode_toggle.get_interaction_mode() == PSYCHOLOGICAL_MODE, "Mode UI did not synchronize its initial authoritative mode.")
 	_assert(mode_toggle.get_node("ModeLabel").text == "對話", "Psychological mode label is incorrect.")
 	_assert(choice_panel.visible, "Psychological mode did not leave the choice layer visible.")
@@ -88,33 +90,33 @@ func _test_numeric_hud_and_legacy_visibility() -> void:
 	var physical_label: Label = hud.get_node("NumericScores/PhysicalScore/Value")
 	var emotional_label: Label = hud.get_node("NumericScores/EmotionalScore/Value")
 	var legacy_meter: Control = hud.get_node("ArousalMeter")
-	var affection_track: ColorRect = hud.get_node("ReferenceMeter/Track")
-	var affection_fill: ColorRect = hud.get_node("ReferenceMeter/Track/Fill")
-	var affection_label: Label = hud.get_node("ReferenceMeter/PeakValueLabel")
+	var overall_arousal_track: ColorRect = hud.get_node("ReferenceMeter/Track")
+	var overall_arousal_fill: ColorRect = hud.get_node("ReferenceMeter/Track/Fill")
+	var overall_arousal_label: Label = hud.get_node("ReferenceMeter/PeakValueLabel")
 
 	hud.update_values(0.0, 100.0, 0.0)
 	_assert(physical_label.text == "0", "Physical HUD did not render zero.")
 	_assert(emotional_label.text == "100", "Emotional HUD did not render 100 independently.")
-	_assert(affection_label.text == "0/100", "Affection HUD did not render zero.")
-	_assert(is_zero_approx(affection_fill.size.x), "Affection bar was not empty at zero.")
+	_assert(overall_arousal_label.text == "0/100", "Overall-arousal HUD did not render zero.")
+	_assert(is_zero_approx(overall_arousal_fill.size.x), "Overall-arousal bar was not empty at zero.")
 
 	hud.update_values(42.4, 67.6, 50.0)
 	_assert(physical_label.text == "42", "Physical HUD middle-value rounding is incorrect.")
 	_assert(emotional_label.text == "68", "Emotional HUD middle-value rounding is incorrect.")
-	_assert(affection_label.text == "50/100", "Affection HUD did not render its midpoint.")
+	_assert(overall_arousal_label.text == "50/100", "Overall-arousal HUD did not render its midpoint.")
 	_assert(
-		is_equal_approx(affection_fill.size.x, affection_track.size.x * 0.5),
-		"Affection bar did not fill to its midpoint."
+		is_equal_approx(overall_arousal_fill.size.x, overall_arousal_track.size.x * 0.5),
+		"Overall-arousal bar did not fill to its midpoint."
 	)
-	_assert(affection_fill.color == Color(1, 0.76, 0.24, 1), "Affection bar is not yellow.")
+	_assert(overall_arousal_fill.color == Color(1, 0.76, 0.24, 1), "Overall-arousal bar is not yellow.")
 
 	hud.update_values(100.0, 0.0, 100.0)
 	_assert(physical_label.text == "100", "Physical HUD did not render 100.")
 	_assert(emotional_label.text == "0", "Emotional HUD did not render zero independently.")
-	_assert(affection_label.text == "100/100", "Affection HUD did not render its maximum.")
+	_assert(overall_arousal_label.text == "100/100", "Overall-arousal HUD did not render its maximum.")
 	_assert(
-		is_equal_approx(affection_fill.size.x, affection_track.size.x),
-		"Affection bar did not fill the complete track at 100."
+		is_equal_approx(overall_arousal_fill.size.x, overall_arousal_track.size.x),
+		"Overall-arousal bar did not fill the complete track at 100."
 	)
 	_assert(not legacy_meter.visible, "Legacy StatusHUD meter is not hidden by default.")
 	_assert(legacy_meter.has_node("HeartIcon"), "Legacy heart meter node was removed.")
@@ -200,9 +202,9 @@ func _test_warning_presentation_apis() -> void:
 	var mode_label: Label = mode_toggle.get_node("ModeLabel")
 	var talk_button: TextureButton = mode_toggle.get_node("TalkButton")
 	var music_button: TextureButton = mode_toggle.get_node("MusicButton")
-	var affection_track: ColorRect = game.get_node("%StatusHUD/ReferenceMeter/Track")
-	var affection_fill: ColorRect = game.get_node("%StatusHUD/ReferenceMeter/Track/Fill")
-	var affection_label: Label = game.get_node("%StatusHUD/ReferenceMeter/PeakValueLabel")
+	var overall_arousal_track: ColorRect = game.get_node("%StatusHUD/ReferenceMeter/Track")
+	var overall_arousal_fill: ColorRect = game.get_node("%StatusHUD/ReferenceMeter/Track/Fill")
+	var overall_arousal_label: Label = game.get_node("%StatusHUD/ReferenceMeter/PeakValueLabel")
 	var original_physical: float = game.arousal_model.physical
 	var original_emotional: float = game.arousal_model.emotional
 	var psychological_label_text: String = mode_label.text
@@ -238,15 +240,20 @@ func _test_warning_presentation_apis() -> void:
 
 	game.arousal_model.physical = 60.0
 	game.arousal_model.emotional = 20.0
+	game.arousal_model.peak = 35.0
 	game._update_presentation()
-	_assert(affection_label.text == "60/100", "Live affection HUD did not display the physical score.")
+	_assert(overall_arousal_label.text == "35/100", "Live overall-arousal HUD did not display the peak score.")
 	_assert(
-		is_equal_approx(affection_fill.size.x, affection_track.size.x * 0.6),
-		"Live affection bar did not react to physical-score changes."
+		is_equal_approx(overall_arousal_fill.size.x, overall_arousal_track.size.x * 0.35),
+		"Live overall-arousal bar did not react to peak-score changes."
 	)
+	game.arousal_model.physical = 90.0
 	game.arousal_model.emotional = 80.0
 	game._update_presentation()
-	_assert(affection_label.text == "60/100", "Emotional score incorrectly changed affection HUD.")
+	_assert(overall_arousal_label.text == "35/100", "Physical or emotional score incorrectly changed the overall-arousal HUD.")
+	game.arousal_model.peak = 75.0
+	game._update_presentation()
+	_assert(overall_arousal_label.text == "75/100", "Peak-score changes did not update the overall-arousal HUD.")
 
 	mode_toggle.set_imbalance_warning(false, -1)
 	_assert(not mode_toggle.is_imbalance_warning_active(), "Mode-toggle warning API did not deactivate.")

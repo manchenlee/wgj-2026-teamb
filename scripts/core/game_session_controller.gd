@@ -1298,7 +1298,7 @@ func _update_presentation() -> void:
 	status_hud.update_values(
 		arousal_model.physical,
 		arousal_model.emotional,
-		arousal_model.physical
+		arousal_model.peak
 	)
 	_update_score_warning_state()
 	_update_phase_debug_label()

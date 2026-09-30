@@ -23,7 +23,7 @@ const WARNING_PULSE_SPEED: float = 4.0
 
 @export var show_legacy_meter: bool = false
 
-var _affection_value: float = 0.0
+var _overall_arousal_value: float = 0.0
 var _physical_low_warning_active: bool = false
 var _emotional_low_warning_active: bool = false
 var _warning_pulse_time: float = 0.0
@@ -31,7 +31,7 @@ var _combo_pulse_tween: Tween = null
 
 func _ready() -> void:
 	legacy_arousal_meter.visible = show_legacy_meter
-	_apply_affection_value(_affection_value)
+	_apply_overall_arousal_value(_overall_arousal_value)
 	set_process(false)
 	_apply_score_warning_presentation()
 	update_combo(0)
@@ -43,15 +43,15 @@ func _process(delta: float) -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready():
-		_apply_affection_value(_affection_value)
+		_apply_overall_arousal_value(_overall_arousal_value)
 
-func update_values(physical: float, emotional: float, affection_value: float) -> void:
+func update_values(physical: float, emotional: float, overall_arousal: float) -> void:
 	physical_value_label.text = str(int(round(Config.clamp_value(physical))))
 	emotional_value_label.text = str(int(round(Config.clamp_value(emotional))))
-	_affection_value = Config.clamp_value(affection_value)
-	heart_value_label.text = str(int(round(_affection_value)))
-	peak_value_label.text = "%d/100" % int(round(_affection_value))
-	_apply_affection_value(_affection_value)
+	_overall_arousal_value = Config.clamp_value(overall_arousal)
+	heart_value_label.text = str(int(round(_overall_arousal_value)))
+	peak_value_label.text = "%d/100" % int(round(_overall_arousal_value))
+	_apply_overall_arousal_value(_overall_arousal_value)
 
 
 func update_combo(combo: int, pulse: bool = false) -> void:
@@ -101,10 +101,10 @@ func set_legacy_meter_visible(legacy_visible: bool) -> void:
 	if is_node_ready():
 		legacy_arousal_meter.visible = legacy_visible
 
-func _apply_affection_value(affection_value: float) -> void:
+func _apply_overall_arousal_value(overall_arousal: float) -> void:
 	if not is_node_ready():
 		return
-	var fill_ratio := Config.clamp_value(affection_value) / Config.MAX_VALUE
+	var fill_ratio := Config.clamp_value(overall_arousal) / Config.MAX_VALUE
 	reference_fill.size.x = reference_track.size.x * fill_ratio
 	var fill_start := fill_start_marker.position
 	var fill_end := fill_end_marker.position

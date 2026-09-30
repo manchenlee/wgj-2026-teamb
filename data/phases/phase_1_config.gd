@@ -6,6 +6,7 @@ func _init() -> void:
 		{
 			"phase_id": "phase_1",
 			"starting_physical_value": 20.0,
-			"starting_emotional_value": 20.0
+			"starting_emotional_value": 20.0,
+			"starting_peak_value": 0.0
 		}
 	)

@@ -168,7 +168,7 @@ assets/theme/dialogue_theme.tres
 
 - `btn_talk_clicked.png`、`btn_talk_unclicked.png`、`btn_talk_warning.png`：心理／對話模式按鈕的選取、未選取、失衡警告狀態。
 - `btn_music_clicked.png`、`btn_music_unclicked.png`、`btn_music_warning.png`：生理／調音模式按鈕的選取、未選取、失衡警告狀態。
-- `img_score.png`：遊戲畫面左上角好感度計量圖示，搭配橫向進度條與 `/100` 數值。
+- `img_score.png`：遊戲畫面左上角整體興奮度計量圖示，搭配橫向進度條與 `/100` 數值。
 - `img_dialogue.png`：心理階段下方角色台詞框。
 - `btn_choose.png`、`btn_unchoose.png`：心理階段對話選項的 hover／按下與一般狀態。
 - `img_tentacle.png`、`btn_friction.png`：生理階段摩擦互動目標與左右摩擦提示。
