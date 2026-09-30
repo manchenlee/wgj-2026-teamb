@@ -57,6 +57,8 @@ var peak_balance_best_diff: float
 var peak_balance_ok_diff: float
 var peak_balance_fail_diff: float
 var max_positive_peak_gain_rate: float
+var peak_full_gain_level: float
+var minimum_peak_level_factor: float
 var peak_loss_rate_imbalanced: float
 var peak_zero_value_extra_loss_rate: float
 var success_condition: Dictionary
@@ -134,6 +136,11 @@ func _init(values: Dictionary = {}) -> void:
 	max_positive_peak_gain_rate = float(values.get(
 		"max_positive_peak_gain_rate",
 		Config.MAX_POSITIVE_PEAK_GAIN_RATE
+	))
+	peak_full_gain_level = float(values.get("peak_full_gain_level", Config.PEAK_FULL_GAIN_LEVEL))
+	minimum_peak_level_factor = float(values.get(
+		"minimum_peak_level_factor",
+		Config.MINIMUM_PEAK_LEVEL_FACTOR
 	))
 	peak_loss_rate_imbalanced = float(values.get("peak_loss_rate_imbalanced", 2.0))
 	peak_zero_value_extra_loss_rate = float(values.get("peak_zero_value_extra_loss_rate", 3.0))

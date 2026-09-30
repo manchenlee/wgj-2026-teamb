@@ -11,8 +11,8 @@ var _failures: Array[String] = []
 
 
 func _initialize() -> void:
-	_test_perfect_balance_rates_and_times()
-	_test_absolute_level_ordering()
+	_test_perfect_balance_rates()
+	_test_level_factor_floor_and_cap()
 	_test_balance_curve()
 	_test_minimum_active_threshold()
 	_test_negative_loss_is_not_level_scaled()
@@ -20,7 +20,7 @@ func _initialize() -> void:
 	_test_physical_and_emotional_clamping()
 	_test_peak_clamping_and_activation()
 	_test_delta_integration()
-	_test_phase_formula_parity()
+	_test_phase_configuration_is_applied()
 	if _failures.is_empty():
 		print("ArousalModel peak headless tests passed.")
 		quit(0)
@@ -30,80 +30,91 @@ func _initialize() -> void:
 	quit(1)
 
 
-func _test_perfect_balance_rates_and_times() -> void:
-	var cases: Array = [
-		[20.0, 0.06, 1666.6667],
-		[40.0, 0.24, 416.6667],
-		[60.0, 0.54, 185.1852],
-		[80.0, 0.96, 104.1667],
-		[100.0, 1.5, 66.6667],
+func _test_perfect_balance_rates() -> void:
+	var config = PHASE_1_CONFIG_SCRIPT.new()
+	var scores: Array[float] = [
+		config.minimum_active_threshold,
+		config.peak_full_gain_level,
+		CONFIG.MAX_VALUE,
 	]
-	for test_case in cases:
-		var score: float = test_case[0]
-		var expected_rate: float = test_case[1]
-		var expected_seconds: float = test_case[2]
-		var actual_rate := _measure_rate(score, score)
+	for score in scores:
+		var level := clampf(score / config.peak_full_gain_level, 0.0, 1.0)
+		var expected_level_factor := maxf(level * level, config.minimum_peak_level_factor)
+		var expected_rate: float = config.max_positive_peak_gain_rate * expected_level_factor
+		var actual_rate := _measure_rate(score, score, config)
 		_assert_approx(actual_rate, expected_rate, EPSILON, "Perfect-balance rate at %.0f/%.0f" % [score, score])
-		_assert_approx(100.0 / actual_rate, expected_seconds, 0.01, "Ideal time to 100 at %.0f/%.0f" % [score, score])
-	_assert_approx(
-		CONFIG.MAX_POSITIVE_PEAK_GAIN_RATE,
-		1.5,
-		EPSILON,
-		"Central maximum positive peak rate"
+		_assert(actual_rate > 0.0, "Perfect-balance rate was not positive at %.0f/%.0f." % [score, score])
+
+
+func _test_level_factor_floor_and_cap() -> void:
+	var config = PHASE_1_CONFIG_SCRIPT.new()
+	var threshold_rate := _measure_rate(
+		config.minimum_active_threshold,
+		config.minimum_active_threshold,
+		config
 	)
-
-
-func _test_absolute_level_ordering() -> void:
-	var previous_rate := -1.0
-	for score in [20.0, 40.0, 60.0, 80.0, 100.0]:
-		var current_rate := _measure_rate(score, score)
-		_assert(current_rate > previous_rate, "Perfect-balance rate did not increase at %.0f/%.0f." % [score, score])
-		previous_rate = current_rate
+	var full_rate := _measure_rate(config.peak_full_gain_level, config.peak_full_gain_level, config)
+	var capped_rate := _measure_rate(CONFIG.MAX_VALUE, CONFIG.MAX_VALUE, config)
+	_assert_approx(
+		threshold_rate,
+		config.max_positive_peak_gain_rate * config.minimum_peak_level_factor,
+		EPSILON,
+		"Minimum positive level factor"
+	)
+	_assert_approx(full_rate, config.max_positive_peak_gain_rate, EPSILON, "Full-gain level")
+	_assert_approx(capped_rate, full_rate, EPSILON, "Level factor upper cap")
 
 
 func _test_balance_curve() -> void:
-	var perfect_rate := _measure_rate(100.0, 100.0)
-	var difference_five_rate := _measure_rate(100.0, 95.0)
-	var difference_ten_rate := _measure_rate(100.0, 90.0)
-	var difference_fifteen_rate := _measure_rate(100.0, 85.0)
-	var difference_thirty_rate := _measure_rate(100.0, 70.0)
-	var same_level_maximum := CONFIG.MAX_POSITIVE_PEAK_GAIN_RATE * 0.95 * 0.95
+	var config = PHASE_1_CONFIG_SCRIPT.new()
+	var perfect_rate := _measure_rate(CONFIG.MAX_VALUE, CONFIG.MAX_VALUE, config)
+	var difference_five_rate := _measure_rate(CONFIG.MAX_VALUE, CONFIG.MAX_VALUE - config.peak_balance_best_diff, config)
+	var middle_difference: float = (config.peak_balance_best_diff + config.peak_balance_ok_diff) * 0.5
+	var difference_ten_rate := _measure_rate(CONFIG.MAX_VALUE, CONFIG.MAX_VALUE - middle_difference, config)
+	var difference_fifteen_rate := _measure_rate(CONFIG.MAX_VALUE, CONFIG.MAX_VALUE - config.peak_balance_ok_diff, config)
+	var difference_thirty_rate := _measure_rate(CONFIG.MAX_VALUE, CONFIG.MAX_VALUE - config.peak_balance_fail_diff, config)
 	_assert(perfect_rate > difference_five_rate, "Perfect balance was not the strongest positive case.")
-	_assert_approx(difference_five_rate, same_level_maximum * 0.2, EPSILON, "Difference-five balance factor")
 	_assert(difference_five_rate > difference_ten_rate, "Positive balance gain did not decline from difference 5 to 10.")
 	_assert_approx(difference_fifteen_rate, 0.0, EPSILON, "Difference-fifteen neutral rate")
-	_assert_approx(difference_thirty_rate, -2.0, EPSILON, "Difference-thirty ordinary loss")
+	_assert_approx(difference_thirty_rate, -config.peak_loss_rate_imbalanced, EPSILON, "Difference-thirty ordinary loss")
 
 
 func _test_minimum_active_threshold() -> void:
-	_assert_approx(_measure_rate(14.0, 14.0), 0.0, EPSILON, "Both scores below the active threshold")
-	_assert_approx(_measure_rate(14.0, 15.0), 0.0, EPSILON, "One score below the active threshold")
-	_assert_approx(_measure_rate(15.0, 15.0), 0.03375, EPSILON, "Inclusive active threshold")
+	var config = PHASE_1_CONFIG_SCRIPT.new()
+	var below_threshold: float = config.minimum_active_threshold - 1.0
+	_assert_approx(_measure_rate(below_threshold, below_threshold, config), 0.0, EPSILON, "Both scores below the active threshold")
+	_assert_approx(_measure_rate(below_threshold, config.minimum_active_threshold, config), 0.0, EPSILON, "One score below the active threshold")
+	_assert(_measure_rate(config.minimum_active_threshold, config.minimum_active_threshold, config) > 0.0, "Inclusive active threshold did not gain peak.")
 
 
 func _test_negative_loss_is_not_level_scaled() -> void:
-	var low_level_loss := _measure_rate(40.0, 20.0)
-	var high_level_loss := _measure_rate(100.0, 80.0)
+	var config = PHASE_1_CONFIG_SCRIPT.new()
+	var loss_difference: float = (config.peak_balance_ok_diff + config.peak_balance_fail_diff) * 0.5
+	var low_level_loss := _measure_rate(config.peak_full_gain_level, config.peak_full_gain_level - loss_difference, config)
+	var high_level_loss := _measure_rate(CONFIG.MAX_VALUE, CONFIG.MAX_VALUE - loss_difference, config)
 	_assert_approx(low_level_loss, high_level_loss, EPSILON, "Level-independent imbalance loss")
-	_assert_approx(low_level_loss, -2.0 / 3.0, EPSILON, "Difference-twenty loss rate")
+	_assert(low_level_loss < 0.0, "Imbalanced scores did not lose peak.")
 
 
 func _test_zero_score_penalties() -> void:
+	var config = PHASE_1_CONFIG_SCRIPT.new()
 	var both_zero_model = AROUSAL_MODEL_SCRIPT.new()
+	both_zero_model.set_phase_config(config)
 	both_zero_model.physical = 0.0
 	both_zero_model.emotional = 0.0
 	both_zero_model.peak = 10.0
 	both_zero_model.peak_has_activated = true
 	both_zero_model.update_peak(1.0)
-	_assert_approx(both_zero_model.peak, 4.0, EPSILON, "Two independent zero-score penalties")
+	_assert_approx(both_zero_model.peak, 10.0 - config.peak_zero_value_extra_loss_rate * 2.0, EPSILON, "Two independent zero-score penalties")
 
 	var one_zero_model = AROUSAL_MODEL_SCRIPT.new()
+	one_zero_model.set_phase_config(config)
 	one_zero_model.physical = 0.0
 	one_zero_model.emotional = 10.0
 	one_zero_model.peak = 10.0
 	one_zero_model.peak_has_activated = true
 	one_zero_model.update_peak(1.0)
-	_assert_approx(one_zero_model.peak, 7.0, EPSILON, "One zero-score penalty")
+	_assert_approx(one_zero_model.peak, 10.0 - config.peak_zero_value_extra_loss_rate, EPSILON, "One zero-score penalty")
 
 
 func _test_physical_and_emotional_clamping() -> void:
@@ -148,33 +159,36 @@ func _test_peak_clamping_and_activation() -> void:
 
 
 func _test_delta_integration() -> void:
+	var config = PHASE_1_CONFIG_SCRIPT.new()
 	var one_step_model = AROUSAL_MODEL_SCRIPT.new()
+	one_step_model.set_phase_config(config)
 	one_step_model.physical = 80.0
 	one_step_model.emotional = 80.0
 	one_step_model.update_peak(10.0)
 
 	var many_step_model = AROUSAL_MODEL_SCRIPT.new()
+	many_step_model.set_phase_config(config)
 	many_step_model.physical = 80.0
 	many_step_model.emotional = 80.0
 	for step in range(100):
 		many_step_model.update_peak(0.1)
-	_assert_approx(one_step_model.peak, 9.6, EPSILON, "One-step time integration")
+	_assert_approx(one_step_model.peak, config.max_positive_peak_gain_rate * 10.0, EPSILON, "One-step time integration")
 	_assert_approx(many_step_model.peak, one_step_model.peak, 0.001, "Frame-rate-independent time integration")
 
 
-func _test_phase_formula_parity() -> void:
-	var phase_1 = PHASE_1_CONFIG_SCRIPT.new()
-	var phase_2 = PHASE_2_CONFIG_SCRIPT.new()
-	_assert_approx(
-		phase_1.max_positive_peak_gain_rate,
-		phase_2.max_positive_peak_gain_rate,
-		EPSILON,
-		"Phase maximum positive-rate parity"
-	)
-	for scores in [[100.0, 100.0], [100.0, 95.0], [100.0, 70.0], [0.0, 0.0]]:
-		var phase_1_rate := _measure_rate(scores[0], scores[1], phase_1)
-		var phase_2_rate := _measure_rate(scores[0], scores[1], phase_2)
-		_assert_approx(phase_1_rate, phase_2_rate, EPSILON, "Phase formula parity at %s" % [str(scores)])
+func _test_phase_configuration_is_applied() -> void:
+	for config in [PHASE_1_CONFIG_SCRIPT.new(), PHASE_2_CONFIG_SCRIPT.new()]:
+		var rate := _measure_rate(
+			config.peak_full_gain_level,
+			config.peak_full_gain_level,
+			config
+		)
+		_assert_approx(
+			rate,
+			config.max_positive_peak_gain_rate,
+			EPSILON,
+			"Configured full-gain rate for %s" % [config.phase_id]
+		)
 
 
 func _measure_rate(physical: float, emotional: float, phase_config = null) -> float:

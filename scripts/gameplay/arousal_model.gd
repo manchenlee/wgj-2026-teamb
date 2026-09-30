@@ -76,8 +76,16 @@ func _get_peak_rate(difference: float, both_active: bool) -> float:
 			peak_balance_best_diff,
 			peak_balance_ok_diff
 		)
-		var level := clampf(minf(physical, emotional) / Config.MAX_VALUE, 0.0, 1.0)
-		var level_factor := level * level
+		var peak_full_gain_level: float = float(_get_config_value(
+			"peak_full_gain_level",
+			Config.PEAK_FULL_GAIN_LEVEL
+		))
+		var minimum_peak_level_factor: float = float(_get_config_value(
+			"minimum_peak_level_factor",
+			Config.MINIMUM_PEAK_LEVEL_FACTOR
+		))
+		var level := clampf(minf(physical, emotional) / peak_full_gain_level, 0.0, 1.0)
+		var level_factor := maxf(level * level, minimum_peak_level_factor)
 		var max_positive_rate: float = float(_get_config_value(
 			"max_positive_peak_gain_rate",
 			Config.MAX_POSITIVE_PEAK_GAIN_RATE
