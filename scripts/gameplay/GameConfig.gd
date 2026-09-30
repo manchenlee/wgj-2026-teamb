@@ -10,7 +10,7 @@ const USE_PHYSICAL_FOR_DEPLETION_FAILURE: bool = true
 # Temporary score-warning presentation tuning. These thresholds are independent
 # from ending evaluation and do not affect authoritative gameplay values.
 const LOW_SCORE_WARNING_THRESHOLD: float = 20.0
-const SCORE_IMBALANCE_WARNING_THRESHOLD: float = 20.0
+const SCORE_IMBALANCE_WARNING_THRESHOLD: float = 10.0
 
 # Shared dialogue defaults.
 const FEEDBACK_MESSAGE_TEXT: String = "……"
@@ -27,9 +27,9 @@ const INITIAL_EMOTIONAL: float = 40.0
 const INITIAL_PEAK: float = 0.0
 # Passive progression.
 # 最平衡且兩項分數皆為 100 時，整體興奮度的最大上升速度。
-const MAX_POSITIVE_PEAK_GAIN_RATE: float = 1.5
+const MAX_POSITIVE_PEAK_GAIN_RATE: float = 2
 const PEAK_FULL_GAIN_LEVEL: float = 40.0
-const MINIMUM_PEAK_LEVEL_FACTOR: float = 0.5
+const MINIMUM_PEAK_LEVEL_FACTOR: float = 0.8
 
 # --- Ordered checkpoint interaction (Physical Arousal) ---
 
