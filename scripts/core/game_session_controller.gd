@@ -1358,16 +1358,11 @@ func _update_choice_timer_visual() -> void:
 	dialogue_panel.set_choice_timeout_progress(0.0)
 
 func _update_bgm_state() -> void:
-	var next_track_key := "default"
-	var use_fade := false
-
-	if has_switched_to_game_bgm:
-		next_track_key = "overall_low" if arousal_model.peak >= 50.0 else "overall_high"
-		use_fade = true
-	elif arousal_model.peak_has_activated:
-		has_switched_to_game_bgm = true
-		next_track_key = "overall_low" if arousal_model.peak >= 50.0 else "overall_high"
-		use_fade = true
+	# Entering gameplay must leave the menu/default track immediately. Waiting
+	# for peak activation kept the default BGM playing at the start of a run.
+	var next_track_key := "overall_low" if arousal_model.peak >= 50.0 else "overall_high"
+	var use_fade := true
+	has_switched_to_game_bgm = true
 
 	if last_requested_bgm_key == next_track_key:
 		return

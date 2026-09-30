@@ -104,7 +104,6 @@ func _show_game(safe_word: String = "紅色") -> void:
 	screen.debug_overlay = debug_overlay
 	_swap_screen(screen)
 	debug_overlay.sync_live_readout(screen.get_debug_state())
-	_play_bgm("default", false)
 
 func _show_ending(ending_type: String) -> void:
 	current_screen_id = Config.SCREEN_ENDING
