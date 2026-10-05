@@ -21,7 +21,7 @@ func _run() -> void:
 	await _test_forced_success_routes_directly()
 	await _test_continuous_band_progression_and_dialogue_pool()
 	await _test_psychological_mode_starts_new_dialogue()
-	await _test_failure_routes_and_peak_depletion()
+	await _test_score_ending_routes()
 	await _test_physiological_combo_lifecycle()
 	await _test_explicit_new_run_reset()
 	await _test_actual_ending_fade_remains()
@@ -36,27 +36,30 @@ func _run() -> void:
 
 func _test_success_routes_directly_without_reset() -> void:
 	var game = await _create_game()
-	var physical_threshold := float(game.active_phase_config.success_condition.get("physical_value", 100.0))
-	var emotional_threshold := float(game.active_phase_config.success_condition.get("emotional_value", 70.0))
-	game.arousal_model.physical = physical_threshold - 0.001
-	game.arousal_model.emotional = emotional_threshold
+	game.arousal_model.physical = 100.0
+	game.arousal_model.emotional = 80.0
 	game.arousal_model.peak = 100.0
 	game.arousal_model.peak_has_activated = true
 	game._check_ending()
-	_assert(not game.ending_transition_started and game.run_active, "Physical below the success threshold ended the run.")
+	_assert(not game.ending_transition_started and game.run_active, "100/80 ended instead of continuing play.")
+	game.arousal_model.physical = 80.0
+	game.arousal_model.emotional = 100.0
+	game._check_ending()
+	_assert(not game.ending_transition_started and game.run_active, "80/100 ended instead of continuing play.")
 
 	game.dialogue_panel.append_history("continuous history marker", "companion")
 	var history_before: Array = game.dialogue_panel.get_dialogue_history()
 	var phase_before: int = game.active_phase_index
 	var config_before = game.active_phase_config
-	game.arousal_model.physical = physical_threshold
-	var scores_before := [physical_threshold, emotional_threshold, game.arousal_model.peak]
+	game.arousal_model.physical = 100.0
+	game.arousal_model.emotional = 95.0
+	var scores_before := [game.arousal_model.physical, game.arousal_model.emotional, game.arousal_model.peak]
 	var endings: Array[String] = []
 	game.ending_requested.connect(func(ending_type: String) -> void: endings.append(ending_type))
 	game.phase_transition_overlay = null
 	game._check_ending()
 
-	_assert(endings == [CONFIG.SUCCESS_ENDING], "Threshold success did not route directly to the final success ending: %s" % str(endings))
+	_assert(endings == [CONFIG.SUCCESS_ENDING], "100/95 did not route directly to the final success ending: %s" % str(endings))
 	_assert(game.ending_transition_started and not game.run_active, "Final success did not begin canonical ending teardown.")
 	_assert(game.active_phase_index == phase_before and game.active_phase_config == config_before, "Final success created a second gameplay phase/config.")
 	_assert([game.arousal_model.physical, game.arousal_model.emotional, game.arousal_model.peak] == scores_before, "Final success reset scores before ending.")
@@ -130,8 +133,8 @@ func _test_continuous_band_progression_and_dialogue_pool() -> void:
 	game.phase_transition_overlay = null
 	var endings: Array[String] = []
 	game.ending_requested.connect(func(ending_type: String) -> void: endings.append(ending_type))
-	game.arousal_model.physical = float(game.active_phase_config.success_condition.get("physical_value", 100.0))
-	game.arousal_model.emotional = float(game.active_phase_config.success_condition.get("emotional_value", 70.0))
+	game.arousal_model.physical = 100.0
+	game.arousal_model.emotional = 95.0
 	game._check_ending()
 	_assert(endings == [CONFIG.SUCCESS_ENDING], "Deterministic continuous flow did not finish at final success.")
 	await _free_game(game)
@@ -161,11 +164,11 @@ func _test_psychological_mode_starts_new_dialogue() -> void:
 	await _free_game(game)
 
 
-func _test_failure_routes_and_peak_depletion() -> void:
-	await _assert_failure_route(CONFIG.PEAK_DEPLETION_FAILURE_ENDING, 0.0, 50.0, 50.0, false)
+func _test_score_ending_routes() -> void:
+	await _assert_failure_route(CONFIG.PEAK_DEPLETION_FAILURE_ENDING, 0.0, 0.0, 50.0, false)
 	await _assert_failure_route(CONFIG.PHYSICAL_IMBALANCE_FAILURE_ENDING, 100.0, 10.0, 0.0, false)
 	await _assert_failure_route(CONFIG.EMOTIONAL_IMBALANCE_FAILURE_ENDING, 10.0, 100.0, 0.0, false)
-	await _assert_runtime_decay_depletion()
+	await _assert_runtime_zero_score_continuation()
 	await _assert_runtime_penalty_depletion()
 	var game = await _create_game()
 	var endings: Array[String] = []
@@ -176,7 +179,7 @@ func _test_failure_routes_and_peak_depletion() -> void:
 	await _free_game(game)
 
 
-func _assert_runtime_decay_depletion() -> void:
+func _assert_runtime_zero_score_continuation() -> void:
 	var game = await _create_game()
 	var endings: Array[String] = []
 	game.ending_requested.connect(func(result: String) -> void: endings.append(result))
@@ -188,7 +191,7 @@ func _assert_runtime_decay_depletion() -> void:
 	game.arousal_model.physical_activity_grace_remaining = 0.0
 	game._process(1.0)
 	_assert(game.arousal_model.physical == 0.0, "Runtime decay setup did not reach physiological zero.")
-	_assert(endings == [CONFIG.PEAK_DEPLETION_FAILURE_ENDING], "Runtime decay did not route physiological depletion: %s" % str(endings))
+	_assert(endings.is_empty() and game.run_active and not game.ending_transition_started, "Runtime physical depletion ended the run with emotional score above zero: %s" % str(endings))
 	await _free_game(game)
 
 
@@ -206,7 +209,7 @@ func _assert_runtime_penalty_depletion() -> void:
 	game.force_expire_spot()
 	game._process(0.0)
 	_assert(game.arousal_model.physical == 0.0, "Physiological expiry penalty setup did not reach zero.")
-	_assert(endings == [CONFIG.PEAK_DEPLETION_FAILURE_ENDING], "Physiological expiry penalty did not route depletion: %s" % str(endings))
+	_assert(endings.is_empty() and game.run_active and not game.ending_transition_started, "Physiological expiry penalty ended the run with emotional score above zero: %s" % str(endings))
 	await _free_game(game)
 
 

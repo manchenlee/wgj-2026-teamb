@@ -3,40 +3,18 @@ extends RefCounted
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
-static func evaluate(
-		model,
-		phase_config = null,
-		use_physical_for_depletion_failure: bool = Config.USE_PHYSICAL_FOR_DEPLETION_FAILURE
-) -> String:
-	var success_condition := {
-		"type": "physical_and_emotional_at_or_above",
-		"physical_value": Config.MAX_VALUE,
-		"emotional_value": 70.0
-	}
-	var failure_thresholds := {
-		"peak_depletion_requires_activation": true,
-		"physical_cap": Config.MAX_VALUE,
-		"physical_counterpart_below": 70.0,
-		"emotional_cap": Config.MAX_VALUE,
-		"emotional_counterpart_below": 70.0
-	}
-	if phase_config != null:
-		success_condition = phase_config.success_condition
-		failure_thresholds = phase_config.failure_thresholds
+static func evaluate(model) -> String:
+	# Match the integer scores shown by StatusHUD.update_values().
+	var physical_score: int = int(round(Config.clamp_value(model.physical)))
+	var emotional_score: int = int(round(Config.clamp_value(model.emotional)))
+	var difference: int = absi(physical_score - emotional_score)
 
-	if str(success_condition.get("type", "")) == "physical_and_emotional_at_or_above" \
-			and model.physical >= float(success_condition.get("physical_value", Config.MAX_VALUE)) \
-			and model.emotional >= float(success_condition.get("emotional_value", 70.0)):
-		return Config.SUCCESS_ENDING
-	var depletion_failure: bool = model.physical <= 0.0 if use_physical_for_depletion_failure else (
-		bool(failure_thresholds.get("peak_depletion_requires_activation", true))
-		and model.peak_has_activated
-		and model.peak <= 0.0
-	)
-	if depletion_failure:
+	if physical_score == 0 and emotional_score == 0:
 		return Config.PEAK_DEPLETION_FAILURE_ENDING
-	if model.physical >= float(failure_thresholds.get("physical_cap", Config.MAX_VALUE)) and model.emotional < float(failure_thresholds.get("physical_counterpart_below", 70.0)):
+	if (physical_score == 100 or emotional_score == 100) and difference <= 10:
+		return Config.SUCCESS_ENDING
+	if physical_score == 100 and physical_score - emotional_score > 30:
 		return Config.PHYSICAL_IMBALANCE_FAILURE_ENDING
-	if model.emotional >= float(failure_thresholds.get("emotional_cap", Config.MAX_VALUE)) and model.physical < float(failure_thresholds.get("emotional_counterpart_below", 70.0)):
+	if emotional_score == 100 and emotional_score - physical_score > 30:
 		return Config.EMOTIONAL_IMBALANCE_FAILURE_ENDING
 	return ""

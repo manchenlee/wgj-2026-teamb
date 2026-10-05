@@ -1225,7 +1225,7 @@ func _has_pending_psychological_choice() -> bool:
 func _check_ending() -> void:
 	if ending_transition_started:
 		return
-	var ending_type := EndingEvaluatorClass.evaluate(arousal_model, active_phase_config)
+	var ending_type := EndingEvaluatorClass.evaluate(arousal_model)
 	if ending_type.is_empty():
 		return
 	_begin_ending_transition(ending_type)

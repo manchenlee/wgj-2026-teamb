@@ -11,11 +11,9 @@ var _failures: Array[String] = []
 
 
 func _initialize() -> void:
-	_test_temporary_physical_depletion_policy()
-	_test_legacy_peak_depletion_restoration()
-	_test_runtime_physical_depletion_paths()
-	_test_imbalance_boundaries()
-	_test_ending_priority()
+	_test_score_boundaries()
+	_test_displayed_integer_conversion()
+	_test_peak_and_phase_independence()
 	_test_safe_word_path()
 	if _failures.is_empty():
 		print("EndingEvaluator headless tests passed.")
@@ -26,63 +24,58 @@ func _initialize() -> void:
 	quit(1)
 
 
-func _test_temporary_physical_depletion_policy() -> void:
-	_assert(CONFIG.USE_PHYSICAL_FOR_DEPLETION_FAILURE, "Temporary physical-depletion policy is not enabled.")
-	_assert_ending(CONFIG.PEAK_DEPLETION_FAILURE_ENDING, 0.0, 50.0, 50.0, false)
-	_assert_ending(CONFIG.PEAK_DEPLETION_FAILURE_ENDING, 0.0, 50.0, 0.0, false)
-	_assert_ending("", 50.0, 50.0, 0.0, true)
+func _test_score_boundaries() -> void:
+	var cases: Array = [
+		[0.0, 0.0, CONFIG.PEAK_DEPLETION_FAILURE_ENDING],
+		[0.0, 40.0, ""],
+		[40.0, 0.0, ""],
+		[100.0, 100.0, CONFIG.SUCCESS_ENDING],
+		[100.0, 95.0, CONFIG.SUCCESS_ENDING],
+		[95.0, 100.0, CONFIG.SUCCESS_ENDING],
+		[100.0, 90.0, CONFIG.SUCCESS_ENDING],
+		[90.0, 100.0, CONFIG.SUCCESS_ENDING],
+		[100.0, 89.0, ""],
+		[100.0, 80.0, ""],
+		[100.0, 70.0, ""],
+		[100.0, 69.0, CONFIG.PHYSICAL_IMBALANCE_FAILURE_ENDING],
+		[89.0, 100.0, ""],
+		[80.0, 100.0, ""],
+		[70.0, 100.0, ""],
+		[69.0, 100.0, CONFIG.EMOTIONAL_IMBALANCE_FAILURE_ENDING],
+		[99.0, 99.0, ""],
+	]
+	for entry in cases:
+		_assert_ending(String(entry[2]), float(entry[0]), float(entry[1]))
 
 
-func _test_legacy_peak_depletion_restoration() -> void:
-	_assert_ending(CONFIG.PEAK_DEPLETION_FAILURE_ENDING, 50.0, 50.0, 0.0, true, false)
-	_assert_ending("", 0.0, 50.0, 50.0, false, false)
-	_assert_ending("", 50.0, 50.0, 0.0, false, false)
+func _test_displayed_integer_conversion() -> void:
+	# StatusHUD displays int(round(Config.clamp_value(value))).
+	_assert_ending(CONFIG.PEAK_DEPLETION_FAILURE_ENDING, 0.49, 0.49)
+	_assert_ending("", 0.5, 0.49)
+	_assert_ending(CONFIG.SUCCESS_ENDING, 99.5, 89.5)
+	_assert_ending("", 99.49, 89.5)
+	_assert_ending("", 99.5, 89.49)
+	_assert_ending(CONFIG.PHYSICAL_IMBALANCE_FAILURE_ENDING, 99.5, 69.49)
+	_assert_ending("", 99.5, 69.5)
+	_assert_ending(CONFIG.EMOTIONAL_IMBALANCE_FAILURE_ENDING, 69.49, 99.5)
+	_assert_ending("", 69.5, 99.5)
+	_assert_ending(CONFIG.PEAK_DEPLETION_FAILURE_ENDING, -1.0, -1.0)
+	_assert_ending(CONFIG.SUCCESS_ENDING, 101.0, 95.0)
 
 
-func _test_runtime_physical_depletion_paths() -> void:
-	var decay_model = _make_model(0.5, 50.0, 50.0, true)
-	decay_model.set_phase_config(PHASE_1_CONFIG_SCRIPT.new())
-	decay_model.apply_decay(1.0)
-	_assert(
-		ENDING_EVALUATOR_SCRIPT.evaluate(decay_model, decay_model.phase_config) == CONFIG.PEAK_DEPLETION_FAILURE_ENDING,
-		"Passive decay reaching physical zero did not trigger depletion failure."
-	)
-
-	var penalty_model = _make_model(2.0, 50.0, 50.0, true)
-	penalty_model.apply_physical(-5.0)
-	_assert(
-		ENDING_EVALUATOR_SCRIPT.evaluate(penalty_model, PHASE_1_CONFIG_SCRIPT.new()) == CONFIG.PEAK_DEPLETION_FAILURE_ENDING,
-		"A physiological penalty reaching zero did not trigger depletion failure."
-	)
-
-
-func _test_imbalance_boundaries() -> void:
-	for phase_config in [PHASE_1_CONFIG_SCRIPT.new(), PHASE_2_CONFIG_SCRIPT.new()]:
-		_assert(float(phase_config.failure_thresholds.get("physical_counterpart_below", -1.0)) == 70.0, "Physical counterpart threshold is not 70 in %s." % phase_config.phase_id)
-		_assert(float(phase_config.failure_thresholds.get("emotional_counterpart_below", -1.0)) == 70.0, "Emotional counterpart threshold is not 70 in %s." % phase_config.phase_id)
-
-	var phase_config = PHASE_1_CONFIG_SCRIPT.new()
-	_assert_ending(CONFIG.PHYSICAL_IMBALANCE_FAILURE_ENDING, 100.0, 69.0, 50.0, true, true, phase_config)
-	_assert_ending(CONFIG.PHYSICAL_IMBALANCE_FAILURE_ENDING, 100.0, 69.999, 50.0, true, true, phase_config)
-	_assert_ending(CONFIG.SUCCESS_ENDING, 100.0, 70.0, 50.0, true, true, phase_config)
-	_assert_ending(CONFIG.SUCCESS_ENDING, 100.0, 90.0, 50.0, true, true, phase_config)
-	_assert_ending(CONFIG.EMOTIONAL_IMBALANCE_FAILURE_ENDING, 69.0, 100.0, 50.0, true, true, phase_config)
-	_assert_ending(CONFIG.EMOTIONAL_IMBALANCE_FAILURE_ENDING, 69.999, 100.0, 50.0, true, true, phase_config)
-	_assert_ending("", 70.0, 100.0, 50.0, true, true, phase_config)
-	_assert_ending("", 90.0, 100.0, 50.0, true, true, phase_config)
-	_assert_ending("", 95.0, 10.0, 50.0, true, true, phase_config)
-
-
-func _test_ending_priority() -> void:
-	var phase_config = PHASE_1_CONFIG_SCRIPT.new()
-	_assert_ending(CONFIG.SUCCESS_ENDING, 100.0, 70.0, 0.0, false, true, phase_config)
-	_assert_ending(CONFIG.SUCCESS_ENDING, 100.0, 100.0, 50.0, true, true, phase_config)
-	_assert_ending(CONFIG.PEAK_DEPLETION_FAILURE_ENDING, 0.0, 50.0, 100.0, true, true, phase_config)
-	_assert_ending(CONFIG.PHYSICAL_IMBALANCE_FAILURE_ENDING, 100.0, 60.0, 100.0, true, true, phase_config)
-	_assert_ending("", 99.999, 100.0, 100.0, true, true, phase_config)
-	_assert_ending(CONFIG.PEAK_DEPLETION_FAILURE_ENDING, 0.0, 100.0, 50.0, true, true, phase_config)
-	_assert_ending(CONFIG.PHYSICAL_IMBALANCE_FAILURE_ENDING, 100.0, 60.0, 50.0, true, true, phase_config)
-	_assert_ending(CONFIG.EMOTIONAL_IMBALANCE_FAILURE_ENDING, 60.0, 100.0, 50.0, true, true, phase_config)
+func _test_peak_and_phase_independence() -> void:
+	for phase_config in [null, PHASE_1_CONFIG_SCRIPT.new(), PHASE_2_CONFIG_SCRIPT.new()]:
+		for peak in [0.0, 50.0, 100.0]:
+			for activated in [false, true]:
+				var model = _make_model(100.0, 80.0, peak, activated)
+				model.set_phase_config(phase_config)
+				_assert(
+					ENDING_EVALUATOR_SCRIPT.evaluate(model) == "",
+					"100/80 ended with peak %.1f, activation %s, phase %s." % [peak, str(activated), str(phase_config)]
+				)
+				model.physical = 0.0
+				model.emotional = 0.0
+				_assert(ENDING_EVALUATOR_SCRIPT.evaluate(model) == CONFIG.PEAK_DEPLETION_FAILURE_ENDING, "0/0 depended on peak or phase.")
 
 
 func _test_safe_word_path() -> void:
@@ -99,33 +92,9 @@ func _test_safe_word_path() -> void:
 	)
 
 
-func _assert_ending(
-		expected: String,
-		physical: float,
-		emotional: float,
-		peak: float,
-		peak_has_activated: bool,
-		use_physical_for_depletion_failure: bool = true,
-		phase_config = null
-) -> void:
-	var model = _make_model(physical, emotional, peak, peak_has_activated)
-	var actual: String = ENDING_EVALUATOR_SCRIPT.evaluate(
-		model,
-		phase_config,
-		use_physical_for_depletion_failure
-	)
-	_assert(
-		actual == expected,
-		"Ending for physical %.3f, emotional %.3f, peak %.3f, activated %s, physical policy %s was '%s' instead of '%s'." % [
-			physical,
-			emotional,
-			peak,
-			str(peak_has_activated),
-			str(use_physical_for_depletion_failure),
-			actual,
-			expected,
-		]
-	)
+func _assert_ending(expected: String, physical: float, emotional: float) -> void:
+	var actual: String = ENDING_EVALUATOR_SCRIPT.evaluate(_make_model(physical, emotional, 0.0, false))
+	_assert(actual == expected, "Ending for physical %.3f, emotional %.3f was '%s' instead of '%s'." % [physical, emotional, actual, expected])
 
 
 func _make_model(physical: float, emotional: float, peak: float, peak_has_activated: bool):
