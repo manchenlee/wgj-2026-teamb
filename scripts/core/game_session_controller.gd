@@ -4,8 +4,7 @@ extends Control
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 const PhaseLibraryClass := preload("res://data/phases/phase_library.gd")
 const PhaseCharacterProfileClass := preload("res://data/character_profiles/phase_character_profile.gd")
-const Phase1CharacterProfileClass := preload("res://data/character_profiles/phase_1_character_profile.gd")
-const Phase2CharacterProfileClass := preload("res://data/character_profiles/phase_2_character_profile.gd")
+const PoseCharacterProfileClass := preload("res://data/character_profiles/pose_character_profile.gd")
 const ArousalModelClass := preload("res://scripts/gameplay/arousal_model.gd")
 # LEGACY: DirectionSequenceControllerClass kept for rollback reference — NOT instantiated.
 const DirectionSequenceControllerClass := preload("res://scripts/gameplay/direction_sequence_controller.gd")
@@ -23,11 +22,9 @@ signal physiological_visual_band_changed(previous_band: int, current_band: int, 
 signal score_warning_changed(physical_low: bool, emotional_low: bool)
 signal score_imbalance_changed(active: bool, lower_mode: int)
 
-const PHYSIOLOGICAL_VISUAL_BAND_COUNT: int = 6
+const PHYSIOLOGICAL_VISUAL_BAND_COUNT: int = 5
 const PHYSIOLOGICAL_VISUAL_BAND_MIN: int = 0
 const PHYSIOLOGICAL_VISUAL_BAND_MAX: int = PHYSIOLOGICAL_VISUAL_BAND_COUNT - 1
-const CHARACTER_PRESENTATION_FAMILY_EARLY: int = 0
-const CHARACTER_PRESENTATION_FAMILY_LATE: int = 1
 const PRESENTATION_PREFETCH_RESOURCES_PER_FRAME: int = 1
 
 enum InteractionMode {
@@ -56,6 +53,7 @@ enum CharacterExpressionSource {
 @onready var phase_2_flush_layer: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/Phase2FlushLayer
 @onready var phase_2_face_layer: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/Phase2FaceLayer
 @onready var phase_2_gameover_overlay: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/Phase2GameoverOverlay
+@onready var pose_tail_layer: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/PoseTailLayer
 @onready var main_character_area: Control = $CharacterAlignmentRoot/MainCharacterArea
 @onready var character_area = $CharacterAlignmentRoot/MainCharacterArea/CharacterArea
 @onready var character_prompt_region = %CharacterPromptRegion
@@ -79,7 +77,6 @@ enum CharacterExpressionSource {
 @onready var physiological_dialogue_timer: Timer = $PhysiologicalDialogueTimer
 @onready var spot_spawn_timer: Timer = $SpotSpawnTimer
 @onready var choice_timeout_timer: Timer = $ChoiceTimeoutTimer
-@onready var physiological_expression_timer: Timer = $PhysiologicalExpressionTimer
 @onready var failure_flash: FailureFlash = $FeedbackOverlayLayer/FailureFlash
 @onready var phase_transition_overlay: ColorRect = $PhaseTransitionOverlay
 
@@ -104,17 +101,21 @@ var phase_sequence: Array = []
 var active_phase_index: int = 0
 var active_phase_config: PhaseConfig = null
 var active_character_profile = null
-var current_character_presentation_family: int = -1
-var character_presentation_profiles: Dictionary = {}
+var pose_profiles: Dictionary = {}
 var has_switched_to_game_bgm: bool = false
 var last_requested_bgm_key: String = ""
 var interaction_mode: InteractionMode = InteractionMode.PSYCHOLOGICAL
 var current_visual_band: int = -1
+var current_presentation_phase: int = 1
+var shooting_tail_active: bool = false
+var _tail_frames: Array[Texture2D] = []
+var _tail_frame_index: int = 0
+var _tail_elapsed: float = 0.0
+const TAIL_FRAME_DURATION: float = 0.18
 var current_expression_state: int = PhaseCharacterProfileClass.ExpressionState.NEUTRAL
 var character_expression_conflict: bool = false
 var _character_expression_requests: Dictionary = {}
 var _next_character_expression_token: int = 0
-var _physiological_expression_request_token: int = -1
 var _psychological_expression_round_pending: bool = false
 var _psychological_expression_request_token: int = -1
 var _resolved_character_alignment_offset: Vector2 = Vector2.ZERO
@@ -133,7 +134,8 @@ func _ready() -> void:
 	physiological_dialogue_controller.configure("physiological_dialogue_data_source", false)
 	_build_phase_sequence()
 	_apply_phase_by_index(_get_initial_phase_index())
-	_begin_character_presentation_prefetch(CHARACTER_PRESENTATION_FAMILY_LATE)
+	for phase in range(1, 6):
+		_begin_character_presentation_prefetch(phase)
 	_update_character_visual_state()
 	_apply_overlay_motion_set()
 	_bind_breathing_targets()
@@ -158,7 +160,6 @@ func _ready() -> void:
 	psychological_dialogue_timer.timeout.connect(_on_psychological_dialogue_timer_timeout)
 	physiological_dialogue_timer.timeout.connect(_on_physiological_dialogue_timer_timeout)
 	choice_timeout_timer.timeout.connect(_on_choice_timeout)
-	physiological_expression_timer.timeout.connect(_on_physiological_expression_timer_timeout)
 	_setup_spot_manager()
 	reset_run()
 	if breathing_controller != null and breathing_controller.has_method("is_debug_breathing_enabled") \
@@ -191,6 +192,7 @@ func _setup_spot_manager() -> void:
 	spot_manager.spot_telemetry_updated.connect(_on_spot_telemetry_updated)
 	spot_manager.physiological_spot_completed.connect(_on_physiological_spot_completed)
 	spot_manager.physiological_spot_failed.connect(_on_physiological_spot_failed)
+	_configure_pose_layers()
 
 # ---------------------------------------------------------------------------
 # Phase management
@@ -226,9 +228,7 @@ func _apply_phase_by_index(phase_index: int) -> void:
 	psychological_dialogue_controller.set_safe_word(safe_word)
 	physiological_dialogue_controller.set_phase_config(active_phase_config)
 	physiological_dialogue_controller.set_safe_word(safe_word)
-	_sync_character_presentation_family_for_visual_band(
-		physical_score_to_visual_band(arousal_model.physical)
-	)
+	_sync_character_presentation_phase_for_visual_band(current_visual_band)
 	if dialogue_panel != null:
 		dialogue_panel.refresh_active_dialogue_position()
 	if choice_panel != null:
@@ -247,6 +247,46 @@ func _apply_character_presentation_profile() -> void:
 	_update_character_visual_state()
 	_apply_overlay_motion_set()
 	_bind_breathing_targets()
+
+func _configure_pose_layers() -> void:
+	_tail_frames.clear()
+	_tail_frame_index = 0
+	_tail_elapsed = 0.0
+	if active_character_profile == null:
+		return
+	for path in active_character_profile.get_tail_frame_paths():
+		var texture := _load_texture_from_asset_path(path)
+		if texture != null:
+			_tail_frames.append(texture)
+	if pose_tail_layer != null:
+		_apply_phase_layer_texture(pose_tail_layer, _tail_frames[0] if not _tail_frames.is_empty() else null)
+	if spot_manager != null:
+		var mask_texture := _load_texture_from_asset_path(active_character_profile.get_interaction_mask_path())
+		spot_manager.set_interaction_mask(mask_texture, background_placeholder)
+	_update_shooting_tail_layer()
+
+func set_shooting_tail_active(active: bool) -> void:
+	shooting_tail_active = active
+	_update_shooting_tail_layer()
+
+func _update_shooting_tail_layer() -> void:
+	if pose_tail_layer == null or active_character_profile == null:
+		return
+	if shooting_tail_active and current_presentation_phase == 3:
+		var shooting_path: String = active_character_profile.get_shooting_tail_path()
+		_apply_phase_layer_texture(pose_tail_layer, _load_texture_from_asset_path(shooting_path))
+	elif not _tail_frames.is_empty():
+		_apply_phase_layer_texture(pose_tail_layer, _tail_frames[_tail_frame_index])
+
+func _advance_tail_animation(delta: float) -> void:
+	if _tail_frames.size() != 3 or (shooting_tail_active and current_presentation_phase == 3):
+		return
+	_tail_elapsed += delta
+	if _tail_elapsed < TAIL_FRAME_DURATION:
+		return
+	_tail_elapsed = fmod(_tail_elapsed, TAIL_FRAME_DURATION)
+	_tail_frame_index = (_tail_frame_index + 1) % 3
+	_update_shooting_tail_layer()
 
 func _apply_breathing_profile() -> void:
 	if breathing_controller == null or active_character_profile == null:
@@ -286,9 +326,7 @@ func _load_texture_from_asset_path(asset_path: String) -> Texture2D:
 	if ResourceLoader.exists(asset_path):
 		var resource_texture := load(asset_path) as Texture2D
 		if resource_texture != null:
-			# Keep textures from both presentation families alive for the whole run.
-			# Otherwise switching families clears the active dictionaries and a
-			# reverse switch can synchronously decode the previous family's images.
+			# Keep loaded pose textures alive for the whole run.
 			_prefetched_character_textures[asset_path] = resource_texture
 			return resource_texture
 	var absolute_asset_path := ProjectSettings.globalize_path(asset_path)
@@ -302,17 +340,20 @@ func _load_texture_from_asset_path(asset_path: String) -> Texture2D:
 	return image_texture
 
 
-func _begin_character_presentation_prefetch(presentation_family: int) -> void:
-	if _presentation_prefetch_pending.has(presentation_family) \
-			or bool(_presentation_prefetch_ready.get(presentation_family, false)):
+func _begin_character_presentation_prefetch(presentation_phase: int) -> void:
+	if _presentation_prefetch_pending.has(presentation_phase) \
+			or bool(_presentation_prefetch_ready.get(presentation_phase, false)):
 		return
-	var profile = _get_character_presentation_profile(presentation_family)
+	var profile = _get_pose_profile(presentation_phase)
 	if profile == null:
 		return
 	var path_set: Dictionary = {}
 	_collect_texture_resource_paths(profile.get_all_texture_paths(), path_set)
 	_collect_texture_resource_paths(profile.get_layer_texture_paths(), path_set)
 	_collect_texture_resource_paths(profile.get_face_texture_paths(), path_set)
+	_collect_texture_resource_paths(profile.get_tail_frame_paths(), path_set)
+	_collect_texture_resource_paths(profile.get_interaction_mask_path(), path_set)
+	_collect_texture_resource_paths(profile.get_shooting_tail_path(), path_set)
 	_collect_texture_resource_paths(profile.overlay_animation_set, path_set)
 	_collect_texture_resource_paths(profile.get_phase2_overlay_profile_config(), path_set)
 	var pending_paths: Array[String] = []
@@ -332,8 +373,8 @@ func _begin_character_presentation_prefetch(presentation_family: int) -> void:
 				"prefetch_failed:%s" % asset_path,
 				"Character texture prefetch could not start: %s" % asset_path
 			)
-	_presentation_prefetch_pending[presentation_family] = pending_paths
-	_presentation_prefetch_ready[presentation_family] = pending_paths.is_empty()
+	_presentation_prefetch_pending[presentation_phase] = pending_paths
+	_presentation_prefetch_ready[presentation_phase] = pending_paths.is_empty()
 
 
 func _collect_texture_resource_paths(value: Variant, path_set: Dictionary) -> void:
@@ -352,11 +393,11 @@ func _collect_texture_resource_paths(value: Variant, path_set: Dictionary) -> vo
 
 func _poll_character_presentation_prefetch() -> void:
 	var finalized_count := 0
-	for family_variant in _presentation_prefetch_pending.keys():
+	for phase_variant in _presentation_prefetch_pending.keys():
 		if finalized_count >= PRESENTATION_PREFETCH_RESOURCES_PER_FRAME:
 			return
-		var presentation_family := int(family_variant)
-		var pending_paths: Array = _presentation_prefetch_pending[presentation_family]
+		var presentation_phase := int(phase_variant)
+		var pending_paths: Array = _presentation_prefetch_pending[presentation_phase]
 		for path_index in range(pending_paths.size()):
 			var asset_path := String(pending_paths[path_index])
 			var status := ResourceLoader.load_threaded_get_status(asset_path)
@@ -383,9 +424,9 @@ func _poll_character_presentation_prefetch() -> void:
 			pending_paths.remove_at(path_index)
 			finalized_count += 1
 			break
-		_presentation_prefetch_pending[presentation_family] = pending_paths
+		_presentation_prefetch_pending[presentation_phase] = pending_paths
 		if pending_paths.is_empty():
-			_presentation_prefetch_ready[presentation_family] = true
+			_presentation_prefetch_ready[presentation_phase] = true
 
 func _build_overlay_motion_set() -> Dictionary:
 	var motion_set: Dictionary = {}
@@ -492,8 +533,7 @@ func _update_character_visual_state(forced_ending_type: String = "") -> void:
 		return
 	var resolved_state := resolve_character_visual_state()
 	var visual_state := String(resolved_state.get("base_state_key", "overall_init"))
-	if not forced_ending_type.is_empty():
-		visual_state = _get_character_visual_state_key(forced_ending_type)
+	# Ending routing is unchanged; the pose artwork remains the active phase image.
 	_update_phase_specific_visual_layers(forced_ending_type, resolved_state)
 	var next_texture := _get_character_visual_texture(visual_state)
 	if next_texture == null:
@@ -521,29 +561,16 @@ func _update_phase_specific_visual_layers(
 		forced_ending_type: String = "",
 		resolved_state: Dictionary = {}
 ) -> void:
-	if not _is_phase_2_visual_profile_active():
-		_apply_phase_layer_texture(phase_2_background_layer, null)
-		_apply_phase_layer_texture(phase_2_flush_layer, null)
-		_apply_phase_layer_texture(phase_2_face_layer, null)
-		_apply_phase_layer_texture(phase_2_gameover_overlay, null)
-		return
-	_apply_phase_layer_texture(phase_2_background_layer, _get_phase_layer_texture("phase_2_background"))
-	_apply_phase_layer_texture(phase_2_flush_layer, _get_phase_layer_texture("phase_2_flush"))
+	_apply_phase_layer_texture(phase_2_background_layer, null)
+	_apply_phase_layer_texture(phase_2_flush_layer, null)
 	_apply_phase_layer_texture(phase_2_face_layer, _get_phase_2_face_texture(resolved_state))
-	var show_gameover_overlay := not forced_ending_type.is_empty() and forced_ending_type != Config.SUCCESS_ENDING
-	var gameover_texture := _get_phase_2_gameover_texture() if show_gameover_overlay else null
-	_apply_phase_layer_texture(phase_2_gameover_overlay, gameover_texture)
+	_apply_phase_layer_texture(phase_2_gameover_overlay, null)
 
 func _apply_phase_layer_texture(layer: TextureRect, next_texture: Texture2D) -> void:
 	if layer == null:
 		return
 	layer.texture = next_texture
 	layer.visible = next_texture != null
-
-func _is_phase_2_visual_profile_active() -> bool:
-	if active_character_profile == null:
-		return false
-	return not active_character_profile.get_face_texture_paths().is_empty()
 
 func _get_phase_layer_texture(layer_key: String) -> Texture2D:
 	if character_layer_textures.has(layer_key):
@@ -609,9 +636,6 @@ func clear_character_expression(source: CharacterExpressionSource, token: int) -
 
 func clear_all_character_expression_requests() -> void:
 	_character_expression_requests.clear()
-	_physiological_expression_request_token = -1
-	if physiological_expression_timer != null:
-		physiological_expression_timer.stop()
 	_psychological_expression_round_pending = false
 	_psychological_expression_request_token = -1
 	# Advance the generation even when no request exists so every reset creates
@@ -642,30 +666,6 @@ func _refresh_requested_character_expression() -> void:
 		return
 	current_expression_state = next_expression
 	_update_character_visual_state()
-
-func _get_phase_2_gameover_texture() -> Texture2D:
-	return _get_phase_layer_texture("phase_2_gameover_overlay")
-
-func _get_character_visual_state_key(forced_ending_type: String = "") -> String:
-	if forced_ending_type == Config.PHYSICAL_IMBALANCE_FAILURE_ENDING:
-		return "physic_high_mental_low_gameover"
-	if forced_ending_type == Config.EMOTIONAL_IMBALANCE_FAILURE_ENDING:
-		return "physic_low_mental_high_gameover"
-	var physical_low_threshold: float = float(_get_phase_value("feedback_physical_low_threshold", Config.FEEDBACK_PHYSICAL_LOW_THRESHOLD))
-	var physical_high_threshold: float = float(_get_phase_value("feedback_physical_high_threshold", Config.FEEDBACK_PHYSICAL_HIGH_THRESHOLD))
-	var emotional_low_threshold: float = float(_get_phase_value("feedback_emotional_low_threshold", Config.FEEDBACK_EMOTIONAL_LOW_THRESHOLD))
-	var emotional_high_threshold: float = float(_get_phase_value("feedback_emotional_high_threshold", Config.FEEDBACK_EMOTIONAL_HIGH_THRESHOLD))
-	if arousal_model.physical >= physical_high_threshold and arousal_model.emotional <= emotional_low_threshold:
-		return "physic_high_mental_low"
-	if arousal_model.emotional >= emotional_high_threshold and arousal_model.physical <= physical_low_threshold:
-		return "physic_low_mental_high"
-	if arousal_model.peak >= _get_phase_value("overall_high_threshold", 60.0):
-		return "overall_high"
-	if arousal_model.peak >= _get_phase_value("overall_medium_threshold", 20.0):
-		return "overall_medium"
-	if has_left_overall_init_visual:
-		return "overall_low"
-	return "overall_init"
 
 func _get_character_visual_texture(visual_state: String) -> Texture2D:
 	if character_visual_textures.has(visual_state):
@@ -705,6 +705,7 @@ func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
 	_poll_character_presentation_prefetch()
+	_advance_tail_animation(delta)
 	if not run_active:
 		_update_phase_debug_label()
 		return
@@ -715,48 +716,33 @@ func _process(delta: float) -> void:
 	_check_ending()
 
 static func physical_score_to_visual_band(physical_score: float) -> int:
-	var clamped_score := clampf(physical_score, 0.0, 100.0)
-	var derived_band := floori(clamped_score * float(PHYSIOLOGICAL_VISUAL_BAND_COUNT) / 100.0)
-	return clampi(
-		derived_band,
-		PHYSIOLOGICAL_VISUAL_BAND_MIN,
-		PHYSIOLOGICAL_VISUAL_BAND_MAX
-	)
+	return clampi(floori(clampf(physical_score, 0.0, 100.0) / 20.0), 0, 4)
 
 
-static func visual_band_to_character_presentation_family(visual_band: int) -> int:
-	var clamped_band := clampi(
-		visual_band,
-		PHYSIOLOGICAL_VISUAL_BAND_MIN,
-		PHYSIOLOGICAL_VISUAL_BAND_MAX
-	)
-	if clamped_band <= 2:
-		return CHARACTER_PRESENTATION_FAMILY_EARLY
-	return CHARACTER_PRESENTATION_FAMILY_LATE
+static func visual_band_to_character_presentation_phase(visual_band: int) -> int:
+	return clampi(visual_band, 0, 4) + 1
 
 
-func _sync_character_presentation_family_for_visual_band(visual_band: int) -> bool:
-	var next_family := visual_band_to_character_presentation_family(visual_band)
-	if current_character_presentation_family == next_family and active_character_profile != null:
+func _sync_character_presentation_phase_for_visual_band(visual_band: int) -> bool:
+	var next_phase := visual_band_to_character_presentation_phase(visual_band)
+	next_phase = maxi(current_presentation_phase, next_phase)
+	if current_presentation_phase == next_phase and active_character_profile != null:
 		return false
-	if is_inside_tree() and next_family == CHARACTER_PRESENTATION_FAMILY_LATE \
-			and not bool(_presentation_prefetch_ready.get(next_family, false)):
-		_begin_character_presentation_prefetch(next_family)
-		return false
-	var next_profile = _get_character_presentation_profile(next_family)
+	var next_profile = _get_pose_profile(next_phase)
 	if next_profile == null:
-		push_error("GameSessionController: character presentation profile is unavailable for family %d." % next_family)
+		push_error("GameSessionController: character presentation profile is unavailable for phase %d." % next_phase)
 		return false
 	var active_note_positions: Dictionary = {}
 	if spot_manager != null:
 		active_note_positions = spot_manager.capture_active_note_global_positions()
-	current_character_presentation_family = next_family
+	current_presentation_phase = next_phase
 	active_character_profile = next_profile
 	_cache_character_visual_textures()
+	_configure_pose_layers()
 	overlay_motion_set = _build_overlay_motion_set()
 	_apply_character_presentation_profile()
 	# set_motion_set() rebuilds every overlay track in a stopped and hidden state.
-	# A runtime family switch must restart playback after the new tracks exist.
+	# A runtime pose switch must restart playback after the new tracks exist.
 	if not Engine.is_editor_hint() and overlay_animator != null and run_active:
 		overlay_animator.play_idle()
 	_apply_character_alignment()
@@ -770,79 +756,33 @@ func _sync_character_presentation_family_for_visual_band(visual_band: int) -> bo
 	return true
 
 
-func _get_character_presentation_profile(presentation_family: int):
-	if character_presentation_profiles.has(presentation_family):
-		return character_presentation_profiles[presentation_family]
-	var profile = null
-	if presentation_family == CHARACTER_PRESENTATION_FAMILY_EARLY:
-		profile = Phase1CharacterProfileClass.new()
-	elif presentation_family == CHARACTER_PRESENTATION_FAMILY_LATE:
-		profile = Phase2CharacterProfileClass.new()
+func _get_pose_profile(presentation_phase: int):
+	if pose_profiles.has(presentation_phase):
+		return pose_profiles[presentation_phase]
+	var profile = PoseCharacterProfileClass.new(presentation_phase)
 	if profile != null:
-		character_presentation_profiles[presentation_family] = profile
+		pose_profiles[presentation_phase] = profile
 	return profile
 
 
 func _sync_physiological_visual_band(emit_crossing: bool = true) -> void:
 	var next_visual_band := physical_score_to_visual_band(arousal_model.physical)
 	var previous_visual_band := current_visual_band
-	current_visual_band = next_visual_band
-	_sync_character_presentation_family_for_visual_band(current_visual_band)
+	current_visual_band = maxi(current_visual_band, next_visual_band)
+	_sync_character_presentation_phase_for_visual_band(current_visual_band)
 	if previous_visual_band < PHYSIOLOGICAL_VISUAL_BAND_MIN:
 		return
 	if current_visual_band == previous_visual_band:
 		return
 	if not emit_crossing:
 		return
-	var direction := 1 if current_visual_band > previous_visual_band else -1
-	_request_physiological_band_expression(direction)
+	var direction := 1
 	physiological_visual_band_changed.emit(
 		previous_visual_band,
 		current_visual_band,
 		direction
 	)
 
-
-func _request_physiological_band_expression(direction: int) -> int:
-	var expression := PhaseCharacterProfileClass.ExpressionState.POSITIVE \
-			if direction > 0 else PhaseCharacterProfileClass.ExpressionState.NEGATIVE
-	_physiological_expression_request_token = request_character_expression(
-		CharacterExpressionSource.PHYSIOLOGICAL,
-		expression
-	)
-	if direction > 0 and character_area != null:
-		character_area.show_success_heart_burst()
-	if physiological_expression_timer != null:
-		physiological_expression_timer.start(Config.PHYSIOLOGICAL_EXPRESSION_DURATION_SECONDS)
-	return _physiological_expression_request_token
-
-
-func _on_physiological_expression_timer_timeout() -> void:
-	_complete_physiological_expression_reaction(_physiological_expression_request_token)
-
-
-func _complete_physiological_expression_reaction(expression_token: int) -> bool:
-	if expression_token != _physiological_expression_request_token:
-		return false
-	if not clear_character_expression(
-		CharacterExpressionSource.PHYSIOLOGICAL,
-		expression_token
-	):
-		return false
-	_physiological_expression_request_token = -1
-	return true
-
-
-func _reset_physiological_expression_reaction() -> void:
-	if physiological_expression_timer != null:
-		physiological_expression_timer.stop()
-	var expression_token := _physiological_expression_request_token
-	_physiological_expression_request_token = -1
-	if expression_token >= 0:
-		clear_character_expression(
-			CharacterExpressionSource.PHYSIOLOGICAL,
-			expression_token
-		)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if Engine.is_editor_hint() or not run_active:
@@ -953,7 +893,10 @@ func _reset_run_at_phase_2_threshold() -> void:
 	_update_presentation()
 
 func _reset_run_for_phase_index(phase_index: int) -> void:
-	_reset_physiological_expression_reaction()
+	current_visual_band = -1
+	current_presentation_phase = 1
+	active_character_profile = null
+	shooting_tail_active = false
 	current_combo = 0
 	max_combo = 0
 	run_active = true
@@ -1423,8 +1366,6 @@ func _resolve_active_phase_alignment_offset() -> Vector2:
 	return Vector2(target_x - focus_position.x, target_y - bottom_position.y)
 
 func _get_character_alignment_focus_layer() -> TextureRect:
-	if _is_phase_2_visual_profile_active() and phase_2_background_layer != null and phase_2_background_layer.texture != null:
-		return phase_2_background_layer
 	return background_placeholder
 
 func _get_texture_normalized_position_in_alignment_root(texture_rect: TextureRect, normalized_position: Vector2) -> Vector2:
@@ -1487,7 +1428,6 @@ func _stop_runtime_timers() -> void:
 	physiological_dialogue_timer.stop()
 	spot_spawn_timer.stop()
 	choice_timeout_timer.stop()
-	_reset_physiological_expression_reaction()
 	if spot_manager != null:
 		spot_manager.stop()
 	if failure_flash != null:
@@ -1507,7 +1447,8 @@ func _sync_spot_anchor_layout() -> void:
 	if Engine.is_editor_hint() or spot_manager == null or character_prompt_region == null:
 		return
 	spot_manager.set_available_anchor_ids(character_prompt_region.get_interaction_spot_anchor_ids())
-	spot_manager.set_bounds_rect(_get_prompt_region_rect_in_prompt_layer())
+	var prompt_layer := character_area.get_node_or_null("PromptLayer") as Control
+	spot_manager.set_bounds_rect(Rect2(Vector2.ZERO, prompt_layer.size) if prompt_layer != null else _get_prompt_region_rect_in_prompt_layer())
 
 func _play_failure_flash() -> void:
 	if failure_flash != null:

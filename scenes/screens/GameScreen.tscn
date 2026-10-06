@@ -178,6 +178,24 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 6
 
+[node name="PoseTailLayer" type="TextureRect" parent="CharacterAlignmentRoot/BackgroundAnchor"]
+visible = false
+z_index = 4
+z_as_relative = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -140.0
+offset_right = -40.0
+offset_bottom = -140.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 6
+
 [node name="Phase2GameoverOverlay" type="TextureRect" parent="CharacterAlignmentRoot/BackgroundAnchor" unique_id=190000112]
 visible = false
 z_index = 6
@@ -973,9 +991,6 @@ one_shot = true
 
 [node name="ChoiceTimeoutTimer" type="Timer" parent="." unique_id=292030748]
 wait_time = 4.2
-one_shot = true
-
-[node name="PhysiologicalExpressionTimer" type="Timer" parent="."]
 one_shot = true
 
 [node name="FeedbackOverlayLayer" type="Control" parent="." unique_id=1157570693]

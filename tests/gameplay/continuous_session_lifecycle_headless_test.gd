@@ -108,7 +108,7 @@ func _test_continuous_band_progression_and_dialogue_pool() -> void:
 	var preserved_before := _capture_continuous_state(game, spots_before)
 	var overlay_visible_before: bool = game.phase_transition_overlay.visible
 
-	for band in range(6):
+	for band in range(1, 5):
 		game.arousal_model.physical = _score_inside_band(band)
 		game._sync_physiological_visual_band()
 		_assert(game.current_visual_band == band, "Continuous run did not reach visual band %d." % band)
@@ -118,12 +118,12 @@ func _test_continuous_band_progression_and_dialogue_pool() -> void:
 
 	game.arousal_model.physical = 49.0
 	game._sync_physiological_visual_band()
-	_assert(game.current_visual_band == 2, "Band 3 to 2 reversal failed.")
-	_assert(game._get_active_phase_id() == "phase_1", "Physical 49 did not return to Phase 1.")
+	_assert(game.current_visual_band == 4, "Lower physiology regressed the attained pose band.")
+	_assert(game._get_active_phase_id() == "phase_1", "Gameplay phase indicator changed at physical 49.")
 	game.arousal_model.physical = 50.0
 	game._sync_physiological_visual_band()
-	_assert(game.current_visual_band == 3, "Physical 50 did not enter the first Phase 2 band.")
-	_assert(game._get_active_phase_id() == "phase_2", "Physical 50 did not enter Phase 2.")
+	_assert(game.current_visual_band == 4, "Lower physiology regressed the attained pose band.")
+	_assert(game._get_active_phase_id() == "phase_2", "Gameplay phase indicator changed at physical 50.")
 	_assert(game.psychological_dialogue_controller.entries == dialogue_entries_before, "Band-family crossing reloaded/changed the psychological pool.")
 	_assert(game.physiological_dialogue_controller.entries == physiological_entries_before, "Band-family crossing reloaded/changed the physiological pool.")
 	_assert(_capture_continuous_state(game, spots_before) == preserved_before, "Band-family progression reset continuous history/dialogue/timers/notes/mode/BGM/expression state.")
@@ -336,7 +336,7 @@ func _test_explicit_new_run_reset() -> void:
 	game.reset_run()
 	_assert([game.arousal_model.physical, game.arousal_model.emotional, game.arousal_model.peak] == [20.0, 20.0, 0.0], "Explicit new run did not restore the Phase 1 starting scores.")
 	_assert(not game.arousal_model.peak_has_activated, "Explicit new run retained peak activation.")
-	_assert(game.current_visual_band == 1 and game.current_character_presentation_family == 0, "Explicit new run did not derive early presentation from starting physical.")
+	_assert(game.current_visual_band == 1 and game.current_presentation_phase == 2, "Explicit new run did not derive Phase 2 pose from starting physiology 20.")
 	_assert(game.interaction_mode == PSYCHOLOGICAL_MODE, "Explicit new run did not restore psychological interaction mode.")
 	_assert(not game.get_character_expression_request_state().requests.has(COMPATIBILITY_SOURCE), "Explicit new run retained expression requests.")
 	_assert(not _history_contains(game.dialogue_panel.get_dialogue_history(), "must be cleared"), "Explicit new run retained prior dialogue history.")
@@ -435,7 +435,7 @@ func _timer_state(timer: Timer) -> Dictionary:
 
 
 func _score_inside_band(band: int) -> float:
-	return (float(band) + 0.5) * 100.0 / 6.0
+	return (float(band) + 0.5) * 20.0
 
 
 func _candidate_ids(candidates: Array[Dictionary]) -> Array[String]:

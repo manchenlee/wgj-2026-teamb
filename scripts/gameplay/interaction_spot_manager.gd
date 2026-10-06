@@ -40,6 +40,8 @@ var _spawn_timer: Timer = null
 var _phase_config = null
 var _rng := RandomNumberGenerator.new()
 var _bounds_rect := Rect2()
+var _interaction_mask: Image = null
+var _interaction_mask_layer: TextureRect = null
 
 var _available_anchor_ids: Array[String] = []
 # All currently live spots
@@ -83,6 +85,26 @@ func set_available_anchor_ids(ids: Array[String]) -> void:
 
 func set_bounds_rect(bounds_rect: Rect2) -> void:
 	_bounds_rect = bounds_rect
+
+func set_interaction_mask(mask_texture: Texture2D, display_layer: TextureRect) -> void:
+	_interaction_mask = mask_texture.get_image() if mask_texture != null else null
+	_interaction_mask_layer = display_layer
+
+func _is_inside_interaction_mask(local_point: Vector2) -> bool:
+	if _interaction_mask == null or _interaction_mask_layer == null:
+		return true
+	var layer_size := _interaction_mask_layer.size
+	var image_size := Vector2(_interaction_mask.get_size())
+	if layer_size.x <= 0.0 or layer_size.y <= 0.0:
+		return false
+	var global_point := _prompt_layer.get_global_transform_with_canvas() * local_point
+	var layer_point := _interaction_mask_layer.get_global_transform_with_canvas().affine_inverse() * global_point
+	var scale_factor: float = maxf(layer_size.x / image_size.x, layer_size.y / image_size.y)
+	var image_point := (layer_point - (layer_size - image_size * scale_factor) * 0.5) / scale_factor
+	var pixel := Vector2i(image_point)
+	if pixel.x < 0 or pixel.y < 0 or pixel.x >= _interaction_mask.get_width() or pixel.y >= _interaction_mask.get_height():
+		return false
+	return _interaction_mask.get_pixelv(pixel).a >= 0.5
 
 
 func capture_active_note_global_positions() -> Dictionary:
@@ -349,6 +371,8 @@ func _find_clear_placement(
 			var global_center := _pick_global_center_in_rect(global_rect, placement_radius)
 			var local_center: Vector2 = inverse_prompt_transform * global_center
 			local_center = _clamp_center_to_bounds(local_center, placement_radius)
+			if not _is_inside_interaction_mask(local_center):
+				continue
 			var candidate_rect: Rect2
 			var points := PackedVector2Array()
 			if note_type == NoteType.SLIDE:
@@ -372,6 +396,27 @@ func _find_clear_placement(
 					"rect": candidate_rect,
 					"points": points,
 				}
+	# Existing anatomical anchors may not cover a new pose's usable white area.
+	# Search the bounded mask before giving up on an otherwise valid note.
+	for _attempt in range(100):
+		var local_center := Vector2(
+			_rng.randf_range(_bounds_rect.position.x, _bounds_rect.end.x),
+			_rng.randf_range(_bounds_rect.position.y, _bounds_rect.end.y)
+		)
+		local_center = _clamp_center_to_bounds(local_center, placement_radius)
+		if not _is_inside_interaction_mask(local_center):
+			continue
+		var points := PackedVector2Array()
+		var candidate_rect: Rect2
+		if note_type == NoteType.SLIDE:
+			var checkpoint_count: int = int(_get_config_value("spot_required_checkpoint_count", Config.SPOT_REQUIRED_CHECKPOINT_COUNT))
+			var spacing: float = _get_config_value("spot_checkpoint_spacing", Config.SPOT_CHECKPOINT_SPACING)
+			points = _generate_sequence_points(local_center, checkpoint_count, spacing, target_radius)
+			candidate_rect = _get_path_rect(points, target_radius * 2.0 + 4.0)
+		else:
+			candidate_rect = Rect2(local_center - Vector2.ONE * placement_radius, Vector2.ONE * placement_radius * 2.0)
+		if _is_placement_clear(candidate_rect):
+			return {"anchor_id": available_anchor_ids[0], "center": local_center, "rect": candidate_rect, "points": points}
 	return {}
 
 

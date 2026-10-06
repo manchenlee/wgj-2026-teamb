@@ -46,7 +46,7 @@ func _init(
 	character_visual_bottom_inset_pixels = character_visual_bottom_inset_pixels_value
 
 func resolve_visual_state(visual_band: int, expression: ExpressionState) -> Dictionary:
-	var clamped_band := clampi(visual_band, 0, 5)
+	var clamped_band := clampi(visual_band, 0, 4)
 	var band_mapping: Dictionary = visual_state_mapping.get(clamped_band, {})
 	var neutral_mapping: Dictionary = band_mapping.get(ExpressionState.NEUTRAL, {})
 	var resolved_expression := expression

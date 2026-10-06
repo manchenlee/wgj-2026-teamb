@@ -85,7 +85,7 @@ func set_motion_set(motions: Dictionary) -> void:
 		_motion_ids.append(motion_id)
 		_create_track(motion_id, frame_1, frame_2)
 
-	if _motion_ids.is_empty():
+	if _motion_ids.is_empty() and not motions.is_empty():
 		push_warning("TwoFrameOverlayAnimator: no valid two-frame motions were provided.")
 
 
