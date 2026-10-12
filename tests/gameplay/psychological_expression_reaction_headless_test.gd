@@ -21,8 +21,9 @@ func _initialize() -> void:
 
 func _run() -> void:
 	await _test_good_and_bad_choice_paths()
-	await _test_round_boundary_and_mode_pause()
+	await _test_reaction_duration_and_mode_switch()
 	await _test_stale_token_and_source_isolation()
+	await _test_physiological_spot_paths()
 	if _failures.is_empty():
 		print("Psychological expression-reaction headless tests passed.")
 		quit(0)
@@ -47,7 +48,7 @@ func _test_good_and_bad_choice_paths() -> void:
 	_assert(game.arousal_model.emotional == initial_emotional + 10.0, "Good choice no longer applies exactly +10 emotional score.")
 	_assert(game.character_area.prompt_layer.get_child_count() == heart_count_before + 5, "Good choice did not use the existing five-heart burst path.")
 	_assert(not game.failure_flash.visible, "Good choice unexpectedly used failure feedback.")
-	_assert(game._psychological_expression_round_pending, "Good reaction was not marked active for its dialogue round.")
+	_assert(game.current_expression_state == POSITIVE, "Good reaction was not displayed immediately.")
 	_assert(game.psychological_dialogue_controller.current_feedback_index == -1, "Choice response incorrectly remained in the pre-choice feedback sequence.")
 	_assert(game.arousal_model.physical == initial_physical and game.current_visual_band == initial_band, "Good expression request changed physical score or visual band.")
 	_assert(game.active_phase_index == initial_phase, "Good expression request changed gameplay config.")
@@ -70,22 +71,22 @@ func _test_good_and_bad_choice_paths() -> void:
 	await process_frame
 
 
-func _test_round_boundary_and_mode_pause() -> void:
+func _test_reaction_duration_and_mode_switch() -> void:
 	var game = await _create_game()
 	_prepare_choice(game, "positive", ["one of several authored response options", "another option"])
 	game._on_choice_selected("good", "good choice")
-	var token: int = game._psychological_expression_request_token
 	_assert(game.current_expression_state == POSITIVE, "Positive request was not active while the response line was displayed.")
 	_assert(not game.psychological_dialogue_timer.is_stopped(), "Post-choice round-completion timer was not scheduled.")
 
 	game.set_interaction_mode(PHYSIOLOGICAL_MODE)
 	_assert(game.current_expression_state == POSITIVE, "Mode switch cleared the psychological reaction.")
 	_assert(game.psychological_dialogue_timer.paused, "Psychological dialogue timer did not pause in physiological mode.")
-	game._on_psychological_dialogue_timer_timeout()
-	_assert(game._psychological_expression_request_token == token, "Paused/manual timeout prematurely cleared the reaction.")
+	game._advance_character_expression_reactions(0.49)
+	_assert(game.current_expression_state == POSITIVE, "Psychological reaction ended before 0.5 seconds.")
+	game._advance_character_expression_reactions(0.02)
+	_assert(game.current_expression_state == NEUTRAL, "Psychological reaction did not return to neutral after 0.5 seconds.")
 
 	game.set_interaction_mode(PSYCHOLOGICAL_MODE)
-	_assert(not game._psychological_expression_round_pending, "Returning to psychological mode retained the previous dialogue round marker.")
 	_assert(not game.get_character_expression_request_state().requests.has(PSYCHOLOGICAL_SOURCE), "Returning to psychological mode retained the previous dialogue reaction.")
 	_assert(game.current_expression_state == NEUTRAL, "A new psychological dialogue did not begin neutral.")
 	_assert(not game.psychological_dialogue_controller.current_line.is_empty(), "A new psychological dialogue did not produce an opening line.")
@@ -98,22 +99,38 @@ func _test_stale_token_and_source_isolation() -> void:
 	var game = await _create_game()
 	_prepare_choice(game, "positive", ["first response"])
 	game._on_choice_selected("good", "first choice")
-	var stale_token: int = game._psychological_expression_request_token
+	var stale_token: int = _request_for(game, PSYCHOLOGICAL_SOURCE).get("token", -1)
 	_prepare_choice(game, "negative", ["newer response"])
 	game._on_choice_selected("bad", "newer choice")
-	var current_token: int = game._psychological_expression_request_token
+	var current_token: int = _request_for(game, PSYCHOLOGICAL_SOURCE).get("token", -1)
 	_assert(current_token != stale_token, "Newer psychological reaction reused the old token.")
-	_assert(not game._complete_psychological_expression_round(stale_token), "Stale round callback cleared a newer reaction.")
+	_assert(not game.clear_character_expression(PSYCHOLOGICAL_SOURCE, stale_token), "Stale token cleared a newer reaction.")
 	_assert(game.current_expression_state == NEGATIVE, "Stale callback changed the newer psychological reaction.")
 
 	var physiological_token: int = game.request_character_expression(PHYSIOLOGICAL_SOURCE, POSITIVE)
 	var conflict: Dictionary = game.get_character_expression_request_state()
-	_assert(conflict.has_conflict and conflict.presentation_expression == NEUTRAL, "Coexisting conflicting sources changed Stage 6A conflict behavior.")
-	_assert(game._complete_psychological_expression_round(current_token), "Current round token did not clear psychological reaction.")
+	_assert(conflict.has_conflict and conflict.presentation_expression == POSITIVE, "Newest reaction did not appear during overlapping requests.")
+	_assert(game.clear_character_expression(PSYCHOLOGICAL_SOURCE, current_token), "Current token did not clear psychological reaction.")
 	var remaining: Dictionary = game.get_character_expression_request_state()
 	_assert(remaining.requests.has(PHYSIOLOGICAL_SOURCE), "Clearing psychological reaction deleted physiological request.")
 	_assert(remaining.presentation_expression == POSITIVE and not remaining.has_conflict, "Remaining physiological request was not restored after conflict.")
 	_assert(game.clear_character_expression(PHYSIOLOGICAL_SOURCE, physiological_token), "Physiological cleanup failed.")
+	game.queue_free()
+	await process_frame
+
+
+func _test_physiological_spot_paths() -> void:
+	var game = await _create_game()
+	game._on_physiological_spot_completed()
+	_assert(game.current_expression_state == POSITIVE, "Completed spot did not show positive face.")
+	game._advance_character_expression_reactions(0.49)
+	_assert(game.current_expression_state == POSITIVE, "Completed spot reaction ended before 0.5 seconds.")
+	game._advance_character_expression_reactions(0.02)
+	_assert(game.current_expression_state == NEUTRAL, "Completed spot reaction did not return to neutral.")
+	game._on_physiological_spot_failed(0.0, 0.0)
+	_assert(game.current_expression_state == NEGATIVE, "Missed spot did not show negative face.")
+	game._advance_character_expression_reactions(0.5)
+	_assert(game.current_expression_state == NEUTRAL, "Missed spot reaction did not return to neutral.")
 	game.queue_free()
 	await process_frame
 

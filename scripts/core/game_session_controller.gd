@@ -111,13 +111,15 @@ var shooting_tail_active: bool = false
 var _tail_frames: Array[Texture2D] = []
 var _tail_frame_index: int = 0
 var _tail_elapsed: float = 0.0
-const TAIL_FRAME_DURATION: float = 0.18
+var _tail_frame_duration: float = 0.0
+var _tail_rng := RandomNumberGenerator.new()
+const TAIL_TIME_UNIT: float = 0.35
+const EXPRESSION_REACTION_DURATION: float = 0.5
 var current_expression_state: int = PhaseCharacterProfileClass.ExpressionState.NEUTRAL
 var character_expression_conflict: bool = false
 var _character_expression_requests: Dictionary = {}
+var _timed_character_expression_requests: Dictionary = {}
 var _next_character_expression_token: int = 0
-var _psychological_expression_round_pending: bool = false
-var _psychological_expression_request_token: int = -1
 var _resolved_character_alignment_offset: Vector2 = Vector2.ZERO
 var physical_low_warning_active: bool = false
 var emotional_low_warning_active: bool = false
@@ -153,6 +155,7 @@ func _ready() -> void:
 		return
 
 	feedback_rng.randomize()
+	_tail_rng.randomize()
 	set_process_unhandled_input(true)
 	choice_panel.choice_selected.connect(_on_choice_selected)
 	interaction_mode_toggle.toggle_requested.connect(toggle_interaction_mode)
@@ -252,6 +255,7 @@ func _configure_pose_layers() -> void:
 	_tail_frames.clear()
 	_tail_frame_index = 0
 	_tail_elapsed = 0.0
+	_tail_frame_duration = TAIL_TIME_UNIT * _tail_rng.randi_range(1, 2)
 	if active_character_profile == null:
 		return
 	for path in active_character_profile.get_tail_frame_paths():
@@ -267,6 +271,7 @@ func _configure_pose_layers() -> void:
 
 func set_shooting_tail_active(active: bool) -> void:
 	shooting_tail_active = active
+	_tail_elapsed = 0.0
 	_update_shooting_tail_layer()
 
 func _update_shooting_tail_layer() -> void:
@@ -282,10 +287,12 @@ func _advance_tail_animation(delta: float) -> void:
 	if _tail_frames.size() != 3 or (shooting_tail_active and current_presentation_phase == 3):
 		return
 	_tail_elapsed += delta
-	if _tail_elapsed < TAIL_FRAME_DURATION:
+	if _tail_elapsed < _tail_frame_duration:
 		return
-	_tail_elapsed = fmod(_tail_elapsed, TAIL_FRAME_DURATION)
-	_tail_frame_index = (_tail_frame_index + 1) % 3
+	_tail_elapsed = 0.0
+	# Choose one of the other two frames so every transition is visible.
+	_tail_frame_index = (_tail_frame_index + _tail_rng.randi_range(1, 2)) % _tail_frames.size()
+	_tail_frame_duration = TAIL_TIME_UNIT * _tail_rng.randi_range(1, 2)
 	_update_shooting_tail_layer()
 
 func _apply_breathing_profile() -> void:
@@ -626,6 +633,23 @@ func request_character_expression(source: CharacterExpressionSource, expression:
 	_refresh_requested_character_expression()
 	return token
 
+func _show_timed_character_expression(source: CharacterExpressionSource, expression: int) -> void:
+	var token := request_character_expression(source, expression)
+	_timed_character_expression_requests[source] = {
+		"token": token,
+		"remaining": EXPRESSION_REACTION_DURATION,
+	}
+
+func _advance_character_expression_reactions(delta: float) -> void:
+	for source in _timed_character_expression_requests.keys():
+		var reaction: Dictionary = _timed_character_expression_requests[source]
+		var remaining := float(reaction["remaining"]) - delta
+		if remaining > 0.0:
+			reaction["remaining"] = remaining
+			continue
+		_timed_character_expression_requests.erase(source)
+		clear_character_expression(source, int(reaction["token"]))
+
 func clear_character_expression(source: CharacterExpressionSource, token: int) -> bool:
 	var request: Dictionary = _character_expression_requests.get(source, {})
 	if request.is_empty() or int(request.get("token", -1)) != token:
@@ -636,8 +660,7 @@ func clear_character_expression(source: CharacterExpressionSource, token: int) -
 
 func clear_all_character_expression_requests() -> void:
 	_character_expression_requests.clear()
-	_psychological_expression_round_pending = false
-	_psychological_expression_request_token = -1
+	_timed_character_expression_requests.clear()
 	# Advance the generation even when no request exists so every reset creates
 	# a token boundary that delayed callbacks from an earlier run cannot cross.
 	_next_character_expression_token += 1
@@ -652,16 +675,19 @@ func get_character_expression_request_state() -> Dictionary:
 
 func _refresh_requested_character_expression() -> void:
 	var distinct_expressions: Dictionary = {}
+	var latest_token: int = -1
+	var next_expression := PhaseCharacterProfileClass.ExpressionState.NEUTRAL
 	for request_variant in _character_expression_requests.values():
 		var request: Dictionary = request_variant
-		distinct_expressions[int(request.get(
+		var expression: int = int(request.get(
 			"expression",
 			PhaseCharacterProfileClass.ExpressionState.NEUTRAL
-		))] = true
+		))
+		distinct_expressions[expression] = true
+		if int(request.get("token", -1)) > latest_token:
+			latest_token = int(request.get("token", -1))
+			next_expression = expression
 	character_expression_conflict = distinct_expressions.size() > 1
-	var next_expression := PhaseCharacterProfileClass.ExpressionState.NEUTRAL
-	if distinct_expressions.size() == 1:
-		next_expression = int(distinct_expressions.keys()[0])
 	if current_expression_state == next_expression:
 		return
 	current_expression_state = next_expression
@@ -706,6 +732,7 @@ func _process(delta: float) -> void:
 		return
 	_poll_character_presentation_prefetch()
 	_advance_tail_animation(delta)
+	_advance_character_expression_reactions(delta)
 	if not run_active:
 		_update_phase_debug_label()
 		return
@@ -987,12 +1014,14 @@ func _on_spot_telemetry_updated(telemetry: Dictionary) -> void:
 
 
 func _on_physiological_spot_completed() -> void:
+	_show_timed_character_expression(CharacterExpressionSource.PHYSIOLOGICAL, PhaseCharacterProfileClass.ExpressionState.POSITIVE)
 	current_combo += 1
 	max_combo = maxi(max_combo, current_combo)
 	status_hud.update_combo(current_combo, true)
 
 
 func _on_physiological_spot_failed(_progress_ratio: float, _penalty: float) -> void:
+	_show_timed_character_expression(CharacterExpressionSource.PHYSIOLOGICAL, PhaseCharacterProfileClass.ExpressionState.NEGATIVE)
 	current_combo = 0
 	status_hud.update_combo(current_combo)
 	_play_failure_flash()
@@ -1005,8 +1034,6 @@ func _on_psychological_dialogue_timer_timeout() -> void:
 	if not run_active or interaction_mode != InteractionMode.PSYCHOLOGICAL \
 			or _has_pending_psychological_choice():
 		return
-	if _psychological_expression_round_pending:
-		_complete_psychological_expression_round(_psychological_expression_request_token)
 	_push_next_dialogue_event(InteractionMode.PSYCHOLOGICAL)
 
 func _on_physiological_dialogue_timer_timeout() -> void:
@@ -1023,7 +1050,11 @@ func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	var outcome := psychological_dialogue_controller.apply_choice(choice_quality, arousal_model)
 	var ending_type := str(outcome.get("ending_type", ""))
 	var is_wrong_choice := bool(outcome.get("is_wrong_choice", false))
-	_request_psychological_choice_expression(is_wrong_choice)
+	_show_timed_character_expression(
+		CharacterExpressionSource.PSYCHOLOGICAL,
+		PhaseCharacterProfileClass.ExpressionState.NEGATIVE if is_wrong_choice \
+		else PhaseCharacterProfileClass.ExpressionState.POSITIVE
+	)
 	if is_wrong_choice:
 		_play_failure_flash()
 	else:
@@ -1038,29 +1069,6 @@ func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 		return
 	_schedule_next_dialogue_message(InteractionMode.PSYCHOLOGICAL)
 	_update_presentation()
-
-func _request_psychological_choice_expression(is_wrong_choice: bool) -> int:
-	var expression := PhaseCharacterProfileClass.ExpressionState.NEGATIVE \
-			if is_wrong_choice else PhaseCharacterProfileClass.ExpressionState.POSITIVE
-	_psychological_expression_request_token = request_character_expression(
-		CharacterExpressionSource.PSYCHOLOGICAL,
-		expression
-	)
-	_psychological_expression_round_pending = true
-	return _psychological_expression_request_token
-
-func _complete_psychological_expression_round(expression_token: int) -> bool:
-	if not _psychological_expression_round_pending \
-			or expression_token != _psychological_expression_request_token:
-		return false
-	if not clear_character_expression(
-		CharacterExpressionSource.PSYCHOLOGICAL,
-		expression_token
-	):
-		return false
-	_psychological_expression_round_pending = false
-	_psychological_expression_request_token = -1
-	return true
 
 func _on_choice_timeout() -> void:
 	if not run_active or interaction_mode != InteractionMode.PSYCHOLOGICAL \
@@ -1117,17 +1125,6 @@ func _schedule_next_dialogue_message(mode: InteractionMode) -> void:
 func _start_new_psychological_dialogue() -> void:
 	psychological_dialogue_timer.stop()
 	choice_timeout_timer.stop()
-	var psychological_request: Dictionary = _character_expression_requests.get(
-		CharacterExpressionSource.PSYCHOLOGICAL,
-		{}
-	)
-	if not psychological_request.is_empty():
-		clear_character_expression(
-			CharacterExpressionSource.PSYCHOLOGICAL,
-			int(psychological_request.get("token", -1))
-		)
-	_psychological_expression_round_pending = false
-	_psychological_expression_request_token = -1
 	psychological_dialogue_controller.reset()
 	if dialogue_panel != null:
 		dialogue_panel.clear_history()
