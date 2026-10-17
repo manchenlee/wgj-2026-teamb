@@ -2,6 +2,7 @@ extends Control
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 const ENDING_TEXTS_PATH := "res://assets/dialogue/endings.json"
+const VISUAL_NOVEL_SCENE := preload("res://scenes/screens/OpeningScreen.tscn")
 const DEFAULT_ENDING_TEXTS := {
 	Config.SUCCESS_ENDING: {
 		"title": "整體興奮值滿",
@@ -41,6 +42,7 @@ signal back_to_title_pressed
 
 var pending_result_type: String = ""
 var ending_texts_by_type: Dictionary = {}
+var _novel_screen: Control
 
 func _ready() -> void:
 	ending_texts_by_type = _load_ending_texts()
@@ -85,6 +87,17 @@ func _apply_result(result_type: String) -> void:
 		var ending_entry: Dictionary = ending_entry_variant
 		var ending_title: String = str(ending_entry.get("title", ""))
 		var ending_body: String = str(ending_entry.get("body", ""))
+		var steps := ending_entry.get("steps", []) as Array
+		if not steps.is_empty():
+			heading_label.text = ending_title
+			body_label.visible = false
+			$OuterMargin/Layout/RestartButtons.visible = false
+			_novel_screen = VISUAL_NOVEL_SCENE.instantiate()
+			_novel_screen.set_dialogue_steps(steps, ending_title)
+			_novel_screen.continue_pressed.connect(_finish_novel)
+			_novel_screen.skip_pressed.connect(_finish_novel)
+			add_child(_novel_screen)
+			return
 		if not ending_title.is_empty() and not ending_body.is_empty():
 			heading_label.text = ending_title
 			body_label.text = ending_body
@@ -92,6 +105,12 @@ func _apply_result(result_type: String) -> void:
 
 	heading_label.text = "結局"
 	body_label.text = "未知結局。\n\n尚未找到對應的 ending 文案。"
+
+func _finish_novel() -> void:
+	if _novel_screen != null:
+		_novel_screen.queue_free()
+		_novel_screen = null
+	$OuterMargin/Layout/RestartButtons.visible = true
 
 func _load_ending_texts() -> Dictionary:
 	var file: FileAccess = FileAccess.open(ENDING_TEXTS_PATH, FileAccess.READ)

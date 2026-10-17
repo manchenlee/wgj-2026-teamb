@@ -20,10 +20,18 @@ const WARNING_PULSE_SPEED: float = 4.0
 @onready var reference_track: ColorRect = $ReferenceMeter/Track
 @onready var reference_fill: ColorRect = $ReferenceMeter/Track/Fill
 @onready var peak_value_label: Label = $ReferenceMeter/PeakValueLabel
+@onready var physical_track: ColorRect = $PhysicalBar/Track
+@onready var physical_fill: ColorRect = $PhysicalBar/Track/Fill
+@onready var physical_bar_value: Label = $PhysicalBar/Value
+@onready var emotional_track: ColorRect = $EmotionalBar/Track
+@onready var emotional_fill: ColorRect = $EmotionalBar/Track/Fill
+@onready var emotional_bar_value: Label = $EmotionalBar/Value
 
 @export var show_legacy_meter: bool = false
 
 var _overall_arousal_value: float = 0.0
+var _physical_value: float = 0.0
+var _emotional_value: float = 0.0
 var _physical_low_warning_active: bool = false
 var _emotional_low_warning_active: bool = false
 var _warning_pulse_time: float = 0.0
@@ -32,6 +40,7 @@ var _combo_pulse_tween: Tween = null
 func _ready() -> void:
 	legacy_arousal_meter.visible = show_legacy_meter
 	_apply_overall_arousal_value(_overall_arousal_value)
+	_apply_score_bars()
 	set_process(false)
 	_apply_score_warning_presentation()
 	update_combo(0)
@@ -44,10 +53,14 @@ func _process(delta: float) -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready():
 		_apply_overall_arousal_value(_overall_arousal_value)
+		_apply_score_bars()
 
 func update_values(physical: float, emotional: float, overall_arousal: float) -> void:
-	physical_value_label.text = str(int(round(Config.clamp_value(physical))))
-	emotional_value_label.text = str(int(round(Config.clamp_value(emotional))))
+	_physical_value = Config.clamp_value(physical)
+	_emotional_value = Config.clamp_value(emotional)
+	physical_value_label.text = str(int(round(_physical_value)))
+	emotional_value_label.text = str(int(round(_emotional_value)))
+	_apply_score_bars()
 	_overall_arousal_value = Config.clamp_value(overall_arousal)
 	heart_value_label.text = str(int(round(_overall_arousal_value)))
 	peak_value_label.text = "%d/100" % int(round(_overall_arousal_value))
@@ -116,9 +129,20 @@ func _apply_overall_arousal_value(overall_arousal: float) -> void:
 	treble_clef.position.x = note_center_x - treble_clef.pivot_offset.x
 
 
+func _apply_score_bars() -> void:
+	if not is_node_ready():
+		return
+	physical_fill.size.x = physical_track.size.x * _physical_value / Config.MAX_VALUE
+	emotional_fill.size.x = emotional_track.size.x * _emotional_value / Config.MAX_VALUE
+	physical_bar_value.text = "%d/100" % int(round(_physical_value))
+	emotional_bar_value.text = "%d/100" % int(round(_emotional_value))
+
+
 func _apply_score_warning_presentation() -> void:
 	_apply_label_warning(physical_value_label, _physical_low_warning_active)
 	_apply_label_warning(emotional_value_label, _emotional_low_warning_active)
+	_apply_label_warning(physical_bar_value, _physical_low_warning_active)
+	_apply_label_warning(emotional_bar_value, _emotional_low_warning_active)
 
 
 func _apply_label_warning(label: Label, warning_active: bool) -> void:

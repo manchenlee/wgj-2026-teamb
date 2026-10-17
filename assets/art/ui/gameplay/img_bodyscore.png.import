@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ccxs8vvditqi7"
-path="res://.godot/imported/hole_using.png-797495748c2ac0c59a1e13b4c7261ed5.ctex"
+uid="uid://bscafdp5hjyj4"
+path="res://.godot/imported/img_bodyscore.png-84f61b675d5dcecfa8d2d0c92c05198c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/character/phase2/hole_using.png"
-dest_files=["res://.godot/imported/hole_using.png-797495748c2ac0c59a1e13b4c7261ed5.ctex"]
+source_file="res://assets/art/ui/gameplay/img_bodyscore.png"
+dest_files=["res://.godot/imported/img_bodyscore.png-84f61b675d5dcecfa8d2d0c92c05198c.ctex"]
 
 [params]
 

@@ -12,6 +12,8 @@ var entries: Array = []
 var rng := RandomNumberGenerator.new()
 var safe_word: String = Config.SAFE_WORD_DEFAULT
 var current_line: String = ""
+var _queued_response_lines: Array = []
+var _queued_response_speakers: Array = []
 var _data_source_property: String = "psychological_dialogue_data_source"
 var _choices_enabled: bool = true
 
@@ -39,10 +41,16 @@ func reset() -> void:
 	current_feedback_index = -1
 	choice_prompt_pending = false
 	current_line = ""
+	_queued_response_lines.clear()
+	_queued_response_speakers.clear()
 
 func next_event(physical: float, emotional: float, force_safe_word: bool = false) -> Dictionary:
 	if choice_prompt_pending:
 		return {}
+	if not _queued_response_lines.is_empty():
+		current_line = _format_text(str(_queued_response_lines.pop_front()))
+		var queued_speaker := str(_queued_response_speakers.pop_front()) if not _queued_response_speakers.is_empty() else ""
+		return {"text": current_line, "speaker": queued_speaker}
 	if current_entry.is_empty():
 		current_entry = _select_entry(physical, emotional, force_safe_word)
 		current_feedback_index = -1
@@ -75,7 +83,20 @@ func apply_choice(choice_id: String, model) -> Dictionary:
 	var ending_type := ""
 	if effect == "bad_ending":
 		ending_type = Config.SAFEWORD_IGNORED_FAILURE_ENDING
-	var reply := _get_choice_response(choice_id, current_entry, ending_type.is_empty())
+	var response_map := current_entry.get("response", {}) as Dictionary
+	var speaker_map := current_entry.get("response_speakers", {}) as Dictionary
+	var authored_responses := response_map.get(choice_id, []) as Array
+	var authored_speakers := speaker_map.get(choice_id, []) as Array
+	var reply := ""
+	var reply_speaker := ""
+	if not authored_responses.is_empty():
+		reply = _format_text(str(authored_responses[0]))
+		reply_speaker = str(authored_speakers[0]) if not authored_speakers.is_empty() else ""
+		for index in range(1, authored_responses.size()):
+			_queued_response_lines.append(authored_responses[index])
+			_queued_response_speakers.append(authored_speakers[index] if index < authored_speakers.size() else "")
+	else:
+		reply = _get_choice_response(choice_id, current_entry, ending_type.is_empty())
 	current_line = reply
 	current_prompt = {}
 	current_entry = {}
@@ -83,6 +104,7 @@ func apply_choice(choice_id: String, model) -> Dictionary:
 	choice_prompt_pending = false
 	return {
 		"reply": reply,
+		"reply_speaker": reply_speaker,
 		"delta": delta_value,
 		"ending_type": ending_type,
 		"choice_effect": effect,
@@ -174,9 +196,9 @@ func _get_matching_entries(physical: float, emotional: float) -> Array[Dictionar
 	for entry_variant in entries:
 		var entry := entry_variant as Dictionary
 		var condition := entry.get("condition", {}) as Dictionary
-		if str(condition.get("physical", "")) != target_physical:
+		if str(condition.get("physical", "")) not in [target_physical, "any"]:
 			continue
-		if str(condition.get("emotional", "")) != target_emotional:
+		if str(condition.get("emotional", "")) not in [target_emotional, "any"]:
 			continue
 		# Legacy phase variants share one condition-based pool. Collapse only exact
 		# semantic duplicates so placeholder copies do not receive extra weight.
@@ -224,11 +246,17 @@ func _build_next_prompt(entry: Dictionary) -> Dictionary:
 	if choices.is_empty() and is_last_feedback_line:
 		var terminal_text := _get_current_feedback_line(entry)
 		_clear_current_sequence()
-		return {"text": terminal_text}
+		return {"text": terminal_text, "speaker": _get_current_feedback_speaker(entry)}
 	if choices.is_empty():
-		return {"text": _get_current_feedback_line(entry)}
+		return {"text": _get_current_feedback_line(entry), "speaker": _get_current_feedback_speaker(entry)}
 	choice_prompt_pending = true
-	return {"text": _get_current_feedback_line(entry), "choices": choices}
+	return {"text": _get_current_feedback_line(entry), "speaker": _get_current_feedback_speaker(entry), "choices": choices}
+
+func _get_current_feedback_speaker(entry: Dictionary) -> String:
+	var speakers := entry.get("feedback_speakers", []) as Array
+	if current_feedback_index >= 0 and current_feedback_index < speakers.size():
+		return str(speakers[current_feedback_index])
+	return ""
 
 func _get_current_feedback_line(entry: Dictionary) -> String:
 	var feedback_lines := _get_feedback_lines(entry)

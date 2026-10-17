@@ -17,6 +17,7 @@ extends Control
 
 @onready var margin_container: MarginContainer = $MarginContainer
 @onready var text_label: Label = $MarginContainer/TextLabel
+@onready var speaker_label: Label = $SpeakerLabel
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -27,6 +28,11 @@ func set_dialogue_text(text_value: String) -> void:
 		return
 	text_label.text = text_value.strip_edges()
 	_refresh_layout()
+
+func set_speaker_text(speaker_text: String) -> void:
+	if is_node_ready():
+		speaker_label.text = speaker_text
+		speaker_label.visible = not speaker_text.is_empty()
 
 func resolve_size() -> Vector2:
 	if not is_node_ready():

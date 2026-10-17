@@ -1062,7 +1062,7 @@ func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	arousal_model.refresh_emotional_activity()
 	var reply_text := str(outcome.get("reply", ""))
 	if not reply_text.is_empty():
-		dialogue_panel.append_history(reply_text, "companion")
+		dialogue_panel.append_history(reply_text, _dialogue_speaker_type(str(outcome.get("reply_speaker", ""))))
 	character_area.show_choice_reaction(choice_quality)
 	if not ending_type.is_empty():
 		_begin_ending_transition(ending_type)
@@ -1099,19 +1099,31 @@ func _push_next_dialogue_event(mode: InteractionMode) -> void:
 		push_warning("Physiological dialogue attempted to expose choices; choices were ignored.")
 		prompt.erase("choices")
 	var prompt_text := str(prompt.get("text", Config.FEEDBACK_MESSAGE_TEXT))
+	var speaker_type := _dialogue_speaker_type(str(prompt.get("speaker", "小提琴")))
 	if mode == InteractionMode.PSYCHOLOGICAL and prompt.has("choices"):
 		dialogue_panel.hide_prompt()
-		dialogue_panel.append_history(prompt_text, "companion")
+		dialogue_panel.append_history(prompt_text, speaker_type)
 		choice_panel.show_choices(prompt.get("choices", {}))
 		psychological_dialogue_timer.stop()
 		choice_timeout_timer.start(float(active_phase_config.choice_timeout_seconds))
 	else:
 		dialogue_panel.hide_prompt()
-		dialogue_panel.append_history(prompt_text, "companion")
+		dialogue_panel.append_history(prompt_text, speaker_type)
 		if mode == InteractionMode.PSYCHOLOGICAL:
 			choice_panel.clear_choices()
 			choice_timeout_timer.stop()
 		_schedule_next_dialogue_message(mode)
+
+func _dialogue_speaker_type(authored_speaker: String) -> String:
+	match authored_speaker:
+		"小提琴":
+			return "companion"
+		"主角":
+			return "player"
+		"旁白":
+			return "narrator"
+		_:
+			return "unassigned"
 
 func _schedule_next_dialogue_message(mode: InteractionMode) -> void:
 	var wait_time := feedback_rng.randf_range(

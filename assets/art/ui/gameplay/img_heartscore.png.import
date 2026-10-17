@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bboawke3rdjgn"
-path="res://.godot/imported/tentacle8_2.png-4fa5dbecb01871ec214986675aa65fa2.ctex"
+uid="uid://cpq216jau37t0"
+path="res://.godot/imported/img_heartscore.png-0a1ef4579e0ebd99f54b434513fc0d97.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/character/phase2/tentacle8_2.png"
-dest_files=["res://.godot/imported/tentacle8_2.png-4fa5dbecb01871ec214986675aa65fa2.ctex"]
+source_file="res://assets/art/ui/gameplay/img_heartscore.png"
+dest_files=["res://.godot/imported/img_heartscore.png-0a1ef4579e0ebd99f54b434513fc0d97.ctex"]
 
 [params]
 

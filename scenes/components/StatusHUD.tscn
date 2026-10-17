@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/status_hud.gd" id="1_hud"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/heart.png" id="2_heart"]
@@ -8,6 +8,8 @@
 [ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/img_score.png" id="6_score"]
 [ext_resource type="FontFile" path="res://assets/fonts/ShipporiMincho-ExtraBold.ttf" id="7_combo_font"]
 [ext_resource type="Shader" path="res://scripts/ui/combo_text_gradient.gdshader" id="8_combo_gradient"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/img_bodyscore.png" id="9_body_score"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/img_heartscore.png" id="10_heart_score"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_combo_gradient"]
 shader = ExtResource("8_combo_gradient")
@@ -15,12 +17,15 @@ shader_parameter/gradient_top = Color(0.98, 0.62, 0.29, 1)
 shader_parameter/gradient_bottom = Color(0.67, 0.2, 0.055, 1)
 shader_parameter/gradient_height = 90.0
 [node name="StatusHUD" type="Control"]
-custom_minimum_size = Vector2(1120, 164)
+custom_minimum_size = Vector2(1050, 150)
 clip_contents = false
+z_index = 20
+z_as_relative = false
 mouse_filter = 2
 script = ExtResource("1_hud")
 
 [node name="ReferenceMeter" type="Control" parent="."]
+visible = false
 layout_mode = 0
 offset_right = 1120.0
 offset_bottom = 164.0
@@ -233,4 +238,96 @@ theme_override_fonts/font = ExtResource("7_combo_font")
 theme_override_font_sizes/font_size = 60
 text = "0 COMBO"
 horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PhysicalBar" type="Control" parent="."]
+layout_mode = 0
+offset_right = 1050.0
+offset_bottom = 90.0
+mouse_filter = 2
+
+[node name="Icon" type="TextureRect" parent="PhysicalBar"]
+layout_mode = 0
+offset_left = -15.0
+offset_top = -21.0
+offset_right = 135.0
+offset_bottom = 129.0
+mouse_filter = 2
+texture = ExtResource("9_body_score")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Track" type="ColorRect" parent="PhysicalBar"]
+layout_mode = 0
+offset_left = 112.0
+offset_top = 48.0
+offset_right = 892.0
+offset_bottom = 60.0
+mouse_filter = 2
+color = Color(0.4, 0.39, 0.4, 0.88)
+
+[node name="Fill" type="ColorRect" parent="PhysicalBar/Track"]
+layout_mode = 0
+offset_bottom = 12.0
+mouse_filter = 2
+color = Color(1, 0.38, 0.28, 1)
+
+[node name="Value" type="Label" parent="PhysicalBar"]
+layout_mode = 0
+offset_left = 903.0
+offset_top = 29.0
+offset_right = 1025.0
+offset_bottom = 77.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.44, 0.28, 1)
+theme_override_colors/font_outline_color = Color(0.18, 0.035, 0.02, 0.92)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 25
+text = "0/100"
+vertical_alignment = 1
+
+[node name="EmotionalBar" type="Control" parent="."]
+layout_mode = 0
+offset_right = 1050.0
+offset_bottom = 150.0
+mouse_filter = 2
+
+[node name="Icon" type="TextureRect" parent="EmotionalBar"]
+layout_mode = 0
+offset_left = 41.0
+offset_top = 24.0
+offset_right = 191.0
+offset_bottom = 174.0
+mouse_filter = 2
+texture = ExtResource("10_heart_score")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Track" type="ColorRect" parent="EmotionalBar"]
+layout_mode = 0
+offset_left = 166.0
+offset_top = 93.0
+offset_right = 946.0
+offset_bottom = 105.0
+mouse_filter = 2
+color = Color(0.4, 0.39, 0.4, 0.88)
+
+[node name="Fill" type="ColorRect" parent="EmotionalBar/Track"]
+layout_mode = 0
+offset_bottom = 12.0
+mouse_filter = 2
+color = Color(0.95, 0.44, 0.7, 1)
+
+[node name="Value" type="Label" parent="EmotionalBar"]
+layout_mode = 0
+offset_left = 957.0
+offset_top = 74.0
+offset_right = 1048.0
+offset_bottom = 122.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.52, 0.76, 1)
+theme_override_colors/font_outline_color = Color(0.18, 0.035, 0.12, 0.92)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 25
+text = "0/100"
 vertical_alignment = 1

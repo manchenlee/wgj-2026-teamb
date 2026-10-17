@@ -1,39 +1,24 @@
 extends PhaseCharacterProfile
 
+const CURRENT_PORTRAIT := "res://assets/art/character/phase2/complete.png"
+
 func _init() -> void:
 	super._init(
 		"phase_1_profile",
 		{
-			"draft": "res://assets/art/character/draft.png",
-			"overall_init": "res://assets/art/character/phase1/overall_init.png",
-			"overall_low": "res://assets/art/character/phase1/overall_low.png",
-			"overall_medium": "res://assets/art/character/phase1/overall_medium.png",
-			"overall_high": "res://assets/art/character/phase1/overall_high.png",
-			"physic_high_mental_low": "res://assets/art/character/phase1/physic_high_mental_low.png.png",
-			"physic_low_mental_high": "res://assets/art/character/phase1/physic_low_mental_high.png"
+			"draft": CURRENT_PORTRAIT,
+			"overall_init": CURRENT_PORTRAIT,
+			"overall_low": CURRENT_PORTRAIT,
+			"overall_medium": CURRENT_PORTRAIT,
+			"overall_high": CURRENT_PORTRAIT,
+			"physic_high_mental_low": CURRENT_PORTRAIT,
+			"physic_low_mental_high": CURRENT_PORTRAIT
 		},
 		{
-			"physic_high_mental_low_gameover": "res://assets/art/character/phase1/physic_high_mental_low_gameover.png",
-			"physic_low_mental_high_gameover": "res://assets/art/character/phase1/physic_low_mental_high_gameover.png"
+			"physic_high_mental_low_gameover": CURRENT_PORTRAIT,
+			"physic_low_mental_high_gameover": CURRENT_PORTRAIT
 		},
-		{
-			"tentacle1": [
-				"res://assets/art/character/phase1/tentacle1_1.png",
-				"res://assets/art/character/phase1/tentacle1_2.png"
-			],
-			"tentacle2": [
-				"res://assets/art/character/phase1/tentacle2_1.png",
-				"res://assets/art/character/phase1/tentacle2_2.png"
-			],
-			"tentacle3": [
-				"res://assets/art/character/phase1/tentacle3_1.png",
-				"res://assets/art/character/phase1/tentacle3_2.png"
-			],
-			"tentacle4": [
-				"res://assets/art/character/phase1/tentacle4_1.png",
-				"res://assets/art/character/phase1/tentacle4_2.png"
-			]
-		},
+		{},
 		{
 			"HeadLeft": Rect2(140.0, 10.0, 140.0, 134.0),
 			"HeadRight": Rect2(280.0, 10.0, 140.0, 134.0),

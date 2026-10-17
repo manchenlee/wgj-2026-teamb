@@ -2,29 +2,29 @@ extends Control
 
 signal continue_pressed
 signal skip_pressed
+signal safe_word_requested
+signal game_requested
 
 const OPENING_DATA_PATH := "res://assets/dialogue/opening.json"
 const SAFE_WORD_SCREEN_PATH := "res://scenes/screens/SafeWordScreen.tscn"
 const DEFAULT_BACKGROUND_PATH := "res://assets/art/background/curtain.jpg"
-const DEFAULT_NEXT_TEXT := "NEXT"
-const FINISH_TEXT := "START"
 const DEFAULT_SPEAKER := "旁白"
 
 @onready var background: TextureRect = $Background
 @onready var backdrop_tint: ColorRect = $BackdropTint
-@onready var chapter_label: Label = $SafeArea/RootLayout/TopRow/ChapterLabel
 @onready var character_stage: Control = $CharacterStage
 @onready var character_glow_root: Control = $CharacterStage/CharacterPivot/GlowRoot
 @onready var character_root: Control = $CharacterStage/CharacterPivot/CharacterRoot
 @onready var speaker_label: Label = $SafeArea/RootLayout/DialogueBox/DialogueLayout/SpeakerPanel/SpeakerLabel
 @onready var dialogue_label: RichTextLabel = $SafeArea/RootLayout/DialogueBox/DialogueLayout/DialogueLabel
-@onready var hint_label: Label = $SafeArea/RootLayout/DialogueBox/DialogueLayout/FooterRow/HintLabel
-@onready var next_button: Button = $SafeArea/RootLayout/DialogueBox/DialogueLayout/FooterRow/NextButton
 @onready var _skip_button_root: Control = $SkipButtonRoot
 @onready var _skip_button: Button = $SkipButtonRoot/SkipButton
 
 var _entries: Array = []
 var _current_entry_index := -1
+var start_step_id: String = ""
+var _choice_buttons: VBoxContainer
+var _injected_steps: Array = []
 var _base_sprite: TextureRect
 var _base_glow_sprite: TextureRect
 var _layer_sprites: Dictionary = {}
@@ -43,7 +43,6 @@ var _skip_button_base_scale := Vector2.ONE
 func _ready() -> void:
 	_base_sprite = _create_stage_sprite("base")
 	_base_glow_sprite = _create_stage_sprite("base_glow", true)
-	next_button.pressed.connect(_advance_script)
 	_skip_button.mouse_entered.connect(_on_skip_mouse_entered)
 	_skip_button.mouse_exited.connect(_on_skip_mouse_exited)
 	_skip_button.pressed.connect(_on_skip_pressed)
@@ -51,17 +50,35 @@ func _ready() -> void:
 	_skip_button_root.pivot_offset = _skip_button_root.size * 0.5
 	resized.connect(_layout_character_stage)
 	_load_opening_script()
+	_choice_buttons = VBoxContainer.new()
+	_choice_buttons.add_theme_constant_override("separation", 8)
+	$SafeArea/RootLayout/DialogueBox/DialogueLayout.add_child(_choice_buttons)
+	$SafeArea/RootLayout/DialogueBox/DialogueLayout.move_child(_choice_buttons, 2)
 	_layout_character_stage()
-	_advance_script()
+	if not start_step_id.is_empty():
+		_current_entry_index = _find_step_index(start_step_id)
+		if _current_entry_index < _entries.size():
+			_apply_entry(_entries[_current_entry_index] as Dictionary)
+	else:
+		_advance_script()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_echo():
 		return
 	if event.is_action_pressed("ui_accept"):
 		advance_input_handled()
-	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if not next_button.get_global_rect().has_point(event.position):
-			advance_input_handled()
+
+func _input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton):
+		return
+	if not event.pressed or event.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if _skip_button.get_global_rect().has_point(event.position):
+		return
+	for button in _choice_buttons.get_children():
+		if button is Button and button.get_global_rect().has_point(event.position):
+			return
+	advance_input_handled()
 
 func advance_input_handled() -> void:
 	get_viewport().set_input_as_handled()
@@ -93,7 +110,22 @@ func _advance_script() -> void:
 		continue_pressed.emit()
 		return
 
+	if _current_entry_index >= 0:
+		var current_entry: Dictionary = _entries[_current_entry_index]
+		if current_entry.has("choices"):
+			return
+		match str(current_entry.get("action", "")):
+			"safe_word":
+				safe_word_requested.emit()
+				return
+			"game":
+				game_requested.emit()
+				return
 	var next_index := _current_entry_index + 1
+	if _current_entry_index >= 0:
+		var next_id := str((_entries[_current_entry_index] as Dictionary).get("next", ""))
+		if not next_id.is_empty():
+			next_index = _find_step_index(next_id)
 	if next_index >= _entries.size():
 		continue_pressed.emit()
 		return
@@ -106,6 +138,9 @@ func _advance_script() -> void:
 
 func _load_opening_script() -> void:
 	_entries.clear()
+	if not _injected_steps.is_empty():
+		_entries = _injected_steps.duplicate(true)
+		return
 	if not FileAccess.file_exists(OPENING_DATA_PATH):
 		push_warning("Opening dialogue file not found: %s" % OPENING_DATA_PATH)
 		return
@@ -121,8 +156,6 @@ func _load_opening_script() -> void:
 		return
 
 	var root: Dictionary = parsed
-	var chapter: String = str(root.get("chapter", "序章"))
-	chapter_label.text = chapter
 	var steps: Variant = root.get("steps", [])
 	if not (steps is Array):
 		push_warning("Opening dialogue steps field is not an array: %s" % OPENING_DATA_PATH)
@@ -130,13 +163,40 @@ func _load_opening_script() -> void:
 
 	_entries = (steps as Array).duplicate(true)
 
+func set_dialogue_steps(steps: Array, _chapter: String) -> void:
+	_injected_steps = steps.duplicate(true)
+
 func _apply_entry(entry: Dictionary) -> void:
 	_apply_background(str(entry.get("background", DEFAULT_BACKGROUND_PATH)))
 	_apply_backdrop_tint(entry.get("backdrop_tint", null))
 	_apply_character(entry.get("character", {}))
 	_apply_dialogue(entry)
 	_apply_effects(entry.get("effects", []))
-	_update_next_button_text()
+	_show_entry_choices(entry)
+
+func _find_step_index(step_id: String) -> int:
+	for index in range(_entries.size()):
+		if str((_entries[index] as Dictionary).get("id", "")) == step_id:
+			return index
+	push_error("Opening step not found: %s" % step_id)
+	return _entries.size()
+
+func _show_entry_choices(entry: Dictionary) -> void:
+	for button in _choice_buttons.get_children():
+		button.queue_free()
+	var choices := entry.get("choices", []) as Array
+	for choice_variant in choices:
+		var choice := choice_variant as Dictionary
+		var button := Button.new()
+		button.text = str(choice.get("text", ""))
+		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		button.custom_minimum_size = Vector2(0, 50)
+		_choice_buttons.add_child(button)
+		var target_id := str(choice.get("next", ""))
+		button.pressed.connect(func() -> void:
+			_current_entry_index = _find_step_index(target_id)
+			_apply_entry(_entries[_current_entry_index] as Dictionary)
+		)
 
 func _apply_background(path: String) -> void:
 	var texture := _load_texture(path, _background_texture_cache)
@@ -153,7 +213,6 @@ func _apply_dialogue(entry: Dictionary) -> void:
 	speaker_label.text = str(entry.get("speaker", DEFAULT_SPEAKER))
 	dialogue_label.clear()
 	dialogue_label.append_text(str(entry.get("text", "")))
-	hint_label.text = str(entry.get("hint", "點擊、Enter 或按鈕繼續"))
 
 func _apply_character(character_data_variant: Variant) -> void:
 	if not (character_data_variant is Dictionary):
@@ -317,12 +376,6 @@ func _reset_effect_state() -> void:
 	character_glow_root.position = _pivot_rest_position + _current_character_offset
 	character_glow_root.modulate.a = 0.0
 	character_glow_root.scale = _current_character_scale
-
-func _update_next_button_text() -> void:
-	if _current_entry_index >= _entries.size() - 1:
-		next_button.text = FINISH_TEXT
-	else:
-		next_button.text = DEFAULT_NEXT_TEXT
 
 func _layout_character_stage() -> void:
 	if not is_node_ready():

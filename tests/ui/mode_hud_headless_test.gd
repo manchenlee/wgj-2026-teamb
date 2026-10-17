@@ -93,12 +93,20 @@ func _test_numeric_hud_and_legacy_visibility() -> void:
 	var overall_arousal_track: ColorRect = hud.get_node("ReferenceMeter/Track")
 	var overall_arousal_fill: ColorRect = hud.get_node("ReferenceMeter/Track/Fill")
 	var overall_arousal_label: Label = hud.get_node("ReferenceMeter/PeakValueLabel")
+	var physical_track: ColorRect = hud.get_node("PhysicalBar/Track")
+	var physical_fill: ColorRect = hud.get_node("PhysicalBar/Track/Fill")
+	var physical_bar_value: Label = hud.get_node("PhysicalBar/Value")
+	var emotional_track: ColorRect = hud.get_node("EmotionalBar/Track")
+	var emotional_fill: ColorRect = hud.get_node("EmotionalBar/Track/Fill")
+	var emotional_bar_value: Label = hud.get_node("EmotionalBar/Value")
 
 	hud.update_values(0.0, 100.0, 0.0)
 	_assert(physical_label.text == "0", "Physical HUD did not render zero.")
 	_assert(emotional_label.text == "100", "Emotional HUD did not render 100 independently.")
 	_assert(overall_arousal_label.text == "0/100", "Overall-arousal HUD did not render zero.")
 	_assert(is_zero_approx(overall_arousal_fill.size.x), "Overall-arousal bar was not empty at zero.")
+	_assert(is_zero_approx(physical_fill.size.x) and physical_bar_value.text == "0/100", "Physical bar did not show zero.")
+	_assert(is_equal_approx(emotional_fill.size.x, emotional_track.size.x) and emotional_bar_value.text == "100/100", "Emotional bar did not show 100.")
 
 	hud.update_values(42.4, 67.6, 50.0)
 	_assert(physical_label.text == "42", "Physical HUD middle-value rounding is incorrect.")
@@ -108,7 +116,9 @@ func _test_numeric_hud_and_legacy_visibility() -> void:
 		is_equal_approx(overall_arousal_fill.size.x, overall_arousal_track.size.x * 0.5),
 		"Overall-arousal bar did not fill to its midpoint."
 	)
-	_assert(overall_arousal_fill.color == Color(1, 0.76, 0.24, 1), "Overall-arousal bar is not yellow.")
+	_assert(is_equal_approx(physical_fill.size.x, physical_track.size.x * 0.424), "Physical bar did not use its normalized score.")
+	_assert(is_equal_approx(emotional_fill.size.x, emotional_track.size.x * 0.676), "Emotional bar did not use its normalized score.")
+	_assert(physical_bar_value.text == "42/100" and emotional_bar_value.text == "68/100", "Score bar labels did not round like the numeric values.")
 
 	hud.update_values(100.0, 0.0, 100.0)
 	_assert(physical_label.text == "100", "Physical HUD did not render 100.")
@@ -121,6 +131,9 @@ func _test_numeric_hud_and_legacy_visibility() -> void:
 	_assert(not legacy_meter.visible, "Legacy StatusHUD meter is not hidden by default.")
 	_assert(legacy_meter.has_node("HeartIcon"), "Legacy heart meter node was removed.")
 	_assert(legacy_meter.has_node("ArousalFillBar"), "Legacy fill calculation node was removed.")
+	_assert(not hud.get_node("ReferenceMeter").visible, "Replaced yellow meter is still visible.")
+	_assert(is_equal_approx(physical_fill.size.x, physical_track.size.x), "Physical bar did not fill to 100.")
+	_assert(is_zero_approx(emotional_fill.size.x), "Emotional bar did not empty at zero.")
 
 	hud.set_legacy_meter_visible(true)
 	_assert(legacy_meter.visible, "Legacy StatusHUD meter cannot be re-enabled through its presentation API.")

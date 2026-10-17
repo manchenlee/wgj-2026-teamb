@@ -40,13 +40,12 @@ func _test_psychological_merged_pool() -> void:
 			condition.emotional
 		)
 		var ids := _candidate_ids(candidates)
-		_assert(candidates.size() == 2, "Psychological %s pool has %d candidates instead of 2." % [condition.suffix, candidates.size()])
-		_assert(_contains_prefix(ids, "phase1_"), "Psychological %s pool lost its former Phase 1 entry: %s" % [condition.suffix, str(ids)])
-		_assert(_contains_prefix(ids, "phase2_"), "Psychological %s pool lost its former Phase 2 entry: %s" % [condition.suffix, str(ids)])
+		_assert(candidates.size() == 3, "Psychological %s pool has %d candidates instead of 3." % [condition.suffix, candidates.size()])
+		_assert(ids == ["psychological_dialogue_01", "psychological_dialogue_03", "psychological_dialogue_04"], "Psychological pool IDs differ from workbook conversations: %s" % str(ids))
 		for candidate in candidates:
 			var candidate_condition := candidate.get("condition", {}) as Dictionary
-			_assert(candidate_condition.get("physical") == condition.physical_state, "Psychological candidate escaped physical condition filtering.")
-			_assert(candidate_condition.get("emotional") == condition.emotional_state, "Psychological candidate escaped emotional condition filtering.")
+			_assert(candidate_condition.get("physical") == "any", "Psychological workbook dialogue is not available across physical states.")
+			_assert(candidate_condition.get("emotional") == "any", "Psychological workbook dialogue is not available across emotional states.")
 
 
 func _test_physiological_duplicate_handling() -> void:
@@ -69,7 +68,7 @@ func _test_phase_config_does_not_gate_candidates() -> void:
 	controller.set_phase_config(PHASE_2_CONFIG_SCRIPT.new())
 	var phase_2_ids := _candidate_ids(controller._get_matching_entries(60.0, 60.0))
 	_assert(phase_1_ids == phase_2_ids, "Changing compatibility phase config changed the continuous dialogue pool: %s vs %s" % [str(phase_1_ids), str(phase_2_ids)])
-	_assert(phase_2_ids.size() == 2 and _contains_prefix(phase_2_ids, "phase1_") and _contains_prefix(phase_2_ids, "phase2_"), "Both authored families are not available under one config: %s" % str(phase_2_ids))
+	_assert(phase_2_ids.size() == 3, "All three ordinary workbook conversations must remain available under each phase: %s" % str(phase_2_ids))
 
 
 func _test_safe_word_remains_special() -> void:
@@ -79,7 +78,7 @@ func _test_safe_word_remains_special() -> void:
 		for candidate in controller._get_matching_entries(condition.physical, condition.emotional):
 			_assert(candidate.get("condition", {}).get("event", "") != "safe_word", "Safe-word event entered the ordinary condition pool.")
 	var safe_word_entry: Dictionary = controller._select_entry(60.0, 60.0, true)
-	_assert(safe_word_entry.get("id", "") == "safe_word_event_01", "Forced safe-word selection changed: %s" % str(safe_word_entry.get("id", "")))
+	_assert(safe_word_entry.get("id", "") == "psychological_dialogue_02", "Forced safe-word selection changed: %s" % str(safe_word_entry.get("id", "")))
 
 
 func _make_controller(data_source_property: String, choices_enabled: bool):

@@ -81,8 +81,27 @@ func _show_opening() -> void:
 	var screen := OPENING_SCENE.instantiate()
 	screen.continue_pressed.connect(_show_safe_word)
 	screen.skip_pressed.connect(_show_safe_word)
+	screen.safe_word_requested.connect(_show_opening_safe_word)
+	screen.game_requested.connect(func() -> void: _show_game(current_safe_word))
 	_swap_screen(screen)
 	_play_bgm("default", false)
+
+func _show_opening_safe_word() -> void:
+	current_screen_id = Config.SCREEN_SAFE_WORD
+	var screen := SAFE_WORD_SCENE.instantiate()
+	screen.continue_pressed.connect(_resume_opening_after_safe_word)
+	_swap_screen(screen)
+
+func _resume_opening_after_safe_word(safe_word: String) -> void:
+	var trimmed := safe_word.strip_edges()
+	current_safe_word = trimmed if not trimmed.is_empty() else Config.SAFE_WORD_DEFAULT
+	current_screen_id = Config.SCREEN_OPENING
+	var screen := OPENING_SCENE.instantiate()
+	screen.start_step_id = "r58"
+	screen.safe_word_requested.connect(_show_opening_safe_word)
+	screen.game_requested.connect(func() -> void: _show_game(current_safe_word))
+	screen.skip_pressed.connect(func() -> void: _show_game(current_safe_word))
+	_swap_screen(screen)
 
 func _show_safe_word() -> void:
 	current_screen_id = Config.SCREEN_SAFE_WORD

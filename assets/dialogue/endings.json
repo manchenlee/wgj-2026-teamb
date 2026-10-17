@@ -1,25 +1,812 @@
 {
-  "usage": "Ending 畫面文案，依不同結局類型顯示對應文字。",
   "entries": {
-	"peak_depletion_failure": {
-	  "title": "結局",
-	  "body": "糟糕的手法、不稱職的愛撫與言語，你與小提琴間的氣氛降到了冰點，\n終於，在一次激烈卻又不得要領的束縛中，琴弦嘶啞出了一聲難聽的哭嚎。\n但幸好，你的理智清晰的告訴了你，你搞砸了。\n所以你沒有繼續，而是鬆開觸手，接受小提琴那今夜注定走調的嗚咽。\n但這並不意味著演奏會的失敗，只要他願意、只要你願意，你們隨時都能開始新的「調音」——"
-	},
-	"physical_imbalance_failure": {
-	  "title": "結局",
-	  "body": "觸手、愛撫、觸手、揉弄、觸手、挑逗、觸手、擼動、插入！\n小提琴幾乎是被你整個舉起，半吊在空中，光滑黏膩的觸手前仆後繼的深入那緊窄的小洞，\n插入、抽出，伴隨著對身下堅挺的擼動，白濁的液體幾乎灑滿了你能看到的地方。\n小提琴的聲音愈來愈高亢、嘶啞、甚至走音跑調，但你將其視為舒服的、忘我的訊號，手法愈來愈激烈——\n終於，在一次響徹此處的空鳴，「咿呀——」一聲，琴弦應聲崩斷，整個像是抽離一樣的癱軟在觸手中。\n在生理抵達了極限後，你終於被迫停了下來。\n房間頓時安靜了下來，只剩下虛弱的、空虛的、沒有任何溫存的，哀哀弦鳴——"
-	},
-	"emotional_imbalance_failure": {
-	  "title": "結局",
-	  "body": "「唔，痛！」\n隨著一聲小提琴的嗚鳴聲，你慌張地停下了動作，小提琴的聲響微微偏音，但琴弦卻恰到好處的柔韌，不緊不繃。\n你們面面相覷，似乎都在為了這次不盡興而感到遺憾和尷尬，沉默片刻，不知是誰的肚子「咕嚕～～」的叫了一聲。\n你決定先暫時放棄了，收拾好了彼此，決定出門吃個宵夜。\n小提琴的聲音仍然嘶啞難聽，但今夜就先如此吧，你這樣想。\n吃飽飯後，只要他願意，只要你願意，隨時都可以進行新的「調音」——"
-	},
-	"success": {
-	  "title": "結局",
-	  "body": "隨著一聲悠揚的嗚鳴，你的觸手撥動琴弦，在四弦上掃出漂亮的弧度。\n潮濕的水聲與略為甜膩的氣息在房中逸散，隨後是充滿規律的碰撞聲與黏膩的水聲。\n小提琴發出了只有你才能調教出的嘶鳴與嗚咽，在你的手下輕輕顫抖。拉出一連串不成調卻不失真的顫音。\n你似乎忘記了這只是一場為了周末演奏會而緊急進行的調音，輕挑慢捻，專注地尋找著小提琴那隱蔽的，沒有被找尋到的音色。\n但在這場愉悅的、緩慢的調音演奏中，你只想享受這個當下的快樂與耳鬢廝磨的溫存——"
-	},
-	"safeword_ignored_failure": {
-	  "title": "結局",
-	  "body": "隨著一聲近乎崩裂的聲響，你的觸手纏上了小提琴的每一個支點，生扳硬扯，強行調整到了自己想要的音調。\n小提琴剛開始還會發出刺耳難耐的嘶鳴，隨著你觸手的勁道逐漸增加，反抗的弦鳴也變成了嗚咽的應和。\n終於，在調整完最後一個旋鈕後，小提琴發出了你理想中的，悅耳的哀鳴聲。\n你調教出了你理想的小提琴。\n只有琴聲的小提琴。"
-	}
+    "peak_depletion_failure": {
+      "title": "結局一（兩者興奮度歸零）",
+      "steps": [
+        {
+          "speaker": "小提琴",
+          "text": "……",
+          "source_row": 3,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "……那、那個……",
+          "source_row": 4,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "…………",
+          "source_row": 5,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "",
+          "text": "【哇，完全不理人。但仔細想想，是我的技術太差勁了，又不懂哄人開心……】",
+          "source_row": 6,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "……對不起。",
+          "source_row": 7,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "……罷了，至少你有停下來，不是逼我繼續。",
+          "source_row": 8,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "以這點來說，你還算……勉強及格啦。",
+          "source_row": 9,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "【嗯？他剛剛……是安慰我嗎？】",
+          "source_row": 10,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "咳、咳嗯……不過你技術還是很糟、很爛，這是事實，今天你也搞砸了，這也是事實。只是……",
+          "source_row": 11,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "……以後如果還有機會的話，也不是……不可以。",
+          "source_row": 12,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "旁白",
+          "text": "【沒有顧慮對象的情緒與不稱職的愛撫，你無疑搞砸了今夜的美好時光，但幸好，你並沒有在他真的很不舒服時選擇強迫對方……】",
+          "source_row": 13,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "",
+          "text": "【多虧如此，這把小提琴雖然不滿，卻沒有憤怒，性愛中的失敗不過尋常，但你很清楚，只要彼此願意，你們隨時都可以進行新的「調音」——】",
+          "source_row": 14,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "physical_imbalance_failure": {
+      "title": "結局二（只有生理興奮度滿）",
+      "steps": [
+        {
+          "speaker": "小提琴",
+          "text": "哈啊……啊啊……不要、不要了……",
+          "source_row": 18,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "「不要」？為什麼不要了？你不是很舒服嗎？你瞧——",
+          "source_row": 19,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "唔……唔啊！！",
+          "source_row": 20,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "……！？怎、怎麼了？",
+          "source_row": 22,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "……不要……哈啊……",
+          "source_row": 23,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "昏、昏過去了？不會吧？喂！喂！？",
+          "source_row": 24,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "…………",
+          "source_row": 25,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "剛剛還叫的那樣浪、那樣大聲，怎麼就這樣沒了？不過……",
+          "source_row": 26,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "",
+          "text": "剛剛的聲音，比其合奏，更像是哀號……這真的是舒服的嗎？還是說，其實他不想要這樣的感覺？",
+          "source_row": 27,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "…………",
+          "source_row": 28,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "……算了，他也回答不了我。先清理一下附近吧。",
+          "source_row": 29,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "旁白",
+          "text": "【小提琴的聲音愈發高亢、走調、哀鳴，都被你視若無物，等回過神來時，他已經如同崩斷的琴弦，整個人軟趴趴的癱倒在床上，彷彿昏了過去。】",
+          "source_row": 30,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "旁白",
+          "text": "【你被迫停了下來，心中慾火難消，然而眼前的小提琴已經承受不了任何「憐愛」，猶如死物一樣躺在白色床單上，奄奄一息。】",
+          "source_row": 31,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "旁白",
+          "text": "【只剩下虛弱的、空虛的、沒有任何溫存的，哀哀弦鳴——】",
+          "source_row": 32,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "emotional_imbalance_failure": {
+      "title": "結局三 （只有心理興奮度滿）",
+      "steps": [
+        {
+          "speaker": "小提琴",
+          "text": "唔……！",
+          "source_row": 36,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "怎、怎麼了？不舒服嗎？我太用力了？還是太粗魯了？",
+          "source_row": 37,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "……是沒有，話說你幹嘛這樣畏畏縮縮的，我又不是玻璃人偶，一碰就破。",
+          "source_row": 38,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "我、我只是不希望你不舒服嘛……",
+          "source_row": 39,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "還是，你覺得我這樣溫柔反而沒意思了？嫌棄我技術不好？",
+          "source_row": 40,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "…………",
+          "source_row": 41,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "喂！你別不說話啊！喂——",
+          "source_row": 42,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "旁白",
+          "text": "【咕、咕嚕——】",
+          "source_row": 43,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "…………",
+          "source_row": 44,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "…………",
+          "source_row": 45,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "噗……噗哈哈哈！我、我肚子餓了……抱歉，抱歉……",
+          "source_row": 46,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "吼！氣氛都沒了啦……算了算了，走，去吃宵夜！",
+          "source_row": 47,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "旁白",
+          "text": "【不知是運氣不好，或者純粹是因技術不足，你雖盡自己所能，卻終究沒能讓小提琴完全沉浸其中。】",
+          "source_row": 48,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "旁白",
+          "text": "【不過，或許是始終有照顧到對方的心情，他的表情清爽愉悅，與你們第一次相遇時已是大不相同，或許……這是好的開始？】",
+          "source_row": 49,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "旁白",
+          "text": "【你們一邊吃著消夜，一邊有一搭沒一搭地聊起了天，彼此間沒有半點床地情事失敗的窘迫。】",
+          "source_row": 50,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "旁白",
+          "text": "【因為你很清楚，只要彼此願意，你們隨時都能開始一段「新的調音」——】",
+          "source_row": 51,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "success": {
+      "title": "結局三 （兩者皆滿，好結局）",
+      "steps": [
+        {
+          "speaker": "小提琴",
+          "text": "哈啊……哈啊……唔！",
+          "source_row": 56,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "【好重……明明是小提琴卻這麼重真是有夠反直覺！但是……】",
+          "source_row": 57,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "【能夠感受到他那全身心的重量都靠在自己身上，水乳交融，彷彿我與他本該就是一體。】",
+          "source_row": 58,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "旁白",
+          "text": "【小提琴的琴聲悠揚，在你的觸手中發出僅有他才能發出的，連綿而悠揚的音調。】",
+          "source_row": 59,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "這……真的是我的聲音？原來、原來我能發出這樣……？",
+          "source_row": 60,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "嗯，是你的聲音……很好聽呢。",
+          "source_row": 61,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "…………",
+          "source_row": 62,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "……太好了，我不是壞掉的小提琴……",
+          "source_row": 63,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "旁白",
+          "text": "【他抽噎了幾聲，隨後像是想起你還在場，立刻拉了旁邊的枕頭遮住自己的臉。即便如此，也能聽到枕頭下依稀的聲響……】",
+          "source_row": 64,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "旁白",
+          "text": "【你微微一笑，似乎忘記了這只是一場為了演奏會而促成的調音，輕挑慢捻，專注尋找著小提琴那隱蔽的，未能被開發的音色。】",
+          "source_row": 65,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "哈啊……還可以繼續嗎？好舒服？",
+          "source_row": 66,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "當然可以，交給我就好。",
+          "source_row": 67,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "嗯……",
+          "source_row": 68,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        },
+        {
+          "speaker": "旁白",
+          "text": "【他完全褪去了之前的戒備，全身放鬆，毫無保留的將自己交給了你，而在這場緩慢的演奏中，你只想享受與他那難分難捨的纏綿——】",
+          "source_row": 69,
+          "character": {
+            "base": "res://assets/art/character/phase2/complete.png",
+            "layers": [
+              {
+                "id": "phase_2_negative_face",
+                "path": "res://assets/art/character/phase2/face_negative.png"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "safeword_ignored_failure": {
+      "title": "結局",
+      "body": "隨著一聲近乎崩裂的聲響，你的觸手纏上了小提琴的每一個支點，生扳硬扯，強行調整到了自己想要的音調。\n小提琴剛開始還會發出刺耳難耐的嘶鳴，隨著你觸手的勁道逐漸增加，反抗的弦鳴也變成了嗚咽的應和。\n終於，在調整完最後一個旋鈕後，小提琴發出了你理想中的，悅耳的哀鳴聲。\n你調教出了你理想的小提琴。\n只有琴聲的小提琴。"
+    }
   }
 }

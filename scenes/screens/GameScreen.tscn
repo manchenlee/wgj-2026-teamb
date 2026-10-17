@@ -2,23 +2,20 @@
 
 [ext_resource type="Script" uid="uid://bqjifxskxou0v" path="res://scripts/core/game_session_controller.gd" id="1_game"]
 [ext_resource type="PackedScene" path="res://scenes/components/CharacterArea.tscn" id="2_character"]
-[ext_resource type="Texture2D" uid="uid://bvl52yg22147o" path="res://assets/art/character/phase1/overall_init.png" id="2_pbayp"]
+[ext_resource type="Texture2D" path="res://assets/art/character/phase2/complete.png" id="2_pbayp"]
 [ext_resource type="PackedScene" path="res://scenes/components/StatusHUD.tscn" id="4_hud"]
 [ext_resource type="Script" uid="uid://y4sw51emkoug" path="res://scripts/presentation/central_arousal_visualization.gd" id="5_vis"]
 [ext_resource type="Script" uid="uid://d3bshm1tk5r8n" path="res://scripts/ui/TwoFrameOverlayAnimator.gd" id="6_overlay"]
 [ext_resource type="Script" uid="uid://7lsklnfonwr6" path="res://scripts/ui/LocalizedMeshBreathing.gd" id="7_breathing"]
 [ext_resource type="Script" uid="uid://d24toufu83pxy" path="res://scripts/ui/conversation_viewport.gd" id="8_conversation"]
 [ext_resource type="Script" uid="uid://x3cgbulqxokf" path="res://scripts/editor/phase_2_editor_preview_controller.gd" id="9_phase2_preview"]
-[ext_resource type="Texture2D" uid="uid://b3obdm5nxmqui" path="res://assets/art/character/phase2/person.png" id="10_phase2_person"]
+[ext_resource type="Texture2D" path="res://assets/art/character/phase2/complete.png" id="10_phase2_person"]
 [ext_resource type="Texture2D" uid="uid://mkqnsj2nshun" path="res://assets/art/background/game_bg.png" id="11_game_bg"]
 [ext_resource type="Script" uid="uid://c537cpupxlgv0" path="res://scripts/ui/prompt_anchor_region.gd" id="12_prompt_region"]
 [ext_resource type="PackedScene" path="res://scenes/components/ChoicePanel.tscn" id="13_choice_panel"]
 [ext_resource type="PackedScene" path="res://scenes/components/CurrentSpeechBubble.tscn" id="14_speech_bubble"]
 [ext_resource type="Script" uid="uid://1hkwnhoxho74" path="res://scripts/presentation/failure_flash.gd" id="15_failure_flash"]
 [ext_resource type="PackedScene" path="res://scenes/components/InteractionModeToggle.tscn" id="16_mode_toggle"]
-
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_alg88"]
-load_path = "res://.godot/imported/draft.png-80a3863fe83a454b531da103f3e5f42e.ctex"
 
 [node name="GameScreen" type="Control" unique_id=2039179595]
 custom_minimum_size = Vector2(1440, 1024)
@@ -30,7 +27,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_game")
 show_phase2_editor_reference = false
-character_background = SubResource("CompressedTexture2D_alg88")
+character_background = ExtResource("2_pbayp")
 
 [node name="BackgroundColor" type="TextureRect" parent="." unique_id=92650428]
 layout_mode = 1
@@ -913,10 +910,8 @@ mouse_filter = 2
 
 [node name="TopHudCenter" type="CenterContainer" parent="HudLayer" unique_id=425025227]
 layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 200.0
-grow_horizontal = 2
+offset_right = 1050.0
+offset_bottom = 150.0
 mouse_filter = 2
 
 [node name="StatusHUD" parent="HudLayer/TopHudCenter" unique_id=1193190438 instance=ExtResource("4_hud")]

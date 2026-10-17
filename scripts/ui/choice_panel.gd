@@ -57,6 +57,8 @@ func show_choices(choices: Variant) -> void:
 	_placement_version += 1
 	var placement_version := _placement_version
 	_choice_data = _normalize_choices(choices)
+	if _choice_data.size() == 2 and _rng.randi_range(0, 1) == 1:
+		_choice_data.reverse()
 	_apply_choice_to_button(choice_button_1, choice_label_1, 0, true)
 	_apply_choice_to_button(choice_button_2, choice_label_2, 1, true)
 	_select_choice_anchor_pair()

@@ -129,7 +129,7 @@ func _test_continuous_band_progression_and_dialogue_pool() -> void:
 	_assert(_capture_continuous_state(game, spots_before) == preserved_before, "Band-family progression reset continuous history/dialogue/timers/notes/mode/BGM/expression state.")
 
 	var merged_ids := _candidate_ids(game.psychological_dialogue_controller._get_matching_entries(60.0, 60.0))
-	_assert(_contains_prefix(merged_ids, "phase1_") and _contains_prefix(merged_ids, "phase2_"), "Former Phase 1 and Phase 2 dialogue are not available in the same run: %s" % str(merged_ids))
+	_assert(merged_ids == ["psychological_dialogue_01", "psychological_dialogue_03", "psychological_dialogue_04"], "Workbook dialogue pool changed during the same run: %s" % str(merged_ids))
 	game.phase_transition_overlay = null
 	var endings: Array[String] = []
 	game.ending_requested.connect(func(ending_type: String) -> void: endings.append(ending_type))

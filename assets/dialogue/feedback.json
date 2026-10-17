@@ -1,291 +1,241 @@
 {
-  "usage": "畫面右側，依整體低興奮度與第二階段狀態跳出的角色心理活動",
   "entries": [
     {
-      "id": "phase1_physical_low_emotional_high_01",
+      "id": "psychological_dialogue_01",
       "condition": {
-        "phase": 1,
-        "physical": "low",
-        "emotional": "high"
+        "physical": "any",
+        "emotional": "any"
       },
       "feedback": [
-        "……我餓了。",
-        "喂，我們別做了好不好？我餓了。"
+        "咳……唔嗯……",
+        "【從剛剛開始就一直不說話，眉頭還皺得死緊，是不是不舒服？】",
+        "…………"
+      ],
+      "feedback_speakers": [
+        "小提琴",
+        "主角",
+        "小提琴"
       ],
       "choice": [
         {
-          "id": "good",
-          "text": "小提琴也會餓嗎？……好，我扶你起來。",
-          "effect": "positive"
+          "id": "option_1",
+          "text": "【算了，既然本人都沒說甚麼，那就繼續吧。】",
+          "effect": "negative"
         },
         {
-          "id": "bad",
-          "text": "才剛剛開始，我們再努力一下好不好？",
-          "effect": "negative"
+          "id": "option_2",
+          "text": "……你不說話，是希望我用猜的嗎？",
+          "effect": "positive"
         }
       ],
       "response": {
-        "good": [
-          "……噗，噗呵呵！",
-          "其實是我騙你的，小提琴怎麼可能肚子餓呢？",
-          "不過……你這樣，總覺得……奇怪的地方，有點餓了……"
+        "option_1": [
+          "……呃……嗯……",
+          "【小提琴又悶哼了幾聲，他的眼神朦上了一層水霧，你卻能感受到其中射出一股有些冰冷的光。】"
         ],
-        "bad": [
-          "……",
-          "……好，我、我再努力一下……",
-          "……"
+        "option_2": [
+          "甚麼？",
+          "你看起來就一臉不舒服，為什麼不說出來？你不說話我怎麼知道你在想什麼？",
+          "……我、我沒有……",
+          "你有，你百分之百有。",
+          "……反正忍一下就好，你用久了就會有感覺……一直以來都是這樣。",
+          "不說出來的話，我根本不知道你怎麼了……這樣忍耐的關係，不是我想要的。",
+          "……你……真的很奇怪。",
+          "……那稍微……速度放慢一點。",
+          "【他垂下眼睛，你能感覺他的喘息沒有方才那樣劇烈，但眼神明顯柔和了些。】"
+        ]
+      },
+      "response_speakers": {
+        "option_1": [
+          "小提琴",
+          "旁白"
+        ],
+        "option_2": [
+          "小提琴",
+          "主角",
+          "小提琴",
+          "主角",
+          "小提琴",
+          "主角",
+          "小提琴",
+          "小提琴",
+          "旁白"
         ]
       }
     },
     {
-      "id": "phase1_physical_low_emotional_low_01",
-      "condition": {
-        "phase": 1,
-        "physical": "low",
-        "emotional": "low"
-      },
-      "feedback": [
-        "……唔！",
-        "你弄痛我了！"
-      ],
-      "choice": [
-        {
-          "id": "good",
-          "text": "抱歉，那要休息一下嗎？",
-          "effect": "positive"
-        },
-        {
-          "id": "bad",
-          "text": "是不是你太敏感了？",
-          "effect": "negative"
-        }
-      ],
-      "response": {
-        "good": [
-          "……算你識相。",
-          "……算了，也不是……不行啦，你還可以再努力一下。"
-        ],
-        "bad": [
-          "……我！說！你！弄！痛！我！了！"
-        ]
-      }
-    },
-    {
-      "id": "phase1_physical_high_emotional_low_01",
-      "condition": {
-        "phase": 1,
-        "physical": "high",
-        "emotional": "low"
-      },
-      "feedback": [
-        "唔嗯！唔嗯……！",
-        "……哈啊……"
-      ],
-      "choice": [
-        {
-          "id": "good",
-          "text": "調整自己的步調，讓節奏慢下來。",
-          "effect": "positive"
-        },
-        {
-          "id": "bad",
-          "text": "不舒服就說，你不說話，我怎麼知道你怎麼了？",
-          "effect": "negative"
-        }
-      ],
-      "response": {
-        "good": [
-          "……哈啊……"
-        ],
-        "bad": [
-          "……我……沒有，我沒有怎樣。"
-        ]
-      }
-    },
-    {
-      "id": "phase1_physical_high_emotional_high_01",
-      "condition": {
-        "phase": 1,
-        "physical": "high",
-        "emotional": "high"
-      },
-      "feedback": [
-        "哈……",
-        "好、好像漸漸有點感覺了……"
-      ],
-      "choice": [
-        {
-          "id": "good",
-          "text": "你很棒，我們慢慢來就好……",
-          "effect": "positive"
-        },
-        {
-          "id": "bad",
-          "text": "這樣才有點感覺？你是覺得我技術不好嗎？",
-          "effect": "negative"
-        }
-      ],
-      "response": {
-        "good": [
-          "嗯，謝謝……稍微快一點，快一點也可以……"
-        ],
-        "bad": [
-          "我、我不是這個意思……嗚……對、對不起。"
-        ]
-      }
-    },
-    {
-      "id": "safe_word_event_01",
+      "id": "psychological_dialogue_02",
       "condition": {
         "event": "safe_word"
       },
       "feedback": [
-        "哈啊……我、我不要了……{safe_word}……{safe_word}……"
+        "……唔……！呃……【安全詞】……不，沒什麼。",
+        "【他悶哼以聲，在觸手某一下重重的撸動後，他無意間吐出你們設定好的安全詞——】",
+        "【然而話卡到一半，他就又閉上了嘴，撇過頭……是想要把安全詞收回去嗎？】"
+      ],
+      "feedback_speakers": [
+        "小提琴",
+        "旁白",
+        ""
       ],
       "choice": [
         {
-          "id": "good",
-          "text": "抱歉！好，我立刻停下來。",
-          "effect": "positive"
-        },
-        {
-          "id": "bad",
-          "text": "剛剛不是很舒服嗎？為什麼不要了？再來一下嘛！",
-          "effect": "bad_ending"
-        }
-      ],
-      "response": {
-        "good": [
-          "唔……謝謝……我休息一下，等等就可以繼續了。"
-        ],
-        "bad": []
-      }
-    },
-    {
-      "id": "phase2_physical_low_emotional_high_01",
-      "condition": {
-        "phase": 2,
-        "physical": "low",
-        "emotional": "high"
-      },
-      "feedback": [
-        "哈啊……為什麼，突然慢下來了……",
-        "我、我還差一點點就要……"
-      ],
-      "choice": [
-        {
-          "id": "good",
-          "text": "可以嗎？我有點擔心你受不了。",
-          "effect": "positive"
-        },
-        {
-          "id": "bad",
-          "text": "我稍微慢一點，這是為了你身體好。",
+          "id": "option_1",
+          "text": "【繼續調教。】",
           "effect": "negative"
+        },
+        {
+          "id": "option_2",
+          "text": "【乖乖停下動作。】",
+          "effect": "positive"
         }
       ],
       "response": {
-        "good": [
-          "我沒關係，你可以再……用力一點！"
+        "option_1": [
+          "……嗯，繼續……",
+          "【對方沒有說什麼，只是在這之後，無論你如何調教，他都不再喊出你們預先設計好的安全詞了。】"
         ],
-        "bad": [
-          "為我好……"
+        "option_2": [
+          "……？",
+          "不繼續了嗎？",
+          "你說了安全詞，我當然要停下來。",
+          "……那種詞不就是拿來……「助興」的嗎？喊的越嗨就代表越舒服——",
+          "沒有這回事。",
+          "如果安全詞是拿來助興的，那為了真正的安全，是不是還要創一個「安全詞的安全詞」？沒完沒了。",
+          "不管你有沒有意，安全詞都是「界線」……我不能為了自己的舒服破壞這個界線。",
+          "……",
+          "【他沒有回答，但你感覺他的氣息沉穩許多，甚至能隱隱約約感覺到他嘴角微微勾起。】"
+        ]
+      },
+      "response_speakers": {
+        "option_1": [
+          "小提琴",
+          "旁白"
+        ],
+        "option_2": [
+          "小提琴",
+          "小提琴",
+          "主角",
+          "小提琴",
+          "主角",
+          "主角",
+          "主角",
+          "小提琴",
+          "旁白"
         ]
       }
     },
     {
-      "id": "phase2_physical_low_emotional_low_01",
+      "id": "psychological_dialogue_03",
       "condition": {
-        "phase": 2,
-        "physical": "low",
-        "emotional": "low"
+        "physical": "any",
+        "emotional": "any"
       },
       "feedback": [
-        "你累了？還是不要了？"
+        "哈啊……哈阿……",
+        "【他眼神迷離，似乎在劇烈的愛撫後逐漸沉溺其中。】"
+      ],
+      "feedback_speakers": [
+        "小提琴",
+        ""
       ],
       "choice": [
         {
-          "id": "good",
-          "text": "呼……稍微有點累了。",
+          "id": "option_1",
+          "text": "【順其自然地繼續愛撫。】",
           "effect": "positive"
         },
         {
-          "id": "bad",
-          "text": "我不像你一直躺著，當然累。",
-          "effect": "negative"
-        }
-      ],
-      "response": {
-        "good": [
-          "謝謝你，一直顧著讓我舒服……我都沒注意到你也累了，那我們先休息一下吧。"
-        ],
-        "bad": [
-          "什麼叫做一直躺著？",
-          "我沒有一直躺著，我也有在配合你啊！"
-        ]
-      }
-    },
-    {
-      "id": "phase2_physical_high_emotional_low_01",
-      "condition": {
-        "phase": 2,
-        "physical": "high",
-        "emotional": "low"
-      },
-      "feedback": [
-        "哈啊！哈啊啊……！好、好舒服！",
-        "不對、不要了……不對、繼續……繼續！"
-      ],
-      "choice": [
-        {
-          "id": "good",
-          "text": "緩和自己的步調，讓他稍微休息。",
-          "effect": "positive"
-        },
-        {
-          "id": "bad",
+          "id": "option_2",
           "text": "舒服嗎？是不是只有我能讓你這麼舒服？",
           "effect": "negative"
         }
       ],
       "response": {
-        "good": [
-          "哈啊……哈……"
+        "option_1": [
+          "哈啊……哈……",
+          "【他伸出手，輕輕搭載你的觸手上，你感覺到他的體溫逐漸升高，甚至因為舒服，開始輕輕搓揉觸手表面……】"
         ],
-        "bad": [
-          "嗯！嗯……！只、只有你可以！只有你可以……！嗚嗚！"
+        "option_2": [
+          "……為什麼要問這個？",
+          "為什麼不能問，這不是事實嗎？我讓你很舒服阿。還是你覺得前一個主人比較舒服？",
+          "…………",
+          "【他眼神銳利，似乎覺得你在他舒服時問這個問題很不解風情。】"
+        ]
+      },
+      "response_speakers": {
+        "option_1": [
+          "小提琴",
+          "旁白"
+        ],
+        "option_2": [
+          "小提琴",
+          "主角",
+          "小提琴",
+          "旁白"
         ]
       }
     },
     {
-      "id": "phase2_physical_high_emotional_high_01",
+      "id": "psychological_dialogue_04",
       "condition": {
-        "phase": 2,
-        "physical": "high",
-        "emotional": "high"
+        "physical": "any",
+        "emotional": "any"
       },
       "feedback": [
-        "哈啊！哈啊啊……！哈啊！",
-        "快、快要到了！嗚嗚、快要到了！"
+        "……唔！",
+        "【你的觸手輕輕掃過某個不顯眼的部位，突然感覺手中的人身子用力一振。】",
+        "……",
+        "【然而，他卻緊緊咬住自己的下唇，似乎是想要迴避方才那無意間流露出的快感。】"
+      ],
+      "feedback_speakers": [
+        "小提琴",
+        "旁白",
+        "小提琴",
+        "旁白"
       ],
       "choice": [
         {
-          "id": "good",
-          "text": "我們一起……我們一起……",
+          "id": "option_1",
+          "text": "剛剛那樣，你喜歡嗎？",
           "effect": "positive"
         },
         {
-          "id": "bad",
-          "text": "加快動作。",
+          "id": "option_2",
+          "text": "為什麼不叫一下？你這樣很沒有感覺誒。",
           "effect": "negative"
         }
       ],
       "response": {
-        "good": [
-          "嗚！嗚嗚……好舒服……前面，前面好像有什麼東西出來了！"
+        "option_1": [
+          "……我喜不喜歡有什麼關係？反正是你要的……",
+          "怎麼會無關呢？這種事情本來就是兩人一起的，只有我自己舒服，那你要怎麼辦？",
+          "我……",
+          "所以剛剛那樣，你喜歡嗎？",
+          "…………還不錯。",
+          "呵呵，那我再來一次？"
         ],
-        "bad": [
-          "哈啊啊啊！出、出來了！！"
+        "option_2": [
+          "……我有出聲。",
+          "你咬住嘴唇了，為什麼不叫出來呢？你這樣子很沒有情緒價值，來，叫一下？",
+          "……",
+          "【他別過頭，你能感覺他似乎隱隱約約地白了你一眼。】"
+        ]
+      },
+      "response_speakers": {
+        "option_1": [
+          "小提琴",
+          "主角",
+          "小提琴",
+          "主角",
+          "小提琴",
+          "主角"
+        ],
+        "option_2": [
+          "小提琴",
+          "主角",
+          "小提琴",
+          "旁白"
         ]
       }
     }

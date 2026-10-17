@@ -2,7 +2,10 @@ extends Control
 
 const CHARACTER_SPEAKER_TYPES := {
 	"companion": true,
-	"system": true
+	"system": true,
+	"player": true,
+	"narrator": true,
+	"unassigned": true
 }
 const VIEWPORT_SAFE_MARGIN := 16.0
 const TOP_SAFE_MARGIN := 88.0
@@ -49,7 +52,7 @@ func append_history(line: String, speaker_type: String = "companion") -> void:
 		"speaker_type": speaker_type
 	})
 	if _is_character_speaker(speaker_type):
-		_show_current_character_line(cleaned_line)
+		_show_current_character_line(cleaned_line, speaker_type)
 
 func restore_current_character_line(line: String) -> void:
 	_show_current_character_line(line.strip_edges())
@@ -60,7 +63,7 @@ func set_choice_timeout_progress(_progress: float) -> void:
 func get_dialogue_history() -> Array[Dictionary]:
 	return _history.duplicate(true)
 
-func _show_current_character_line(line: String) -> void:
+func _show_current_character_line(line: String, speaker_type: String = "companion") -> void:
 	_active_character_line = line
 	_active_line_version += 1
 	var line_version := _active_line_version
@@ -69,6 +72,15 @@ func _show_current_character_line(line: String) -> void:
 	if line.is_empty():
 		current_speech_bubble.visible = false
 		return
+	match speaker_type:
+		"companion":
+			current_speech_bubble.set_speaker_text("小提琴")
+		"player":
+			current_speech_bubble.set_speaker_text("主角")
+		"narrator":
+			current_speech_bubble.set_speaker_text("旁白")
+		_:
+			current_speech_bubble.set_speaker_text("")
 	current_speech_bubble.set_dialogue_text(line)
 	await get_tree().process_frame
 	if line_version != _active_line_version:

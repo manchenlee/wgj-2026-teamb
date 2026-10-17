@@ -119,15 +119,6 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 18
 
-[node name="TopRow" type="HBoxContainer" parent="SafeArea/RootLayout" unique_id=151505183]
-layout_mode = 2
-
-[node name="ChapterLabel" type="Label" parent="SafeArea/RootLayout/TopRow" unique_id=1919374577]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.98, 0.89, 0.68, 1)
-theme_override_font_sizes/font_size = 28
-text = "序章"
-
 [node name="TopSpacer" type="Control" parent="SafeArea/RootLayout" unique_id=835305174]
 layout_mode = 2
 size_flags_vertical = 3
@@ -136,6 +127,7 @@ mouse_filter = 2
 [node name="DialogueBox" type="PanelContainer" parent="SafeArea/RootLayout" unique_id=166112798]
 custom_minimum_size = Vector2(0, 196)
 layout_mode = 2
+mouse_filter = 1
 theme_override_styles/panel = SubResource("StyleBoxFlat_dialogue")
 
 [node name="DialogueLayout" type="VBoxContainer" parent="SafeArea/RootLayout/DialogueBox" unique_id=1776621023]
@@ -156,29 +148,12 @@ text = "旁白"
 [node name="DialogueLabel" type="RichTextLabel" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout" unique_id=92416121]
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
+mouse_filter = 2
 theme_override_colors/default_color = Color(0.98, 0.96, 0.92, 1)
 theme_override_font_sizes/normal_font_size = 36
 text = "..."
 fit_content = true
 scroll_active = false
-
-[node name="FooterRow" type="HBoxContainer" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout" unique_id=992871500]
-layout_mode = 2
-alignment = 1
-
-[node name="HintLabel" type="Label" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout/FooterRow" unique_id=343295201]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.83, 0.77, 0.72, 0.92)
-theme_override_font_sizes/font_size = 22
-text = "點擊、Enter 或按鈕繼續"
-vertical_alignment = 1
-
-[node name="NextButton" type="Button" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout/FooterRow" unique_id=1760788133]
-custom_minimum_size = Vector2(180, 52)
-layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "NEXT"
 
 [node name="SkipButtonRoot" type="Control" parent="." unique_id=801847253]
 layout_mode = 1
