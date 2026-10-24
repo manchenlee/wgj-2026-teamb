@@ -89,10 +89,8 @@ func _show_current_character_line(line: String, speaker_type: String = "companio
 func _position_active_bubble() -> void:
 	if current_speech_bubble == null or _speech_bubble_anchor == null or _active_character_line.is_empty():
 		return
+	current_speech_bubble.max_width = minf(1000.0, maxf(120.0, size.x - 56.0))
 	current_speech_bubble.resolve_size()
-	# The reference layout uses one stable lower-third dialogue box. Keeping the
-	# anchor dependency preserves the existing presentation API while the box is
-	# centered independently of character animation and phase-specific offsets.
 	var target_position := Vector2(
 		(size.x - current_speech_bubble.size.x) * 0.5,
 		size.y - current_speech_bubble.size.y - 28.0

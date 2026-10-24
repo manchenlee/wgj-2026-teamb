@@ -5,12 +5,8 @@ signal choice_selected(choice_quality: String, choice_text: String)
 
 const CHOICE_ENABLED_MODULATE := Color(1.0, 1.0, 1.0, 1.0)
 const CHOICE_DISABLED_MODULATE := Color(0.42, 0.42, 0.42, 1.0)
-const BUTTON_WIDTH := 720.0
-const BUTTON_MIN_HEIGHT := 100.0
-const BUTTON_TEXT_MARGIN_LEFT := 34.0
-const BUTTON_TEXT_MARGIN_TOP := 8.0
-const BUTTON_TEXT_MARGIN_RIGHT := 34.0
-const BUTTON_TEXT_MARGIN_BOTTOM := 8.0
+const CHOICE_WIDTH := 720.0
+const CHOICE_SIDE_MARGIN := 28.0
 const REQUIRED_ANCHORS_PER_SIDE := 4
 
 @export var use_fixed_choice_anchor_seed: bool = false
@@ -20,7 +16,8 @@ var choice_button_1: TextureButton = null
 var choice_button_2: TextureButton = null
 var choice_label_1: Label = null
 var choice_label_2: Label = null
-@onready var choice_countdown: ProgressBar = $ChoiceCountdown
+@onready var choice_countdown: ProgressBar = $ChoiceContainer/ChoiceCountdown
+@onready var choice_container: Control = $ChoiceContainer
 @onready var timeout_feedback: Label = $TimeoutFeedback
 
 var _choice_data: Array[Dictionary] = []
@@ -42,11 +39,12 @@ func _ready() -> void:
 	_init_anchor_rng()
 	if not _bind_choice_nodes():
 		return
+	_fit_choice_width()
 	clear_choices()
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready():
-		refresh_choice_anchor_positions()
+		_fit_choice_width()
 
 func set_choice_anchor_groups(left_anchors: Array[Control], right_anchors: Array[Control]) -> void:
 	_left_choice_anchors = left_anchors.duplicate()
@@ -70,8 +68,6 @@ func show_choices(choices: Variant) -> void:
 	await get_tree().process_frame
 	if placement_version != _placement_version:
 		return
-	_refresh_button_sizes()
-	refresh_choice_anchor_positions()
 	_apply_button_visibility_after_positioning()
 
 func clear_choices() -> void:
@@ -113,21 +109,24 @@ func emit_choice_by_index(index: int) -> void:
 	_emit_choice(index)
 
 func refresh_choice_anchor_positions() -> void:
-	if not _bind_choice_nodes():
-		return
-	_refresh_button_sizes()
-	if _selected_left_anchor_index >= 0 and _selected_left_anchor_index < _left_choice_anchors.size():
-		_attach_left_button_to_anchor(choice_button_1, _left_choice_anchors[_selected_left_anchor_index])
-	if _selected_right_anchor_index >= 0 and _selected_right_anchor_index < _right_choice_anchors.size():
-		_attach_right_button_to_anchor(choice_button_2, _right_choice_anchors[_selected_right_anchor_index])
+	# Compatibility hook for callers that refresh after character layout changes.
+	pass
+
+func _fit_choice_width() -> void:
+	var target_width := minf(CHOICE_WIDTH, maxf(120.0, size.x - CHOICE_SIDE_MARGIN * 2.0))
+	var right_offset := minf(500.0, size.x * 0.5 - CHOICE_SIDE_MARGIN)
+	choice_container.offset_right = right_offset
+	choice_container.offset_left = right_offset - target_width
+	for button in [choice_button_1, choice_button_2]:
+		button.custom_minimum_size.x = target_width
 
 func _bind_choice_nodes() -> bool:
 	if choice_button_1 != null and choice_button_2 != null and choice_label_1 != null and choice_label_2 != null:
 		return true
-	choice_button_1 = get_node_or_null("ChoiceButton1") as TextureButton
-	choice_button_2 = get_node_or_null("ChoiceButton2") as TextureButton
-	choice_label_1 = get_node_or_null("ChoiceButton1/Label") as Label
-	choice_label_2 = get_node_or_null("ChoiceButton2/Label") as Label
+	choice_button_1 = get_node_or_null("ChoiceContainer/ChoiceButton1") as TextureButton
+	choice_button_2 = get_node_or_null("ChoiceContainer/ChoiceButton2") as TextureButton
+	choice_label_1 = get_node_or_null("ChoiceContainer/ChoiceButton1/Label") as Label
+	choice_label_2 = get_node_or_null("ChoiceContainer/ChoiceButton2/Label") as Label
 	if choice_button_1 != null and choice_button_2 != null and choice_label_1 != null and choice_label_2 != null:
 		_connect_buttons_once()
 		return true
@@ -156,7 +155,6 @@ func _apply_choice_to_button(button: TextureButton, label: Label, index: int, de
 	button.disabled = false
 	label.text = str(choice.get("text", "")).strip_edges()
 	_set_choice_button_enabled_state(button, true)
-	_resize_choice_button(button, label)
 
 func _apply_disabled_choice_button(button: TextureButton, label: Label) -> void:
 	if button == null or label == null:
@@ -165,7 +163,6 @@ func _apply_disabled_choice_button(button: TextureButton, label: Label) -> void:
 	button.disabled = true
 	label.text = ""
 	_set_choice_button_enabled_state(button, false)
-	_resize_choice_button(button, label)
 
 func _set_choice_button_enabled_state(button: TextureButton, enabled: bool) -> void:
 	if button == null:
@@ -227,45 +224,6 @@ func _select_anchor_index(anchor_count: int, previous_index: int) -> int:
 	if selected_index == previous_index:
 		selected_index = (selected_index + 1 + _rng.randi_range(0, anchor_count - 2)) % anchor_count
 	return selected_index
-
-func _refresh_button_sizes() -> void:
-	_resize_choice_button(choice_button_1, choice_label_1)
-	_resize_choice_button(choice_button_2, choice_label_2)
-
-func _resize_choice_button(button: TextureButton, label: Label) -> void:
-	if button == null or label == null:
-		return
-	label.custom_minimum_size.x = BUTTON_WIDTH - BUTTON_TEXT_MARGIN_LEFT - BUTTON_TEXT_MARGIN_RIGHT
-	label.position = Vector2(BUTTON_TEXT_MARGIN_LEFT, BUTTON_TEXT_MARGIN_TOP)
-	label.size.x = label.custom_minimum_size.x
-	label.update_minimum_size()
-	var button_height := BUTTON_MIN_HEIGHT
-	button.custom_minimum_size = Vector2(BUTTON_WIDTH, button_height)
-	button.size = Vector2(BUTTON_WIDTH, button_height)
-	label.size = Vector2(
-		BUTTON_WIDTH - BUTTON_TEXT_MARGIN_LEFT - BUTTON_TEXT_MARGIN_RIGHT,
-		button_height - BUTTON_TEXT_MARGIN_TOP - BUTTON_TEXT_MARGIN_BOTTOM
-	)
-
-func _attach_left_button_to_anchor(button: TextureButton, anchor: Control) -> void:
-	if button == null or anchor == null:
-		return
-	button.position = Vector2(
-		maxf(20.0, size.x - button.size.x - 28.0),
-		clampf(size.y * 0.48, 160.0, size.y - button.size.y * 2.0 - 40.0)
-	)
-
-func _attach_right_button_to_anchor(button: TextureButton, anchor: Control) -> void:
-	if button == null or anchor == null:
-		return
-	button.position = Vector2(
-		maxf(20.0, size.x - button.size.x - 28.0),
-		clampf(size.y * 0.48 + button.size.y, 273.0, size.y - button.size.y - 28.0)
-	)
-
-func _anchor_center_in_panel_space(anchor: Control) -> Vector2:
-	var anchor_global_center := anchor.get_global_rect().get_center()
-	return get_global_transform_with_canvas().affine_inverse() * anchor_global_center
 
 func _apply_button_visibility_after_positioning() -> void:
 	if choice_button_1 != null:

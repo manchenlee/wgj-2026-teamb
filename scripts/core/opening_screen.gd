@@ -8,6 +8,9 @@ signal game_requested
 const OPENING_DATA_PATH := "res://assets/dialogue/opening.json"
 const SAFE_WORD_SCREEN_PATH := "res://scenes/screens/SafeWordScreen.tscn"
 const DEFAULT_BACKGROUND_PATH := "res://assets/art/background/curtain.jpg"
+const CHOICE_BUTTON_SCENE := preload("res://scenes/components/DialogueChoiceButton.tscn")
+const CHOICE_BUTTON_WIDTH := 720.0
+const CHOICE_HORIZONTAL_INSETS := 144.0
 
 @onready var background: TextureRect = $Background
 @onready var backdrop_tint: ColorRect = $BackdropTint
@@ -50,10 +53,8 @@ func _ready() -> void:
 	_skip_button_root.pivot_offset = _skip_button_root.size * 0.5
 	resized.connect(_layout_character_stage)
 	_load_opening_script()
-	_choice_buttons = VBoxContainer.new()
-	_choice_buttons.add_theme_constant_override("separation", 8)
-	$SafeArea/RootLayout/DialogueBox/DialogueLayout.add_child(_choice_buttons)
-	$SafeArea/RootLayout/DialogueBox/DialogueLayout.move_child(_choice_buttons, 2)
+	_choice_buttons = $SafeArea/RootLayout/DialogueBox/DialogueLayout/ChoiceButtons
+	resized.connect(_fit_opening_choices)
 	_layout_character_stage()
 	if not start_step_id.is_empty():
 		_current_entry_index = _find_step_index(start_step_id)
@@ -76,7 +77,7 @@ func _input(event: InputEvent) -> void:
 	if _skip_button.get_global_rect().has_point(event.position):
 		return
 	for button in _choice_buttons.get_children():
-		if button is Button and button.get_global_rect().has_point(event.position):
+		if button is BaseButton and button.get_global_rect().has_point(event.position):
 			return
 	advance_input_handled()
 
@@ -187,16 +188,20 @@ func _show_entry_choices(entry: Dictionary) -> void:
 	var choices := entry.get("choices", []) as Array
 	for choice_variant in choices:
 		var choice := choice_variant as Dictionary
-		var button := Button.new()
-		button.text = str(choice.get("text", ""))
-		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		button.custom_minimum_size = Vector2(0, 50)
+		var button := CHOICE_BUTTON_SCENE.instantiate() as TextureButton
+		(button.get_node("Label") as Label).text = str(choice.get("text", ""))
 		_choice_buttons.add_child(button)
+		button.custom_minimum_size.x = minf(CHOICE_BUTTON_WIDTH, maxf(120.0, size.x - CHOICE_HORIZONTAL_INSETS))
 		var target_id := str(choice.get("next", ""))
 		button.pressed.connect(func() -> void:
 			_current_entry_index = _find_step_index(target_id)
 			_apply_entry(_entries[_current_entry_index] as Dictionary)
 		)
+
+func _fit_opening_choices() -> void:
+	for button in _choice_buttons.get_children():
+		if button is TextureButton:
+			button.custom_minimum_size.x = minf(CHOICE_BUTTON_WIDTH, maxf(120.0, size.x - CHOICE_HORIZONTAL_INSETS))
 
 func _apply_background(path: String) -> void:
 	var texture := _load_texture(path, _background_texture_cache)

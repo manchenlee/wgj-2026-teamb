@@ -55,12 +55,12 @@ func _test_opening_branches() -> void:
 			break
 		opening._advance_script()
 	_check(opening._choice_buttons.get_child_count() == 3, "Opening does not present three branches.")
-	(opening._choice_buttons.get_child(0) as Button).pressed.emit()
+	(opening._choice_buttons.get_child(0) as TextureButton).pressed.emit()
 	_check(opening._entries[opening._current_entry_index].id == "r42", "Tutorial choice does not route to its workbook branch.")
 	opening._advance_script()
 	_check(opening._entries[opening._current_entry_index].id == "r37", "Tutorial branch does not return to choices.")
 	await process_frame
-	(opening._choice_buttons.get_child(1) as Button).pressed.emit()
+	(opening._choice_buttons.get_child(1) as TextureButton).pressed.emit()
 	for index in range(20):
 		if opening._entries[opening._current_entry_index].id == "r56":
 			break
@@ -83,7 +83,7 @@ func _test_opening_branches() -> void:
 	resumed._advance_script()
 	_check(resumed._entries[resumed._current_entry_index].id == "r37", "Safe-word branch does not return to choices.")
 	await process_frame
-	(resumed._choice_buttons.get_child(2) as Button).pressed.emit()
+	(resumed._choice_buttons.get_child(2) as TextureButton).pressed.emit()
 	for index in range(10):
 		if resumed._entries[resumed._current_entry_index].id == "r66":
 			break

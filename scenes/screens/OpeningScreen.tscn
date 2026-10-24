@@ -143,7 +143,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_speaker")
 [node name="SpeakerLabel" type="Label" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout/SpeakerPanel" unique_id=1123056162]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.19, 0.11, 0.08, 1)
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 30
 text = ""
 
 [node name="DialogueLabel" type="RichTextLabel" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout" unique_id=92416121]
@@ -151,10 +151,14 @@ custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/default_color = Color(0.98, 0.96, 0.92, 1)
-theme_override_font_sizes/normal_font_size = 36
+theme_override_font_sizes/normal_font_size = 30
 text = "..."
 fit_content = true
 scroll_active = false
+
+[node name="ChoiceButtons" type="VBoxContainer" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout"]
+layout_mode = 2
+theme_override_constants/separation = 0
 
 [node name="SkipButtonRoot" type="Control" parent="." unique_id=801847253]
 layout_mode = 1

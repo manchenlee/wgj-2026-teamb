@@ -13,7 +13,7 @@ offset_bottom = 247.0
 mouse_filter = 2
 script = ExtResource("1_script")
 max_width = 1000.0
-minimum_bubble_size = Vector2(1000, 247)
+minimum_bubble_size = Vector2(180, 247)
 text_margins = Vector4(50, 34, 50, 38)
 
 [node name="BubbleTexture" type="TextureRect" parent="."]
