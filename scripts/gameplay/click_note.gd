@@ -33,6 +33,10 @@ func _gui_input(event: InputEvent) -> void:
 		return
 	accept_event()
 	_begin_interaction()
+	var press_direction := (press_position - target_center).normalized()
+	if press_direction == Vector2.ZERO:
+		press_direction = Vector2.RIGHT
+	visual_motion.emit(press_direction, 1.0)
 	progressed.emit(1.0)
 	_resolve_completed()
 

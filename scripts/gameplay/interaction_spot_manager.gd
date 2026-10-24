@@ -123,6 +123,8 @@ func restore_active_note_global_positions(positions: Dictionary) -> void:
 
 
 func start() -> void:
+	if _character_presenter != null:
+		_character_presenter.clear_body_motion()
 	_active = true
 	_suspended = false
 	_spawn_timer.set_paused(false)
@@ -132,6 +134,8 @@ func start() -> void:
 
 
 func stop() -> void:
+	if _character_presenter != null:
+		_character_presenter.clear_body_motion()
 	_active = false
 	_suspended = false
 	_spawn_timer.set_paused(false)
@@ -151,6 +155,8 @@ func suspend() -> void:
 	if not _active or _suspended:
 		return
 	_suspended = true
+	if _character_presenter != null:
+		_character_presenter.clear_body_motion()
 	_spawn_timer.set_paused(true)
 	_active_spots = _active_spots.filter(func(spot): return is_instance_valid(spot))
 	for spot in _active_spots:
@@ -331,7 +337,8 @@ func _spawn_note_type(requested_note_type: int = -1) -> void:
 	spot.set_meta("placement_rect", placement_rect)
 
 	spot.interaction_started.connect(_on_spot_scrub_started.bind(spot))
-	spot.interaction_ended.connect(_on_spot_scrub_ended)
+	spot.interaction_ended.connect(_on_spot_scrub_ended.bind(spot))
+	spot.visual_motion.connect(_on_spot_visual_motion.bind(spot))
 	spot.progressed.connect(_on_spot_progressed.bind(spot))
 	spot.completed.connect(_on_spot_completed.bind(spot))
 	spot.expired.connect(_on_spot_expired.bind(spot))
@@ -596,13 +603,25 @@ func _clamp_center_to_bounds(center: Vector2, radius: float) -> Vector2:
 
 func _on_spot_scrub_started(spot: InteractionNote) -> void:
 	spot.set_meta("was_interacted", true)
-	if _character_presenter != null:
-		_character_presenter.show_body_tremble(true)
 	emit_signal("spot_scrub_started")
 
 
-func _on_spot_scrub_ended() -> void:
+func _on_spot_scrub_ended(spot: InteractionNote) -> void:
+	if _character_presenter != null and spot is RubNote:
+		_character_presenter.end_rub_tremor(spot.get_instance_id())
 	emit_signal("spot_scrub_ended")
+
+
+func _on_spot_visual_motion(direction: Vector2, intensity: float, spot: InteractionNote) -> void:
+	if _character_presenter == null:
+		return
+	if spot is ClickNote:
+		_character_presenter.show_click_jolt(direction)
+	elif spot is SlideNote:
+		spot.set_meta("last_visual_direction", direction)
+		_character_presenter.show_slide_sway(direction)
+	elif spot is RubNote:
+		_character_presenter.update_rub_tremor(spot.get_instance_id(), intensity)
 
 
 func _on_spot_progressed(progress_delta: float, _spot: InteractionNote) -> void:
@@ -625,6 +644,12 @@ func _on_spot_completed(spot: InteractionNote) -> void:
 		_arousal_model.refresh_physical_activity()
 	_telemetry_completion_bonus += bonus
 	if _character_presenter != null:
+		_character_presenter.show_body_outcome(
+			_note_type_name(int(spot.get_meta("note_type", -1))),
+			true,
+			spot.get_meta("last_visual_direction", Vector2.RIGHT),
+			spot.get_instance_id()
+		)
 		_character_presenter.show_spot_reaction("strong")
 		_character_presenter.show_success_heart_burst(spot.position + (spot.size * 0.5))
 	print_debug(
@@ -652,8 +677,10 @@ func _on_spot_expired(progress_ratio: float, spot: InteractionNote, is_timeout_f
 	_telemetry_penalty += penalty
 	if _character_presenter != null:
 		_character_presenter.show_spot_reaction("mild")
-		if spot.get_meta("was_interacted", false):
-			_character_presenter.show_body_tremble(false)
+		if spot is SlideNote and (spot as SlideNote).is_armed():
+			_character_presenter.show_body_outcome(&"slide", false, -spot.get_meta("last_visual_direction", Vector2.RIGHT))
+		elif spot is RubNote and progress_ratio > 0.0:
+			_character_presenter.show_body_outcome(&"rub", false, Vector2(-1.0, 0.6), spot.get_instance_id())
 	if is_timeout_failure:
 		physiological_spot_failed.emit(progress_ratio, penalty)
 	print_debug(
@@ -671,8 +698,12 @@ func _disconnect_spot(spot: InteractionNote) -> void:
 	var started_callback := _on_spot_scrub_started.bind(spot)
 	if spot.interaction_started.is_connected(started_callback):
 		spot.interaction_started.disconnect(started_callback)
-	if spot.interaction_ended.is_connected(_on_spot_scrub_ended):
-		spot.interaction_ended.disconnect(_on_spot_scrub_ended)
+	var ended_callback := _on_spot_scrub_ended.bind(spot)
+	if spot.interaction_ended.is_connected(ended_callback):
+		spot.interaction_ended.disconnect(ended_callback)
+	var motion_callback := _on_spot_visual_motion.bind(spot)
+	if spot.visual_motion.is_connected(motion_callback):
+		spot.visual_motion.disconnect(motion_callback)
 	var progressed_callback := _on_spot_progressed.bind(spot)
 	if spot.progressed.is_connected(progressed_callback):
 		spot.progressed.disconnect(progressed_callback)

@@ -3,6 +3,8 @@ extends SceneTree
 const GAME_SCENE := preload("res://scenes/screens/GameScreen.tscn")
 const OPENING_SCENE := preload("res://scenes/screens/OpeningScreen.tscn")
 const ENDING_SCENE := preload("res://scenes/screens/EndingScreen.tscn")
+const SAFE_WORD_SCENE := preload("res://scenes/screens/SafeWordScreen.tscn")
+const WARNING_SCENE := preload("res://scenes/screens/WarningScreen.tscn")
 
 var failures: Array[String] = []
 
@@ -12,6 +14,7 @@ func _initialize() -> void:
 func _run() -> void:
 	await _check_game_layout()
 	await _check_opening_and_ending_styles()
+	await _check_navigation_styles()
 	if failures.is_empty():
 		print("Stage 3 dialogue layout headless tests passed.")
 		quit(0)
@@ -88,7 +91,6 @@ func _check_opening_and_ending_styles() -> void:
 	var opening_skip_label: Label = opening.get_node("SkipButtonRoot/SkipLabel")
 	var skip_texture: Texture2D = opening_skip_visual.texture
 	var skip_font: Font = opening_skip_label.get_theme_font("font")
-	var skip_color: Color = opening_skip_label.get_theme_color("font_color")
 	opening.queue_free()
 	await process_frame
 	var ending := ENDING_SCENE.instantiate()
@@ -100,11 +102,36 @@ func _check_opening_and_ending_styles() -> void:
 		var visual: TextureRect = button_root.get_node("SkipVisual")
 		var label: Label = button_root.get_node("SkipLabel")
 		_check(visual.texture == skip_texture, "%s does not use the opening Skip texture." % button_name)
-		_check(label.get_theme_font("font") == skip_font and label.get_theme_color("font_color") == skip_color, "%s does not match the opening Skip typography." % button_name)
+		_check(label.get_theme_font("font") == skip_font and label.get_theme_color("font_color") == Color(0.32, 0.07, 0.12, 1), "%s does not use the burgundy navigation label." % button_name)
 		_check(button_root.size.x >= 220.0 and button_root.size.y >= 110.0, "%s is smaller than the opening Skip button." % button_name)
 	_check((ending.get_node("OuterMargin/Layout/RestartButtons/RestartButton/SkipLabel") as Label).text == "再度演奏", "Restart label changed.")
 	_check((ending.get_node("OuterMargin/Layout/RestartButtons/BackToTitleButton/SkipLabel") as Label).text == "回到標題", "Back to title label changed.")
 	ending.queue_free()
+	await process_frame
+
+func _check_navigation_styles() -> void:
+	var safe_word := SAFE_WORD_SCENE.instantiate()
+	root.add_child(safe_word)
+	await process_frame
+	var reset: Button = safe_word.reset_button
+	var confirm: Button = safe_word.continue_button
+	var reset_normal := reset.get_theme_stylebox("normal") as StyleBoxFlat
+	var confirm_normal := confirm.get_theme_stylebox("normal") as StyleBoxFlat
+	_check(reset_normal.bg_color == Color(0.28, 0.09, 0.14, 1), "Safety-word secondary action lost its burgundy fill.")
+	_check(confirm_normal.bg_color == Color(0.78, 0.57, 0.31, 1), "Safety-word primary action lost its bronze fill.")
+	_check(reset_normal.border_width_left == 2 and confirm_normal.corner_radius_top_left == 8, "Safety-word button border or corner differs.")
+	_check(reset.get_theme_stylebox("hover") is StyleBoxFlat and confirm.get_theme_stylebox("hover") is StyleBoxFlat, "Safety-word button hover styles are missing.")
+	safe_word.queue_free()
+	await process_frame
+	var warning := WARNING_SCENE.instantiate()
+	root.add_child(warning)
+	await process_frame
+	var leave: Button = warning.get_node("WarningPanel/ContentContainer/VBoxContainer/ButtonRow/LeaveButton")
+	var continue_button: Button = warning.get_node("WarningPanel/ContentContainer/VBoxContainer/ButtonRow/ContinueButton")
+	_check((leave.get_theme_stylebox("normal") as StyleBoxFlat).bg_color == reset_normal.bg_color, "Warning secondary fill differs from safety-word setup.")
+	_check((continue_button.get_theme_stylebox("normal") as StyleBoxFlat).bg_color == confirm_normal.bg_color, "Warning primary fill differs from safety-word setup.")
+	_check(leave.get_theme_stylebox("pressed") is StyleBoxFlat and continue_button.get_theme_stylebox("pressed") is StyleBoxFlat, "Warning button pressed styles are missing.")
+	warning.queue_free()
 	await process_frame
 
 func _check(condition: bool, message: String) -> void:

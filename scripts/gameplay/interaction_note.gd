@@ -6,6 +6,7 @@ signal interaction_ended()
 signal progressed(progress_delta: float)
 signal completed()
 signal expired(progress_ratio: float)
+signal visual_motion(direction: Vector2, intensity: float)
 
 var spot_lifetime: float = 7.0
 var approach_start_scale: float = 2.0

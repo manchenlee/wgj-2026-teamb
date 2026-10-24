@@ -120,7 +120,8 @@ func _process_pointer_move(new_pos: Vector2) -> void:
 		_set_pointer_sample(new_pos)
 		return
 
-	var raw_distance := new_pos.distance_to(_last_pointer_pos)
+	var movement := new_pos - _last_pointer_pos
+	var raw_distance := movement.length()
 	_last_pointer_pos = new_pos
 	if raw_distance < valid_motion_threshold:
 		return
@@ -129,6 +130,7 @@ func _process_pointer_move(new_pos: Vector2) -> void:
 	if credited_distance <= 0.0:
 		return
 	accumulated_scrub_distance += credited_distance
+	visual_motion.emit(movement.normalized(), credited_distance / maxf(max_delta_per_event, 0.001))
 	progressed.emit(credited_distance / maxf(required_scrub_distance, 0.001))
 	queue_redraw()
 	if fmod(accumulated_scrub_distance, 60.0) < credited_distance:

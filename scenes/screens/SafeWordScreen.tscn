@@ -1,79 +1,133 @@
-[gd_scene load_steps=13 format=3 uid="uid://buxwky84ktg5s"]
+[gd_scene load_steps=14 format=3 uid="uid://buxwky84ktg5s"]
 
 [ext_resource type="Script" uid="uid://cb6d1m2m1bqs8" path="res://scripts/core/safe_word_screen.gd" id="1_safe_word"]
 [ext_resource type="Texture2D" uid="uid://dc7csqq8gypo5" path="res://assets/art/background/curtain.jpg" id="2_curtain"]
 [ext_resource type="FontFile" uid="uid://db5u741tm2yje" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="4_bold"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_modal"]
-bg_color = Color(0.31, 0.125, 0.035, 0.98)
+bg_color = Color(0.22, 0.07, 0.11, 0.98)
+border_width_left = 2
 border_width_top = 2
-border_color = Color(1, 0.81, 0.31, 1)
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.78, 0.57, 0.31, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_header"]
 content_margin_left = 34.0
 content_margin_right = 34.0
-bg_color = Color(0.22, 0.07, 0.015, 0.42)
+bg_color = Color(0.16, 0.04, 0.08, 0.72)
 border_width_bottom = 1
-border_color = Color(0.82, 0.56, 0.22, 0.8)
+border_color = Color(0.78, 0.57, 0.31, 0.8)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_input_normal"]
 content_margin_left = 22.0
 content_margin_top = 12.0
 content_margin_right = 22.0
 content_margin_bottom = 12.0
-bg_color = Color(0.66, 0.56, 0.49, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.95, 0.91, 0.85, 1)
+bg_color = Color(0.25, 0.12, 0.16, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.62, 0.4, 0.43, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_input_focus"]
 content_margin_left = 22.0
 content_margin_top = 12.0
 content_margin_right = 22.0
 content_margin_bottom = 12.0
-bg_color = Color(0.72, 0.62, 0.54, 1)
+bg_color = Color(0.29, 0.14, 0.19, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(1, 0.82, 0.38, 1)
+border_color = Color(0.9, 0.7, 0.4, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_reset_normal"]
-bg_color = Color(0.16, 0.08, 0.04, 0.86)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.68, 0.48, 0.29, 1)
+bg_color = Color(0.28, 0.09, 0.14, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.66, 0.38, 0.44, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_reset_hover"]
-bg_color = Color(0.25, 0.12, 0.055, 0.96)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.92, 0.67, 0.34, 1)
+bg_color = Color(0.35, 0.12, 0.18, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.84, 0.53, 0.58, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_confirm_normal"]
-bg_color = Color(0.72, 0, 0, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1, 0.45, 0.3, 0.8)
+bg_color = Color(0.78, 0.57, 0.31, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.94, 0.76, 0.46, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_confirm_hover"]
-bg_color = Color(0.9, 0.025, 0.015, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1, 0.72, 0.44, 1)
+bg_color = Color(0.88, 0.67, 0.39, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.85, 0.58, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed"]
-bg_color = Color(0.38, 0.01, 0.005, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_reset_pressed"]
+bg_color = Color(0.18, 0.06, 0.1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.66, 0.38, 0.44, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_confirm_pressed"]
+bg_color = Color(0.62, 0.44, 0.23, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.94, 0.76, 0.46, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [node name="SafeWordScreen" type="Control" unique_id=426288651]
 layout_mode = 3
@@ -162,7 +216,7 @@ custom_minimum_size = Vector2(0, 66)
 layout_mode = 2
 max_length = 16
 theme_override_colors/font_color = Color(1, 0.98, 0.95, 1)
-theme_override_colors/font_placeholder_color = Color(0.84, 0.78, 0.73, 1)
+theme_override_colors/font_placeholder_color = Color(0.79, 0.7, 0.69, 1)
 theme_override_fonts/font = ExtResource("4_bold")
 theme_override_font_sizes/font_size = 25
 theme_override_styles/normal = SubResource("StyleBoxFlat_input_normal")
@@ -189,7 +243,7 @@ theme_override_fonts/font = ExtResource("4_bold")
 theme_override_font_sizes/font_size = 27
 theme_override_styles/normal = SubResource("StyleBoxFlat_reset_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_reset_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_reset_pressed")
 text = "重新輸入"
 
 [node name="ContinueButton" type="Button" parent="ModalCenter/PromptPanel/PanelLayout/ContentMargin/Content/ButtonRow"]
@@ -197,10 +251,12 @@ custom_minimum_size = Vector2(205, 68)
 layout_mode = 2
 focus_mode = 0
 mouse_default_cursor_shape = 2
-theme_override_colors/font_color = Color(1, 0.98, 0.95, 1)
+theme_override_colors/font_color = Color(0.16, 0.04, 0.08, 1)
+theme_override_colors/font_hover_color = Color(0.16, 0.04, 0.08, 1)
+theme_override_colors/font_pressed_color = Color(0.16, 0.04, 0.08, 1)
 theme_override_fonts/font = ExtResource("4_bold")
 theme_override_font_sizes/font_size = 27
 theme_override_styles/normal = SubResource("StyleBoxFlat_confirm_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_confirm_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_confirm_pressed")
 text = "確定"

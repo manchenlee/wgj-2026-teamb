@@ -70,27 +70,126 @@ var _direction_texture: Texture2D
 var _direction_texture_warning_emitted := false
 var _body_visual_anchor: Control
 var _body_rest_position := Vector2.ZERO
-var _body_tremble_tween: Tween
+var _body_offset := Vector2.ZERO
+var _motion_offset := Vector2.ZERO
+var _motion_origin := Vector2.ZERO
+var _motion_direction := Vector2.RIGHT
+var _motion_kind := ""
+var _motion_elapsed := 0.0
+var _slide_remaining := 0.0
+var _rub_owner := 0
+var _rub_active := false
+var _rub_idle := 0.0
+var _rub_intensity := 0.0
+var _rub_target_intensity := 0.0
+var _rub_phase := 0.0
 
 func set_body_visual_anchor(anchor: Control) -> void:
+	clear_body_motion()
 	_body_visual_anchor = anchor
 	_body_rest_position = anchor.position
 
-func show_body_tremble(is_good: bool) -> void:
+func clear_body_motion() -> void:
+	_motion_kind = ""
+	_motion_offset = Vector2.ZERO
+	_motion_origin = Vector2.ZERO
+	_slide_remaining = 0.0
+	_rub_owner = 0
+	_rub_active = false
+	_rub_intensity = 0.0
+	_rub_target_intensity = 0.0
+	_body_offset = Vector2.ZERO
+	if is_instance_valid(_body_visual_anchor):
+		_body_visual_anchor.position = _body_rest_position
+
+func show_click_jolt(direction: Vector2) -> void:
+	_start_body_motion("click", direction)
+
+func show_slide_sway(direction: Vector2) -> void:
+	if direction.is_zero_approx():
+		return
+	if _motion_kind != "slide":
+		_motion_kind = "slide"
+		_slide_remaining = 0.24
+	else:
+		# Retarget the current sway without resetting its offset or full lifetime.
+		_slide_remaining = maxf(_slide_remaining, 0.18)
+	_motion_direction = direction.normalized()
+
+func update_rub_tremor(owner_id: int, intensity: float) -> void:
+	_rub_owner = owner_id
+	_rub_active = true
+	_rub_idle = 0.0
+	_rub_target_intensity = clampf(intensity, 0.25, 1.0)
+
+func end_rub_tremor(owner_id: int) -> void:
+	if owner_id != _rub_owner:
+		return
+	_rub_active = false
+	_rub_target_intensity = 0.0
+
+func show_body_outcome(note_type: StringName, succeeded: bool, direction: Vector2, owner_id: int = 0) -> void:
+	if note_type == &"rub":
+		end_rub_tremor(owner_id)
+	if succeeded:
+		if note_type == &"slide" or note_type == &"rub":
+			_start_body_motion("accent", direction)
+	else:
+		_start_body_motion("failure", direction)
+
+func _start_body_motion(kind: String, direction: Vector2) -> void:
+	_motion_origin = _motion_offset
+	_motion_kind = kind
+	_motion_elapsed = 0.0
+	_motion_direction = direction.normalized() if not direction.is_zero_approx() else Vector2.RIGHT
+	_slide_remaining = 0.0
+
+func _process(delta: float) -> void:
 	if not is_instance_valid(_body_visual_anchor):
 		return
-	if _body_tremble_tween != null:
-		_body_tremble_tween.kill()
-	_body_visual_anchor.position = _body_rest_position
-	_body_tremble_tween = create_tween()
-	if is_good:
-		_body_tremble_tween.tween_property(_body_visual_anchor, "position", _body_rest_position + Vector2(1.5, -1.0), 0.06).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-		_body_tremble_tween.tween_property(_body_visual_anchor, "position", _body_rest_position + Vector2(-1.0, 0.7), 0.06).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		_body_tremble_tween.tween_property(_body_visual_anchor, "position", _body_rest_position, 0.08).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_update_body_motion(delta)
+	_rub_idle += delta
+	if not _rub_active or _rub_idle >= 0.08:
+		_rub_target_intensity = 0.0
+	var rub_time_constant := 0.04 if _rub_target_intensity > _rub_intensity else 0.045
+	_rub_intensity = lerpf(_rub_intensity, _rub_target_intensity, 1.0 - exp(-delta / rub_time_constant))
+	_rub_phase += TAU * 13.5 * delta
+	var rub_offset := Vector2(sin(_rub_phase), sin(_rub_phase + PI * 0.5) * 0.65) * (0.9 * _rub_intensity)
+	_body_offset = (_motion_offset + rub_offset).limit_length(3.5)
+	_body_visual_anchor.position = _body_rest_position + _body_offset
+
+func _update_body_motion(delta: float) -> void:
+	if _motion_kind == "slide":
+		_slide_remaining = maxf(_slide_remaining - delta, 0.0)
+		var slide_target := Vector2.ZERO
+		if _slide_remaining > 0.10:
+			slide_target = _motion_direction * 2.5
+		elif _slide_remaining > 0.05:
+			slide_target = _motion_direction * -0.45
+		_motion_offset = _motion_offset.lerp(slide_target, 1.0 - exp(-delta / 0.045))
+		if _slide_remaining <= 0.0 and _motion_offset.length() < 0.02:
+			_motion_kind = ""
+		return
+	if _motion_kind == "":
+		_motion_offset = _motion_offset.lerp(Vector2.ZERO, 1.0 - exp(-delta / 0.04))
+		return
+	_motion_elapsed += delta
+	var duration := 0.16 if _motion_kind != "accent" else 0.14
+	var t := clampf(_motion_elapsed / duration, 0.0, 1.0)
+	var profile := 0.0
+	var amplitude := 1.8
+	if _motion_kind == "failure":
+		amplitude = 3.2
+		profile = t / 0.16 if t < 0.16 else (1.0 - t) / 0.84
+	elif _motion_kind == "accent":
+		amplitude = 1.2
+		profile = sin(PI * t) * 0.8
 	else:
-		_body_tremble_tween.tween_property(_body_visual_anchor, "position", _body_rest_position + Vector2(-4.0, 2.5), 0.025).set_trans(Tween.TRANS_LINEAR)
-		_body_tremble_tween.tween_property(_body_visual_anchor, "position", _body_rest_position + Vector2(2.5, -1.5), 0.045).set_trans(Tween.TRANS_LINEAR)
-		_body_tremble_tween.tween_property(_body_visual_anchor, "position", _body_rest_position, 0.09).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		profile = sin(PI * t * 2.0) if t < 0.5 else -0.25 * sin(PI * (t - 0.5) * 2.0)
+	_motion_offset = _motion_origin * (1.0 - t) + _motion_direction * (amplitude * profile)
+	if t >= 1.0:
+		_motion_kind = ""
+		_motion_offset = Vector2.ZERO
 
 func _get_direction_texture() -> Texture2D:
 	if _direction_texture != null:

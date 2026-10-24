@@ -6,7 +6,12 @@
 [ext_resource type="FontFile" uid="uid://cwkj3luqwe71h" path="res://assets/fonts/ShipporiMincho-SemiBold.ttf" id="4_i7tt6"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_leave_normal"]
-bg_color = Color(0.55, 0.55, 0.55, 1)
+bg_color = Color(0.28, 0.09, 0.14, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.66, 0.38, 0.44, 1)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_left = 8
@@ -17,7 +22,76 @@ content_margin_right = 24.0
 content_margin_bottom = 12.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_continue_normal"]
-bg_color = Color(0.95, 0.55, 0.65, 1)
+bg_color = Color(0.78, 0.57, 0.31, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.94, 0.76, 0.46, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+content_margin_left = 24.0
+content_margin_top = 12.0
+content_margin_right = 24.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_leave_hover"]
+bg_color = Color(0.35, 0.12, 0.18, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.84, 0.53, 0.58, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+content_margin_left = 24.0
+content_margin_top = 12.0
+content_margin_right = 24.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_leave_pressed"]
+bg_color = Color(0.18, 0.06, 0.1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.66, 0.38, 0.44, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+content_margin_left = 24.0
+content_margin_top = 12.0
+content_margin_right = 24.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_continue_hover"]
+bg_color = Color(0.88, 0.67, 0.39, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.85, 0.58, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+content_margin_left = 24.0
+content_margin_top = 12.0
+content_margin_right = 24.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_continue_pressed"]
+bg_color = Color(0.62, 0.44, 0.23, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.94, 0.76, 0.46, 1)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_left = 8
@@ -113,14 +187,24 @@ alignment = 1
 custom_minimum_size = Vector2(180, 56)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 28
 theme_override_styles/normal = SubResource("StyleBoxFlat_leave_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_leave_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_leave_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_leave_hover")
 text = "離開遊戲"
 
 [node name="ContinueButton" type="Button" parent="WarningPanel/ContentContainer/VBoxContainer/ButtonRow" unique_id=1594333250]
 custom_minimum_size = Vector2(180, 56)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(0.16, 0.04, 0.08, 1)
+theme_override_colors/font_hover_color = Color(0.16, 0.04, 0.08, 1)
+theme_override_colors/font_pressed_color = Color(0.16, 0.04, 0.08, 1)
 theme_override_font_sizes/font_size = 28
 theme_override_styles/normal = SubResource("StyleBoxFlat_continue_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_continue_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_continue_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_continue_hover")
 text = "確認遊玩"

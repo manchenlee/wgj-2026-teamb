@@ -81,6 +81,12 @@ theme_override_constants/separation = 16
 layout_mode = 2
 button_text = "再度演奏"
 
+[node name="SkipLabel" parent="OuterMargin/Layout/RestartButtons/RestartButton" index="1"]
+theme_override_colors/font_color = Color(0.32, 0.07, 0.12, 1)
+
 [node name="BackToTitleButton" parent="OuterMargin/Layout/RestartButtons" instance=ExtResource("7_skip_style")]
 layout_mode = 2
 button_text = "回到標題"
+
+[node name="SkipLabel" parent="OuterMargin/Layout/RestartButtons/BackToTitleButton" index="1"]
+theme_override_colors/font_color = Color(0.32, 0.07, 0.12, 1)
