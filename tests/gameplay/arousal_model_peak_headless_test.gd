@@ -2,8 +2,7 @@ extends SceneTree
 
 const AROUSAL_MODEL_SCRIPT := preload("res://scripts/gameplay/arousal_model.gd")
 const CONFIG := preload("res://scripts/gameplay/GameConfig.gd")
-const PHASE_1_CONFIG_SCRIPT := preload("res://data/phases/phase_1_config.gd")
-const PHASE_2_CONFIG_SCRIPT := preload("res://data/phases/phase_2_config.gd")
+const PHASE_CONFIG_SCRIPT := preload("res://data/phases/phase_config.gd")
 
 const EPSILON: float = 0.0001
 
@@ -31,7 +30,7 @@ func _initialize() -> void:
 
 
 func _test_perfect_balance_rates() -> void:
-	var config = PHASE_1_CONFIG_SCRIPT.new()
+	var config = PHASE_CONFIG_SCRIPT.new()
 	var scores: Array[float] = [
 		config.minimum_active_threshold,
 		config.peak_full_gain_level,
@@ -47,7 +46,7 @@ func _test_perfect_balance_rates() -> void:
 
 
 func _test_level_factor_floor_and_cap() -> void:
-	var config = PHASE_1_CONFIG_SCRIPT.new()
+	var config = PHASE_CONFIG_SCRIPT.new()
 	var threshold_rate := _measure_rate(
 		config.minimum_active_threshold,
 		config.minimum_active_threshold,
@@ -66,7 +65,7 @@ func _test_level_factor_floor_and_cap() -> void:
 
 
 func _test_balance_curve() -> void:
-	var config = PHASE_1_CONFIG_SCRIPT.new()
+	var config = PHASE_CONFIG_SCRIPT.new()
 	var perfect_rate := _measure_rate(CONFIG.MAX_VALUE, CONFIG.MAX_VALUE, config)
 	var difference_five_rate := _measure_rate(CONFIG.MAX_VALUE, CONFIG.MAX_VALUE - config.peak_balance_best_diff, config)
 	var middle_difference: float = (config.peak_balance_best_diff + config.peak_balance_ok_diff) * 0.5
@@ -80,7 +79,7 @@ func _test_balance_curve() -> void:
 
 
 func _test_minimum_active_threshold() -> void:
-	var config = PHASE_1_CONFIG_SCRIPT.new()
+	var config = PHASE_CONFIG_SCRIPT.new()
 	var below_threshold: float = config.minimum_active_threshold - 1.0
 	_assert_approx(_measure_rate(below_threshold, below_threshold, config), 0.0, EPSILON, "Both scores below the active threshold")
 	_assert_approx(_measure_rate(below_threshold, config.minimum_active_threshold, config), 0.0, EPSILON, "One score below the active threshold")
@@ -88,7 +87,7 @@ func _test_minimum_active_threshold() -> void:
 
 
 func _test_negative_loss_is_not_level_scaled() -> void:
-	var config = PHASE_1_CONFIG_SCRIPT.new()
+	var config = PHASE_CONFIG_SCRIPT.new()
 	var loss_difference: float = (config.peak_balance_ok_diff + config.peak_balance_fail_diff) * 0.5
 	var low_level_loss := _measure_rate(config.peak_full_gain_level, config.peak_full_gain_level - loss_difference, config)
 	var high_level_loss := _measure_rate(CONFIG.MAX_VALUE, CONFIG.MAX_VALUE - loss_difference, config)
@@ -97,7 +96,7 @@ func _test_negative_loss_is_not_level_scaled() -> void:
 
 
 func _test_zero_score_penalties() -> void:
-	var config = PHASE_1_CONFIG_SCRIPT.new()
+	var config = PHASE_CONFIG_SCRIPT.new()
 	var both_zero_model = AROUSAL_MODEL_SCRIPT.new()
 	both_zero_model.set_phase_config(config)
 	both_zero_model.physical = 0.0
@@ -159,7 +158,7 @@ func _test_peak_clamping_and_activation() -> void:
 
 
 func _test_delta_integration() -> void:
-	var config = PHASE_1_CONFIG_SCRIPT.new()
+	var config = PHASE_CONFIG_SCRIPT.new()
 	var one_step_model = AROUSAL_MODEL_SCRIPT.new()
 	one_step_model.set_phase_config(config)
 	one_step_model.physical = 80.0
@@ -177,18 +176,18 @@ func _test_delta_integration() -> void:
 
 
 func _test_phase_configuration_is_applied() -> void:
-	for config in [PHASE_1_CONFIG_SCRIPT.new(), PHASE_2_CONFIG_SCRIPT.new()]:
-		var rate := _measure_rate(
-			config.peak_full_gain_level,
-			config.peak_full_gain_level,
-			config
-		)
-		_assert_approx(
-			rate,
-			config.max_positive_peak_gain_rate,
-			EPSILON,
-			"Configured full-gain rate for %s" % [config.phase_id]
-		)
+	var config = PHASE_CONFIG_SCRIPT.new()
+	var rate := _measure_rate(
+		config.peak_full_gain_level,
+		config.peak_full_gain_level,
+		config
+	)
+	_assert_approx(
+		rate,
+		config.max_positive_peak_gain_rate,
+		EPSILON,
+		"Configured full-gain rate for %s" % [config.phase_id]
+	)
 
 
 func _measure_rate(physical: float, emotional: float, phase_config = null) -> float:

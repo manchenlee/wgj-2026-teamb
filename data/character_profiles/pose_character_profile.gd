@@ -1,8 +1,26 @@
 class_name PoseCharacterProfile
 extends PhaseCharacterProfile
 
-# Phase 1 deliberately references the Phase 2 sitting art until its final art exists.
-const LEGACY_LAYOUT := preload("res://data/character_profiles/phase_2_character_profile.gd")
+const PROMPT_ANCHOR_LAYOUT := {
+	"HeadLeft": Rect2(160.0, 100.0, 80.0, 80.0),
+	"HeadRight": Rect2(280.0, 130.0, 80.0, 80.0),
+	"Chest": Rect2(110.0, 250.0, 250.0, 270.0),
+	"LeftArm": Rect2(80.0, 0.0, 70.0, 182.0),
+	"RightArm": Rect2(400.0, 150.0, 250.0, 140.0),
+	"Waist": Rect2(220.0, 530.0, 120.0, 220.0),
+	"LeftLeg": Rect2(-100.0, 350.0, 182.0, 350.0),
+	"RightLeg": Rect2(370.0, 370.0, 182.0, 350.0),
+}
+const INTERACTION_SPOT_ANCHOR_LAYOUT := {
+	"HeadLeft": Rect2(176.0, 112.0, 82.0, 82.0),
+	"HeadRight": Rect2(278.0, 138.0, 86.0, 86.0),
+	"Chest": Rect2(156.0, 276.0, 166.0, 190.0),
+	"LeftArm": Rect2(94.0, 70.0, 78.0, 122.0),
+	"RightArm": Rect2(398.0, 166.0, 156.0, 104.0),
+	"Waist": Rect2(220.0, 520.0, 120.0, 174.0),
+	"LeftLeg": Rect2(18.0, 418.0, 116.0, 210.0),
+	"RightLeg": Rect2(380.0, 428.0, 116.0, 210.0),
+}
 const BREATHING_REGIONS := {
 	1: Rect2(0.46, 0.30, 0.23, 0.24),
 	2: Rect2(0.46, 0.30, 0.23, 0.24),
@@ -18,7 +36,6 @@ func _init(phase: int = 1) -> void:
 	presentation_phase = clampi(phase, 1, 5)
 	asset_phase = maxi(2, presentation_phase)
 	var root := "res://assets/art/character/phase%d/" % asset_phase
-	var layout = LEGACY_LAYOUT.new()
 	var expressions := {
 		ExpressionState.NEUTRAL: {"base_state_key": "overall_init", "face_state_key": "face_neutral"},
 		ExpressionState.POSITIVE: {"base_state_key": "overall_init", "face_state_key": "face_positive"},
@@ -31,8 +48,8 @@ func _init(phase: int = 1) -> void:
 		"phase_%d_profile" % presentation_phase,
 		{"draft": root + "complete.png", "overall_init": root + "complete.png"},
 		{}, {},
-		layout.prompt_anchor_layout,
-		layout.interaction_spot_anchor_layout,
+		PROMPT_ANCHOR_LAYOUT,
+		INTERACTION_SPOT_ANCHOR_LAYOUT,
 		BREATHING_REGIONS[presentation_phase],
 		Vector2(0.5, 0.5), 0.0,
 		mappings

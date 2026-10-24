@@ -97,6 +97,7 @@ func _test_skip_and_restart() -> void:
 	await create_timer(0.65).timeout
 	_check(main.current_screen_id == "safe_word", "Duplicate Skip caused a second transition.")
 	var setup = main.current_screen
+	_check(setup.safe_word_input.text == Config.SAFE_WORD_DEFAULT, "Safety-word setup did not show the default word.")
 	setup.safe_word_input.text = "測試安全詞"
 	setup._on_continue_pressed()
 	setup._on_continue_pressed()
@@ -129,7 +130,7 @@ func _test_skip_and_restart() -> void:
 	_check(main.current_screen.get_node_or_null("SkipButton") == null, "Safety-word setup still has a Skip button.")
 	main.current_screen.continue_button.pressed.emit()
 	await create_timer(0.65).timeout
-	_check(main.current_safe_word == Config.SAFE_WORD_DEFAULT and main.safe_word_completed, "Empty safety-word confirmation lost the default fallback.")
+	_check(main.current_safe_word == Config.SAFE_WORD_DEFAULT and main.safe_word_completed, "Default safety-word confirmation lost the default word.")
 	main.queue_free()
 	await process_frame
 

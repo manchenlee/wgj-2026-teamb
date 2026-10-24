@@ -4,8 +4,7 @@ const AROUSAL_MODEL_SCRIPT := preload("res://scripts/gameplay/arousal_model.gd")
 const CONFIG := preload("res://scripts/gameplay/GameConfig.gd")
 const DIALOGUE_CHOICE_CONTROLLER_SCRIPT := preload("res://scripts/gameplay/dialogue_choice_controller.gd")
 const ENDING_EVALUATOR_SCRIPT := preload("res://scripts/gameplay/ending_evaluator.gd")
-const PHASE_1_CONFIG_SCRIPT := preload("res://data/phases/phase_1_config.gd")
-const PHASE_2_CONFIG_SCRIPT := preload("res://data/phases/phase_2_config.gd")
+const PHASE_CONFIG_SCRIPT := preload("res://data/phases/phase_config.gd")
 
 var _failures: Array[String] = []
 
@@ -64,7 +63,7 @@ func _test_displayed_integer_conversion() -> void:
 
 
 func _test_peak_and_phase_independence() -> void:
-	for phase_config in [null, PHASE_1_CONFIG_SCRIPT.new(), PHASE_2_CONFIG_SCRIPT.new()]:
+	for phase_config in [null, PHASE_CONFIG_SCRIPT.new()]:
 		for peak in [0.0, 50.0, 100.0]:
 			for activated in [false, true]:
 				var model = _make_model(100.0, 80.0, peak, activated)

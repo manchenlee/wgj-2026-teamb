@@ -11,6 +11,7 @@ const Config := preload("res://scripts/gameplay/GameConfig.gd")
 var _submitted := false
 
 func _ready() -> void:
+	safe_word_input.text = Config.SAFE_WORD_DEFAULT
 	safe_word_input.text_submitted.connect(_on_safe_word_submitted)
 	continue_button.pressed.connect(_on_continue_pressed)
 	reset_button.pressed.connect(_on_reset_pressed)

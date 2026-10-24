@@ -4,7 +4,6 @@ extends RefCounted
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
 var phase_id: String
-var entry_physical_threshold: float
 var starting_physical_value: float
 var starting_emotional_value: float
 var starting_peak_value: float
@@ -70,13 +69,12 @@ var psychological_dialogue_data_source: String
 var physiological_dialogue_data_source: String
 
 func _init(values: Dictionary = {}) -> void:
-	phase_id = String(values.get("phase_id", "phase"))
-	entry_physical_threshold = float(values.get("entry_physical_threshold", 0.0))
-	starting_physical_value = float(values.get("starting_physical_value", 0.0))
-	starting_emotional_value = float(values.get("starting_emotional_value", 0.0))
+	phase_id = String(values.get("phase_id", "phase_1"))
+	starting_physical_value = float(values.get("starting_physical_value", 20.0))
+	starting_emotional_value = float(values.get("starting_emotional_value", 20.0))
 	starting_peak_value = float(values.get("starting_peak_value", 0.0))
 	physical_decay_rate = float(values.get("physical_decay_rate", 1.0))
-	emotional_decay_rate = float(values.get("emotional_decay_rate", 0.3))
+	emotional_decay_rate = float(values.get("emotional_decay_rate", 0.2))
 	physical_activity_grace_seconds = float(values.get("physical_activity_grace_seconds", 2.8))
 	emotional_activity_grace_seconds = float(values.get("emotional_activity_grace_seconds", 2.8))
 

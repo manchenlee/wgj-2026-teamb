@@ -919,7 +919,7 @@ func _reset_run_for_phase_id(phase_id: String) -> void:
 
 func _reset_run_at_phase_2_threshold() -> void:
 	_reset_run_for_phase_index(0)
-	arousal_model.physical = _get_phase_2_entry_physical_threshold()
+	arousal_model.physical = Config.PHASE_2_PHYSICAL_THRESHOLD
 	_sync_physiological_visual_band(false)
 	_update_presentation()
 
@@ -1526,16 +1526,10 @@ func _get_phase_value(property_name: String, fallback: Variant) -> Variant:
 	return fallback
 
 func _get_active_phase_id() -> String:
-	if arousal_model.physical >= _get_phase_2_entry_physical_threshold():
+	if arousal_model.physical >= Config.PHASE_2_PHYSICAL_THRESHOLD:
 		return "phase_2"
 	return "phase_1"
 
-
-func _get_phase_2_entry_physical_threshold() -> float:
-	for phase_config in phase_sequence:
-		if String(phase_config.phase_id) == "phase_2":
-			return float(phase_config.entry_physical_threshold)
-	return 50.0
 
 func _on_phase_2_skip_pressed() -> void:
 	if _get_active_phase_id() == "phase_2":

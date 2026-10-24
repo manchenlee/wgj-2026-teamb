@@ -4,7 +4,7 @@ const OPENING_SCENE := preload("res://scenes/screens/OpeningScreen.tscn")
 const ENDING_SCENE := preload("res://scenes/screens/EndingScreen.tscn")
 const CHOICE_SCENE := preload("res://scenes/components/ChoicePanel.tscn")
 const CONTROLLER_SCRIPT := preload("res://scripts/gameplay/dialogue_choice_controller.gd")
-const PHASE_CONFIG := preload("res://data/phases/phase_1_config.gd")
+const PHASE_CONFIG := preload("res://data/phases/phase_config.gd")
 const MODEL_SCRIPT := preload("res://scripts/gameplay/arousal_model.gd")
 const MAIN_SCENE := preload("res://scenes/Main.tscn")
 
