@@ -62,8 +62,16 @@ func _check_opening_and_ending_styles() -> void:
 	root.add_child(opening)
 	await process_frame
 	opening.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_check(opening.dialogue_label.get_theme_font_size("normal_font_size") == 30, "Opening dialogue font differs.")
+	_check(opening.dialogue_label.get_theme_font_size("font_size") == 30, "Opening dialogue font differs.")
 	_check(opening.speaker_label.get_theme_font_size("font_size") == 30, "Opening speaker font differs.")
+	_check(opening.dialogue_bubble is CurrentSpeechBubble, "Opening does not reuse the gameplay dialogue bubble.")
+	var fixed_height: float = opening.dialogue_bubble.size.y
+	opening._apply_dialogue({"speaker": "主角", "text": "短句"})
+	await process_frame
+	_check(opening.dialogue_bubble.size.y == fixed_height, "Short opening dialogue changed bubble height.")
+	opening._apply_dialogue({"speaker": "主角", "text": "這是一段較長的對話內容，用來確認前導與結局的對話框不會因為內文長度而改變高度。"})
+	await process_frame
+	_check(opening.dialogue_bubble.size.y == fixed_height, "Long opening dialogue changed bubble height.")
 	while opening._current_entry_index < opening._find_step_index("r37"):
 		opening._advance_script()
 	_check(opening._choice_buttons.get_child_count() == 2, "Opening branch count differs from Stage 4 flow.")
@@ -73,8 +81,9 @@ func _check_opening_and_ending_styles() -> void:
 	opening.size = Vector2(720.0, 1024.0)
 	await process_frame
 	for button in opening._choice_buttons.get_children():
-		_check(button.global_position.x >= 0.0 and button.global_position.x + button.size.x <= 720.0, "Opening choice clips in a narrow window.")
-	_check(opening.get_node_or_null("SafeArea/RootLayout/DialogueBox/DialogueLayout/ChoiceCountdown") == null, "Opening choices gained a countdown.")
+		_check(button.global_position.x >= 0.0 and button.global_position.x + button.size.x <= 720.0, "Opening choice clips in a narrow window: x=%s width=%s root=%s bubble=%s." % [button.global_position.x, button.size.x, opening.size.x, opening.dialogue_bubble.size.x])
+	_check(opening.get_node_or_null("DialogueUi/ChoiceButtons/ChoiceCountdown") == null, "Opening choices gained a countdown.")
+	_check(opening._choice_buttons.global_position.y + opening._choice_buttons.size.y <= opening.dialogue_bubble.global_position.y + 1.0, "Opening choices overlap the dialogue bubble.")
 	opening.queue_free()
 	await process_frame
 	var ending := ENDING_SCENE.instantiate()

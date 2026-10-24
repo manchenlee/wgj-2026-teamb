@@ -488,31 +488,31 @@
       "choices": [
         {
           "id": "tutorial",
-          "text": "Tutorial",
+          "text": "先了解我們等等要做什麼",
           "next": "r42"
         },
         {
           "id": "safe_word",
-          "text": "Safety-word setup",
+          "text": "有很重要的事情要先說好……",
           "next": "r45"
         }
       ],
       "choices_after_safe_word": [
         {
           "id": "tutorial",
-          "text": "Tutorial",
+          "text": "先了解我們等等要做什麼",
           "next": "r42"
         },
         {
           "id": "start",
-          "text": "Start Game",
+          "text": "話都說完的話，我們就開始吧",
           "next": "r63"
         }
       ]
     },
     {
       "id": "r42",
-      "text": "希望先約法三章【開啟教學】",
+      "text": "<待補教學圖>",
       "source_row": 42,
       "character": {
         "base": "res://assets/art/character/phase2/complete.png",
@@ -530,7 +530,7 @@
     {
       "id": "r45",
       "speaker": "主角",
-      "text": "有很重要的事情要先說好。【開啟安全詞】",
+      "non_dialogue": true,
       "source_row": 45,
       "character": {
         "base": "res://assets/art/character/phase2/complete.png",
@@ -787,7 +787,7 @@
     },
     {
       "id": "r63",
-      "text": "話都說完的話，我們就開始吧。【開始遊戲】",
+      "non_dialogue": true,
       "source_row": 63,
       "character": {
         "base": "res://assets/art/character/phase2/complete.png",

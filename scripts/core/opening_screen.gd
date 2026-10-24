@@ -19,9 +19,9 @@ enum TutorialReturn { FIRST_BRANCH, SECOND_BRANCH }
 @onready var character_stage: Control = $CharacterStage
 @onready var character_glow_root: Control = $CharacterStage/CharacterPivot/GlowRoot
 @onready var character_root: Control = $CharacterStage/CharacterPivot/CharacterRoot
-@onready var speaker_label: Label = $SafeArea/RootLayout/DialogueBox/DialogueLayout/SpeakerPanel/SpeakerLabel
-@onready var speaker_panel: PanelContainer = $SafeArea/RootLayout/DialogueBox/DialogueLayout/SpeakerPanel
-@onready var dialogue_label: RichTextLabel = $SafeArea/RootLayout/DialogueBox/DialogueLayout/DialogueLabel
+@onready var dialogue_bubble: CurrentSpeechBubble = $DialogueUi/CurrentSpeechBubble
+@onready var speaker_label: Label = $DialogueUi/CurrentSpeechBubble/SpeakerLabel
+@onready var dialogue_label: Label = $DialogueUi/CurrentSpeechBubble/MarginContainer/TextLabel
 @onready var _skip_button_root: Control = $SkipButtonRoot
 @onready var _skip_button: Button = $SkipButtonRoot/SkipButton
 
@@ -61,9 +61,10 @@ func _ready() -> void:
 	resized.connect(_layout_character_stage)
 	_load_opening_script()
 	_active_branch = TutorialReturn.SECOND_BRANCH if safe_word_completed else TutorialReturn.FIRST_BRANCH
-	_choice_buttons = $SafeArea/RootLayout/DialogueBox/DialogueLayout/ChoiceButtons
-	resized.connect(_fit_opening_choices)
+	_choice_buttons = $DialogueUi/ChoiceButtons
+	resized.connect(_layout_dialogue_ui)
 	_layout_character_stage()
+	_layout_dialogue_ui()
 	if not start_step_id.is_empty():
 		_current_entry_index = _find_step_index(start_step_id)
 		if _current_entry_index < _entries.size():
@@ -187,6 +188,9 @@ func set_dialogue_steps(steps: Array, _chapter: String) -> void:
 	_injected_steps = steps.duplicate(true)
 
 func _apply_entry(entry: Dictionary) -> void:
+	if bool(entry.get("non_dialogue", false)):
+		_advance_script()
+		return
 	_apply_background(str(entry.get("background", DEFAULT_BACKGROUND_PATH)))
 	_apply_backdrop_tint(entry.get("backdrop_tint", null))
 	_apply_character(entry.get("character", {}))
@@ -228,10 +232,26 @@ func _show_entry_choices(entry: Dictionary) -> void:
 			_apply_entry(_entries[_current_entry_index] as Dictionary)
 		)
 
-func _fit_opening_choices() -> void:
+func _layout_dialogue_ui() -> void:
+	if not is_node_ready():
+		return
+	dialogue_bubble.max_width = minf(1000.0, maxf(120.0, size.x - 56.0))
+	dialogue_bubble.resolve_size()
+	dialogue_bubble.position = Vector2(
+		(size.x - dialogue_bubble.size.x) * 0.5,
+		maxf(88.0, size.y - dialogue_bubble.size.y - 28.0)
+	)
+	var choice_width := minf(CHOICE_BUTTON_WIDTH, maxf(120.0, size.x - CHOICE_HORIZONTAL_INSETS))
 	for button in _choice_buttons.get_children():
 		if button is TextureButton:
-			button.custom_minimum_size.x = minf(CHOICE_BUTTON_WIDTH, maxf(120.0, size.x - CHOICE_HORIZONTAL_INSETS))
+			button.custom_minimum_size.x = choice_width
+			button.size.x = choice_width
+	_choice_buttons.custom_minimum_size.x = choice_width
+	_choice_buttons.size.x = choice_width
+	_choice_buttons.position = Vector2(
+		dialogue_bubble.position.x + dialogue_bubble.size.x - choice_width,
+		dialogue_bubble.position.y - 210.0
+	)
 
 func _apply_background(path: String) -> void:
 	var texture := _load_texture(path, _background_texture_cache)
@@ -246,10 +266,8 @@ func _apply_backdrop_tint(tint_value: Variant) -> void:
 
 func _apply_dialogue(entry: Dictionary) -> void:
 	var speaker_text := str(entry.get("speaker", ""))
-	speaker_label.text = speaker_text
-	speaker_panel.visible = not speaker_text.is_empty()
-	dialogue_label.clear()
-	dialogue_label.append_text(str(entry.get("text", "")))
+	dialogue_bubble.set_speaker_text(speaker_text)
+	dialogue_bubble.set_dialogue_text(str(entry.get("text", "")))
 
 func _apply_character(character_data_variant: Variant) -> void:
 	if not (character_data_variant is Dictionary):

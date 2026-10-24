@@ -4,33 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://dc7csqq8gypo5" path="res://assets/art/background/curtain.jpg" id="2_curtain"]
 [ext_resource type="Texture2D" uid="uid://4wr2irri54pd" path="res://assets/art/ui/screens/btn_skip.png" id="3_skip"]
 [ext_resource type="FontFile" uid="uid://db5u741tm2yje" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="4_bold"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dialogue"]
-content_margin_left = 24.0
-content_margin_top = 18.0
-content_margin_right = 24.0
-content_margin_bottom = 18.0
-bg_color = Color(0.11, 0.07, 0.08, 0.9)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.95, 0.86, 0.68, 0.3)
-corner_radius_top_left = 26
-corner_radius_top_right = 26
-corner_radius_bottom_right = 26
-corner_radius_bottom_left = 26
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_speaker"]
-content_margin_left = 14.0
-content_margin_top = 6.0
-content_margin_right = 14.0
-content_margin_bottom = 6.0
-bg_color = Color(0.91, 0.79, 0.56, 1)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
+[ext_resource type="PackedScene" path="res://scenes/components/CurrentSpeechBubble.tscn" id="5_speech_bubble"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_skip"]
 
@@ -101,7 +75,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="SafeArea" type="MarginContainer" parent="." unique_id=845908141]
+[node name="DialogueUi" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -109,55 +83,12 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/margin_left = 48
-theme_override_constants/margin_top = 28
-theme_override_constants/margin_right = 48
-theme_override_constants/margin_bottom = 28
 
-[node name="RootLayout" type="VBoxContainer" parent="SafeArea" unique_id=1679932007]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 18
+[node name="CurrentSpeechBubble" parent="DialogueUi" instance=ExtResource("5_speech_bubble")]
+layout_mode = 0
 
-[node name="TopSpacer" type="Control" parent="SafeArea/RootLayout" unique_id=835305174]
-layout_mode = 2
-size_flags_vertical = 3
-mouse_filter = 2
-
-[node name="DialogueBox" type="PanelContainer" parent="SafeArea/RootLayout" unique_id=166112798]
-custom_minimum_size = Vector2(0, 196)
-layout_mode = 2
-mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxFlat_dialogue")
-
-[node name="DialogueLayout" type="VBoxContainer" parent="SafeArea/RootLayout/DialogueBox" unique_id=1776621023]
-layout_mode = 2
-theme_override_constants/separation = 14
-
-[node name="SpeakerPanel" type="PanelContainer" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout" unique_id=666000271]
-visible = false
-layout_mode = 2
-size_flags_horizontal = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_speaker")
-
-[node name="SpeakerLabel" type="Label" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout/SpeakerPanel" unique_id=1123056162]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.19, 0.11, 0.08, 1)
-theme_override_font_sizes/font_size = 30
-text = ""
-
-[node name="DialogueLabel" type="RichTextLabel" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout" unique_id=92416121]
-custom_minimum_size = Vector2(0, 96)
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/default_color = Color(0.98, 0.96, 0.92, 1)
-theme_override_font_sizes/normal_font_size = 30
-text = "..."
-fit_content = true
-scroll_active = false
-
-[node name="ChoiceButtons" type="VBoxContainer" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout"]
-layout_mode = 2
+[node name="ChoiceButtons" type="VBoxContainer" parent="DialogueUi"]
+layout_mode = 0
 theme_override_constants/separation = 0
 
 [node name="SkipButtonRoot" type="Control" parent="." unique_id=801847253]

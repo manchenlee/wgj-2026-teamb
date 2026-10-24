@@ -35,8 +35,8 @@ func _test_opening_branches() -> void:
 	root.add_child(opening)
 	await process_frame
 	_check(opening._entries.size() == 53, "Opening step count is incorrect.")
-	_check(opening.get_node_or_null("SafeArea/RootLayout/TopRow/ChapterLabel") == null, "Opening still shows a chapter heading.")
-	_check(opening.get_node_or_null("SafeArea/RootLayout/DialogueBox/DialogueLayout/FooterRow") == null, "Opening still shows a footer or Next button.")
+	_check(opening.get_node_or_null("DialogueUi/ChapterLabel") == null, "Opening still shows a chapter heading.")
+	_check(opening.get_node_or_null("DialogueUi/FooterRow") == null, "Opening still shows a footer or Next button.")
 	var click := InputEventMouseButton.new()
 	click.button_index = MOUSE_BUTTON_LEFT
 	click.pressed = true
@@ -56,7 +56,7 @@ func _test_opening_branches() -> void:
 		opening._advance_script()
 	_check(opening._choice_buttons.get_child_count() == 2, "Opening does not present the first two choices.")
 	(opening._choice_buttons.get_child(0) as TextureButton).pressed.emit()
-	_check(opening._entries[opening._current_entry_index].id == "r42", "Tutorial choice does not route to its workbook branch.")
+	_check(opening._entries[opening._current_entry_index].id == "r42" and opening.dialogue_label.text == "<待補教學圖>", "Tutorial placeholder was not displayed.")
 	opening._advance_script()
 	_check(opening._entries[opening._current_entry_index].id == "r37", "Tutorial branch does not return to choices.")
 	await process_frame
@@ -140,9 +140,12 @@ func _test_endings() -> void:
 		await process_frame
 		var steps := ending_data.entries[result_type].steps as Array
 		_check(ending._novel_screen != null, "Ending %s did not use the visual novel view." % result_type)
-		_check(ending._novel_screen.dialogue_label.get_parsed_text() == steps[0].text, "Ending %s started on the wrong line." % result_type)
+		_check(ending._novel_screen.dialogue_label.text == steps[0].text, "Ending %s started on the wrong line." % result_type)
+		var bubble_height: float = ending._novel_screen.dialogue_bubble.size.y
 		for index in range(steps.size()):
 			ending._novel_screen._advance_script()
+			if ending._novel_screen != null:
+				_check(ending._novel_screen.dialogue_bubble.size.y == bubble_height, "Ending %s changed bubble height between lines." % result_type)
 		await process_frame
 		_check(ending._novel_screen == null, "Ending %s did not reach its final image." % result_type)
 		ending.queue_free()
