@@ -26,7 +26,8 @@ func _test_hud_layout_and_pulse() -> void:
 	var combo: Label = hud.get_node("ComboLabel")
 	var emotional_track: ColorRect = hud.get_node("EmotionalBar/Track")
 	_assert(combo.position.y >= emotional_track.position.y + emotional_track.size.y, "Combo overlaps the emotional bar.")
-	_assert(combo.get_theme_font_size("font_size") <= 36, "Combo font remains oversized.")
+	_assert(combo.get_theme_font_size("font_size") == 56, "Combo font size differs from the game HUD.")
+	_assert(combo.get_theme_constant("outline_size") == 6, "Combo white outline is not thick enough.")
 	hud.update_combo(2, true)
 	_assert(combo.visible and hud._combo_pulse_tween != null, "Physical combo did not appear and pulse.")
 	hud.set_physical_mode_active(false)
@@ -38,7 +39,7 @@ func _test_hud_layout_and_pulse() -> void:
 	for width in [1050.0, 1300.0]:
 		hud.size.x = width
 		await process_frame
-		_assert(is_equal_approx(combo.position.x + combo.size.x, width - 20.0), "Combo is not right aligned at HUD width %s." % width)
+		_assert(is_equal_approx(combo.position.x + combo.size.x, width + 280.0), "Combo is not right aligned at HUD width %s." % width)
 		_assert(combo.position.x > width * 0.65, "Combo is too close to the character area at HUD width %s." % width)
 	hud.queue_free()
 	await process_frame
@@ -60,7 +61,8 @@ func _test_mode_visibility_and_combo_preservation() -> void:
 	game.size = Vector2(1600.0, 1024.0)
 	await process_frame
 	var hud: Control = game.get_node("%StatusHUD")
-	_assert(is_equal_approx(combo.global_position.x + combo.size.x, hud.global_position.x + hud.size.x - 20.0), "Combo did not stay right aligned after viewport resize.")
+	_assert(is_equal_approx(hud.global_position.x, game.global_position.x), "Status HUD is not aligned with the left edge.")
+	_assert(is_equal_approx(combo.global_position.x + combo.size.x, hud.global_position.x + hud.size.x + 280.0), "Combo did not stay right aligned after viewport resize.")
 	game._stop_runtime_timers()
 	game.queue_free()
 	await process_frame

@@ -54,7 +54,7 @@ func _check_game_layout() -> void:
 	_check((countdown.get_theme_stylebox("fill") as StyleBoxFlat).bg_color == Color.WHITE, "Countdown fill is not white.")
 	_check(bubble.text_label.get_theme_font_size("font_size") == 30, "Psychological dialogue font differs from shared body size.")
 	_check((first.get_node("Label") as Label).get_theme_font_size("font_size") == 28, "Choice font size changed.")
-	_check(combo.get_theme_font_size("font_size") == 36, "Combo font was not increased.")
+	_check(combo.get_theme_font_size("font_size") == 56, "Combo font size differs from the game HUD.")
 	_check(combo.position.y >= (game.get_node("%StatusHUD/EmotionalBar/Track") as Control).position.y + (game.get_node("%StatusHUD/EmotionalBar/Track") as Control).size.y, "Combo overlaps status bar.")
 	game._stop_runtime_timers()
 	game.queue_free()

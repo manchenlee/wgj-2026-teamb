@@ -72,7 +72,7 @@ enum CharacterExpressionSource {
 @onready var layout_debug_regions := [
 	$CharacterAlignmentRoot/MainCharacterArea/DebugRegionTint,
 	$ConversationViewport/DebugRegionTint,
-	$HudLayer/TopHudCenter/StatusHUD/DebugRegionTint,
+	$HudLayer/TopHudLeft/StatusHUD/DebugRegionTint,
 	$ChoiceLayer/ChoicePanel/DebugRegionTint
 ]
 @onready var psychological_dialogue_timer: Timer = $PsychologicalDialogueTimer
