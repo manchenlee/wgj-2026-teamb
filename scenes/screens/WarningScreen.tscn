@@ -176,7 +176,8 @@ layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.97, 0.94, 1)
 theme_override_fonts/font = ExtResource("4_bold")
 theme_override_font_sizes/font_size = 27
-text = "本作含成人及 BDSM 內容，僅供 18 歲以上玩家。
+text = "本作含成人及 BDSM 內容，
+僅供 18 歲以上玩家。
 未達法定年齡請立即離開。"
 horizontal_alignment = 1
 autowrap_mode = 2

@@ -89,6 +89,7 @@ var spot_manager: InteractionSpotManager = null
 var feedback_rng := RandomNumberGenerator.new()
 var debug_overlay = null
 var run_active: bool = true
+var _has_chosen_penalty_option: bool = false
 var character_visual_textures: Dictionary = {}
 var character_layer_textures: Dictionary = {}
 var character_visual_warnings_printed: Dictionary = {}
@@ -933,6 +934,7 @@ func _reset_run_at_phase_2_threshold() -> void:
 
 func _reset_run_for_phase_index(phase_index: int) -> void:
 	current_visual_band = -1
+	_has_chosen_penalty_option = false
 	current_presentation_phase = 1
 	active_character_profile = null
 	shooting_tail_active = false
@@ -1078,6 +1080,8 @@ func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	dialogue_panel.hide_prompt()
 	choice_panel.clear_choices()
 	var outcome := psychological_dialogue_controller.apply_choice(choice_quality, arousal_model)
+	if float(outcome.get("delta", 0.0)) < 0.0:
+		_has_chosen_penalty_option = true
 	var ending_type := str(outcome.get("ending_type", ""))
 	var is_wrong_choice := bool(outcome.get("is_wrong_choice", false))
 	_show_timed_character_expression(
@@ -1124,6 +1128,7 @@ func _push_next_dialogue_event(mode: InteractionMode) -> void:
 	_invalidate_reading_step()
 	var controller: DialogueChoiceController = _get_dialogue_controller(mode)
 	var should_force_safe_word: bool = mode == InteractionMode.PSYCHOLOGICAL \
+			and not _has_chosen_penalty_option \
 			and controller.has_safe_word_event() \
 			and feedback_rng.randf() < Config.SAFE_WORD_EVENT_CHANCE
 	var prompt: Dictionary = controller.next_event(

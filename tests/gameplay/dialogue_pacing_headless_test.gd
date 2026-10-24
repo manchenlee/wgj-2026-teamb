@@ -93,6 +93,7 @@ func _test_choice_timer_and_penalty() -> void:
 	var emotional_before_timeout: float = game.arousal_model.emotional
 	game._on_choice_timeout()
 	_assert(is_equal_approx(game.arousal_model.emotional, emotional_before_timeout - 2.0), "Ordinary timeout did not apply exactly two emotional points.")
+	_assert(not game._has_chosen_penalty_option, "Choice timeout disabled safe-word dialogue without a selected penalty option.")
 	_assert(not game.psychological_dialogue_controller.choice_prompt_pending, "Timeout retained a pending choice.")
 	_assert(game.choice_timeout_timer.is_stopped() and not countdown.visible, "Timeout left the timer or countdown active.")
 	_assert(game.choice_panel.get_node("TimeoutFeedback").visible, "Ordinary timeout gave no brief feedback.")
@@ -125,6 +126,7 @@ func _test_choice_timer_and_penalty() -> void:
 	game.choice_timeout_timer.start(8.0)
 	game._on_choice_selected("good", "好")
 	_assert(is_equal_approx(game.arousal_model.emotional, 50.0), "Selected answer did not retain its existing reward.")
+	_assert(not game._has_chosen_penalty_option, "Reward choice disabled safe-word dialogue.")
 	game._on_choice_timeout()
 	_assert(is_equal_approx(game.arousal_model.emotional, 50.0), "A selected answer was penalized by a late timeout.")
 
@@ -139,6 +141,23 @@ func _test_choice_timer_and_penalty() -> void:
 	_assert(is_equal_approx(game.arousal_model.emotional, 50.0), "Paused physical-mode choice applied a penalty.")
 	game.set_interaction_mode(0)
 	_assert(not game.choice_timeout_timer.paused, "Returning to psychological mode left the choice timer paused.")
+	game.psychological_dialogue_controller.reset()
+	game.psychological_dialogue_controller.current_entry = {
+		"condition": {"physical": "any", "emotional": "any"},
+		"feedback": ["Penalty choice"],
+		"choice": [{"id": "bad", "text": "Bad", "effect": "negative"}]
+	}
+	game.psychological_dialogue_controller.choice_prompt_pending = true
+	game._on_choice_selected("bad", "Bad")
+	_assert(game._has_chosen_penalty_option, "Penalty choice did not disable future safe-word dialogue.")
+	for index in range(100):
+		game.psychological_dialogue_timer.stop()
+		game.psychological_dialogue_controller.reset()
+		game._push_next_dialogue_event(0)
+		var condition: Dictionary = game.psychological_dialogue_controller.current_entry.get("condition", {})
+		_assert(condition.get("event", "") != "safe_word", "Safe-word dialogue appeared after a penalty choice on draw %d." % index)
+	game._reset_run_for_phase_index(0)
+	_assert(not game._has_chosen_penalty_option, "New run did not restore safe-word eligibility.")
 	game._stop_runtime_timers()
 	_assert(game.choice_timeout_timer.is_stopped(), "Runtime cleanup left the choice timer running.")
 	game.queue_free()
