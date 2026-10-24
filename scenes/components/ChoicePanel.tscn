@@ -1,9 +1,31 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/choice_panel.gd" id="1_choice"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/btn_unchoose.png" id="2_unchoose"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/btn_choose.png" id="4_choose"]
 [ext_resource type="FontFile" uid="uid://db5u741tm2yje" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="3_choice_font"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_countdown_track"]
+bg_color = Color(0.23, 0.2, 0.23, 0.68)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_countdown_fill"]
+bg_color = Color(1, 0.69, 0.75, 0.9)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_choice_normal"]
+atlas = ExtResource("2_unchoose")
+region = Rect2(0, 20, 720, 100)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_choice_hover"]
+atlas = ExtResource("4_choose")
+region = Rect2(0, 20, 720, 100)
 
 [node name="ChoicePanel" type="Control"]
 layout_mode = 3
@@ -27,26 +49,65 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.98, 0.36, 0.62, 0.18)
 
+[node name="ChoiceCountdown" type="ProgressBar" parent="."]
+visible = false
+layout_mode = 1
+anchor_left = 1.0
+anchor_top = 0.41
+anchor_right = 1.0
+anchor_bottom = 0.41
+offset_left = -228.0
+offset_top = 10.0
+offset_right = -28.0
+offset_bottom = 14.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_countdown_track")
+theme_override_styles/fill = SubResource("StyleBoxFlat_countdown_fill")
+max_value = 1.0
+step = 0.001
+value = 1.0
+show_percentage = false
+mouse_filter = 2
+
+[node name="TimeoutFeedback" type="Label" parent="."]
+visible = false
+layout_mode = 1
+anchor_left = 1.0
+anchor_top = 0.41
+anchor_right = 1.0
+anchor_bottom = 0.41
+offset_left = -280.0
+offset_top = 0.0
+offset_right = -28.0
+offset_bottom = 24.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.72, 0.72, 1)
+theme_override_colors/font_outline_color = Color(0.12, 0.06, 0.08, 1)
+theme_override_constants/outline_size = 1
+theme_override_fonts/font = ExtResource("3_choice_font")
+theme_override_font_sizes/font_size = 17
+horizontal_alignment = 2
+
 [node name="ChoiceButton1" type="TextureButton" parent="."]
 modulate = Color(0.42, 0.42, 0.42, 1)
-custom_minimum_size = Vector2(720, 140)
+custom_minimum_size = Vector2(720, 100)
 layout_mode = 0
 offset_right = 720.0
-offset_bottom = 140.0
+offset_bottom = 100.0
 focus_mode = 0
 ignore_texture_size = true
 stretch_mode = 0
-texture_normal = ExtResource("2_unchoose")
-texture_hover = ExtResource("4_choose")
-texture_pressed = ExtResource("4_choose")
-texture_disabled = ExtResource("2_unchoose")
+texture_normal = SubResource("AtlasTexture_choice_normal")
+texture_hover = SubResource("AtlasTexture_choice_hover")
+texture_pressed = SubResource("AtlasTexture_choice_hover")
+texture_disabled = SubResource("AtlasTexture_choice_normal")
 
 [node name="Label" type="Label" parent="ChoiceButton1"]
 layout_mode = 0
 offset_left = 34.0
-offset_top = 18.0
+offset_top = 8.0
 offset_right = 686.0
-offset_bottom = 122.0
+offset_bottom = 92.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
 theme_override_constants/outline_size = 0
@@ -59,25 +120,25 @@ mouse_filter = 2
 
 [node name="ChoiceButton2" type="TextureButton" parent="."]
 modulate = Color(0.42, 0.42, 0.42, 1)
-custom_minimum_size = Vector2(720, 140)
+custom_minimum_size = Vector2(720, 100)
 layout_mode = 0
 offset_left = 760.0
 offset_right = 1480.0
-offset_bottom = 140.0
+offset_bottom = 100.0
 focus_mode = 0
 ignore_texture_size = true
 stretch_mode = 0
-texture_normal = ExtResource("2_unchoose")
-texture_hover = ExtResource("4_choose")
-texture_pressed = ExtResource("4_choose")
-texture_disabled = ExtResource("2_unchoose")
+texture_normal = SubResource("AtlasTexture_choice_normal")
+texture_hover = SubResource("AtlasTexture_choice_hover")
+texture_pressed = SubResource("AtlasTexture_choice_hover")
+texture_disabled = SubResource("AtlasTexture_choice_normal")
 
 [node name="Label" type="Label" parent="ChoiceButton2"]
 layout_mode = 0
 offset_left = 34.0
-offset_top = 18.0
+offset_top = 8.0
 offset_right = 686.0
-offset_bottom = 122.0
+offset_bottom = 92.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
 theme_override_constants/outline_size = 0

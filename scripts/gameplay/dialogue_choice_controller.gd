@@ -31,9 +31,13 @@ func set_phase_config(next_phase_config) -> void:
 	_load_feedback_entries()
 
 func set_safe_word(next_safe_word: String) -> void:
-	safe_word = next_safe_word.strip_edges()
-	if safe_word.is_empty():
-		safe_word = Config.SAFE_WORD_DEFAULT
+	safe_word = Config.normalize_safe_word(next_safe_word)
+
+func is_safe_word_choice_pending() -> bool:
+	if not choice_prompt_pending:
+		return false
+	var condition := current_entry.get("condition", {}) as Dictionary
+	return str(condition.get("event", "")) == "safe_word"
 
 func reset() -> void:
 	current_prompt = {}

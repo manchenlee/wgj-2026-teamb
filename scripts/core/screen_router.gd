@@ -24,7 +24,7 @@ const SCREEN_TRANSITION_COLOR := Color(0, 0, 0, 1)
 
 var current_screen: Control
 var current_screen_id: String = ""
-var current_safe_word: String = "紅色"
+var current_safe_word: String = Config.SAFE_WORD_DEFAULT
 var bg_music_secondary: AudioStreamPlayer
 var active_bgm_player: AudioStreamPlayer
 var inactive_bgm_player: AudioStreamPlayer
@@ -93,8 +93,7 @@ func _show_opening_safe_word() -> void:
 	_swap_screen(screen)
 
 func _resume_opening_after_safe_word(safe_word: String) -> void:
-	var trimmed := safe_word.strip_edges()
-	current_safe_word = trimmed if not trimmed.is_empty() else Config.SAFE_WORD_DEFAULT
+	current_safe_word = Config.normalize_safe_word(safe_word)
 	current_screen_id = Config.SCREEN_OPENING
 	var screen := OPENING_SCENE.instantiate()
 	screen.start_step_id = "r58"
@@ -110,11 +109,11 @@ func _show_safe_word() -> void:
 	_swap_screen(screen)
 	_play_bgm("default", false)
 
-func _show_game(safe_word: String = "紅色") -> void:
+func _show_game(safe_word: String = Config.SAFE_WORD_DEFAULT) -> void:
 	current_screen_id = Config.SCREEN_GAME
 	var screen := GAME_SCENE.instantiate()
 	var trimmed_safe_word := safe_word.strip_edges()
-	current_safe_word = trimmed_safe_word if not trimmed_safe_word.is_empty() else current_safe_word
+	current_safe_word = Config.normalize_safe_word(trimmed_safe_word) if not trimmed_safe_word.is_empty() else current_safe_word
 	if current_safe_word.is_empty():
 		current_safe_word = Config.SAFE_WORD_DEFAULT
 	screen.safe_word = current_safe_word

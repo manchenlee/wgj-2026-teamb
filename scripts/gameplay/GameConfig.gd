@@ -16,7 +16,23 @@ const SCORE_IMBALANCE_WARNING_THRESHOLD: float = 10.0
 const FEEDBACK_MESSAGE_TEXT: String = "……"
 const RESPONSE_BUTTON_TEXT: String = "……"
 const SAFE_WORD_DEFAULT: String = "紅色"
+const SAFE_WORD_MAX_LENGTH: int = 16
 const SAFE_WORD_EVENT_CHANCE: float = 0.15
+
+static func normalize_safe_word(value: String) -> String:
+	var cleaned := ""
+	for index in range(value.length()):
+		var code := value.unicode_at(index)
+		if code < 32 or (code >= 127 and code <= 159) \
+				or (code >= 0x200B and code <= 0x200F) \
+				or (code >= 0x202A and code <= 0x202E) \
+				or (code >= 0x2066 and code <= 0x2069) or code == 0xFEFF:
+			continue
+		cleaned += value.substr(index, 1)
+	cleaned = cleaned.strip_edges()
+	if cleaned.is_empty():
+		return SAFE_WORD_DEFAULT
+	return cleaned.substr(0, SAFE_WORD_MAX_LENGTH)
 
 # Core arousal values.
 # 遊戲開始時的身體值；調大會讓玩家開局更接近安全區或目標區，調小則開局壓力更高。

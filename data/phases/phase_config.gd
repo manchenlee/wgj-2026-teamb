@@ -43,8 +43,11 @@ var direction_penalty_values: Dictionary
 var choice_reward_values: Dictionary
 var choice_penalty_values: Dictionary
 var choice_timeout_seconds: float
+var choice_timeout_emotional_penalty: float
 var feedback_message_interval_min: float
 var feedback_message_interval_max: float
+var feedback_characters_per_second: float
+var feedback_reading_lead_seconds: float
 var feedback_physical_low_threshold: float
 var feedback_physical_high_threshold: float
 var feedback_emotional_low_threshold: float
@@ -119,9 +122,13 @@ func _init(values: Dictionary = {}) -> void:
 		"choice_penalty_values",
 		{"bad": 5.0}
 	).duplicate(true)
-	choice_timeout_seconds = float(values.get("choice_timeout_seconds", 5.0))
+	choice_timeout_seconds = maxf(0.1, float(values.get("choice_timeout_seconds", 8.0)))
+	choice_timeout_emotional_penalty = float(values.get("choice_timeout_emotional_penalty", 2.0))
 	feedback_message_interval_min = float(values.get("feedback_message_interval_min", 2.0))
-	feedback_message_interval_max = float(values.get("feedback_message_interval_max", 4.0))
+	feedback_message_interval_max = float(values.get("feedback_message_interval_max", 6.0))
+	feedback_characters_per_second = float(values.get("feedback_characters_per_second", 12.0))
+	feedback_reading_lead_seconds = float(values.get("feedback_reading_lead_seconds", 1.0))
+
 	feedback_physical_low_threshold = float(values.get("feedback_physical_low_threshold", 38.0))
 	feedback_physical_high_threshold = float(values.get("feedback_physical_high_threshold", 45.0))
 	feedback_emotional_low_threshold = float(values.get("feedback_emotional_low_threshold", 38.0))
@@ -170,3 +177,9 @@ func _init(values: Dictionary = {}) -> void:
 		"physiological_dialogue_data_source",
 		"res://assets/dialogue/physiological_feedback.json"
 	))
+
+func reading_duration_for_text(line: String) -> float:
+	var minimum := maxf(0.1, feedback_message_interval_min)
+	var maximum := maxf(minimum, feedback_message_interval_max)
+	var speed := maxf(1.0, feedback_characters_per_second)
+	return clampf(feedback_reading_lead_seconds + line.length() / speed, minimum, maximum)

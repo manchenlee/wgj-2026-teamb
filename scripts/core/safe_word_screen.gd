@@ -32,7 +32,4 @@ func _on_skip_pressed() -> void:
 func _get_safe_word() -> String:
 	if safe_word_input == null:
 		return Config.SAFE_WORD_DEFAULT
-	var safe_word := safe_word_input.text.strip_edges()
-	if safe_word.is_empty():
-		return Config.SAFE_WORD_DEFAULT
-	return safe_word
+	return Config.normalize_safe_word(safe_word_input.text)

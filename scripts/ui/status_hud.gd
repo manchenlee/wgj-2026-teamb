@@ -36,6 +36,8 @@ var _physical_low_warning_active: bool = false
 var _emotional_low_warning_active: bool = false
 var _warning_pulse_time: float = 0.0
 var _combo_pulse_tween: Tween = null
+var _combo_value: int = 0
+var _physical_mode_active: bool = true
 
 func _ready() -> void:
 	legacy_arousal_meter.visible = show_legacy_meter
@@ -69,8 +71,9 @@ func update_values(physical: float, emotional: float, overall_arousal: float) ->
 
 func update_combo(combo: int, pulse: bool = false) -> void:
 	_cancel_combo_pulse()
+	_combo_value = combo
 	combo_label.text = "%d COMBO" % combo
-	combo_label.visible = combo >= 2
+	combo_label.visible = combo >= 2 and _physical_mode_active
 	combo_label.pivot_offset = combo_label.size * 0.5
 	if not combo_label.visible or not pulse:
 		return
@@ -79,6 +82,13 @@ func update_combo(combo: int, pulse: bool = false) -> void:
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_combo_pulse_tween.tween_property(combo_label, "scale", Vector2.ONE, 0.12) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+func set_physical_mode_active(active: bool) -> void:
+	if _physical_mode_active == active:
+		return
+	_cancel_combo_pulse()
+	_physical_mode_active = active
+	combo_label.visible = active and _combo_value >= 2
 
 
 func set_score_warnings(physical_low: bool, emotional_low: bool) -> void:

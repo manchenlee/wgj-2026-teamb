@@ -861,6 +861,7 @@ func _set_interaction_mode(next_mode: InteractionMode, force_sync: bool = false)
 
 func _sync_interaction_mode_state() -> void:
 	var psychological_active := interaction_mode == InteractionMode.PSYCHOLOGICAL
+	status_hud.set_physical_mode_active(not psychological_active)
 	if interaction_mode_toggle != null:
 		interaction_mode_toggle.set_interaction_mode(interaction_mode)
 	if dialogue_panel != null:
@@ -1067,18 +1068,25 @@ func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	if not ending_type.is_empty():
 		_begin_ending_transition(ending_type)
 		return
-	_schedule_next_dialogue_message(InteractionMode.PSYCHOLOGICAL)
+	_schedule_next_dialogue_message(InteractionMode.PSYCHOLOGICAL, reply_text)
 	_update_presentation()
 
 func _on_choice_timeout() -> void:
 	if not run_active or interaction_mode != InteractionMode.PSYCHOLOGICAL \
 			or not _has_pending_psychological_choice():
 		return
+	var ordinary_choice := not psychological_dialogue_controller.is_safe_word_choice_pending()
+	choice_timeout_timer.stop()
 	dialogue_panel.hide_prompt()
 	choice_panel.clear_choices()
 	character_area.show_ignored_reaction()
-	dialogue_panel.append_history(psychological_dialogue_controller.get_timeout_reply(), "companion")
-	_schedule_next_dialogue_message(InteractionMode.PSYCHOLOGICAL)
+	var reply_text := psychological_dialogue_controller.get_timeout_reply()
+	if ordinary_choice:
+		var penalty := maxf(0.0, active_phase_config.choice_timeout_emotional_penalty)
+		arousal_model.apply_emotional(-penalty)
+		choice_panel.show_timeout_feedback(penalty)
+	dialogue_panel.append_history(reply_text, "companion")
+	_schedule_next_dialogue_message(InteractionMode.PSYCHOLOGICAL, reply_text)
 	_update_presentation()
 
 func _push_next_dialogue_event(mode: InteractionMode) -> void:
@@ -1106,13 +1114,14 @@ func _push_next_dialogue_event(mode: InteractionMode) -> void:
 		choice_panel.show_choices(prompt.get("choices", {}))
 		psychological_dialogue_timer.stop()
 		choice_timeout_timer.start(float(active_phase_config.choice_timeout_seconds))
+		_update_choice_timer_visual()
 	else:
 		dialogue_panel.hide_prompt()
 		dialogue_panel.append_history(prompt_text, speaker_type)
 		if mode == InteractionMode.PSYCHOLOGICAL:
 			choice_panel.clear_choices()
 			choice_timeout_timer.stop()
-		_schedule_next_dialogue_message(mode)
+		_schedule_next_dialogue_message(mode, prompt_text)
 
 func _dialogue_speaker_type(authored_speaker: String) -> String:
 	match authored_speaker:
@@ -1123,11 +1132,8 @@ func _dialogue_speaker_type(authored_speaker: String) -> String:
 		_:
 			return "unassigned"
 
-func _schedule_next_dialogue_message(mode: InteractionMode) -> void:
-	var wait_time := feedback_rng.randf_range(
-		float(active_phase_config.feedback_message_interval_min),
-		float(active_phase_config.feedback_message_interval_max)
-	)
+func _schedule_next_dialogue_message(mode: InteractionMode, displayed_text: String = "") -> void:
+	var wait_time := active_phase_config.reading_duration_for_text(displayed_text)
 	var timer := _get_dialogue_timer(mode)
 	timer.start(wait_time)
 	timer.set_paused(interaction_mode != mode)
@@ -1302,10 +1308,11 @@ func _update_score_warning_state() -> void:
 
 func _update_choice_timer_visual() -> void:
 	if _has_pending_psychological_choice() and not choice_timeout_timer.is_stopped():
-		var progress := choice_timeout_timer.time_left / float(active_phase_config.choice_timeout_seconds)
-		dialogue_panel.set_choice_timeout_progress(progress)
+		var seconds_left := choice_timeout_timer.time_left
+		var progress := seconds_left / maxf(choice_timeout_timer.wait_time, 0.001)
+		choice_panel.set_timeout_progress(progress)
 		return
-	dialogue_panel.set_choice_timeout_progress(0.0)
+	choice_panel.set_timeout_progress(0.0)
 
 func _update_bgm_state() -> void:
 	# Entering gameplay must leave the menu/default track immediately. Waiting

@@ -6,11 +6,11 @@ signal choice_selected(choice_quality: String, choice_text: String)
 const CHOICE_ENABLED_MODULATE := Color(1.0, 1.0, 1.0, 1.0)
 const CHOICE_DISABLED_MODULATE := Color(0.42, 0.42, 0.42, 1.0)
 const BUTTON_WIDTH := 720.0
-const BUTTON_MIN_HEIGHT := 140.0
+const BUTTON_MIN_HEIGHT := 100.0
 const BUTTON_TEXT_MARGIN_LEFT := 34.0
-const BUTTON_TEXT_MARGIN_TOP := 18.0
+const BUTTON_TEXT_MARGIN_TOP := 8.0
 const BUTTON_TEXT_MARGIN_RIGHT := 34.0
-const BUTTON_TEXT_MARGIN_BOTTOM := 18.0
+const BUTTON_TEXT_MARGIN_BOTTOM := 8.0
 const REQUIRED_ANCHORS_PER_SIDE := 4
 
 @export var use_fixed_choice_anchor_seed: bool = false
@@ -20,6 +20,8 @@ var choice_button_1: TextureButton = null
 var choice_button_2: TextureButton = null
 var choice_label_1: Label = null
 var choice_label_2: Label = null
+@onready var choice_countdown: ProgressBar = $ChoiceCountdown
+@onready var timeout_feedback: Label = $TimeoutFeedback
 
 var _choice_data: Array[Dictionary] = []
 var _left_choice_anchors: Array[Control] = []
@@ -33,6 +35,7 @@ var _rng := RandomNumberGenerator.new()
 var _missing_nodes_warning_printed: bool = false
 var _anchor_warning_printed: bool = false
 var _buttons_connected: bool = false
+var _timeout_feedback_tween: Tween = null
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -54,6 +57,7 @@ func set_choice_anchor_groups(left_anchors: Array[Control], right_anchors: Array
 func show_choices(choices: Variant) -> void:
 	if not _bind_choice_nodes():
 		return
+	_hide_timeout_feedback()
 	_placement_version += 1
 	var placement_version := _placement_version
 	_choice_data = _normalize_choices(choices)
@@ -73,13 +77,37 @@ func show_choices(choices: Variant) -> void:
 func clear_choices() -> void:
 	if not _bind_choice_nodes():
 		return
+	_hide_timeout_feedback()
 	_placement_version += 1
 	visible = true
 	_choice_data.clear()
+	choice_countdown.visible = false
 	_selected_left_anchor_index = -1
 	_selected_right_anchor_index = -1
 	_apply_disabled_choice_button(choice_button_1, choice_label_1)
 	_apply_disabled_choice_button(choice_button_2, choice_label_2)
+
+func set_timeout_progress(progress: float) -> void:
+	choice_countdown.visible = not _choice_data.is_empty()
+	if not choice_countdown.visible:
+		return
+	choice_countdown.value = clampf(progress, 0.0, 1.0)
+
+func show_timeout_feedback(penalty: float) -> void:
+	_hide_timeout_feedback()
+	timeout_feedback.text = "未選擇  情感 -%s" % str(penalty).trim_suffix(".0")
+	timeout_feedback.modulate.a = 1.0
+	timeout_feedback.visible = true
+	_timeout_feedback_tween = create_tween()
+	_timeout_feedback_tween.tween_interval(1.2)
+	_timeout_feedback_tween.tween_property(timeout_feedback, "modulate:a", 0.0, 0.25)
+	_timeout_feedback_tween.tween_callback(func() -> void: timeout_feedback.visible = false)
+
+func _hide_timeout_feedback() -> void:
+	if _timeout_feedback_tween != null and _timeout_feedback_tween.is_valid():
+		_timeout_feedback_tween.kill()
+	_timeout_feedback_tween = null
+	timeout_feedback.visible = false
 
 func emit_choice_by_index(index: int) -> void:
 	_emit_choice(index)
@@ -232,7 +260,7 @@ func _attach_right_button_to_anchor(button: TextureButton, anchor: Control) -> v
 		return
 	button.position = Vector2(
 		maxf(20.0, size.x - button.size.x - 28.0),
-		clampf(size.y * 0.48 + button.size.y - 8.0, 273.0, size.y - button.size.y - 28.0)
+		clampf(size.y * 0.48 + button.size.y, 273.0, size.y - button.size.y - 28.0)
 	)
 
 func _anchor_center_in_panel_space(anchor: Control) -> Vector2:
