@@ -14,6 +14,7 @@ func _run() -> void:
 	_test_safe_word_substitution_and_validation()
 	_test_reading_duration_bounds()
 	await _test_choice_timer_and_penalty()
+	await _test_manual_and_automatic_dialogue_advance()
 	if _failures.is_empty():
 		print("Dialogue pacing headless tests passed.")
 		quit(0)
@@ -142,6 +143,127 @@ func _test_choice_timer_and_penalty() -> void:
 	_assert(game.choice_timeout_timer.is_stopped(), "Runtime cleanup left the choice timer running.")
 	game.queue_free()
 	await process_frame
+
+func _test_manual_and_automatic_dialogue_advance() -> void:
+	root.size = Vector2i(1440, 1024)
+	var game = GAME_SCENE.instantiate()
+	root.add_child(game)
+	await process_frame
+	var bubble: CurrentSpeechBubble = game.dialogue_panel.current_speech_bubble
+	_assert(game.dialogue_panel.mouse_filter == Control.MOUSE_FILTER_IGNORE, "Conversation viewport captured outside clicks.")
+	_assert(bubble.mouse_filter == Control.MOUSE_FILTER_STOP, "Dialogue bubble does not receive clicks.")
+	_assert(bubble.text_label.mouse_filter == Control.MOUSE_FILTER_IGNORE, "Dialogue text captured clicks.")
+
+	_prepare_two_line_dialogue(game)
+	await process_frame
+	var first_generation: int = game._reading_step_generation
+	var first_wait: float = game.psychological_dialogue_timer.wait_time
+	_click_at(Vector2(10.0, 10.0))
+	_assert(game.dialogue_panel.get_dialogue_history().size() == 1, "Outside click advanced dialogue.")
+	_assert(game._reading_step_generation == first_generation, "Outside click consumed the reading step.")
+	_click_at(bubble.global_position + bubble.size * 0.5)
+	_assert(game.dialogue_panel.get_dialogue_history().size() == 2, "Bubble click did not advance immediately.")
+	_assert(game.psychological_dialogue_controller.choice_prompt_pending, "Manual advance skipped the choice prompt.")
+	_assert(game.psychological_dialogue_timer.is_stopped(), "Manual advance left the reading timer active.")
+	_assert(game.choice_timeout_timer.time_left > 0.0, "Manual advance did not start the choice countdown.")
+	_assert(first_wait >= 2.0 and first_wait <= 6.0, "Manual test did not use the configured reading interval.")
+	var history_at_choice: int = game.dialogue_panel.get_dialogue_history().size()
+	_click_at(bubble.global_position + bubble.size * 0.5)
+	_assert(game.dialogue_panel.get_dialogue_history().size() == history_at_choice, "Bubble click dismissed a pending choice.")
+	_assert(game.psychological_dialogue_controller.choice_prompt_pending, "Bubble click cleared a pending choice.")
+	_assert(not game.choice_timeout_timer.is_stopped(), "Bubble click stopped the choice countdown.")
+
+	await process_frame
+	_prepare_two_line_dialogue(game)
+	await process_frame
+	var automatic_generation: int = game._reading_step_generation
+	game.psychological_dialogue_timer.start(0.05)
+	await create_timer(0.10).timeout
+	_assert(game.dialogue_panel.get_dialogue_history().size() == 2, "Reading timer did not advance dialogue.")
+	_assert(game.psychological_dialogue_controller.choice_prompt_pending, "Automatic advance skipped the choice prompt.")
+	game._on_psychological_dialogue_timer_timeout(automatic_generation)
+	_assert(game.dialogue_panel.get_dialogue_history().size() == 2, "Stale timeout advanced a choice prompt.")
+
+	await process_frame
+	_prepare_two_line_dialogue(game)
+	await process_frame
+	var race_generation: int = game._reading_step_generation
+	_click_at(bubble.global_position + bubble.size * 0.5)
+	game._on_psychological_dialogue_timer_timeout(race_generation)
+	_assert(game.dialogue_panel.get_dialogue_history().size() == 2, "Click followed by timeout skipped dialogue.")
+	_assert(game.psychological_dialogue_controller.choice_prompt_pending, "Click/timeout race lost the choice prompt.")
+
+	await process_frame
+	_prepare_two_line_dialogue(game)
+	await process_frame
+	race_generation = game._reading_step_generation
+	game._on_psychological_dialogue_timer_timeout(race_generation)
+	_click_at(bubble.global_position + bubble.size * 0.5)
+	_assert(game.dialogue_panel.get_dialogue_history().size() == 2, "Timeout followed by click skipped dialogue.")
+	_assert(game.psychological_dialogue_controller.choice_prompt_pending, "Timeout/click race lost the choice prompt.")
+
+	await process_frame
+	_prepare_two_line_dialogue(game, ["First line", "Second line", "Third line"])
+	await process_frame
+	_click_at(bubble.global_position + bubble.size * 0.5)
+	_click_at(bubble.global_position + bubble.size * 0.5)
+	_assert(game.dialogue_panel.get_dialogue_history().size() == 2, "Two clicks in one frame skipped the newly displayed line.")
+	await process_frame
+	_click_at(bubble.global_position + bubble.size * 0.5)
+	_assert(game.dialogue_panel.get_dialogue_history().size() == 3, "A later click did not advance the new line.")
+
+	await process_frame
+	_prepare_two_line_dialogue(game)
+	await process_frame
+	var old_generation: int = game._reading_step_generation
+	game.set_interaction_mode(1)
+	_assert(not bubble.is_visible_in_tree() and game.psychological_dialogue_timer.is_stopped(), "Physical mode kept the bubble or reading step active.")
+	game._on_dialogue_bubble_advance_requested()
+	game._on_psychological_dialogue_timer_timeout(old_generation)
+	_assert(game.dialogue_panel.get_dialogue_history().size() == 1, "Hidden bubble or stale timeout advanced dialogue.")
+	game.set_interaction_mode(0)
+	await process_frame
+	_assert(game._reading_step_generation != old_generation and game._reading_step_active, "Returning to psychological mode did not start a fresh reading step.")
+	var generation_before_reset: int = game._reading_step_generation
+	game.reset_run()
+	await process_frame
+	var history_after_reset: int = game.dialogue_panel.get_dialogue_history().size()
+	game._on_psychological_dialogue_timer_timeout(generation_before_reset)
+	_assert(game.dialogue_panel.get_dialogue_history().size() == history_after_reset, "Pre-reset timeout advanced the new run.")
+	var generation_before_ending: int = game._reading_step_generation
+	game._begin_ending_transition("failure")
+	var history_at_ending: int = game.dialogue_panel.get_dialogue_history().size()
+	game._on_psychological_dialogue_timer_timeout(generation_before_ending)
+	game._on_dialogue_bubble_advance_requested()
+	_assert(game.dialogue_panel.get_dialogue_history().size() == history_at_ending, "Ending transition accepted a stale advance.")
+	game._stop_runtime_timers()
+	game.queue_free()
+	await process_frame
+
+func _prepare_two_line_dialogue(game, feedback_lines: Array = ["First line", "Second line"]) -> void:
+	game.psychological_dialogue_timer.stop()
+	game.choice_timeout_timer.stop()
+	game.choice_panel.clear_choices()
+	game.dialogue_panel.clear_history()
+	game.psychological_dialogue_controller.reset()
+	game.psychological_dialogue_controller.current_entry = {
+		"condition": {"physical": "any", "emotional": "any"},
+		"feedback": feedback_lines,
+		"choice": [
+			{"id": "good", "text": "Yes", "effect": "positive"},
+			{"id": "bad", "text": "No", "effect": "negative"}
+		]
+	}
+	game._push_next_dialogue_event(0)
+
+func _click_at(position: Vector2) -> void:
+	for pressed in [true, false]:
+		var event := InputEventMouseButton.new()
+		event.button_index = MOUSE_BUTTON_LEFT
+		event.pressed = pressed
+		event.position = position
+		event.global_position = position
+		root.push_input(event)
 
 func _assert(condition: bool, message: String) -> void:
 	if not condition:

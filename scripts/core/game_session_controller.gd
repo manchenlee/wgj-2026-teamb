@@ -129,6 +129,11 @@ var imbalance_warning_active: bool = false
 var lower_score_mode: int = -1
 var current_combo: int = 0
 var max_combo: int = 0
+var _reading_step_active: bool = false
+var _reading_step_generation: int = 0
+var _reading_step_advancing: bool = false
+var _last_reading_advance_frame: int = -1
+var _reading_timeout_callback: Callable = Callable()
 
 # Telemetry from spot manager for debug readout
 var _last_spot_telemetry: Dictionary = {}
@@ -161,9 +166,9 @@ func _ready() -> void:
 	character_area.set_body_visual_anchor(background_anchor)
 	set_process_unhandled_input(true)
 	choice_panel.choice_selected.connect(_on_choice_selected)
+	dialogue_panel.current_speech_bubble.advance_requested.connect(_on_dialogue_bubble_advance_requested)
 	interaction_mode_toggle.toggle_requested.connect(toggle_interaction_mode)
 	phase_skip_button.pressed.connect(_on_phase_2_skip_pressed)
-	psychological_dialogue_timer.timeout.connect(_on_psychological_dialogue_timer_timeout)
 	physiological_dialogue_timer.timeout.connect(_on_physiological_dialogue_timer_timeout)
 	choice_timeout_timer.timeout.connect(_on_choice_timeout)
 	_setup_spot_manager()
@@ -854,6 +859,8 @@ func set_legacy_arousal_visualization_visible(legacy_visible: bool) -> void:
 func _set_interaction_mode(next_mode: InteractionMode, force_sync: bool = false) -> void:
 	if interaction_mode == next_mode and not force_sync:
 		return
+	if interaction_mode != next_mode:
+		_invalidate_reading_step()
 	var entering_psychological_mode := interaction_mode != next_mode \
 			and next_mode == InteractionMode.PSYCHOLOGICAL
 	interaction_mode = next_mode
@@ -1034,11 +1041,29 @@ func _on_physiological_spot_failed(_progress_ratio: float, _penalty: float) -> v
 # Dialogue
 # ---------------------------------------------------------------------------
 
-func _on_psychological_dialogue_timer_timeout() -> void:
-	if not run_active or interaction_mode != InteractionMode.PSYCHOLOGICAL \
-			or _has_pending_psychological_choice():
+func _on_psychological_dialogue_timer_timeout(generation: int) -> void:
+	_advance_psychological_dialogue(generation)
+
+func _on_dialogue_bubble_advance_requested() -> void:
+	if not dialogue_panel.current_speech_bubble.is_visible_in_tree():
 		return
+	_advance_psychological_dialogue(_reading_step_generation)
+
+func _advance_psychological_dialogue(generation: int) -> void:
+	if not run_active or ending_transition_started \
+			or interaction_mode != InteractionMode.PSYCHOLOGICAL \
+			or _has_pending_psychological_choice() \
+			or not _reading_step_active or generation != _reading_step_generation \
+			or _reading_step_advancing:
+		return
+	var frame := Engine.get_process_frames()
+	if frame == _last_reading_advance_frame:
+		return
+	_last_reading_advance_frame = frame
+	_reading_step_advancing = true
+	_invalidate_reading_step()
 	_push_next_dialogue_event(InteractionMode.PSYCHOLOGICAL)
+	_reading_step_advancing = false
 
 func _on_physiological_dialogue_timer_timeout() -> void:
 	# Kept as a connected no-op so older scenes remain load-compatible.
@@ -1095,6 +1120,7 @@ func _on_choice_timeout() -> void:
 func _push_next_dialogue_event(mode: InteractionMode) -> void:
 	if interaction_mode != mode or mode == InteractionMode.PHYSIOLOGICAL:
 		return
+	_invalidate_reading_step()
 	var controller: DialogueChoiceController = _get_dialogue_controller(mode)
 	var should_force_safe_word: bool = mode == InteractionMode.PSYCHOLOGICAL \
 			and controller.has_safe_word_event() \
@@ -1138,8 +1164,22 @@ func _dialogue_speaker_type(authored_speaker: String) -> String:
 func _schedule_next_dialogue_message(mode: InteractionMode, displayed_text: String = "") -> void:
 	var wait_time := active_phase_config.reading_duration_for_text(displayed_text)
 	var timer := _get_dialogue_timer(mode)
+	if mode == InteractionMode.PSYCHOLOGICAL:
+		_invalidate_reading_step()
+		_reading_step_active = true
+		_reading_timeout_callback = _on_psychological_dialogue_timer_timeout.bind(_reading_step_generation)
+		psychological_dialogue_timer.timeout.connect(_reading_timeout_callback, CONNECT_ONE_SHOT)
 	timer.start(wait_time)
 	timer.set_paused(interaction_mode != mode)
+
+func _invalidate_reading_step() -> void:
+	_reading_step_active = false
+	_reading_step_generation += 1
+	psychological_dialogue_timer.stop()
+	if _reading_timeout_callback.is_valid() \
+			and psychological_dialogue_timer.timeout.is_connected(_reading_timeout_callback):
+		psychological_dialogue_timer.timeout.disconnect(_reading_timeout_callback)
+	_reading_timeout_callback = Callable()
 
 func _start_new_psychological_dialogue() -> void:
 	psychological_dialogue_timer.stop()
@@ -1444,7 +1484,7 @@ func _get_texture_content_rect(texture_rect: TextureRect, texture_size: Vector2)
 # ---------------------------------------------------------------------------
 
 func _stop_runtime_timers() -> void:
-	psychological_dialogue_timer.stop()
+	_invalidate_reading_step()
 	physiological_dialogue_timer.stop()
 	spot_spawn_timer.stop()
 	choice_timeout_timer.stop()

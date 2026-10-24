@@ -2,6 +2,8 @@
 class_name CurrentSpeechBubble
 extends Control
 
+signal advance_requested()
+
 @export var max_width: float = 420.0:
 	set(value):
 		max_width = maxf(value, 120.0)
@@ -20,8 +22,14 @@ extends Control
 @onready var speaker_label: Label = $SpeakerLabel
 
 func _ready() -> void:
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	_refresh_layout()
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT \
+			and event.pressed:
+		accept_event()
+		advance_requested.emit()
 
 func set_dialogue_text(text_value: String) -> void:
 	if not is_node_ready():

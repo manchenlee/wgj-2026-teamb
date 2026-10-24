@@ -22,7 +22,6 @@ func _ready() -> void:
 	clip_contents = false
 	if current_speech_bubble != null:
 		current_speech_bubble.visible = false
-		current_speech_bubble.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready():
