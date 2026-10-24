@@ -40,7 +40,7 @@
     {
       "id": "r7",
       "speaker": "主角",
-      "text": "沒辦法，就快要音樂發表會了，這把琴又剛好很和我眼緣……嗯？聲音似乎不太對……",
+      "text": "沒辦法，就快要音樂發表會了，這把琴又剛好很合我眼緣……嗯？聲音似乎不太對……",
       "source_row": 7,
       "character": {
         "base": "res://assets/art/character/normal_violin.png"
@@ -626,7 +626,7 @@
     {
       "id": "r51",
       "speaker": "小提琴？",
-      "text": "……真正興致上來的時候，不管說甚麼你都停不下來，設置這個……沒有意義。",
+      "text": "……真正興致上來的時候，不管說什麼你都停不下來，設置這個……沒有意義。",
       "source_row": 51,
       "character": {
         "base": "res://assets/art/character/phase2/complete.png",
@@ -658,7 +658,7 @@
     {
       "id": "r53",
       "speaker": "主角",
-      "text": "我答應你，無論等等調音時發生甚麼，無論我們處於甚麼狀態，只要你喊出安全詞，我就會立刻停下。",
+      "text": "我答應你，無論等等調音時發生什麼，無論我們處於什麼狀態，只要你喊出安全詞，我就會立刻停下。",
       "source_row": 53,
       "character": {
         "base": "res://assets/art/character/phase2/complete.png",
