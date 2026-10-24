@@ -91,10 +91,10 @@ func apply_choice(choice_id: String, model) -> Dictionary:
 	var reply_speaker := ""
 	if not authored_responses.is_empty():
 		reply = _format_text(str(authored_responses[0]))
-		reply_speaker = str(authored_speakers[0]) if not authored_speakers.is_empty() else ""
+		reply_speaker = str(authored_speakers[0]) if not authored_speakers.is_empty() and authored_speakers[0] is String else ""
 		for index in range(1, authored_responses.size()):
 			_queued_response_lines.append(authored_responses[index])
-			_queued_response_speakers.append(authored_speakers[index] if index < authored_speakers.size() else "")
+			_queued_response_speakers.append(authored_speakers[index] if index < authored_speakers.size() and authored_speakers[index] is String else "")
 	else:
 		reply = _get_choice_response(choice_id, current_entry, ending_type.is_empty())
 	current_line = reply
@@ -255,7 +255,8 @@ func _build_next_prompt(entry: Dictionary) -> Dictionary:
 func _get_current_feedback_speaker(entry: Dictionary) -> String:
 	var speakers := entry.get("feedback_speakers", []) as Array
 	if current_feedback_index >= 0 and current_feedback_index < speakers.size():
-		return str(speakers[current_feedback_index])
+		var speaker: Variant = speakers[current_feedback_index]
+		return str(speaker) if speaker is String else ""
 	return ""
 
 func _get_current_feedback_line(entry: Dictionary) -> String:

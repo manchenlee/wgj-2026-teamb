@@ -8,7 +8,6 @@ signal game_requested
 const OPENING_DATA_PATH := "res://assets/dialogue/opening.json"
 const SAFE_WORD_SCREEN_PATH := "res://scenes/screens/SafeWordScreen.tscn"
 const DEFAULT_BACKGROUND_PATH := "res://assets/art/background/curtain.jpg"
-const DEFAULT_SPEAKER := "旁白"
 
 @onready var background: TextureRect = $Background
 @onready var backdrop_tint: ColorRect = $BackdropTint
@@ -16,6 +15,7 @@ const DEFAULT_SPEAKER := "旁白"
 @onready var character_glow_root: Control = $CharacterStage/CharacterPivot/GlowRoot
 @onready var character_root: Control = $CharacterStage/CharacterPivot/CharacterRoot
 @onready var speaker_label: Label = $SafeArea/RootLayout/DialogueBox/DialogueLayout/SpeakerPanel/SpeakerLabel
+@onready var speaker_panel: PanelContainer = $SafeArea/RootLayout/DialogueBox/DialogueLayout/SpeakerPanel
 @onready var dialogue_label: RichTextLabel = $SafeArea/RootLayout/DialogueBox/DialogueLayout/DialogueLabel
 @onready var _skip_button_root: Control = $SkipButtonRoot
 @onready var _skip_button: Button = $SkipButtonRoot/SkipButton
@@ -210,7 +210,9 @@ func _apply_backdrop_tint(tint_value: Variant) -> void:
 	backdrop_tint.color = _parse_color(tint_value, Color(0.05, 0.03, 0.05, 0.36))
 
 func _apply_dialogue(entry: Dictionary) -> void:
-	speaker_label.text = str(entry.get("speaker", DEFAULT_SPEAKER))
+	var speaker_text := str(entry.get("speaker", ""))
+	speaker_label.text = speaker_text
+	speaker_panel.visible = not speaker_text.is_empty()
 	dialogue_label.clear()
 	dialogue_label.append_text(str(entry.get("text", "")))
 

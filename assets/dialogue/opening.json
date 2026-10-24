@@ -3,7 +3,6 @@
   "steps": [
     {
       "id": "r2",
-      "speaker": "",
       "text": "（您的包裹已抵達。）",
       "source_row": 2,
       "character": {
@@ -148,7 +147,6 @@
     },
     {
       "id": "r15",
-      "speaker": "音樂行",
       "text": "「尊敬的貴客，您的共鳴小提琴已抵達，期待您與他共譜一曲專屬你們的『合音』。」",
       "source_row": 15,
       "character": {
@@ -197,7 +195,7 @@
     {
       "id": "r19",
       "speaker": "主角",
-      "text": "【不是第一次見到小提琴，但還是第一次見到變成人樣的小提琴啊！】",
+      "text": "（不是第一次見到小提琴，但還是第一次見到變成人樣的小提琴啊！）",
       "source_row": 19,
       "character": {
         "base": "res://assets/art/character/phase2/complete.png",
@@ -293,7 +291,7 @@
     {
       "id": "r26",
       "speaker": "主角",
-      "text": "【那些事情？……啊，他說的是調音吧？】",
+      "text": "（那些事情？……啊，他說的是調音吧？）",
       "source_row": 26,
       "character": {
         "base": "res://assets/art/character/phase2/complete.png",
@@ -379,7 +377,7 @@
     {
       "id": "r31",
       "speaker": "主角",
-      "text": "【完全不聽我說話……但，如果不鼓起勇氣調音的話，接下來的音樂發表會就完蛋了！】",
+      "text": "（完全不聽我說話……但，如果不鼓起勇氣調音的話，接下來的音樂發表會就完蛋了！）",
       "source_row": 31,
       "character": {
         "base": "res://assets/art/character/phase2/complete.png",
@@ -427,7 +425,7 @@
     {
       "id": "r34",
       "speaker": "主角",
-      "text": "【我也只是？難不成他以前也碰過其他演奏家嗎？】",
+      "text": "（我也只是？難不成他以前也碰過其他演奏家嗎？）",
       "source_row": 34,
       "character": {
         "base": "res://assets/art/character/phase2/complete.png",
@@ -459,7 +457,7 @@
     {
       "id": "r36",
       "speaker": "主角",
-      "text": "【就這樣躺下來了……好隨便的態度……】",
+      "text": "（就這樣躺下來了……好隨便的態度……）",
       "source_row": 36,
       "character": {
         "base": "res://assets/art/character/phase2/complete.png",
@@ -507,7 +505,6 @@
     },
     {
       "id": "r42",
-      "speaker": "",
       "text": "希望先約法三章【開啟教學】",
       "source_row": 42,
       "character": {
@@ -525,7 +522,7 @@
     },
     {
       "id": "r45",
-      "speaker": "",
+      "speaker": "主角",
       "text": "有很重要的事情要先說好。【開啟安全詞】",
       "source_row": 45,
       "character": {
@@ -686,7 +683,7 @@
     {
       "id": "r55",
       "speaker": "主角",
-      "text": "【他的眼神，明顯就是對我毫無信任……不過，安全詞可是這種特殊關係的基礎，我不能馬虎。】",
+      "text": "（他的眼神，明顯就是對我毫無信任……不過，安全詞可是這種特殊關係的基礎，我不能馬虎。）",
       "source_row": 55,
       "character": {
         "base": "res://assets/art/character/phase2/complete.png",
@@ -734,7 +731,7 @@
     },
     {
       "id": "r59",
-      "speaker": "",
+      "speaker": "主角",
       "text": "等等過程中，如果你有不舒服的話，一定要喊出來，知道嗎？",
       "source_row": 59,
       "character": {
@@ -766,8 +763,8 @@
     },
     {
       "id": "r61",
-      "speaker": "",
-      "text": "【又不理我了……好吧，既然安全詞設定好了的話，接下來要直接開始嗎？】",
+      "speaker": "主角",
+      "text": "（又不理我了……好吧，既然安全詞設定好了的話，接下來要直接開始嗎？）",
       "source_row": 61,
       "character": {
         "base": "res://assets/art/character/phase2/complete.png",
@@ -783,7 +780,6 @@
     },
     {
       "id": "r63",
-      "speaker": "",
       "text": "話都說完的話，我們就開始吧。【開始遊戲】",
       "source_row": 63,
       "character": {
@@ -815,8 +811,8 @@
     },
     {
       "id": "r65",
-      "speaker": "",
-      "text": "【就這樣，迫在眉睫的音樂發表會，突然變成男人的小提琴，還有雖然不明所以，但內心深去卻了然於心的「調音」儀式……】",
+      "speaker": "主角",
+      "text": "（就這樣，迫在眉睫的音樂發表會，突然變成男人的小提琴，還有雖然不明所以，但內心深去卻了然於心的「調音」儀式……）",
       "source_row": 65,
       "character": {
         "base": "res://assets/art/character/phase2/complete.png",
@@ -831,8 +827,8 @@
     },
     {
       "id": "r66",
-      "speaker": "",
-      "text": "【雖然不知道接下來的相處中，能不能讓眼前的男人稍稍放下心防，但無論如何，為了我的音樂發表會，我都要「調教」你！】",
+      "speaker": "主角",
+      "text": "（雖然不知道接下來的相處中，能不能讓眼前的男人稍稍放下心防，但無論如何，為了我的音樂發表會，我都要「調教」你！）",
       "source_row": 66,
       "character": {
         "base": "res://assets/art/character/phase2/complete.png",

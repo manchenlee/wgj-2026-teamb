@@ -135,6 +135,7 @@ layout_mode = 2
 theme_override_constants/separation = 14
 
 [node name="SpeakerPanel" type="PanelContainer" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout" unique_id=666000271]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_speaker")
@@ -143,7 +144,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_speaker")
 layout_mode = 2
 theme_override_colors/font_color = Color(0.19, 0.11, 0.08, 1)
 theme_override_font_sizes/font_size = 36
-text = "旁白"
+text = ""
 
 [node name="DialogueLabel" type="RichTextLabel" parent="SafeArea/RootLayout/DialogueBox/DialogueLayout" unique_id=92416121]
 custom_minimum_size = Vector2(0, 96)

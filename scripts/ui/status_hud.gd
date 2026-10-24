@@ -155,5 +155,5 @@ func _apply_label_warning(label: Label, warning_active: bool) -> void:
 		return
 	var pulse_ratio := (sin(_warning_pulse_time * WARNING_PULSE_SPEED) + 1.0) * 0.5
 	label.add_theme_color_override("font_outline_color", WARNING_OUTLINE_COLOR)
-	label.add_theme_constant_override("outline_size", 5)
+	label.add_theme_constant_override("outline_size", 1)
 	label.modulate = WARNING_MODULATE_MIN.lerp(WARNING_MODULATE_MAX, pulse_ratio)

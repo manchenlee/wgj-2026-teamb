@@ -77,8 +77,6 @@ func _show_current_character_line(line: String, speaker_type: String = "companio
 			current_speech_bubble.set_speaker_text("小提琴")
 		"player":
 			current_speech_bubble.set_speaker_text("主角")
-		"narrator":
-			current_speech_bubble.set_speaker_text("旁白")
 		_:
 			current_speech_bubble.set_speaker_text("")
 	current_speech_bubble.set_dialogue_text(line)

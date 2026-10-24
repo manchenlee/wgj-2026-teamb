@@ -1099,7 +1099,7 @@ func _push_next_dialogue_event(mode: InteractionMode) -> void:
 		push_warning("Physiological dialogue attempted to expose choices; choices were ignored.")
 		prompt.erase("choices")
 	var prompt_text := str(prompt.get("text", Config.FEEDBACK_MESSAGE_TEXT))
-	var speaker_type := _dialogue_speaker_type(str(prompt.get("speaker", "小提琴")))
+	var speaker_type := _dialogue_speaker_type(str(prompt.get("speaker", "")))
 	if mode == InteractionMode.PSYCHOLOGICAL and prompt.has("choices"):
 		dialogue_panel.hide_prompt()
 		dialogue_panel.append_history(prompt_text, speaker_type)
@@ -1120,8 +1120,6 @@ func _dialogue_speaker_type(authored_speaker: String) -> String:
 			return "companion"
 		"主角":
 			return "player"
-		"旁白":
-			return "narrator"
 		_:
 			return "unassigned"
 
