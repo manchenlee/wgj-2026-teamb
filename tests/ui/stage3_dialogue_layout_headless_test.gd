@@ -84,12 +84,26 @@ func _check_opening_and_ending_styles() -> void:
 		_check(button.global_position.x >= 0.0 and button.global_position.x + button.size.x <= 720.0, "Opening choice clips in a narrow window: x=%s width=%s root=%s bubble=%s." % [button.global_position.x, button.size.x, opening.size.x, opening.dialogue_bubble.size.x])
 	_check(opening.get_node_or_null("DialogueUi/ChoiceButtons/ChoiceCountdown") == null, "Opening choices gained a countdown.")
 	_check(opening._choice_buttons.global_position.y + opening._choice_buttons.size.y <= opening.dialogue_bubble.global_position.y + 1.0, "Opening choices overlap the dialogue bubble.")
+	var opening_skip_visual: TextureRect = opening.get_node("SkipButtonRoot/SkipVisual")
+	var opening_skip_label: Label = opening.get_node("SkipButtonRoot/SkipLabel")
+	var skip_texture: Texture2D = opening_skip_visual.texture
+	var skip_font: Font = opening_skip_label.get_theme_font("font")
+	var skip_color: Color = opening_skip_label.get_theme_color("font_color")
 	opening.queue_free()
 	await process_frame
 	var ending := ENDING_SCENE.instantiate()
 	root.add_child(ending)
 	await process_frame
 	_check((ending.get_node("OuterMargin/Layout/EndingBody") as Label).get_theme_font_size("font_size") == 30, "Ending narrative font differs.")
+	for button_name in ["RestartButton", "BackToTitleButton"]:
+		var button_root: Control = ending.get_node("OuterMargin/Layout/RestartButtons/" + button_name)
+		var visual: TextureRect = button_root.get_node("SkipVisual")
+		var label: Label = button_root.get_node("SkipLabel")
+		_check(visual.texture == skip_texture, "%s does not use the opening Skip texture." % button_name)
+		_check(label.get_theme_font("font") == skip_font and label.get_theme_color("font_color") == skip_color, "%s does not match the opening Skip typography." % button_name)
+		_check(button_root.size.x >= 220.0 and button_root.size.y >= 110.0, "%s is smaller than the opening Skip button." % button_name)
+	_check((ending.get_node("OuterMargin/Layout/RestartButtons/RestartButton/SkipLabel") as Label).text == "再度演奏", "Restart label changed.")
+	_check((ending.get_node("OuterMargin/Layout/RestartButtons/BackToTitleButton/SkipLabel") as Label).text == "回到標題", "Back to title label changed.")
 	ending.queue_free()
 	await process_frame
 

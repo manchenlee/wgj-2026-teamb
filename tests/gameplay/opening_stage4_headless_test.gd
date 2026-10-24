@@ -112,10 +112,12 @@ func _test_skip_and_restart() -> void:
 	_check(main.current_screen.safe_word == "測試安全詞", "Skip did not preserve the chosen safety word.")
 	main._show_ending("success")
 	await create_timer(0.65).timeout
-	main.current_screen.restart_pressed.emit()
+	main.current_screen.restart_button.pressed.emit()
 	await create_timer(0.65).timeout
 	_check(main.current_screen_id == "game" and main.current_screen.safe_word == "測試安全詞", "Restart did not preserve the completed setup.")
-	main._show_title()
+	main._show_ending("success")
+	await create_timer(0.65).timeout
+	main.current_screen.back_to_title_button.pressed.emit()
 	await create_timer(0.65).timeout
 	_check(not main.safe_word_completed and main.current_safe_word == Config.SAFE_WORD_DEFAULT, "Returning to title did not reset opening state.")
 	main._show_opening()
@@ -124,9 +126,10 @@ func _test_skip_and_restart() -> void:
 	main.current_screen._on_skip_pressed()
 	await create_timer(0.65).timeout
 	_check(main.current_screen_id == "safe_word", "Skip before setup after restart did not open setup.")
-	main.current_screen._on_skip_pressed()
+	_check(main.current_screen.get_node_or_null("SkipButton") == null, "Safety-word setup still has a Skip button.")
+	main.current_screen.continue_button.pressed.emit()
 	await create_timer(0.65).timeout
-	_check(main.current_safe_word == Config.SAFE_WORD_DEFAULT and main.safe_word_completed, "Setup Skip lost default safety-word fallback.")
+	_check(main.current_safe_word == Config.SAFE_WORD_DEFAULT and main.safe_word_completed, "Empty safety-word confirmation lost the default fallback.")
 	main.queue_free()
 	await process_frame
 

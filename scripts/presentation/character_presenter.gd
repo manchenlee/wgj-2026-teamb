@@ -68,6 +68,29 @@ var _current_prompt_id: int = -1
 var _prompt_bounds_rect := Rect2()
 var _direction_texture: Texture2D
 var _direction_texture_warning_emitted := false
+var _body_visual_anchor: Control
+var _body_rest_position := Vector2.ZERO
+var _body_tremble_tween: Tween
+
+func set_body_visual_anchor(anchor: Control) -> void:
+	_body_visual_anchor = anchor
+	_body_rest_position = anchor.position
+
+func show_body_tremble(is_good: bool) -> void:
+	if not is_instance_valid(_body_visual_anchor):
+		return
+	if _body_tremble_tween != null:
+		_body_tremble_tween.kill()
+	_body_visual_anchor.position = _body_rest_position
+	_body_tremble_tween = create_tween()
+	if is_good:
+		_body_tremble_tween.tween_property(_body_visual_anchor, "position", _body_rest_position + Vector2(1.5, -1.0), 0.06).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		_body_tremble_tween.tween_property(_body_visual_anchor, "position", _body_rest_position + Vector2(-1.0, 0.7), 0.06).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_body_tremble_tween.tween_property(_body_visual_anchor, "position", _body_rest_position, 0.08).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	else:
+		_body_tremble_tween.tween_property(_body_visual_anchor, "position", _body_rest_position + Vector2(-4.0, 2.5), 0.025).set_trans(Tween.TRANS_LINEAR)
+		_body_tremble_tween.tween_property(_body_visual_anchor, "position", _body_rest_position + Vector2(2.5, -1.5), 0.045).set_trans(Tween.TRANS_LINEAR)
+		_body_tremble_tween.tween_property(_body_visual_anchor, "position", _body_rest_position, 0.09).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 func _get_direction_texture() -> Texture2D:
 	if _direction_texture != null:

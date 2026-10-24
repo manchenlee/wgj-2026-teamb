@@ -3,6 +3,13 @@ extends PhaseCharacterProfile
 
 # Phase 1 deliberately references the Phase 2 sitting art until its final art exists.
 const LEGACY_LAYOUT := preload("res://data/character_profiles/phase_2_character_profile.gd")
+const BREATHING_REGIONS := {
+	1: Rect2(0.46, 0.30, 0.23, 0.24),
+	2: Rect2(0.46, 0.30, 0.23, 0.24),
+	3: Rect2(0.39, 0.33, 0.22, 0.22),
+	4: Rect2(0.24, 0.42, 0.33, 0.23),
+	5: Rect2(0.28, 0.27, 0.25, 0.25),
+}
 
 var presentation_phase: int = 1
 var asset_phase: int = 2
@@ -26,7 +33,7 @@ func _init(phase: int = 1) -> void:
 		{}, {},
 		layout.prompt_anchor_layout,
 		layout.interaction_spot_anchor_layout,
-		layout.breathing_region_rect,
+		BREATHING_REGIONS[presentation_phase],
 		Vector2(0.5, 0.5), 0.0,
 		mappings
 	)

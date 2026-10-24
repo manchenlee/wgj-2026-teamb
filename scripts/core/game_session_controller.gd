@@ -46,6 +46,8 @@ enum CharacterExpressionSource {
 @export var shared_character_alignment_offset: Vector2 = Vector2.ZERO
 
 @onready var character_alignment_root: Control = $CharacterAlignmentRoot
+@onready var background_anchor: Control = $CharacterAlignmentRoot/BackgroundAnchor
+@onready var interaction_mask_anchor: Control = $CharacterAlignmentRoot/InteractionMaskAnchor
 @onready var background_placeholder: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/BackgroundPlaceholder
 @onready var overlay_animator = $CharacterAlignmentRoot/BackgroundAnchor/OverlayAnimator
 @onready var breathing_controller = $CharacterAlignmentRoot/BackgroundAnchor/BreathingController
@@ -156,6 +158,7 @@ func _ready() -> void:
 
 	feedback_rng.randomize()
 	_tail_rng.randomize()
+	character_area.set_body_visual_anchor(background_anchor)
 	set_process_unhandled_input(true)
 	choice_panel.choice_selected.connect(_on_choice_selected)
 	interaction_mode_toggle.toggle_requested.connect(toggle_interaction_mode)
@@ -266,7 +269,7 @@ func _configure_pose_layers() -> void:
 		_apply_phase_layer_texture(pose_tail_layer, _tail_frames[0] if not _tail_frames.is_empty() else null)
 	if spot_manager != null:
 		var mask_texture := _load_texture_from_asset_path(active_character_profile.get_interaction_mask_path())
-		spot_manager.set_interaction_mask(mask_texture, background_placeholder)
+		spot_manager.set_interaction_mask(mask_texture, interaction_mask_anchor)
 	_update_shooting_tail_layer()
 
 func set_shooting_tail_active(active: bool) -> void:
@@ -1351,6 +1354,9 @@ func _apply_character_alignment() -> void:
 	if character_alignment_root == null:
 		return
 	var phase_alignment_offset := _resolve_active_phase_alignment_offset()
+	# The art can be trembling during a score-driven pose change. Keep its
+	# temporary visual offset out of the persistent character alignment.
+	phase_alignment_offset += background_anchor.position
 	_resolved_character_alignment_offset = Vector2(
 		shared_character_alignment_offset.x + phase_alignment_offset.x,
 		phase_alignment_offset.y

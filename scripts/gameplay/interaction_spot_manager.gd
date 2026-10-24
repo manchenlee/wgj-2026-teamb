@@ -41,7 +41,7 @@ var _phase_config = null
 var _rng := RandomNumberGenerator.new()
 var _bounds_rect := Rect2()
 var _interaction_mask: Image = null
-var _interaction_mask_layer: TextureRect = null
+var _interaction_mask_layer: Control = null
 
 var _available_anchor_ids: Array[String] = []
 # All currently live spots
@@ -86,7 +86,7 @@ func set_available_anchor_ids(ids: Array[String]) -> void:
 func set_bounds_rect(bounds_rect: Rect2) -> void:
 	_bounds_rect = bounds_rect
 
-func set_interaction_mask(mask_texture: Texture2D, display_layer: TextureRect) -> void:
+func set_interaction_mask(mask_texture: Texture2D, display_layer: Control) -> void:
 	_interaction_mask = mask_texture.get_image() if mask_texture != null else null
 	_interaction_mask_layer = display_layer
 
@@ -330,7 +330,7 @@ func _spawn_note_type(requested_note_type: int = -1) -> void:
 	spot.set_meta("note_type", note_type)
 	spot.set_meta("placement_rect", placement_rect)
 
-	spot.interaction_started.connect(_on_spot_scrub_started)
+	spot.interaction_started.connect(_on_spot_scrub_started.bind(spot))
 	spot.interaction_ended.connect(_on_spot_scrub_ended)
 	spot.progressed.connect(_on_spot_progressed.bind(spot))
 	spot.completed.connect(_on_spot_completed.bind(spot))
@@ -594,7 +594,10 @@ func _clamp_center_to_bounds(center: Vector2, radius: float) -> Vector2:
 # Signal handlers — all arousal changes happen here, never inside InteractionNote
 # ---------------------------------------------------------------------------
 
-func _on_spot_scrub_started() -> void:
+func _on_spot_scrub_started(spot: InteractionNote) -> void:
+	spot.set_meta("was_interacted", true)
+	if _character_presenter != null:
+		_character_presenter.show_body_tremble(true)
 	emit_signal("spot_scrub_started")
 
 
@@ -649,6 +652,8 @@ func _on_spot_expired(progress_ratio: float, spot: InteractionNote, is_timeout_f
 	_telemetry_penalty += penalty
 	if _character_presenter != null:
 		_character_presenter.show_spot_reaction("mild")
+		if spot.get_meta("was_interacted", false):
+			_character_presenter.show_body_tremble(false)
 	if is_timeout_failure:
 		physiological_spot_failed.emit(progress_ratio, penalty)
 	print_debug(
@@ -663,8 +668,9 @@ func _on_spot_expired(progress_ratio: float, spot: InteractionNote, is_timeout_f
 
 
 func _disconnect_spot(spot: InteractionNote) -> void:
-	if spot.interaction_started.is_connected(_on_spot_scrub_started):
-		spot.interaction_started.disconnect(_on_spot_scrub_started)
+	var started_callback := _on_spot_scrub_started.bind(spot)
+	if spot.interaction_started.is_connected(started_callback):
+		spot.interaction_started.disconnect(started_callback)
 	if spot.interaction_ended.is_connected(_on_spot_scrub_ended):
 		spot.interaction_ended.disconnect(_on_spot_scrub_ended)
 	var progressed_callback := _on_spot_progressed.bind(spot)

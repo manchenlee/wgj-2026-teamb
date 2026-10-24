@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://buxwky84ktg5s"]
+[gd_scene load_steps=13 format=3 uid="uid://buxwky84ktg5s"]
 
 [ext_resource type="Script" uid="uid://cb6d1m2m1bqs8" path="res://scripts/core/safe_word_screen.gd" id="1_safe_word"]
 [ext_resource type="Texture2D" uid="uid://dc7csqq8gypo5" path="res://assets/art/background/curtain.jpg" id="2_curtain"]
@@ -75,12 +75,6 @@ border_color = Color(1, 0.72, 0.44, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed"]
 bg_color = Color(0.38, 0.01, 0.005, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_skip"]
-bg_color = Color(0.06, 0.015, 0.015, 0.72)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_skip_hover"]
-bg_color = Color(0.14, 0.025, 0.025, 0.9)
-
 [node name="SafeWordScreen" type="Control" unique_id=426288651]
 layout_mode = 3
 anchors_preset = 15
@@ -110,27 +104,6 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0.06, 0.01, 0.01, 0.28)
-
-[node name="SkipButton" type="Button" parent="."]
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -236.0
-offset_top = 42.0
-offset_right = -44.0
-offset_bottom = 104.0
-grow_horizontal = 0
-focus_mode = 0
-mouse_default_cursor_shape = 2
-theme_override_colors/font_color = Color(0.78, 0.72, 0.72, 1)
-theme_override_colors/font_hover_color = Color(1, 0.94, 0.9, 1)
-theme_override_fonts/font = ExtResource("4_bold")
-theme_override_font_sizes/font_size = 25
-theme_override_styles/normal = SubResource("StyleBoxFlat_skip")
-theme_override_styles/hover = SubResource("StyleBoxFlat_skip_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
-text = "跳過"
 
 [node name="ModalCenter" type="CenterContainer" parent="."]
 layout_mode = 1

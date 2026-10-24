@@ -37,8 +37,8 @@ signal back_to_title_pressed
 @onready var heading_label: Label = get_node_or_null("OuterMargin/Layout/HeadingLabel")
 @onready var result_label: Label = get_node_or_null("OuterMargin/Layout/ResultSubtypeLabel")
 @onready var body_label: Label = get_node_or_null("OuterMargin/Layout/EndingBody")
-@onready var restart_button: Button = get_node_or_null("OuterMargin/Layout/RestartButtons/RestartButton")
-@onready var back_to_title_button: Button = get_node_or_null("OuterMargin/Layout/RestartButtons/BackToTitleButton")
+@onready var restart_button: Button = get_node_or_null("OuterMargin/Layout/RestartButtons/RestartButton/Button")
+@onready var back_to_title_button: Button = get_node_or_null("OuterMargin/Layout/RestartButtons/BackToTitleButton/Button")
 
 var pending_result_type: String = ""
 var ending_texts_by_type: Dictionary = {}
