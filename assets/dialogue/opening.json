@@ -30,13 +30,7 @@
       "character": {
         "base": "res://assets/art/character/normal_violin.png",
         "offset": [150, 0]
-      },
-      "effects": [
-        {
-          "type": "glow",
-          "duration": 0.9
-        }
-      ]
+      }
     },
     {
       "id": "r7",
