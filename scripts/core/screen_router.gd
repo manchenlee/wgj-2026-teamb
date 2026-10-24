@@ -25,6 +25,7 @@ const SCREEN_TRANSITION_COLOR := Color(0, 0, 0, 1)
 var current_screen: Control
 var current_screen_id: String = ""
 var current_safe_word: String = Config.SAFE_WORD_DEFAULT
+var safe_word_completed := false
 var bg_music_secondary: AudioStreamPlayer
 var active_bgm_player: AudioStreamPlayer
 var inactive_bgm_player: AudioStreamPlayer
@@ -61,6 +62,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		debug_overlay.toggle()
 
 func _show_title() -> void:
+	safe_word_completed = false
+	current_safe_word = Config.SAFE_WORD_DEFAULT
 	current_screen_id = Config.SCREEN_TITLE
 	var screen := TITLE_SCENE.instantiate()
 	screen.start_pressed.connect(_show_warning)
@@ -77,37 +80,61 @@ func _show_warning() -> void:
 	_play_bgm("default", false)
 
 func _show_opening() -> void:
+	safe_word_completed = false
+	current_safe_word = Config.SAFE_WORD_DEFAULT
 	current_screen_id = Config.SCREEN_OPENING
 	var screen := OPENING_SCENE.instantiate()
-	screen.continue_pressed.connect(_show_safe_word)
-	screen.skip_pressed.connect(_show_safe_word)
+	screen.safe_word_completed = safe_word_completed
+	screen.continue_pressed.connect(_on_opening_skip)
+	screen.skip_pressed.connect(_on_opening_skip)
 	screen.safe_word_requested.connect(_show_opening_safe_word)
 	screen.game_requested.connect(func() -> void: _show_game(current_safe_word))
 	_swap_screen(screen)
 	_play_bgm("default", false)
 
 func _show_opening_safe_word() -> void:
+	if current_screen_id != Config.SCREEN_OPENING:
+		return
 	current_screen_id = Config.SCREEN_SAFE_WORD
 	var screen := SAFE_WORD_SCENE.instantiate()
 	screen.continue_pressed.connect(_resume_opening_after_safe_word)
 	_swap_screen(screen)
 
 func _resume_opening_after_safe_word(safe_word: String) -> void:
+	if current_screen_id != Config.SCREEN_SAFE_WORD:
+		return
 	current_safe_word = Config.normalize_safe_word(safe_word)
+	safe_word_completed = true
 	current_screen_id = Config.SCREEN_OPENING
 	var screen := OPENING_SCENE.instantiate()
 	screen.start_step_id = "r58"
+	screen.safe_word_completed = true
+	screen.continue_pressed.connect(_on_opening_skip)
 	screen.safe_word_requested.connect(_show_opening_safe_word)
 	screen.game_requested.connect(func() -> void: _show_game(current_safe_word))
-	screen.skip_pressed.connect(func() -> void: _show_game(current_safe_word))
+	screen.skip_pressed.connect(_on_opening_skip)
 	_swap_screen(screen)
+
+func _on_opening_skip() -> void:
+	if current_screen_id != Config.SCREEN_OPENING:
+		return
+	if safe_word_completed:
+		_show_game(current_safe_word)
+	else:
+		_show_opening_safe_word()
 
 func _show_safe_word() -> void:
 	current_screen_id = Config.SCREEN_SAFE_WORD
 	var screen := SAFE_WORD_SCENE.instantiate()
-	screen.continue_pressed.connect(_show_game)
+	screen.continue_pressed.connect(_complete_direct_safe_word)
 	_swap_screen(screen)
 	_play_bgm("default", false)
+
+func _complete_direct_safe_word(safe_word: String) -> void:
+	if current_screen_id != Config.SCREEN_SAFE_WORD:
+		return
+	safe_word_completed = true
+	_show_game(safe_word)
 
 func _show_game(safe_word: String = Config.SAFE_WORD_DEFAULT) -> void:
 	current_screen_id = Config.SCREEN_GAME

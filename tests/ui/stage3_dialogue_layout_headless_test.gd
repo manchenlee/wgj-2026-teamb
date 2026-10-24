@@ -66,7 +66,7 @@ func _check_opening_and_ending_styles() -> void:
 	_check(opening.speaker_label.get_theme_font_size("font_size") == 30, "Opening speaker font differs.")
 	while opening._current_entry_index < opening._find_step_index("r37"):
 		opening._advance_script()
-	_check(opening._choice_buttons.get_child_count() == 3, "Opening branch count changed.")
+	_check(opening._choice_buttons.get_child_count() == 2, "Opening branch count differs from Stage 4 flow.")
 	for button in opening._choice_buttons.get_children():
 		_check(button is TextureButton, "Opening choice does not use the shared visual component.")
 		_check((button.get_node("Label") as Label).get_theme_font_size("font_size") == 28, "Opening choice text differs from game choices.")

@@ -488,17 +488,24 @@
       "choices": [
         {
           "id": "tutorial",
-          "text": "先了解我們等等要做什麼。【開啟教學】",
+          "text": "Tutorial",
           "next": "r42"
         },
         {
           "id": "safe_word",
-          "text": "有很重要的事情要先說好。【開啟安全詞】",
+          "text": "Safety-word setup",
           "next": "r45"
+        }
+      ],
+      "choices_after_safe_word": [
+        {
+          "id": "tutorial",
+          "text": "Tutorial",
+          "next": "r42"
         },
         {
           "id": "start",
-          "text": "話都說完的話，我們就開始吧。【開始遊戲】",
+          "text": "Start Game",
           "next": "r63"
         }
       ]

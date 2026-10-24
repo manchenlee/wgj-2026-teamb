@@ -12,6 +12,8 @@ const CHOICE_BUTTON_SCENE := preload("res://scenes/components/DialogueChoiceButt
 const CHOICE_BUTTON_WIDTH := 720.0
 const CHOICE_HORIZONTAL_INSETS := 144.0
 
+enum TutorialReturn { FIRST_BRANCH, SECOND_BRANCH }
+
 @onready var background: TextureRect = $Background
 @onready var backdrop_tint: ColorRect = $BackdropTint
 @onready var character_stage: Control = $CharacterStage
@@ -26,6 +28,11 @@ const CHOICE_HORIZONTAL_INSETS := 144.0
 var _entries: Array = []
 var _current_entry_index := -1
 var start_step_id: String = ""
+var safe_word_completed := false
+var _active_branch: TutorialReturn = TutorialReturn.FIRST_BRANCH
+var _tutorial_return_branch: TutorialReturn = TutorialReturn.FIRST_BRANCH
+var _transition_requested := false
+var _choice_generation := 0
 var _choice_buttons: VBoxContainer
 var _injected_steps: Array = []
 var _base_sprite: TextureRect
@@ -53,6 +60,7 @@ func _ready() -> void:
 	_skip_button_root.pivot_offset = _skip_button_root.size * 0.5
 	resized.connect(_layout_character_stage)
 	_load_opening_script()
+	_active_branch = TutorialReturn.SECOND_BRANCH if safe_word_completed else TutorialReturn.FIRST_BRANCH
 	_choice_buttons = $SafeArea/RootLayout/DialogueBox/DialogueLayout/ChoiceButtons
 	resized.connect(_fit_opening_choices)
 	_layout_character_stage()
@@ -87,6 +95,9 @@ func advance_input_handled() -> void:
 
 func _on_skip_pressed() -> void:
 	get_viewport().set_input_as_handled()
+	if _transition_requested:
+		return
+	_transition_requested = true
 	if skip_pressed.get_connections().is_empty():
 		get_tree().change_scene_to_file(SAFE_WORD_SCREEN_PATH)
 		return
@@ -107,7 +118,10 @@ func _on_skip_mouse_exited() -> void:
 	_skip_hover_tween.tween_property(_skip_button_root, "modulate", Color.WHITE, 0.15)
 
 func _advance_script() -> void:
+	if _transition_requested:
+		return
 	if _entries.is_empty():
+		_transition_requested = true
 		continue_pressed.emit()
 		return
 
@@ -117,17 +131,22 @@ func _advance_script() -> void:
 			return
 		match str(current_entry.get("action", "")):
 			"safe_word":
+				_transition_requested = true
 				safe_word_requested.emit()
 				return
 			"game":
+				_transition_requested = true
 				game_requested.emit()
 				return
+		if str(current_entry.get("id", "")) == "r42":
+			_active_branch = _tutorial_return_branch
 	var next_index := _current_entry_index + 1
 	if _current_entry_index >= 0:
 		var next_id := str((_entries[_current_entry_index] as Dictionary).get("next", ""))
 		if not next_id.is_empty():
 			next_index = _find_step_index(next_id)
 	if next_index >= _entries.size():
+		_transition_requested = true
 		continue_pressed.emit()
 		return
 
@@ -183,17 +202,28 @@ func _find_step_index(step_id: String) -> int:
 	return _entries.size()
 
 func _show_entry_choices(entry: Dictionary) -> void:
+	_choice_generation += 1
+	var generation := _choice_generation
 	for button in _choice_buttons.get_children():
+		(button as BaseButton).disabled = true
 		button.queue_free()
 	var choices := entry.get("choices", []) as Array
+	if str(entry.get("id", "")) == "r37" and _active_branch == TutorialReturn.SECOND_BRANCH:
+		choices = entry.get("choices_after_safe_word", []) as Array
 	for choice_variant in choices:
 		var choice := choice_variant as Dictionary
+		var entry_id := str(entry.get("id", ""))
 		var button := CHOICE_BUTTON_SCENE.instantiate() as TextureButton
 		(button.get_node("Label") as Label).text = str(choice.get("text", ""))
 		_choice_buttons.add_child(button)
 		button.custom_minimum_size.x = minf(CHOICE_BUTTON_WIDTH, maxf(120.0, size.x - CHOICE_HORIZONTAL_INSETS))
 		var target_id := str(choice.get("next", ""))
+		var choice_id := str(choice.get("id", ""))
 		button.pressed.connect(func() -> void:
+			if _transition_requested or generation != _choice_generation or str((_entries[_current_entry_index] as Dictionary).get("id", "")) != entry_id:
+				return
+			if choice_id == "tutorial":
+				_tutorial_return_branch = _active_branch
 			_current_entry_index = _find_step_index(target_id)
 			_apply_entry(_entries[_current_entry_index] as Dictionary)
 		)

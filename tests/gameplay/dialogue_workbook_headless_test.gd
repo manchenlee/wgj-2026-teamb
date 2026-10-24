@@ -54,7 +54,7 @@ func _test_opening_branches() -> void:
 		if opening._current_entry_index >= opening._find_step_index("r37"):
 			break
 		opening._advance_script()
-	_check(opening._choice_buttons.get_child_count() == 3, "Opening does not present three branches.")
+	_check(opening._choice_buttons.get_child_count() == 2, "Opening does not present the first two choices.")
 	(opening._choice_buttons.get_child(0) as TextureButton).pressed.emit()
 	_check(opening._entries[opening._current_entry_index].id == "r42", "Tutorial choice does not route to its workbook branch.")
 	opening._advance_script()
@@ -73,6 +73,7 @@ func _test_opening_branches() -> void:
 	await process_frame
 	var resumed := OPENING_SCENE.instantiate()
 	resumed.start_step_id = "r58"
+	resumed.safe_word_completed = true
 	root.add_child(resumed)
 	await process_frame
 	_check(resumed._entries[resumed._current_entry_index].id == "r58", "Opening does not resume after safe-word setup.")
@@ -83,7 +84,8 @@ func _test_opening_branches() -> void:
 	resumed._advance_script()
 	_check(resumed._entries[resumed._current_entry_index].id == "r37", "Safe-word branch does not return to choices.")
 	await process_frame
-	(resumed._choice_buttons.get_child(2) as TextureButton).pressed.emit()
+	_check(resumed._choice_buttons.get_child_count() == 2, "Completed setup does not present the second two choices.")
+	(resumed._choice_buttons.get_child(1) as TextureButton).pressed.emit()
 	for index in range(10):
 		if resumed._entries[resumed._current_entry_index].id == "r66":
 			break
