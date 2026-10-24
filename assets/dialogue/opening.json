@@ -28,7 +28,8 @@
       "text": "哇！好多灰塵！咳、咳咳……！畢、畢竟是老琴了，聽音樂行說，已經好幾年沒有使用過的樣子……",
       "source_row": 6,
       "character": {
-        "base": "res://assets/art/character/normal_violin.png"
+        "base": "res://assets/art/character/normal_violin.png",
+        "offset": [150, 0]
       },
       "effects": [
         {
@@ -43,7 +44,8 @@
       "text": "沒辦法，就快要音樂發表會了，這把琴又剛好很合我眼緣……嗯？聲音似乎不太對……",
       "source_row": 7,
       "character": {
-        "base": "res://assets/art/character/normal_violin.png"
+        "base": "res://assets/art/character/normal_violin.png",
+        "offset": [150, 0]
       }
     },
     {
@@ -52,7 +54,8 @@
       "text": "呃……",
       "source_row": 8,
       "character": {
-        "base": "res://assets/art/character/normal_violin.png"
+        "base": "res://assets/art/character/normal_violin.png",
+        "offset": [150, 0]
       }
     },
     {

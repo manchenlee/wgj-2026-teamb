@@ -126,8 +126,8 @@ func _check_navigation_styles() -> void:
 	var warning := WARNING_SCENE.instantiate()
 	root.add_child(warning)
 	await process_frame
-	var leave: Button = warning.get_node("WarningPanel/ContentContainer/VBoxContainer/ButtonRow/LeaveButton")
-	var continue_button: Button = warning.get_node("WarningPanel/ContentContainer/VBoxContainer/ButtonRow/ContinueButton")
+	var leave: Button = warning.leave_button
+	var continue_button: Button = warning.continue_button
 	_check((leave.get_theme_stylebox("normal") as StyleBoxFlat).bg_color == reset_normal.bg_color, "Warning secondary fill differs from safety-word setup.")
 	_check((continue_button.get_theme_stylebox("normal") as StyleBoxFlat).bg_color == confirm_normal.bg_color, "Warning primary fill differs from safety-word setup.")
 	_check(leave.get_theme_stylebox("pressed") is StyleBoxFlat and continue_button.get_theme_stylebox("pressed") is StyleBoxFlat, "Warning button pressed styles are missing.")

@@ -1,9 +1,29 @@
-[gd_scene format=3 uid="uid://smt2dt6or873"]
+[gd_scene load_steps=12 format=3 uid="uid://smt2dt6or873"]
 
 [ext_resource type="Script" uid="uid://frcwqljbelob" path="res://scripts/core/warning_screen.gd" id="1_warn"]
 [ext_resource type="Texture2D" uid="uid://dc7csqq8gypo5" path="res://assets/art/background/curtain.jpg" id="2_curtain"]
-[ext_resource type="Texture2D" uid="uid://csiddsncvaf8p" path="res://assets/art/ui/screens/warning.png" id="3_warning"]
-[ext_resource type="FontFile" uid="uid://cwkj3luqwe71h" path="res://assets/fonts/ShipporiMincho-SemiBold.ttf" id="4_i7tt6"]
+[ext_resource type="FontFile" uid="uid://db5u741tm2yje" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="4_bold"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_modal"]
+bg_color = Color(0.22, 0.07, 0.11, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.78, 0.57, 0.31, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_header"]
+content_margin_left = 34.0
+content_margin_right = 34.0
+bg_color = Color(0.16, 0.04, 0.08, 0.72)
+border_width_bottom = 1
+border_color = Color(0.78, 0.57, 0.31, 0.8)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_leave_normal"]
 bg_color = Color(0.28, 0.09, 0.14, 1)
@@ -14,28 +34,8 @@ border_width_bottom = 2
 border_color = Color(0.66, 0.38, 0.44, 1)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
-corner_radius_bottom_left = 8
 corner_radius_bottom_right = 8
-content_margin_left = 24.0
-content_margin_top = 12.0
-content_margin_right = 24.0
-content_margin_bottom = 12.0
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_continue_normal"]
-bg_color = Color(0.78, 0.57, 0.31, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.94, 0.76, 0.46, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
 corner_radius_bottom_left = 8
-corner_radius_bottom_right = 8
-content_margin_left = 24.0
-content_margin_top = 12.0
-content_margin_right = 24.0
-content_margin_bottom = 12.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_leave_hover"]
 bg_color = Color(0.35, 0.12, 0.18, 1)
@@ -46,28 +46,20 @@ border_width_bottom = 2
 border_color = Color(0.84, 0.53, 0.58, 1)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
-corner_radius_bottom_left = 8
 corner_radius_bottom_right = 8
-content_margin_left = 24.0
-content_margin_top = 12.0
-content_margin_right = 24.0
-content_margin_bottom = 12.0
+corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_leave_pressed"]
-bg_color = Color(0.18, 0.06, 0.1, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_continue_normal"]
+bg_color = Color(0.78, 0.57, 0.31, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.66, 0.38, 0.44, 1)
+border_color = Color(0.94, 0.76, 0.46, 1)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
-corner_radius_bottom_left = 8
 corner_radius_bottom_right = 8
-content_margin_left = 24.0
-content_margin_top = 12.0
-content_margin_right = 24.0
-content_margin_bottom = 12.0
+corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_continue_hover"]
 bg_color = Color(0.88, 0.67, 0.39, 1)
@@ -78,12 +70,20 @@ border_width_bottom = 2
 border_color = Color(1, 0.85, 0.58, 1)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
-corner_radius_bottom_left = 8
 corner_radius_bottom_right = 8
-content_margin_left = 24.0
-content_margin_top = 12.0
-content_margin_right = 24.0
-content_margin_bottom = 12.0
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_leave_pressed"]
+bg_color = Color(0.18, 0.06, 0.1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.66, 0.38, 0.44, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_continue_pressed"]
 bg_color = Color(0.62, 0.44, 0.23, 1)
@@ -94,12 +94,8 @@ border_width_bottom = 2
 border_color = Color(0.94, 0.76, 0.46, 1)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
-corner_radius_bottom_left = 8
 corner_radius_bottom_right = 8
-content_margin_left = 24.0
-content_margin_top = 12.0
-content_margin_right = 24.0
-content_margin_bottom = 12.0
+corner_radius_bottom_left = 8
 
 [node name="WarningScreen" type="Control" unique_id=1184787338]
 layout_mode = 3
@@ -110,7 +106,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_warn")
 
-[node name="Background" type="TextureRect" parent="." unique_id=1440883054]
+[node name="Background" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -118,93 +114,106 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_curtain")
+expand_mode = 1
 stretch_mode = 6
 
-[node name="WarningPanel" type="TextureRect" parent="." unique_id=649824025]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 180.0
-offset_top = 140.0
-offset_right = -180.0
-offset_bottom = -140.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = ExtResource("3_warning")
-expand_mode = 3
-stretch_mode = 6
-metadata/_edit_group_ = true
-
-[node name="ContentContainer" type="MarginContainer" parent="WarningPanel" unique_id=1071547686]
+[node name="BackdropShade" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 72
-theme_override_constants/margin_top = 48
-theme_override_constants/margin_right = 72
-theme_override_constants/margin_bottom = 48
+mouse_filter = 2
+color = Color(0.06, 0.01, 0.01, 0.28)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="WarningPanel/ContentContainer" unique_id=2116981587]
-layout_mode = 2
-theme_override_constants/separation = 16
-alignment = 1
+[node name="ModalCenter" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 
-[node name="HeadingLabel" type="Label" parent="WarningPanel/ContentContainer/VBoxContainer" unique_id=770058209]
+[node name="PromptPanel" type="PanelContainer" parent="ModalCenter"]
+custom_minimum_size = Vector2(750, 484)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 0.05, 0.05, 1)
-theme_override_fonts/font = ExtResource("4_i7tt6")
-theme_override_font_sizes/font_size = 52
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_modal")
+
+[node name="PanelLayout" type="VBoxContainer" parent="ModalCenter/PromptPanel"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Header" type="PanelContainer" parent="ModalCenter/PromptPanel/PanelLayout"]
+custom_minimum_size = Vector2(0, 86)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_header")
+
+[node name="Title" type="Label" parent="ModalCenter/PromptPanel/PanelLayout/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.97, 0.94, 1)
+theme_override_fonts/font = ExtResource("4_bold")
+theme_override_font_sizes/font_size = 32
 text = "成人內容提醒"
-horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="Spacer2" type="Control" parent="WarningPanel/ContentContainer/VBoxContainer" unique_id=526302969]
-custom_minimum_size = Vector2(0, 32)
+[node name="ContentMargin" type="MarginContainer" parent="ModalCenter/PromptPanel/PanelLayout"]
 layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 112
+theme_override_constants/margin_top = 52
+theme_override_constants/margin_right = 112
+theme_override_constants/margin_bottom = 44
 
-[node name="BodyLabel" type="Label" parent="WarningPanel/ContentContainer/VBoxContainer" unique_id=1443242091]
+[node name="Content" type="VBoxContainer" parent="ModalCenter/PromptPanel/PanelLayout/ContentMargin"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.2, 0.1, 0.05, 1)
-theme_override_font_sizes/font_size = 28
+theme_override_constants/separation = 26
+
+[node name="BodyLabel" type="Label" parent="ModalCenter/PromptPanel/PanelLayout/ContentMargin/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.97, 0.94, 1)
+theme_override_fonts/font = ExtResource("4_bold")
+theme_override_font_sizes/font_size = 27
 text = "本作含成人及 BDSM 內容，僅供 18 歲以上玩家。
 未達法定年齡請立即離開。"
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="Spacer" type="Control" parent="WarningPanel/ContentContainer/VBoxContainer" unique_id=204691801]
-custom_minimum_size = Vector2(0, 32)
+[node name="ButtonSpacer" type="Control" parent="ModalCenter/PromptPanel/PanelLayout/ContentMargin/Content"]
+custom_minimum_size = Vector2(0, 6)
 layout_mode = 2
 
-[node name="ButtonRow" type="HBoxContainer" parent="WarningPanel/ContentContainer/VBoxContainer" unique_id=1220756202]
+[node name="ButtonRow" type="HBoxContainer" parent="ModalCenter/PromptPanel/PanelLayout/ContentMargin/Content"]
 layout_mode = 2
-theme_override_constants/separation = 32
+theme_override_constants/separation = 40
 alignment = 1
 
-[node name="LeaveButton" type="Button" parent="WarningPanel/ContentContainer/VBoxContainer/ButtonRow" unique_id=220913538]
-custom_minimum_size = Vector2(180, 56)
+[node name="LeaveButton" type="Button" parent="ModalCenter/PromptPanel/PanelLayout/ContentMargin/Content/ButtonRow"]
+custom_minimum_size = Vector2(205, 68)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 28
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(1, 0.98, 0.95, 1)
+theme_override_fonts/font = ExtResource("4_bold")
+theme_override_font_sizes/font_size = 27
 theme_override_styles/normal = SubResource("StyleBoxFlat_leave_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_leave_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_leave_pressed")
-theme_override_styles/focus = SubResource("StyleBoxFlat_leave_hover")
 text = "離開遊戲"
 
-[node name="ContinueButton" type="Button" parent="WarningPanel/ContentContainer/VBoxContainer/ButtonRow" unique_id=1594333250]
-custom_minimum_size = Vector2(180, 56)
+[node name="ContinueButton" type="Button" parent="ModalCenter/PromptPanel/PanelLayout/ContentMargin/Content/ButtonRow"]
+custom_minimum_size = Vector2(205, 68)
 layout_mode = 2
+focus_mode = 0
+mouse_default_cursor_shape = 2
 theme_override_colors/font_color = Color(0.16, 0.04, 0.08, 1)
 theme_override_colors/font_hover_color = Color(0.16, 0.04, 0.08, 1)
 theme_override_colors/font_pressed_color = Color(0.16, 0.04, 0.08, 1)
-theme_override_font_sizes/font_size = 28
+theme_override_fonts/font = ExtResource("4_bold")
+theme_override_font_sizes/font_size = 27
 theme_override_styles/normal = SubResource("StyleBoxFlat_continue_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_continue_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_continue_pressed")
-theme_override_styles/focus = SubResource("StyleBoxFlat_continue_hover")
 text = "確認遊玩"

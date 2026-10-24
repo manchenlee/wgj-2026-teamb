@@ -76,7 +76,7 @@ func _init(values: Dictionary = {}) -> void:
 	starting_emotional_value = float(values.get("starting_emotional_value", 0.0))
 	starting_peak_value = float(values.get("starting_peak_value", 0.0))
 	physical_decay_rate = float(values.get("physical_decay_rate", 1.0))
-	emotional_decay_rate = float(values.get("emotional_decay_rate", 0.5))
+	emotional_decay_rate = float(values.get("emotional_decay_rate", 0.3))
 	physical_activity_grace_seconds = float(values.get("physical_activity_grace_seconds", 2.8))
 	emotional_activity_grace_seconds = float(values.get("emotional_activity_grace_seconds", 2.8))
 
