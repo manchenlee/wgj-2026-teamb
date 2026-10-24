@@ -58,6 +58,7 @@ func _run() -> void:
 	await _test_manager_scoring_and_failure_boundary()
 	await _test_partial_slide_timeout_and_failure()
 	_test_weighted_note_type_selection()
+	await _test_slide_path_stays_inside_body_mask()
 	await _test_manager_production_timer_allows_concurrency()
 	await _test_manager_weighted_production_and_debug_spawns()
 	await _test_manager_stop_cleanup_and_restart()
@@ -754,6 +755,47 @@ func _test_weighted_note_type_selection() -> void:
 	_assert(absf(phase_config.spot_spawn_delay_min - 1.1) < 0.001, "PhaseConfig minimum spawn delay is not doubled.")
 	_assert(absf(phase_config.spot_spawn_delay_max - 1.6) < 0.001, "PhaseConfig maximum spawn delay is not doubled.")
 	_assert(phase_config.spot_max_active_count == 3, "PhaseConfig active-note cap is not three.")
+
+
+func _test_slide_path_stays_inside_body_mask() -> void:
+	var prompt_layer := Control.new()
+	prompt_layer.size = Vector2(600.0, 600.0)
+	root.add_child(prompt_layer)
+	var mask_image := Image.create(600, 600, false, Image.FORMAT_RGBA8)
+	mask_image.fill(Color.TRANSPARENT)
+	mask_image.fill_rect(Rect2i(100, 100, 400, 400), Color.WHITE)
+	var manager := SPOT_MANAGER_SCRIPT.new()
+	manager._prompt_layer = prompt_layer
+	manager.set_bounds_rect(Rect2(Vector2.ZERO, prompt_layer.size))
+	manager.set_interaction_mask(ImageTexture.create_from_image(mask_image), prompt_layer)
+	_assert(manager._is_valid_note_center(Vector2(150.0, 300.0)), "A Slide center near the body edge was rejected because of marker size.")
+	_assert(not manager._is_valid_note_center(Vector2(90.0, 300.0)), "A Slide center outside the body was accepted.")
+	_assert(absf(float(manager._build_spot_config(PackedVector2Array()).checkpoint_radius) - 52.0) < 0.001, "Slide marker size changed.")
+	manager._rng.seed = 12345
+	for _attempt in range(20):
+		var points: PackedVector2Array = manager._generate_sequence_points(Vector2(150.0, 300.0), 1, 120.0, 52.0)
+		_assert(points.size() == 2, "Slide could not find a path from a valid center near the body edge.")
+		if points.size() != 2:
+			continue
+		for point in points:
+			_assert(manager._is_valid_note_center(point), "A Slide checkpoint center left the body.")
+	var active_slide := SLIDE_NOTE_SCENE.instantiate() as SlideNote
+	active_slide.setup({
+		"checkpoints": PackedVector2Array([Vector2(300.0, 300.0), Vector2(450.0, 300.0)]),
+		"checkpoint_radius": 52.0,
+	})
+	prompt_layer.add_child(active_slide)
+	manager._active_spots.append(active_slide)
+	mask_image.fill(Color.TRANSPARENT)
+	mask_image.fill_rect(Rect2i(250, 100, 100, 400), Color.WHITE)
+	manager.set_interaction_mask(ImageTexture.create_from_image(mask_image), prompt_layer)
+	manager.remove_notes_outside_interaction_mask()
+	_assert(manager._active_spots.is_empty(), "A pose change kept a Slide center outside the new body mask.")
+	mask_image.fill(Color.TRANSPARENT)
+	manager.set_interaction_mask(ImageTexture.create_from_image(mask_image), prompt_layer)
+	_assert(manager._generate_sequence_points(Vector2(300.0, 300.0), 1, 120.0, 52.0).is_empty(), "Slide generated a path without any valid body centers.")
+	prompt_layer.queue_free()
+	await process_frame
 
 
 func _test_manager_weighted_production_and_debug_spawns() -> void:

@@ -788,6 +788,7 @@ func _sync_character_presentation_phase_for_visual_band(visual_band: int) -> boo
 	_sync_spot_anchor_layout()
 	if spot_manager != null:
 		spot_manager.restore_active_note_global_positions(active_note_positions)
+		spot_manager.remove_notes_outside_interaction_mask()
 	return true
 
 

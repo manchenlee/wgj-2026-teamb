@@ -20,8 +20,8 @@ const RubNoteScene := preload("res://scenes/components/RubNote.tscn")
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 
-const PATH_GENERATION_ATTEMPTS: int = 12
-const PATH_TURN_ANGLE: float = deg_to_rad(72.0)
+const PATH_GENERATION_ATTEMPTS: int = 24
+const PATH_STEP_ATTEMPTS: int = 32
 const PLACEMENT_ATTEMPTS_PER_ANCHOR: int = 12
 const NOTE_SEPARATION: float = 8.0
 
@@ -107,6 +107,10 @@ func _is_inside_interaction_mask(local_point: Vector2) -> bool:
 	return _interaction_mask.get_pixelv(pixel).a >= 0.5
 
 
+func _is_valid_note_center(center: Vector2) -> bool:
+	return _bounds_rect.has_point(center) and _is_inside_interaction_mask(center)
+
+
 func capture_active_note_global_positions() -> Dictionary:
 	var positions: Dictionary = {}
 	for spot in _active_spots:
@@ -120,6 +124,36 @@ func restore_active_note_global_positions(positions: Dictionary) -> void:
 		var spot := spot_variant as InteractionNote
 		if is_instance_valid(spot):
 			spot.global_position = positions[spot_variant]
+
+
+func remove_notes_outside_interaction_mask() -> void:
+	for index in range(_active_spots.size() - 1, -1, -1):
+		var spot := _active_spots[index]
+		if not is_instance_valid(spot):
+			_active_spots.remove_at(index)
+			continue
+		if _note_fits_interaction_mask(spot):
+			continue
+		spot.set_suspended(true)
+		_disconnect_spot(spot)
+		_active_spots.remove_at(index)
+		spot.queue_free()
+
+
+func _note_fits_interaction_mask(spot: InteractionNote) -> bool:
+	if spot is SlideNote:
+		var slide := spot as SlideNote
+		for point: Vector2 in slide.checkpoints:
+			if not _is_valid_note_center(slide.position + point):
+				return false
+		return true
+	if spot is ClickNote:
+		var click := spot as ClickNote
+		return _is_valid_note_center(click.position + click.target_center)
+	if spot is RubNote:
+		var rub := spot as RubNote
+		return _is_valid_note_center(rub.position + rub.target_center)
+	return true
 
 
 func start() -> void:
@@ -378,7 +412,7 @@ func _find_clear_placement(
 			var global_center := _pick_global_center_in_rect(global_rect, placement_radius)
 			var local_center: Vector2 = inverse_prompt_transform * global_center
 			local_center = _clamp_center_to_bounds(local_center, placement_radius)
-			if not _is_inside_interaction_mask(local_center):
+			if not _is_valid_note_center(local_center):
 				continue
 			var candidate_rect: Rect2
 			var points := PackedVector2Array()
@@ -389,6 +423,8 @@ func _find_clear_placement(
 				))
 				var spacing: float = _get_config_value("spot_checkpoint_spacing", Config.SPOT_CHECKPOINT_SPACING)
 				points = _generate_sequence_points(local_center, checkpoint_count, spacing, target_radius)
+				if points.is_empty():
+					continue
 				# Include every checkpoint's fully expanded approach circle.
 				candidate_rect = _get_path_rect(points, target_radius * 2.0 + 4.0)
 			else:
@@ -411,7 +447,7 @@ func _find_clear_placement(
 			_rng.randf_range(_bounds_rect.position.y, _bounds_rect.end.y)
 		)
 		local_center = _clamp_center_to_bounds(local_center, placement_radius)
-		if not _is_inside_interaction_mask(local_center):
+		if not _is_valid_note_center(local_center):
 			continue
 		var points := PackedVector2Array()
 		var candidate_rect: Rect2
@@ -419,6 +455,8 @@ func _find_clear_placement(
 			var checkpoint_count: int = int(_get_config_value("spot_required_checkpoint_count", Config.SPOT_REQUIRED_CHECKPOINT_COUNT))
 			var spacing: float = _get_config_value("spot_checkpoint_spacing", Config.SPOT_CHECKPOINT_SPACING)
 			points = _generate_sequence_points(local_center, checkpoint_count, spacing, target_radius)
+			if points.is_empty():
+				continue
 			candidate_rect = _get_path_rect(points, target_radius * 2.0 + 4.0)
 		else:
 			candidate_rect = Rect2(local_center - Vector2.ONE * placement_radius, Vector2.ONE * placement_radius * 2.0)
@@ -498,54 +536,33 @@ func _generate_sequence_points(
 	radius: float
 ) -> PackedVector2Array:
 	var total_point_count := maxi(required_checkpoint_count + 1, 2)
-	var valid_rect := _bounds_rect.grow(-(radius + Config.ARROW_PROMPT_EDGE_MARGIN))
-	if valid_rect.size.x <= spacing or valid_rect.size.y <= spacing:
-		return _build_safe_fallback(total_point_count, spacing, radius)
-
+	if not _is_valid_note_center(start_center):
+		return PackedVector2Array()
 	for _attempt in range(PATH_GENERATION_ATTEMPTS):
 		var points := PackedVector2Array([start_center])
-		var direction := Vector2.RIGHT.rotated(_rng.randf_range(0.0, TAU))
-		var turn_sign := -1.0 if _rng.randi_range(0, 1) == 0 else 1.0
 		for point_index in range(1, total_point_count):
-			if point_index > 1:
-				direction = direction.rotated(PATH_TURN_ANGLE * turn_sign)
-				turn_sign *= -1.0
-			points.append(points[point_index - 1] + direction * spacing)
-		if _sequence_fits(points, valid_rect, radius):
+			var found_next := false
+			for _step_attempt in range(PATH_STEP_ATTEMPTS):
+				var direction := Vector2.from_angle(_rng.randf_range(0.0, TAU))
+				var step_length := spacing * _rng.randf_range(0.95, 1.25)
+				var next_point: Vector2 = points[-1] + direction * step_length
+				if not _is_valid_note_center(next_point):
+					continue
+				var separated := true
+				for previous_point: Vector2 in points:
+					if next_point.distance_to(previous_point) < radius * 2.1:
+						separated = false
+						break
+				if not separated:
+					continue
+				points.append(next_point)
+				found_next = true
+				break
+			if not found_next:
+				break
+		if points.size() == total_point_count:
 			return points
-
-	return _build_safe_fallback(total_point_count, spacing, radius)
-
-
-func _sequence_fits(points: PackedVector2Array, valid_rect: Rect2, radius: float) -> bool:
-	for point in points:
-		if not valid_rect.has_point(point):
-			return false
-	for first_index in range(points.size()):
-		for second_index in range(first_index + 1, points.size()):
-			if points[first_index].distance_to(points[second_index]) < radius * 2.1:
-				return false
-	return true
-
-
-func _build_safe_fallback(point_count: int, requested_spacing: float, radius: float) -> PackedVector2Array:
-	var valid_rect := _bounds_rect.grow(-(radius + Config.ARROW_PROMPT_EDGE_MARGIN))
-	if valid_rect.size.length_squared() <= 0.0:
-		valid_rect = Rect2(_bounds_rect.get_center() - Vector2(180.0, 180.0), Vector2(360.0, 360.0))
-	var center := valid_rect.get_center()
-	var spacing := minf(requested_spacing, minf(valid_rect.size.x / 3.2, valid_rect.size.y / 2.4))
-	spacing = maxf(spacing, radius * 2.2)
-	var template := [
-		Vector2(-1.2, 0.0),
-		Vector2(-0.4, -0.7),
-		Vector2(0.4, 0.7),
-		Vector2(1.2, 0.0),
-	]
-	var points := PackedVector2Array()
-	for index in range(point_count):
-		var template_point: Vector2 = template[index % template.size()]
-		points.append((center + template_point * spacing).clamp(valid_rect.position, valid_rect.end))
-	return points
+	return PackedVector2Array()
 
 
 func _get_path_rect(points: PackedVector2Array, padding: float) -> Rect2:
