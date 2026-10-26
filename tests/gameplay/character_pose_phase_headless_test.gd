@@ -27,12 +27,19 @@ func _run() -> void:
             _check(track.size() == 3, "Tentacle track in phase %d is incomplete." % phase)
             for path in track:
                 _check(ResourceLoader.exists(path), "Missing tentacle asset: %s" % path)
-    for entry in [[0.0, 0], [19.99, 0], [20.0, 1], [29.99, 1], [30.0, 2], [39.99, 2]]:
+    for entry in [[0.0, 0], [19.49, 0], [19.5, 1], [20.0, 1],
+            [29.49, 1], [29.5, 2], [30.0, 2], [39.99, 2]]:
         _check(CONTROLLER.physical_score_to_sitting_tail_stage(entry[0]) == entry[1],
             "Incorrect sitting tail boundary at %s" % entry[0])
     var game = GAME_SCREEN.instantiate()
     root.add_child(game)
     await process_frame
+    _check(game.tentacle_layer.z_index == game.pose_tail_layer.z_index,
+        "Tail tentacles are not drawn directly over the matching tail.")
+    _check(game.dialogue_panel.z_index >= game.tentacle_layer.z_index,
+        "Dialogue is drawn below the tentacles.")
+    _check(game.character_area.get_node("PromptLayer").z_index > game.tentacle_layer.z_index,
+        "Physiological notes are drawn below the tentacles.")
     game.reset_run()
     _check(game.current_presentation_phase == 2, "Initial physiology 20 should use Phase 2.")
     game.arousal_model.physical = 0.0

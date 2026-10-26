@@ -208,7 +208,7 @@ expand_mode = 1
 stretch_mode = 6
 
 [node name="TentacleLayer" type="Control" parent="CharacterAlignmentRoot/BackgroundAnchor"]
-z_index = 5
+z_index = 4
 z_as_relative = false
 layout_mode = 1
 anchors_preset = 15

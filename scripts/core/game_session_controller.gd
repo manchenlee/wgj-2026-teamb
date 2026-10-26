@@ -286,9 +286,11 @@ func _configure_pose_layers() -> void:
 		tentacle_layer.set_tail_index(_tail_frame_index)
 
 static func physical_score_to_sitting_tail_stage(physical_score: float) -> int:
-	if physical_score < 20.0:
+	# Match the integer score shown by StatusHUD at threshold crossings.
+	var displayed_score := roundi(clampf(physical_score, 0.0, Config.MAX_VALUE))
+	if displayed_score < 20:
 		return 0
-	if physical_score < 30.0:
+	if displayed_score < 30:
 		return 1
 	return 2
 
