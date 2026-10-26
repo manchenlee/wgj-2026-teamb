@@ -23,6 +23,13 @@ func _run() -> void:
         for path in profile.get_tail_frame_paths():
             _check(ResourceLoader.exists(path), "Missing tail asset: %s" % path)
         _check(ResourceLoader.exists(profile.get_interaction_mask_path()), "Missing mask for phase %d." % phase)
+        for track in profile.get_tentacle_part_paths() + profile.get_tail_tentacle_paths():
+            _check(track.size() == 3, "Tentacle track in phase %d is incomplete." % phase)
+            for path in track:
+                _check(ResourceLoader.exists(path), "Missing tentacle asset: %s" % path)
+    for entry in [[0.0, 0], [19.99, 0], [20.0, 1], [29.99, 1], [30.0, 2], [39.99, 2]]:
+        _check(CONTROLLER.physical_score_to_sitting_tail_stage(entry[0]) == entry[1],
+            "Incorrect sitting tail boundary at %s" % entry[0])
     var game = GAME_SCREEN.instantiate()
     root.add_child(game)
     await process_frame
@@ -30,10 +37,28 @@ func _run() -> void:
     _check(game.current_presentation_phase == 2, "Initial physiology 20 should use Phase 2.")
     game.arousal_model.physical = 0.0
     game._sync_physiological_visual_band()
+    game._advance_tail_animation(0.1)
+    _check(game._tail_frame_index == 0, "Score below 20 did not select the first sitting tail stage.")
     _check(game.current_presentation_phase == 2, "Physiology decay regressed the pose.")
+    game.arousal_model.physical = 30.0
+    game._advance_tail_animation(0.1)
+    _check(game._tail_frame_index == 2, "Score 30 did not select the third sitting tail stage.")
+    for step in range(30):
+        game.tentacle_layer.advance(0.15)
+        for track in game.tentacle_layer._tracks:
+            _check(track["layer"].visible, "A normal tentacle disappeared while animating.")
+        _check(game.tentacle_layer._tail_tracks[2]["layer"].visible,
+            "The selected sitting tail tentacle disappeared while animating.")
     game.arousal_model.physical = 40.0
     game._sync_physiological_visual_band()
     _check(game.current_presentation_phase == 3, "Physiology 40 did not reach lying pose.")
+    for step in range(18):
+        game._advance_tail_animation(0.13)
+        for track in game.tentacle_layer._tracks + game.tentacle_layer._tail_tracks:
+            _check(track["layer"].visible, "A lying tentacle disappeared while animating.")
+        for track in game.tentacle_layer._tail_tracks:
+            _check(track["layer"].texture.resource_path.ends_with("_%d.png" % (game._tail_frame_index + 1)),
+                "A lying tail tentacle frame lost sync with the base tail.")
     _check(game.active_character_profile.get_shooting_tail_path().ends_with("tail_shooting.png"), "Lying shooting tail is unavailable.")
     game.set_shooting_tail_active(true)
     _check(game.pose_tail_layer.texture != null, "Shooting tail was not displayed by the presentation API.")

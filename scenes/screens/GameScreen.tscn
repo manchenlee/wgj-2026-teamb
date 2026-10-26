@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://d3bshm1tk5r8n" path="res://scripts/ui/TwoFrameOverlayAnimator.gd" id="6_overlay"]
 [ext_resource type="Script" uid="uid://7lsklnfonwr6" path="res://scripts/ui/LocalizedMeshBreathing.gd" id="7_breathing"]
 [ext_resource type="Script" uid="uid://d24toufu83pxy" path="res://scripts/ui/conversation_viewport.gd" id="8_conversation"]
+[ext_resource type="Script" path="res://scripts/presentation/tentacle_animator.gd" id="8_tentacles"]
 [ext_resource type="Script" uid="uid://x3cgbulqxokf" path="res://scripts/editor/phase_2_editor_preview_controller.gd" id="9_phase2_preview"]
 [ext_resource type="Texture2D" path="res://assets/art/character/phase2/complete.png" id="10_phase2_person"]
 [ext_resource type="Texture2D" uid="uid://mkqnsj2nshun" path="res://assets/art/background/game_bg.png" id="11_game_bg"]
@@ -205,6 +206,22 @@ grow_vertical = 2
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 6
+
+[node name="TentacleLayer" type="Control" parent="CharacterAlignmentRoot/BackgroundAnchor"]
+z_index = 5
+z_as_relative = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -140.0
+offset_right = -40.0
+offset_bottom = -140.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("8_tentacles")
 
 [node name="Phase2GameoverOverlay" type="TextureRect" parent="CharacterAlignmentRoot/BackgroundAnchor" unique_id=190000112]
 visible = false

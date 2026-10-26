@@ -56,6 +56,7 @@ enum CharacterExpressionSource {
 @onready var phase_2_face_layer: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/Phase2FaceLayer
 @onready var phase_2_gameover_overlay: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/Phase2GameoverOverlay
 @onready var pose_tail_layer: TextureRect = $CharacterAlignmentRoot/BackgroundAnchor/PoseTailLayer
+@onready var tentacle_layer: Control = $CharacterAlignmentRoot/BackgroundAnchor/TentacleLayer
 @onready var main_character_area: Control = $CharacterAlignmentRoot/MainCharacterArea
 @onready var character_area = $CharacterAlignmentRoot/MainCharacterArea/CharacterArea
 @onready var character_prompt_region = %CharacterPromptRegion
@@ -271,12 +272,25 @@ func _configure_pose_layers() -> void:
 		var texture := _load_texture_from_asset_path(path)
 		if texture != null:
 			_tail_frames.append(texture)
+	if tentacle_layer != null and not Engine.is_editor_hint():
+		tentacle_layer.configure(active_character_profile, Callable(self, "_load_texture_from_asset_path"))
+	if active_character_profile.asset_phase == 2:
+		_tail_frame_index = physical_score_to_sitting_tail_stage(arousal_model.physical)
 	if pose_tail_layer != null:
 		_apply_phase_layer_texture(pose_tail_layer, _tail_frames[0] if not _tail_frames.is_empty() else null)
 	if spot_manager != null:
 		var mask_texture := _load_texture_from_asset_path(active_character_profile.get_interaction_mask_path())
 		spot_manager.set_interaction_mask(mask_texture, interaction_mask_anchor)
 	_update_shooting_tail_layer()
+	if tentacle_layer != null and not Engine.is_editor_hint():
+		tentacle_layer.set_tail_index(_tail_frame_index)
+
+static func physical_score_to_sitting_tail_stage(physical_score: float) -> int:
+	if physical_score < 20.0:
+		return 0
+	if physical_score < 30.0:
+		return 1
+	return 2
 
 func set_shooting_tail_active(active: bool) -> void:
 	shooting_tail_active = active
@@ -293,6 +307,15 @@ func _update_shooting_tail_layer() -> void:
 		_apply_phase_layer_texture(pose_tail_layer, _tail_frames[_tail_frame_index])
 
 func _advance_tail_animation(delta: float) -> void:
+	if tentacle_layer != null:
+		tentacle_layer.advance(delta)
+	if active_character_profile != null and active_character_profile.asset_phase == 2:
+		var next_stage := physical_score_to_sitting_tail_stage(arousal_model.physical)
+		if next_stage != _tail_frame_index:
+			_tail_frame_index = next_stage
+			_update_shooting_tail_layer()
+			tentacle_layer.set_tail_index(_tail_frame_index)
+		return
 	if _tail_frames.size() != 3 or (shooting_tail_active and current_presentation_phase == 3):
 		return
 	_tail_elapsed += delta
@@ -303,6 +326,8 @@ func _advance_tail_animation(delta: float) -> void:
 	_tail_frame_index = (_tail_frame_index + _tail_rng.randi_range(1, 2)) % _tail_frames.size()
 	_tail_frame_duration = TAIL_TIME_UNIT * _tail_rng.randi_range(1, 2)
 	_update_shooting_tail_layer()
+	if tentacle_layer != null:
+		tentacle_layer.set_tail_index(_tail_frame_index)
 
 func _apply_breathing_profile() -> void:
 	if breathing_controller == null or active_character_profile == null:
@@ -368,6 +393,10 @@ func _begin_character_presentation_prefetch(presentation_phase: int) -> void:
 	_collect_texture_resource_paths(profile.get_layer_texture_paths(), path_set)
 	_collect_texture_resource_paths(profile.get_face_texture_paths(), path_set)
 	_collect_texture_resource_paths(profile.get_tail_frame_paths(), path_set)
+	for paths in profile.get_tentacle_part_paths():
+		_collect_texture_resource_paths(paths, path_set)
+	for paths in profile.get_tail_tentacle_paths():
+		_collect_texture_resource_paths(paths, path_set)
 	_collect_texture_resource_paths(profile.get_interaction_mask_path(), path_set)
 	_collect_texture_resource_paths(profile.get_shooting_tail_path(), path_set)
 	_collect_texture_resource_paths(profile.overlay_animation_set, path_set)

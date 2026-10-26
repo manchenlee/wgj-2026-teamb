@@ -67,6 +67,32 @@ func get_tail_frame_paths() -> Array[String]:
 	var root := "res://assets/art/character/phase%d/" % asset_phase
 	return [root + "tail_1.png", root + "tail_2.png", root + "tail_3.png"]
 
+func get_tentacle_part_paths() -> Array:
+	var paths: Array = []
+	var part_count := 5 if asset_phase == 4 else 4
+	for part in range(1, part_count + 1):
+		var frames: Array[String] = []
+		for frame in range(1, 4):
+			frames.append("res://assets/art/tentacles/phase%d/part_%d_%d.png" % [asset_phase, part, frame])
+		paths.append(frames)
+	return paths
+
+func get_tail_tentacle_paths() -> Array:
+	var paths: Array = []
+	if asset_phase == 2:
+		for stage in range(1, 4):
+			var frames: Array[String] = []
+			for frame in range(1, 4):
+				frames.append("res://assets/art/tentacles/phase2/tail_%d_%d.png" % [stage, frame])
+			paths.append(frames)
+	elif asset_phase == 3:
+		for side in ["left", "center", "right"]:
+			var frames: Array[String] = []
+			for frame in range(1, 4):
+				frames.append("res://assets/art/tentacles/phase3/tail_%s_%d.png" % [side, frame])
+			paths.append(frames)
+	return paths
+
 func get_interaction_mask_path() -> String:
 	return "res://assets/art/character/phase%d/interaction_mask.png" % asset_phase
 
