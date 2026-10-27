@@ -34,7 +34,13 @@ var asset_phase: int = 2
 
 func _init(phase: int = 1) -> void:
 	presentation_phase = clampi(phase, 1, 5)
-	asset_phase = maxi(2, presentation_phase)
+	match presentation_phase:
+		3:
+			asset_phase = 5
+		5:
+			asset_phase = 3
+		_:
+			asset_phase = maxi(2, presentation_phase)
 	var root := "res://assets/art/character/phase%d/" % asset_phase
 	var expressions := {
 		ExpressionState.NEUTRAL: {"base_state_key": "overall_init", "face_state_key": "face_neutral"},
@@ -50,7 +56,7 @@ func _init(phase: int = 1) -> void:
 		{}, {},
 		PROMPT_ANCHOR_LAYOUT,
 		INTERACTION_SPOT_ANCHOR_LAYOUT,
-		BREATHING_REGIONS[presentation_phase],
+		BREATHING_REGIONS[asset_phase],
 		Vector2(0.5, 0.5), 0.0,
 		mappings
 	)

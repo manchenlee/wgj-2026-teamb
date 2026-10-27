@@ -118,6 +118,7 @@ var _tail_elapsed: float = 0.0
 var _tail_frame_duration: float = 0.0
 var _tail_rng := RandomNumberGenerator.new()
 const TAIL_TIME_UNIT: float = 0.35
+const ENDING_SHOOTING_TAIL_HOLD_SECONDS: float = 0.35
 const EXPRESSION_REACTION_DURATION: float = 0.5
 var current_expression_state: int = PhaseCharacterProfileClass.ExpressionState.NEUTRAL
 var character_expression_conflict: bool = false
@@ -302,7 +303,7 @@ func set_shooting_tail_active(active: bool) -> void:
 func _update_shooting_tail_layer() -> void:
 	if pose_tail_layer == null or active_character_profile == null:
 		return
-	if shooting_tail_active and current_presentation_phase == 3:
+	if shooting_tail_active and active_character_profile.asset_phase == 3:
 		var shooting_path: String = active_character_profile.get_shooting_tail_path()
 		_apply_phase_layer_texture(pose_tail_layer, _load_texture_from_asset_path(shooting_path))
 	elif not _tail_frames.is_empty():
@@ -318,7 +319,7 @@ func _advance_tail_animation(delta: float) -> void:
 			_update_shooting_tail_layer()
 			tentacle_layer.set_tail_index(_tail_frame_index)
 		return
-	if _tail_frames.size() != 3 or (shooting_tail_active and current_presentation_phase == 3):
+	if _tail_frames.size() != 3 or (shooting_tail_active and active_character_profile.asset_phase == 3):
 		return
 	_tail_elapsed += delta
 	if _tail_elapsed < _tail_frame_duration:
@@ -1273,14 +1274,21 @@ func _begin_ending_transition(ending_type: String) -> void:
 	_stop_runtime_timers()
 	run_active = false
 	_update_character_visual_state(ending_type)
+	if current_presentation_phase == 5 and roundi(Config.clamp_value(arousal_model.physical)) == 100 \
+			and ending_type in [Config.SUCCESS_ENDING, Config.PHYSICAL_IMBALANCE_FAILURE_ENDING]:
+		set_shooting_tail_active(true)
+		var hold_tween := create_tween()
+		hold_tween.tween_interval(ENDING_SHOOTING_TAIL_HOLD_SECONDS)
+		hold_tween.tween_callback(func() -> void: _play_ending_transition_fade(ending_type, Color.WHITE))
+		return
 	_play_ending_transition_fade(ending_type)
 
-func _play_ending_transition_fade(ending_type: String) -> void:
+func _play_ending_transition_fade(ending_type: String, fade_color: Color = Color.BLACK) -> void:
 	if phase_transition_overlay == null:
 		_request_ending_transition(ending_type)
 		return
-	var overlay_start_color := Color(0, 0, 0, 0)
-	var opaque_color := Color(overlay_start_color.r, overlay_start_color.g, overlay_start_color.b, 1.0)
+	var overlay_start_color := Color(fade_color.r, fade_color.g, fade_color.b, 0.0)
+	var opaque_color := Color(fade_color.r, fade_color.g, fade_color.b, 1.0)
 	phase_transition_overlay.color = overlay_start_color
 	phase_transition_overlay.visible = true
 	var tween := create_tween()

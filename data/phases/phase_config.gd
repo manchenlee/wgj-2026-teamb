@@ -70,8 +70,8 @@ var physiological_dialogue_data_source: String
 
 func _init(values: Dictionary = {}) -> void:
 	phase_id = String(values.get("phase_id", "phase_1"))
-	starting_physical_value = float(values.get("starting_physical_value", 20.0))
-	starting_emotional_value = float(values.get("starting_emotional_value", 20.0))
+	starting_physical_value = float(values.get("starting_physical_value", 10.0))
+	starting_emotional_value = float(values.get("starting_emotional_value", 10.0))
 	starting_peak_value = float(values.get("starting_peak_value", 0.0))
 	physical_decay_rate = float(values.get("physical_decay_rate", 1.0))
 	emotional_decay_rate = float(values.get("emotional_decay_rate", 0.2))

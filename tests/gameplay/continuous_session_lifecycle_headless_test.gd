@@ -25,6 +25,7 @@ func _run() -> void:
 	await _test_physiological_combo_lifecycle()
 	await _test_explicit_new_run_reset()
 	await _test_actual_ending_fade_remains()
+	await _test_physical_100_endings_hold_shooting_tail()
 	if _failures.is_empty():
 		print("Continuous-session lifecycle headless tests passed.")
 		quit(0)
@@ -136,6 +137,8 @@ func _test_continuous_band_progression_and_dialogue_pool() -> void:
 	game.arousal_model.physical = 100.0
 	game.arousal_model.emotional = 95.0
 	game._check_ending()
+	_assert(game.shooting_tail_active and endings.is_empty(), "Continuous flow skipped the Phase 5 tail hold.")
+	await create_timer(CONTROLLER_SCRIPT.ENDING_SHOOTING_TAIL_HOLD_SECONDS + 0.1).timeout
 	_assert(endings == [CONFIG.SUCCESS_ENDING], "Deterministic continuous flow did not finish at final success.")
 	await _free_game(game)
 
@@ -334,9 +337,9 @@ func _test_explicit_new_run_reset() -> void:
 	var stale_completion_note := game.spot_manager._active_spots[0] as InteractionNote
 	var stale_expiration_note := game.spot_manager._active_spots[1] as InteractionNote
 	game.reset_run()
-	_assert([game.arousal_model.physical, game.arousal_model.emotional, game.arousal_model.peak] == [20.0, 20.0, 0.0], "Explicit new run did not restore the Phase 1 starting scores.")
+	_assert([game.arousal_model.physical, game.arousal_model.emotional, game.arousal_model.peak] == [10.0, 10.0, 0.0], "Explicit new run did not restore the Phase 1 starting scores.")
 	_assert(not game.arousal_model.peak_has_activated, "Explicit new run retained peak activation.")
-	_assert(game.current_visual_band == 1 and game.current_presentation_phase == 2, "Explicit new run did not derive Phase 2 pose from starting physiology 20.")
+	_assert(game.current_visual_band == 0 and game.current_presentation_phase == 1, "Explicit new run did not derive Phase 1 pose from starting physiology 10.")
 	_assert(game.interaction_mode == PSYCHOLOGICAL_MODE, "Explicit new run did not restore psychological interaction mode.")
 	_assert(not game.get_character_expression_request_state().requests.has(COMPATIBILITY_SOURCE), "Explicit new run retained expression requests.")
 	_assert(not _history_contains(game.dialogue_panel.get_dialogue_history(), "must be cleared"), "Explicit new run retained prior dialogue history.")
@@ -376,6 +379,26 @@ func _test_actual_ending_fade_remains() -> void:
 	_assert(game.phase_transition_overlay.color.r == 0.0 and game.phase_transition_overlay.color.g == 0.0 and game.phase_transition_overlay.color.b == 0.0, "Actual ending fade is no longer black.")
 	_assert(game.ending_transition_started, "Actual ending fade did not retain canonical ending state.")
 	await _free_game(game)
+
+
+func _test_physical_100_endings_hold_shooting_tail() -> void:
+	for entry in [[95.0, CONFIG.SUCCESS_ENDING], [50.0, CONFIG.PHYSICAL_IMBALANCE_FAILURE_ENDING]]:
+		var game = await _create_game()
+		game.arousal_model.physical = 100.0
+		game.arousal_model.emotional = float(entry[0])
+		game._sync_physiological_visual_band()
+		game._check_ending()
+		_assert(game.current_presentation_phase == 5, "Physical 100 did not reach Phase 5.")
+		_assert(game.shooting_tail_active, "%s did not switch to tail state 4." % entry[1])
+		_assert(game.pose_tail_layer.texture.resource_path.ends_with("tail_shooting.png"), "%s did not show the shooting tail." % entry[1])
+		_assert(not game.phase_transition_overlay.visible, "%s faded before the tail hold." % entry[1])
+		await create_timer(CONTROLLER_SCRIPT.ENDING_SHOOTING_TAIL_HOLD_SECONDS / 2.0).timeout
+		_assert(not game.phase_transition_overlay.visible, "%s hid tail state 4 during its visible hold." % entry[1])
+		await create_timer(CONTROLLER_SCRIPT.ENDING_SHOOTING_TAIL_HOLD_SECONDS / 2.0 + 0.1).timeout
+		_assert(game.phase_transition_overlay.visible, "%s did not fade after the tail hold." % entry[1])
+		_assert(game.phase_transition_overlay.color.r == 1.0 and game.phase_transition_overlay.color.g == 1.0 and game.phase_transition_overlay.color.b == 1.0, "%s did not fade to white." % entry[1])
+		_assert(game.phase_transition_overlay.color.a < 1.0, "%s hid tail state 4 before the white fade completed." % entry[1])
+		await _free_game(game)
 
 
 func _create_game():

@@ -17,6 +17,8 @@ func _run() -> void:
     var phase_one = POSE_PROFILE.new(1)
     _check(phase_one.asset_phase == 2, "Phase 1 does not use the explicit Phase 2 asset fallback.")
     _check(phase_one.get_texture_path("overall_init") == "res://assets/art/character/phase2/complete.png", "Phase 1 fallback points to another pose.")
+    _check(POSE_PROFILE.new(3).asset_phase == 5, "Phase 3 does not use the former Phase 5 pose.")
+    _check(POSE_PROFILE.new(5).asset_phase == 3, "Phase 5 does not use the former Phase 3 pose.")
     for phase in range(1, 6):
         var profile = POSE_PROFILE.new(phase)
         _check(profile.get_tail_frame_paths().size() == 3, "Phase %d tail is not mapped to three frames." % phase)
@@ -58,7 +60,12 @@ func _run() -> void:
             "The selected sitting tail tentacle disappeared while animating.")
     game.arousal_model.physical = 40.0
     game._sync_physiological_visual_band()
-    _check(game.current_presentation_phase == 3, "Physiology 40 did not reach lying pose.")
+    _check(game.current_presentation_phase == 3, "Physiology 40 did not reach Phase 3.")
+    _check(game.active_character_profile.asset_phase == 5, "Phase 3 did not show the former Phase 5 pose.")
+    game.arousal_model.physical = 80.0
+    game._sync_physiological_visual_band()
+    _check(game.current_presentation_phase == 5, "Physiology 80 did not reach Phase 5.")
+    _check(game.active_character_profile.asset_phase == 3, "Phase 5 did not show the former Phase 3 pose.")
     for step in range(18):
         game._advance_tail_animation(0.13)
         for track in game.tentacle_layer._tracks + game.tentacle_layer._tail_tracks:
@@ -77,15 +84,12 @@ func _run() -> void:
     _check(game.phase_2_face_layer.texture != null, "Happy face art was not displayed.")
     game.clear_character_expression(CONTROLLER.CharacterExpressionSource.PSYCHOLOGICAL, token)
     _check(game.resolve_character_visual_state().face_state_key == "face_neutral", "Clearing psychology result did not restore neutral face.")
-    game.arousal_model.physical = 80.0
-    game._sync_physiological_visual_band()
-    _check(game.current_presentation_phase == 5, "Physiology 80 did not reach standing pose.")
-    _check(game._tail_frames.size() == 3, "Standing tail does not have three frames.")
+    _check(game._tail_frames.size() == 3, "Phase 5 tail does not have three frames.")
     _check(game.spot_manager._interaction_mask != null, "White mask was not supplied to note placement.")
     _check(game.background_placeholder.texture.resource_path != game.active_character_profile.get_interaction_mask_path(), "Mask was displayed as a normal pose layer.")
     game.arousal_model.physical = 0.0
     game._sync_physiological_visual_band()
-    _check(game.current_presentation_phase == 5, "Standing pose regressed after decay.")
+    _check(game.current_presentation_phase == 5, "Phase 5 pose regressed after decay.")
     game.reset_run()
     _check(game.current_presentation_phase == 2, "New run did not reset progression to its starting physiology.")
     game.queue_free()
