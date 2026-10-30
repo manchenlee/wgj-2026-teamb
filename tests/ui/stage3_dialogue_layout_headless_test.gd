@@ -47,6 +47,7 @@ func _check_game_layout() -> void:
 		_check(absf(bubble.global_position.x + bubble.size.x * 0.5 - width * 0.5) < 2.0, "Dialogue bubble is not centered at width %s: game=%s, panel=%s, x=%s, size=%s." % [width, game.size.x, game.dialogue_panel.size.x, bubble.global_position.x, bubble.size.x])
 		_check(absf(first.global_position.x + first.size.x - bubble.global_position.x - bubble.size.x) < 2.0, "Choices and bubble right edges differ at width %s." % width)
 		_check(absf(second.global_position.x + second.size.x - bubble.global_position.x - bubble.size.x) < 2.0, "Second choice and bubble right edges differ at width %s." % width)
+		_check(absf(second.global_position.y - first.global_position.y - first.size.y) < 1.0, "Game choices should use the same zero control spacing as Opening at width %s." % width)
 		_check(first.global_position.x >= 0.0, "Choices leave the left edge at width %s." % width)
 		_check(bubble.global_position.y - (second.global_position.y + second.size.y) <= 16.0, "Gap above dialogue is excessive at width %s." % width)
 		_check(bubble.global_position.y >= second.global_position.y + second.size.y, "Choice overlaps dialogue at width %s." % width)
@@ -78,6 +79,7 @@ func _check_opening_and_ending_styles() -> void:
 	while opening._current_entry_index < opening._find_step_index("r37"):
 		opening._advance_script()
 	_check(opening._choice_buttons.get_child_count() == 2, "Opening branch count differs from Stage 4 flow.")
+	_check(opening._choice_buttons.get_theme_constant("separation") == 0, "Opening choice spacing changed.")
 	for button in opening._choice_buttons.get_children():
 		_check(button is TextureButton, "Opening choice does not use the shared visual component.")
 		_check((button.get_node("Label") as Label).get_theme_font_size("font_size") == 28, "Opening choice text differs from game choices.")

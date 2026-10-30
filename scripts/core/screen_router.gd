@@ -88,7 +88,7 @@ func _show_opening() -> void:
 	screen.continue_pressed.connect(_on_opening_skip)
 	screen.skip_pressed.connect(_on_opening_skip)
 	screen.safe_word_requested.connect(_show_opening_safe_word)
-	screen.game_requested.connect(func() -> void: _show_game(current_safe_word))
+	screen.game_requested.connect(func() -> void: _show_game(current_safe_word, true))
 	_swap_screen(screen)
 	_play_bgm("default", false)
 
@@ -111,7 +111,7 @@ func _resume_opening_after_safe_word(safe_word: String) -> void:
 	screen.safe_word_completed = true
 	screen.continue_pressed.connect(_on_opening_skip)
 	screen.safe_word_requested.connect(_show_opening_safe_word)
-	screen.game_requested.connect(func() -> void: _show_game(current_safe_word))
+	screen.game_requested.connect(func() -> void: _show_game(current_safe_word, true))
 	screen.skip_pressed.connect(_on_opening_skip)
 	_swap_screen(screen)
 
@@ -119,7 +119,7 @@ func _on_opening_skip() -> void:
 	if current_screen_id != Config.SCREEN_OPENING:
 		return
 	if safe_word_completed:
-		_show_game(current_safe_word)
+		_show_game(current_safe_word, true)
 	else:
 		_show_opening_safe_word()
 
@@ -136,7 +136,7 @@ func _complete_direct_safe_word(safe_word: String) -> void:
 	safe_word_completed = true
 	_show_game(safe_word)
 
-func _show_game(safe_word: String = Config.SAFE_WORD_DEFAULT) -> void:
+func _show_game(safe_word: String = Config.SAFE_WORD_DEFAULT, fade_from_opening: bool = false) -> void:
 	current_screen_id = Config.SCREEN_GAME
 	var screen := GAME_SCENE.instantiate()
 	var trimmed_safe_word := safe_word.strip_edges()
@@ -147,7 +147,7 @@ func _show_game(safe_word: String = Config.SAFE_WORD_DEFAULT) -> void:
 	screen.ending_requested.connect(_show_ending)
 	screen.bgm_requested.connect(_on_game_bgm_requested)
 	screen.debug_overlay = debug_overlay
-	_swap_screen(screen)
+	_swap_screen(screen, fade_from_opening)
 	debug_overlay.sync_live_readout(screen.get_debug_state())
 
 func _show_ending(ending_type: String) -> void:
@@ -171,14 +171,16 @@ func _show_ending(ending_type: String) -> void:
 		"spot_net": "-"
 	})
 
-func _swap_screen(next_screen: Control) -> void:
-	if current_screen == null or screen_transition_overlay == null:
-		_swap_screen_immediately(next_screen)
-		return
-
+func _swap_screen(next_screen: Control, fade_to_black: bool = false) -> void:
 	if screen_transition_tween != null:
 		screen_transition_tween.kill()
 		screen_transition_tween = null
+	if not fade_to_black or current_screen == null or screen_transition_overlay == null:
+		if screen_transition_overlay != null:
+			screen_transition_overlay.visible = false
+			screen_transition_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_swap_screen_immediately(next_screen)
+		return
 
 	screen_transition_overlay.visible = true
 	screen_transition_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
