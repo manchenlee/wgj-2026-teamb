@@ -90,7 +90,11 @@ var spot_manager: InteractionSpotManager = null
 var feedback_rng := RandomNumberGenerator.new()
 var debug_overlay = null
 var run_active: bool = true
-var _has_chosen_penalty_option: bool = false
+var _has_failed_safe_word_choice: bool = false
+var _safe_word_threshold_reached: bool = false
+var _first_safe_word_shown: bool = false
+var _safe_word_pending: bool = false
+var _first_safe_word_dialogue_active: bool = false
 var character_visual_textures: Dictionary = {}
 var character_layer_textures: Dictionary = {}
 var character_visual_warnings_printed: Dictionary = {}
@@ -893,6 +897,10 @@ func set_legacy_arousal_visualization_visible(legacy_visible: bool) -> void:
 func _set_interaction_mode(next_mode: InteractionMode, force_sync: bool = false) -> void:
 	if interaction_mode == next_mode and not force_sync:
 		return
+	if _first_safe_word_dialogue_active and next_mode == InteractionMode.PHYSIOLOGICAL:
+		_first_safe_word_dialogue_active = false
+		_first_safe_word_shown = false
+		_safe_word_pending = true
 	if interaction_mode != next_mode:
 		_invalidate_reading_step()
 	var entering_psychological_mode := interaction_mode != next_mode \
@@ -966,7 +974,11 @@ func _reset_run_at_phase_2_threshold() -> void:
 
 func _reset_run_for_phase_index(phase_index: int) -> void:
 	current_visual_band = -1
-	_has_chosen_penalty_option = false
+	_has_failed_safe_word_choice = false
+	_safe_word_threshold_reached = false
+	_first_safe_word_shown = false
+	_safe_word_pending = false
+	_first_safe_word_dialogue_active = false
 	current_presentation_phase = 1
 	active_character_profile = null
 	shooting_tail_active = false
@@ -1055,6 +1067,7 @@ func _on_spot_scrub_ended() -> void:
 
 func _on_spot_telemetry_updated(telemetry: Dictionary) -> void:
 	_last_spot_telemetry = telemetry
+	_track_safe_word_threshold()
 	if debug_overlay != null:
 		debug_overlay.sync_live_readout(get_debug_state())
 
@@ -1064,6 +1077,7 @@ func _on_physiological_spot_completed() -> void:
 	current_combo += 1
 	max_combo = maxi(max_combo, current_combo)
 	status_hud.update_combo(current_combo, true)
+	_show_pending_safe_word_after_spot()
 
 
 func _on_physiological_spot_failed(_progress_ratio: float, _penalty: float) -> void:
@@ -1071,6 +1085,22 @@ func _on_physiological_spot_failed(_progress_ratio: float, _penalty: float) -> v
 	current_combo = 0
 	status_hud.update_combo(current_combo)
 	_play_failure_flash()
+	_show_pending_safe_word_after_spot()
+
+
+func _track_safe_word_threshold() -> bool:
+	if not run_active or _safe_word_threshold_reached \
+			or arousal_model.physical < Config.PHASE_2_PHYSICAL_THRESHOLD:
+		return false
+	_safe_word_threshold_reached = true
+	_safe_word_pending = psychological_dialogue_controller.has_safe_word_event()
+	return _safe_word_pending
+
+
+func _show_pending_safe_word_after_spot() -> void:
+	_track_safe_word_threshold()
+	if _safe_word_pending and interaction_mode == InteractionMode.PHYSIOLOGICAL:
+		_set_interaction_mode(InteractionMode.PSYCHOLOGICAL)
 
 # ---------------------------------------------------------------------------
 # Dialogue
@@ -1111,9 +1141,12 @@ func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	dialogue_panel.append_history(choice_text, "player")
 	dialogue_panel.hide_prompt()
 	choice_panel.clear_choices()
+	var is_safe_word_choice := psychological_dialogue_controller.is_safe_word_choice_pending()
 	var outcome := psychological_dialogue_controller.apply_choice(choice_quality, arousal_model)
-	if float(outcome.get("delta", 0.0)) < 0.0:
-		_has_chosen_penalty_option = true
+	if is_safe_word_choice:
+		_first_safe_word_dialogue_active = false
+	if is_safe_word_choice and bool(outcome.get("is_wrong_choice", false)):
+		_has_failed_safe_word_choice = true
 	var ending_type := str(outcome.get("ending_type", ""))
 	var is_wrong_choice := bool(outcome.get("is_wrong_choice", false))
 	_show_timed_character_expression(
@@ -1141,6 +1174,8 @@ func _on_choice_timeout() -> void:
 			or not _has_pending_psychological_choice():
 		return
 	var ordinary_choice := not psychological_dialogue_controller.is_safe_word_choice_pending()
+	if not ordinary_choice:
+		_first_safe_word_dialogue_active = false
 	choice_timeout_timer.stop()
 	dialogue_panel.hide_prompt()
 	choice_panel.clear_choices()
@@ -1159,10 +1194,10 @@ func _push_next_dialogue_event(mode: InteractionMode) -> void:
 		return
 	_invalidate_reading_step()
 	var controller: DialogueChoiceController = _get_dialogue_controller(mode)
-	var should_force_safe_word: bool = mode == InteractionMode.PSYCHOLOGICAL \
-			and not _has_chosen_penalty_option \
+	var should_force_safe_word: bool = not _has_failed_safe_word_choice \
 			and controller.has_safe_word_event() \
-			and feedback_rng.randf() < Config.SAFE_WORD_EVENT_CHANCE
+			and (_safe_word_pending or (_first_safe_word_shown \
+			and feedback_rng.randf() < Config.SAFE_WORD_EVENT_CHANCE))
 	var prompt: Dictionary = controller.next_event(
 		arousal_model.physical,
 		arousal_model.emotional,
@@ -1170,6 +1205,12 @@ func _push_next_dialogue_event(mode: InteractionMode) -> void:
 	)
 	if prompt.is_empty():
 		return
+	if _safe_word_pending and controller.current_feedback_index == 0:
+		var condition := controller.current_entry.get("condition", {}) as Dictionary
+		if str(condition.get("event", "")) == "safe_word":
+			_safe_word_pending = false
+			_first_safe_word_shown = true
+			_first_safe_word_dialogue_active = true
 	if mode == InteractionMode.PHYSIOLOGICAL and prompt.has("choices"):
 		push_warning("Physiological dialogue attempted to expose choices; choices were ignored.")
 		prompt.erase("choices")
@@ -1265,6 +1306,10 @@ func _check_ending() -> void:
 	var ending_type := EndingEvaluatorClass.evaluate(arousal_model)
 	if ending_type.is_empty():
 		return
+	if _safe_word_pending or _first_safe_word_dialogue_active:
+		if _safe_word_pending and interaction_mode == InteractionMode.PHYSIOLOGICAL:
+			_set_interaction_mode(InteractionMode.PSYCHOLOGICAL)
+		return
 	_begin_ending_transition(ending_type)
 
 func _begin_ending_transition(ending_type: String) -> void:
@@ -1334,6 +1379,9 @@ func _return_to_title_standalone() -> void:
 func _update_presentation() -> void:
 	if Engine.is_editor_hint():
 		return
+	if _track_safe_word_threshold() and interaction_mode == InteractionMode.PSYCHOLOGICAL \
+			and not _has_pending_psychological_choice():
+		_start_new_psychological_dialogue()
 	_sync_physiological_visual_band()
 	_update_character_visual_state()
 	_update_bgm_state()
