@@ -6,7 +6,7 @@ const FRAME_SECONDS: float = 0.32
 var _rng := RandomNumberGenerator.new()
 var _tracks: Array[Dictionary] = []
 var _tail_tracks: Array[Dictionary] = []
-var _pose_phase: int = 2
+var _pose_name: String = "sitting"
 var _tail_index: int = 0
 
 func _ready() -> void:
@@ -18,7 +18,7 @@ func configure(profile: PoseCharacterProfile, texture_loader: Callable) -> void:
 		child.queue_free()
 	_tracks.clear()
 	_tail_tracks.clear()
-	_pose_phase = profile.asset_phase
+	_pose_name = profile.pose_name
 	_tail_index = 0
 	for paths in profile.get_tentacle_part_paths():
 		_add_track(paths, texture_loader, _tracks)
@@ -67,15 +67,15 @@ func _update_textures() -> void:
 	for track in _tracks:
 		_show_track(track, true)
 	for index in range(_tail_tracks.size()):
-		# Sitting: tail 1/2/3 are score stages. Lying: all three
+		# Sitting: tail 1/2/3 are score stages. Standing: all three
 		# tail attachments follow the corresponding base-tail frame.
-		_show_track(_tail_tracks[index], _pose_phase == 3 or index == _tail_index)
+		_show_track(_tail_tracks[index], _pose_name == "standing" or index == _tail_index)
 
 func _show_track(track: Dictionary, selected: bool) -> void:
 	var layer := track["layer"] as TextureRect
 	var elapsed := float(track["time"])
 	var frame := floori(elapsed / float(track["frame_seconds"])) % 3
-	if _pose_phase == 3 and _tail_tracks.has(track):
+	if _pose_name == "standing" and _tail_tracks.has(track):
 		frame = _tail_index
 	layer.texture = track["frames"][frame]
 	layer.visible = selected

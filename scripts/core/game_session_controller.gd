@@ -278,7 +278,7 @@ func _configure_pose_layers() -> void:
 			_tail_frames.append(texture)
 	if tentacle_layer != null and not Engine.is_editor_hint():
 		tentacle_layer.configure(active_character_profile, Callable(self, "_load_texture_from_asset_path"))
-	if active_character_profile.asset_phase == 2:
+	if active_character_profile.pose_name == "sitting":
 		_tail_frame_index = physical_score_to_sitting_tail_stage(arousal_model.physical)
 	if pose_tail_layer != null:
 		_apply_phase_layer_texture(pose_tail_layer, _tail_frames[0] if not _tail_frames.is_empty() else null)
@@ -306,7 +306,7 @@ func set_shooting_tail_active(active: bool) -> void:
 func _update_shooting_tail_layer() -> void:
 	if pose_tail_layer == null or active_character_profile == null:
 		return
-	if shooting_tail_active and active_character_profile.asset_phase == 3:
+	if shooting_tail_active and active_character_profile.pose_name == "standing":
 		var shooting_path: String = active_character_profile.get_shooting_tail_path()
 		_apply_phase_layer_texture(pose_tail_layer, _load_texture_from_asset_path(shooting_path))
 	elif not _tail_frames.is_empty():
@@ -315,14 +315,14 @@ func _update_shooting_tail_layer() -> void:
 func _advance_tail_animation(delta: float) -> void:
 	if tentacle_layer != null:
 		tentacle_layer.advance(delta)
-	if active_character_profile != null and active_character_profile.asset_phase == 2:
+	if active_character_profile != null and active_character_profile.pose_name == "sitting":
 		var next_stage := physical_score_to_sitting_tail_stage(arousal_model.physical)
 		if next_stage != _tail_frame_index:
 			_tail_frame_index = next_stage
 			_update_shooting_tail_layer()
 			tentacle_layer.set_tail_index(_tail_frame_index)
 		return
-	if _tail_frames.size() != 3 or (shooting_tail_active and active_character_profile.asset_phase == 3):
+	if _tail_frames.size() != 3 or (shooting_tail_active and active_character_profile.pose_name == "standing"):
 		return
 	_tail_elapsed += delta
 	if _tail_elapsed < _tail_frame_duration:

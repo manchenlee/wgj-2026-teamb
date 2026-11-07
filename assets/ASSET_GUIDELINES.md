@@ -7,7 +7,7 @@
 - `art/`：所有圖片與視覺素材。
 - `art/background/`：遊戲背景、場景底圖、環境圖。
 - `art/character/`：角色、角色狀態、角色部件。
-- `art/character/phase2/`：角色坐姿素材，也供第一階段暫用。
+- `art/character/sitting/`：角色坐姿素材，也供第一階段暫用。
 - `art/screens/`：完整畫面用圖片。
 - `art/screens/title/`：標題畫面素材。
 - `art/screens/ending/`：結局畫面素材。
@@ -38,16 +38,16 @@
 角色：
 
 ```text
-assets/art/character/{phase}/{subject}_{state}.png
-assets/art/character/{phase}/{subject}_{index}_{state}.png
+assets/art/character/{pose}/{subject}_{state}.png
+assets/art/character/{pose}/{subject}_{index}_{state}.png
 ```
 
 範例：
 
 ```text
-assets/art/character/phase2/complete.png
-assets/art/character/phase2/face_negative.png
-assets/art/character/phase2/tail_1.png
+assets/art/character/sitting/complete.png
+assets/art/character/sitting/face_negative.png
+assets/art/character/sitting/tail_1.png
 ```
 
 背景：

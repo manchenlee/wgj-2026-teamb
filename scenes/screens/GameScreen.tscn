@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bqjifxskxou0v" path="res://scripts/core/game_session_controller.gd" id="1_game"]
 [ext_resource type="PackedScene" path="res://scenes/components/CharacterArea.tscn" id="2_character"]
-[ext_resource type="Texture2D" path="res://assets/art/character/phase2/complete.png" id="2_pbayp"]
+[ext_resource type="Texture2D" path="res://assets/art/character/sitting/complete.png" id="2_pbayp"]
 [ext_resource type="PackedScene" path="res://scenes/components/StatusHUD.tscn" id="4_hud"]
 [ext_resource type="Script" uid="uid://y4sw51emkoug" path="res://scripts/presentation/central_arousal_visualization.gd" id="5_vis"]
 [ext_resource type="Script" uid="uid://d3bshm1tk5r8n" path="res://scripts/ui/TwoFrameOverlayAnimator.gd" id="6_overlay"]
@@ -10,7 +10,7 @@
 [ext_resource type="Script" uid="uid://d24toufu83pxy" path="res://scripts/ui/conversation_viewport.gd" id="8_conversation"]
 [ext_resource type="Script" path="res://scripts/presentation/tentacle_animator.gd" id="8_tentacles"]
 [ext_resource type="Script" uid="uid://x3cgbulqxokf" path="res://scripts/editor/phase_2_editor_preview_controller.gd" id="9_phase2_preview"]
-[ext_resource type="Texture2D" path="res://assets/art/character/phase2/complete.png" id="10_phase2_person"]
+[ext_resource type="Texture2D" path="res://assets/art/character/sitting/complete.png" id="10_phase2_person"]
 [ext_resource type="Texture2D" uid="uid://mkqnsj2nshun" path="res://assets/art/background/game_bg.png" id="11_game_bg"]
 [ext_resource type="Script" uid="uid://c537cpupxlgv0" path="res://scripts/ui/prompt_anchor_region.gd" id="12_prompt_region"]
 [ext_resource type="PackedScene" path="res://scenes/components/ChoicePanel.tscn" id="13_choice_panel"]

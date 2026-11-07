@@ -8,11 +8,11 @@
           "text": "……",
           "source_row": 3,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -22,11 +22,11 @@
           "text": "……那、那個……",
           "source_row": 4,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -36,11 +36,11 @@
           "text": "…………",
           "source_row": 5,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -50,11 +50,11 @@
           "text": "（哇，完全不理人。但仔細想想，是我的技術太差勁了，又不懂哄人開心……）",
           "source_row": 6,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -64,11 +64,11 @@
           "text": "……對不起。",
           "source_row": 7,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -78,11 +78,11 @@
           "text": "……罷了，至少你有停下來，不是逼我繼續。",
           "source_row": 8,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -92,11 +92,11 @@
           "text": "以這點來說，你還算……勉強及格啦。",
           "source_row": 9,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -106,11 +106,11 @@
           "text": "（嗯？他剛剛……是安慰我嗎？）",
           "source_row": 10,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -120,11 +120,11 @@
           "text": "咳、咳嗯……不過你技術還是很糟、很爛，這是事實，今天你也搞砸了，這也是事實。只是……",
           "source_row": 11,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -134,11 +134,11 @@
           "text": "……以後如果還有機會的話，也不是……不可以。",
           "source_row": 12,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -147,11 +147,11 @@
           "text": "沒有顧慮對象的情緒與不稱職的愛撫，你無疑搞砸了今夜的美好時光，但幸好，你並沒有在他真的很不舒服時選擇強迫對方……",
           "source_row": 13,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -160,11 +160,11 @@
           "text": "多虧如此，這把小提琴雖然不滿，卻沒有憤怒，性愛中的失敗不過尋常，但你很清楚，只要彼此願意，你們隨時都可以進行新的「調音」——",
           "source_row": 14,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -179,11 +179,11 @@
           "text": "哈啊……啊啊……不要、不要了……",
           "source_row": 18,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -193,11 +193,11 @@
           "text": "「不要」？為什麼不要了？你不是很舒服嗎？你瞧——",
           "source_row": 19,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -207,11 +207,11 @@
           "text": "唔……唔啊！！",
           "source_row": 20,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -221,11 +221,11 @@
           "text": "……！？怎、怎麼了？",
           "source_row": 22,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -235,11 +235,11 @@
           "text": "……不要……哈啊……",
           "source_row": 23,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -249,11 +249,11 @@
           "text": "昏、昏過去了？不會吧？喂！喂！？",
           "source_row": 24,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -263,11 +263,11 @@
           "text": "…………",
           "source_row": 25,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -277,11 +277,11 @@
           "text": "剛剛還叫的那樣浪、那樣大聲，怎麼就這樣沒了？不過……",
           "source_row": 26,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -290,11 +290,11 @@
           "text": "剛剛的聲音，比其合奏，更像是哀號……這真的是舒服的嗎？還是說，其實他不想要這樣的感覺？",
           "source_row": 27,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -304,11 +304,11 @@
           "text": "…………",
           "source_row": 28,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -318,11 +318,11 @@
           "text": "……算了，他也回答不了我。先清理一下附近吧。",
           "source_row": 29,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -331,11 +331,11 @@
           "text": "小提琴的聲音愈發高亢、走調、哀鳴，都被你視若無物，等回過神來時，他已經如同崩斷的琴弦，整個人軟趴趴的癱倒在床上，彷彿昏了過去。",
           "source_row": 30,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -344,11 +344,11 @@
           "text": "你被迫停了下來，心中慾火難消，然而眼前的小提琴已經承受不了任何「憐愛」，猶如死物一樣躺在白色床單上，奄奄一息。",
           "source_row": 31,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -357,11 +357,11 @@
           "text": "只剩下虛弱的、空虛的、沒有任何溫存的，哀哀弦鳴——",
           "source_row": 32,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -376,11 +376,11 @@
           "text": "唔……！",
           "source_row": 36,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -390,11 +390,11 @@
           "text": "怎、怎麼了？不舒服嗎？我太用力了？還是太粗魯了？",
           "source_row": 37,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -404,11 +404,11 @@
           "text": "……是沒有，話說你幹嘛這樣畏畏縮縮的，我又不是玻璃人偶，一碰就破。",
           "source_row": 38,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -418,11 +418,11 @@
           "text": "我、我只是不希望你不舒服嘛……",
           "source_row": 39,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -432,11 +432,11 @@
           "text": "還是，你覺得我這樣溫柔反而沒意思了？嫌棄我技術不好？",
           "source_row": 40,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -446,11 +446,11 @@
           "text": "…………",
           "source_row": 41,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -460,11 +460,11 @@
           "text": "喂！你別不說話啊！喂——",
           "source_row": 42,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -473,11 +473,11 @@
           "text": "咕、咕嚕——",
           "source_row": 43,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -487,11 +487,11 @@
           "text": "…………",
           "source_row": 44,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -501,11 +501,11 @@
           "text": "…………",
           "source_row": 45,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -515,11 +515,11 @@
           "text": "噗……噗哈哈哈！我、我肚子餓了……抱歉，抱歉……",
           "source_row": 46,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -529,11 +529,11 @@
           "text": "吼！氣氛都沒了啦……算了算了，走，去吃宵夜！",
           "source_row": 47,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -542,11 +542,11 @@
           "text": "不知是運氣不好，或者純粹是因技術不足，你雖盡自己所能，卻終究沒能讓小提琴完全沉浸其中。",
           "source_row": 48,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -555,11 +555,11 @@
           "text": "不過，或許是始終有照顧到對方的心情，他的表情清爽愉悅，與你們第一次相遇時已是大不相同，或許……這是好的開始？",
           "source_row": 49,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -568,11 +568,11 @@
           "text": "你們一邊吃著消夜，一邊有一搭沒一搭地聊起了天，彼此間沒有半點床地情事失敗的窘迫。",
           "source_row": 50,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -581,11 +581,11 @@
           "text": "因為你很清楚，只要彼此願意，你們隨時都能開始一段「新的調音」——",
           "source_row": 51,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -600,11 +600,11 @@
           "text": "哈啊……哈啊……唔！",
           "source_row": 56,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -614,11 +614,11 @@
           "text": "（好重……明明是小提琴卻這麼重真是有夠反直覺！但是……）",
           "source_row": 57,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -628,11 +628,11 @@
           "text": "（能夠感受到他那全身心的重量都靠在自己身上，水乳交融，彷彿我與他本該就是一體。）",
           "source_row": 58,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -641,11 +641,11 @@
           "text": "小提琴的琴聲悠揚，在你的觸手中發出僅有他才能發出的，連綿而悠揚的音調。",
           "source_row": 59,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -655,11 +655,11 @@
           "text": "這……真的是我的聲音？原來、原來我能發出這樣……？",
           "source_row": 60,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -669,11 +669,11 @@
           "text": "嗯，是你的聲音……很好聽呢。",
           "source_row": 61,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -683,11 +683,11 @@
           "text": "…………",
           "source_row": 62,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -697,11 +697,11 @@
           "text": "……太好了，我不是壞掉的小提琴……",
           "source_row": 63,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -710,11 +710,11 @@
           "text": "他抽噎了幾聲，隨後像是想起你還在場，立刻拉了旁邊的枕頭遮住自己的臉。即便如此，也能聽到枕頭下依稀的聲響……",
           "source_row": 64,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -723,11 +723,11 @@
           "text": "你微微一笑，似乎忘記了這只是一場為了演奏會而促成的調音，輕挑慢捻，專注尋找著小提琴那隱蔽的，未能被開發的音色。",
           "source_row": 65,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -737,11 +737,11 @@
           "text": "哈啊……還可以繼續嗎？好舒服？",
           "source_row": 66,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -751,11 +751,11 @@
           "text": "當然可以，交給我就好。",
           "source_row": 67,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -765,11 +765,11 @@
           "text": "嗯……",
           "source_row": 68,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }
@@ -778,11 +778,11 @@
           "text": "他完全褪去了之前的戒備，全身放鬆，毫無保留的將自己交給了你，而在這場緩慢的演奏中，你只想享受與他那難分難捨的纏綿——",
           "source_row": 69,
           "character": {
-            "base": "res://assets/art/character/phase2/complete.png",
+            "base": "res://assets/art/character/sitting/complete.png",
             "layers": [
               {
                 "id": "phase_2_negative_face",
-                "path": "res://assets/art/character/phase2/face_negative.png"
+                "path": "res://assets/art/character/sitting/face_negative.png"
               }
             ]
           }

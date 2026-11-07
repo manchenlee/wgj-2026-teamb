@@ -22,26 +22,27 @@ const INTERACTION_SPOT_ANCHOR_LAYOUT := {
 	"RightLeg": Rect2(380.0, 428.0, 116.0, 210.0),
 }
 const BREATHING_REGIONS := {
-	1: Rect2(0.46, 0.30, 0.23, 0.24),
-	2: Rect2(0.46, 0.30, 0.23, 0.24),
-	3: Rect2(0.39, 0.33, 0.22, 0.22),
-	4: Rect2(0.24, 0.42, 0.33, 0.23),
-	5: Rect2(0.28, 0.27, 0.25, 0.25),
+	"sitting": Rect2(0.46, 0.30, 0.23, 0.24),
+	"standing": Rect2(0.39, 0.33, 0.22, 0.22),
+	"prone": Rect2(0.24, 0.42, 0.33, 0.23),
+	"lying": Rect2(0.28, 0.27, 0.25, 0.25),
 }
 
 var presentation_phase: int = 1
-var asset_phase: int = 2
+var pose_name: String = "sitting"
 
 func _init(phase: int = 1) -> void:
 	presentation_phase = clampi(phase, 1, 5)
 	match presentation_phase:
 		3:
-			asset_phase = 5
+			pose_name = "lying"
+		4:
+			pose_name = "prone"
 		5:
-			asset_phase = 3
+			pose_name = "standing"
 		_:
-			asset_phase = maxi(2, presentation_phase)
-	var root := "res://assets/art/character/phase%d/" % asset_phase
+			pose_name = "sitting"
+	var root := "res://assets/art/character/%s/" % pose_name
 	var expressions := {
 		ExpressionState.NEUTRAL: {"base_state_key": "overall_init", "face_state_key": "face_neutral"},
 		ExpressionState.POSITIVE: {"base_state_key": "overall_init", "face_state_key": "face_positive"},
@@ -57,13 +58,13 @@ func _init(phase: int = 1) -> void:
 		{}, {},
 		PROMPT_ANCHOR_LAYOUT,
 		INTERACTION_SPOT_ANCHOR_LAYOUT,
-		BREATHING_REGIONS[asset_phase],
+		BREATHING_REGIONS[pose_name],
 		Vector2(0.5, 0.5), 0.0,
 		mappings
 	)
 
 func get_face_texture_paths() -> Dictionary:
-	var root := "res://assets/art/character/phase%d/" % asset_phase
+	var root := "res://assets/art/character/%s/" % pose_name
 	return {
 		"face_neutral": root + "face_neutral.png",
 		"face_positive": root + "face_positive.png",
@@ -72,39 +73,39 @@ func get_face_texture_paths() -> Dictionary:
 	}
 
 func get_tail_frame_paths() -> Array[String]:
-	var root := "res://assets/art/character/phase%d/" % asset_phase
+	var root := "res://assets/art/character/%s/" % pose_name
 	return [root + "tail_1.png", root + "tail_2.png", root + "tail_3.png"]
 
 func get_tentacle_part_paths() -> Array:
 	var paths: Array = []
-	var part_count := 5 if asset_phase == 4 else 4
+	var part_count := 5 if pose_name == "prone" else 4
 	for part in range(1, part_count + 1):
 		var frames: Array[String] = []
 		for frame in range(1, 4):
-			frames.append("res://assets/art/tentacles/phase%d/part_%d_%d.png" % [asset_phase, part, frame])
+			frames.append("res://assets/art/tentacles/%s/part_%d_%d.png" % [pose_name, part, frame])
 		paths.append(frames)
 	return paths
 
 func get_tail_tentacle_paths() -> Array:
 	var paths: Array = []
-	if asset_phase == 2:
+	if pose_name == "sitting":
 		for stage in range(1, 4):
 			var frames: Array[String] = []
 			for frame in range(1, 4):
-				frames.append("res://assets/art/tentacles/phase2/tail_%d_%d.png" % [stage, frame])
+				frames.append("res://assets/art/tentacles/sitting/tail_%d_%d.png" % [stage, frame])
 			paths.append(frames)
-	elif asset_phase == 3:
+	elif pose_name == "standing":
 		for side in ["left", "center", "right"]:
 			var frames: Array[String] = []
 			for frame in range(1, 4):
-				frames.append("res://assets/art/tentacles/phase3/tail_%s_%d.png" % [side, frame])
+				frames.append("res://assets/art/tentacles/standing/tail_%s_%d.png" % [side, frame])
 			paths.append(frames)
 	return paths
 
 func get_interaction_mask_path() -> String:
-	return "res://assets/art/character/phase%d/interaction_mask.png" % asset_phase
+	return "res://assets/art/character/%s/interaction_mask.png" % pose_name
 
 func get_shooting_tail_path() -> String:
-	if asset_phase == 3:
-		return "res://assets/art/character/phase3/tail_shooting.png"
+	if pose_name == "standing":
+		return "res://assets/art/character/standing/tail_shooting.png"
 	return ""
