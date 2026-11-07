@@ -5,6 +5,7 @@ enum ExpressionState {
 	NEUTRAL,
 	POSITIVE,
 	NEGATIVE,
+	PSYCHOLOGICAL_POSITIVE,
 }
 
 var profile_id: String

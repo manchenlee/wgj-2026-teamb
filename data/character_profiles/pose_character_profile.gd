@@ -45,6 +45,7 @@ func _init(phase: int = 1) -> void:
 	var expressions := {
 		ExpressionState.NEUTRAL: {"base_state_key": "overall_init", "face_state_key": "face_neutral"},
 		ExpressionState.POSITIVE: {"base_state_key": "overall_init", "face_state_key": "face_positive"},
+		ExpressionState.PSYCHOLOGICAL_POSITIVE: {"base_state_key": "overall_init", "face_state_key": "face_psychological_positive"},
 		ExpressionState.NEGATIVE: {"base_state_key": "overall_init", "face_state_key": "face_negative"},
 	}
 	var mappings: Dictionary = {}
@@ -66,6 +67,7 @@ func get_face_texture_paths() -> Dictionary:
 	return {
 		"face_neutral": root + "face_neutral.png",
 		"face_positive": root + "face_positive.png",
+		"face_psychological_positive": root + "face_psychological_positive.png",
 		"face_negative": root + "face_negative.png",
 	}
 

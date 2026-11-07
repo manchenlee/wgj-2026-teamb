@@ -646,7 +646,7 @@ func set_character_expression_state(expression: int) -> void:
 	var next_expression := clampi(
 		expression,
 		PhaseCharacterProfileClass.ExpressionState.NEUTRAL,
-		PhaseCharacterProfileClass.ExpressionState.NEGATIVE
+		PhaseCharacterProfileClass.ExpressionState.PSYCHOLOGICAL_POSITIVE
 	)
 	var compatibility_source := CharacterExpressionSource.COMPATIBILITY
 	if next_expression == PhaseCharacterProfileClass.ExpressionState.NEUTRAL:
@@ -671,7 +671,7 @@ func request_character_expression(source: CharacterExpressionSource, expression:
 		"expression": clampi(
 			expression,
 			PhaseCharacterProfileClass.ExpressionState.NEUTRAL,
-			PhaseCharacterProfileClass.ExpressionState.NEGATIVE
+			PhaseCharacterProfileClass.ExpressionState.PSYCHOLOGICAL_POSITIVE
 		),
 	}
 	_refresh_requested_character_expression()
@@ -1152,7 +1152,7 @@ func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	_show_timed_character_expression(
 		CharacterExpressionSource.PSYCHOLOGICAL,
 		PhaseCharacterProfileClass.ExpressionState.NEGATIVE if is_wrong_choice \
-		else PhaseCharacterProfileClass.ExpressionState.POSITIVE
+		else PhaseCharacterProfileClass.ExpressionState.PSYCHOLOGICAL_POSITIVE
 	)
 	if is_wrong_choice:
 		_play_failure_flash()
