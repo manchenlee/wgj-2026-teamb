@@ -15,7 +15,6 @@ const TOP_SAFE_MARGIN := 88.0
 var _history: Array[Dictionary] = []
 var _speech_bubble_anchor: Control = null
 var _active_character_line: String = ""
-var _active_line_version: int = 0
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -40,7 +39,6 @@ func hide_prompt() -> void:
 func clear_history() -> void:
 	_history.clear()
 	_active_character_line = ""
-	_active_line_version += 1
 	if current_speech_bubble != null:
 		current_speech_bubble.visible = false
 
@@ -64,8 +62,6 @@ func get_dialogue_history() -> Array[Dictionary]:
 
 func _show_current_character_line(line: String, speaker_type: String = "companion") -> void:
 	_active_character_line = line
-	_active_line_version += 1
-	var line_version := _active_line_version
 	if current_speech_bubble == null:
 		return
 	if line.is_empty():
@@ -79,9 +75,6 @@ func _show_current_character_line(line: String, speaker_type: String = "companio
 		_:
 			current_speech_bubble.set_speaker_text("")
 	current_speech_bubble.set_dialogue_text(line)
-	await get_tree().process_frame
-	if line_version != _active_line_version:
-		return
 	_position_active_bubble()
 	current_speech_bubble.visible = true
 

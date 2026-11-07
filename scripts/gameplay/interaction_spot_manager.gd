@@ -201,11 +201,14 @@ func resume() -> void:
 	if not _active or not _suspended:
 		return
 	_suspended = false
+	_active_spots = _active_spots.filter(func(spot): return is_instance_valid(spot))
 	for spot in _active_spots:
-		if is_instance_valid(spot):
-			spot.set_suspended(false)
+		spot.set_suspended(false)
 	_spawn_timer.set_paused(false)
-	if _spawn_timer.is_stopped():
+	if _active_spots.is_empty():
+		_spawn_note_type()
+		_schedule_next_spot()
+	elif _spawn_timer.is_stopped():
 		_schedule_next_spot()
 
 
