@@ -68,6 +68,7 @@ enum CharacterExpressionSource {
 @onready var choice_panel: ChoicePanel = %ChoicePanel
 @onready var status_hud: StatusHUD = %StatusHUD
 @onready var interaction_mode_toggle: InteractionModeToggle = %InteractionModeToggle
+@onready var psychological_vignette = $PsychologicalVignette
 @onready var phase_debug_label: Label = $PhaseDebugLabel
 @onready var phase_skip_button: Button = $Phase2SkipButton
 @onready var layout_debug_regions := [
@@ -911,6 +912,7 @@ func _set_interaction_mode(next_mode: InteractionMode, force_sync: bool = false)
 
 func _sync_interaction_mode_state() -> void:
 	var psychological_active := interaction_mode == InteractionMode.PSYCHOLOGICAL
+	psychological_vignette.set_psychological_active(psychological_active)
 	status_hud.set_physical_mode_active(not psychological_active)
 	if interaction_mode_toggle != null:
 		interaction_mode_toggle.set_interaction_mode(interaction_mode)

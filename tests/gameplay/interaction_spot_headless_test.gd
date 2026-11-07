@@ -52,6 +52,7 @@ func _run() -> void:
 	await _test_rub_suspend_resume()
 	await _test_rub_force_resolution()
 	await _test_ordered_progression_and_fast_crossing()
+	await _test_slide_drag_continues_from_unfinished_segment()
 	await _test_suspend_resume_requires_fresh_crossing()
 	await _test_timeout_resolves_once()
 	await _test_force_resolution_resolves_once()
@@ -594,6 +595,34 @@ func _test_ordered_progression_and_fast_crossing() -> void:
 	_assert(normalized_counts.completed == 1, "Full Slide did not emit exactly one normalized physiological completion.")
 	spot.force_complete()
 	_assert(counts.completed == 1, "Resolved success emitted more than once.")
+	spot.queue_free()
+	await process_frame
+
+
+func _test_slide_drag_continues_from_unfinished_segment() -> void:
+	var spot := _make_spot()
+	var counts := {"progress": 0, "completed": 0}
+	spot.progressed.connect(func(_delta: float) -> void: counts.progress += 1)
+	spot.completed.connect(func() -> void: counts.completed += 1)
+	spot._input(_mouse_button_event(test_points[0], true))
+	spot._input(_mouse_motion_event(test_points[1]))
+	_assert(counts.progress == 1, "Slide setup did not reach checkpoint 1.")
+	var halfway := Vector2(220.0, 160.0)
+	spot._input(_mouse_motion_event(halfway))
+	spot._input(_mouse_button_event(halfway, false))
+	spot._input(_mouse_motion_event(test_points[2]))
+	_assert(counts.progress == 1, "Released Slide advanced without a new drag.")
+	spot._input(_mouse_button_event(Vector2(100.0, 160.0), true))
+	_assert(not spot.is_dragging(), "Slide resumed from a different segment.")
+	spot._input(_mouse_button_event(halfway, true))
+	_assert(spot.is_dragging() and counts.progress == 1, "Slide did not resume from the unfinished segment.")
+	spot._input(_mouse_motion_event(test_points[2]))
+	_assert(counts.progress == 2 and spot.get_next_checkpoint_index() == 3, "Resumed Slide did not reach the next checkpoint exactly once.")
+	spot._input(_mouse_button_event(test_points[2], false))
+	spot._input(_screen_touch_event(Vector2(160.0, 220.0), true, 2))
+	_assert(spot.is_dragging(), "Touch did not resume the remaining Slide segment.")
+	spot._input(_screen_drag_event(test_points[3], 2))
+	_assert(counts.progress == 3 and counts.completed == 1, "Touch continuation did not finish Slide exactly once.")
 	spot.queue_free()
 	await process_frame
 

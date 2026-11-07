@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" path="res://scenes/components/CurrentSpeechBubble.tscn" id="14_speech_bubble"]
 [ext_resource type="Script" uid="uid://1hkwnhoxho74" path="res://scripts/presentation/failure_flash.gd" id="15_failure_flash"]
 [ext_resource type="PackedScene" path="res://scenes/components/InteractionModeToggle.tscn" id="16_mode_toggle"]
+[ext_resource type="Script" path="res://scripts/ui/psychological_vignette.gd" id="17_vignette"]
 
 [node name="GameScreen" type="Control" unique_id=2039179595]
 custom_minimum_size = Vector2(1440, 1024)
@@ -974,6 +975,18 @@ alignment = 1
 [node name="InteractionModeToggle" parent="HudLayer/ModeToggleArea/ModeToggleStack" instance=ExtResource("16_mode_toggle")]
 unique_name_in_owner = true
 layout_mode = 2
+
+[node name="PsychologicalVignette" type="ColorRect" parent="."]
+z_index = 7
+z_as_relative = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("17_vignette")
 
 [node name="DebugRegionTint" type="ColorRect" parent="HudLayer/TopHudLeft/StatusHUD" unique_id=74340883]
 visible = false

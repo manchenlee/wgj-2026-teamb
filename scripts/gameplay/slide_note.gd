@@ -245,10 +245,20 @@ func _stop_dragging() -> void:
 
 
 func _is_inside_drag_start(position_to_test: Vector2) -> bool:
-	var drag_start_index := 0 if not _armed else _next_checkpoint_index - 1
-	if drag_start_index < 0 or drag_start_index >= checkpoints.size():
+	if not _armed:
+		return position_to_test.distance_squared_to(checkpoints[0]) <= checkpoint_radius * checkpoint_radius
+	if _next_checkpoint_index <= 0 or _next_checkpoint_index >= checkpoints.size():
 		return false
-	return position_to_test.distance_squared_to(checkpoints[drag_start_index]) <= checkpoint_radius * checkpoint_radius
+	# A released drag can resume anywhere on the unfinished segment.
+	var segment_start := checkpoints[_next_checkpoint_index - 1]
+	var segment_end := checkpoints[_next_checkpoint_index]
+	var segment := segment_end - segment_start
+	var segment_length_squared := segment.length_squared()
+	if segment_length_squared <= 0.0001:
+		return position_to_test.distance_squared_to(segment_start) <= checkpoint_radius * checkpoint_radius
+	var projection := clampf((position_to_test - segment_start).dot(segment) / segment_length_squared, 0.0, 1.0)
+	var closest_point := segment_start + segment * projection
+	return position_to_test.distance_squared_to(closest_point) <= checkpoint_radius * checkpoint_radius
 
 
 func _to_local_pointer_position(global_position: Vector2) -> Vector2:
