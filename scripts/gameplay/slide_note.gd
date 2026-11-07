@@ -5,7 +5,6 @@ const HEART_TEXTURE := preload("res://assets/art/ui/gameplay/img_heart.png")
 const NOTE_LABEL_FONT := preload("res://assets/fonts/ShipporiMincho-Bold.ttf")
 const SLIDE_COLOR := Color(1.0, 0.42, 0.47, 0.88)
 const SLIDE_COMPLETED_COLOR := Color(0.93, 0.29, 0.42, 0.96)
-const TENTACLE_VISUAL_SIZE := Vector2(180.0, 180.0)
 
 var checkpoint_radius: float = 40.0
 var checkpoints: PackedVector2Array = PackedVector2Array()
@@ -22,7 +21,6 @@ var _active_touch_index: int = -1
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	super._ready()
-	_position_tentacle_at_chain_end()
 
 
 func setup(config: Dictionary) -> void:
@@ -33,7 +31,6 @@ func setup(config: Dictionary) -> void:
 		checkpoints = configured_checkpoints
 	elif configured_checkpoints is Array:
 		checkpoints = PackedVector2Array(configured_checkpoints)
-	_position_tentacle_at_chain_end()
 	queue_redraw()
 
 
@@ -98,12 +95,10 @@ func _draw() -> void:
 	for index in range(checkpoints.size() - 1):
 		var segment_completed := _armed and index < _next_checkpoint_index - 1
 		var line_color := SLIDE_COMPLETED_COLOR if segment_completed else Color(1.0, 0.32, 0.36, 0.72)
-		draw_line(checkpoints[index], checkpoints[index + 1], line_color, 9.0, true)
+		draw_line(checkpoints[index], checkpoints[index + 1], line_color, checkpoint_radius * 2.0, true)
 
 	var target_index := _get_target_index()
-	# The tentacle is the physical end-cap of the chain, so only the preceding
-	# checkpoints use circular slide markers.
-	for index in range(maxi(checkpoints.size() - 1, 0)):
+	for index in range(checkpoints.size()):
 		var is_completed := _armed if index == 0 else _armed and index < _next_checkpoint_index
 		var is_current := index == target_index
 		var fill_color := SLIDE_COMPLETED_COLOR if is_completed else SLIDE_COLOR
@@ -123,18 +118,6 @@ func _draw() -> void:
 			font_size,
 			Color.WHITE
 		)
-
-func _position_tentacle_at_chain_end() -> void:
-	var tentacle_visual := get_node_or_null("TentacleVisual") as TextureRect
-	if tentacle_visual == null:
-		return
-	tentacle_visual.size = TENTACLE_VISUAL_SIZE
-	if checkpoints.is_empty():
-		tentacle_visual.visible = false
-		return
-	tentacle_visual.visible = true
-	tentacle_visual.position = checkpoints[checkpoints.size() - 1] - TENTACLE_VISUAL_SIZE * 0.5
-
 
 func _process_pointer_move(new_pos: Vector2) -> void:
 	if _resolved or _suspended or not is_dragging() or checkpoints.size() < 2:

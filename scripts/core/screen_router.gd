@@ -11,6 +11,8 @@ const BGM_DEFAULT := preload("res://assets/audio/bgm/default.mp3")
 const BGM_OVERALL_HIGH := preload("res://assets/audio/bgm/overall_high.mp3")
 const BGM_OVERALL_LOW := preload("res://assets/audio/bgm/overall_low.mp3")
 const BGM_ENDING := preload("res://assets/audio/bgm/ending.mp3")
+const TENTACLE_CURSOR := preload("res://assets/art/ui/gameplay/img_tentacle.png")
+const TENTACLE_CURSOR_SIZE := Vector2i(96, 96)
 const BGM_TARGET_VOLUME_DB := -6.0
 const BGM_SILENT_VOLUME_DB := -40.0
 const BGM_CROSSFADE_DURATION := 1.0
@@ -218,6 +220,26 @@ func _swap_screen_immediately(next_screen: Control) -> void:
 		current_screen.queue_free()
 	current_screen = next_screen
 	screen_container.add_child(current_screen)
+	_update_mouse_cursor()
+
+
+func _exit_tree() -> void:
+	Input.set_custom_mouse_cursor(null, Input.CURSOR_ARROW)
+	Input.set_custom_mouse_cursor(null, Input.CURSOR_POINTING_HAND)
+
+
+func _update_mouse_cursor() -> void:
+	if current_screen_id != Config.SCREEN_GAME:
+		Input.set_custom_mouse_cursor(null, Input.CURSOR_ARROW)
+		Input.set_custom_mouse_cursor(null, Input.CURSOR_POINTING_HAND)
+		return
+	var cursor_image := TENTACLE_CURSOR.get_image()
+	cursor_image.resize(TENTACLE_CURSOR_SIZE.x, TENTACLE_CURSOR_SIZE.y, Image.INTERPOLATE_LANCZOS)
+	var cursor_texture := ImageTexture.create_from_image(cursor_image)
+	var hotspot := Vector2(TENTACLE_CURSOR_SIZE) * 0.5
+	Input.set_custom_mouse_cursor(cursor_texture, Input.CURSOR_ARROW, hotspot)
+	Input.set_custom_mouse_cursor(cursor_texture, Input.CURSOR_POINTING_HAND, hotspot)
+
 
 func _show_stage(target: String) -> void:
 	match target:

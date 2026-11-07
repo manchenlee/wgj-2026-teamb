@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/btn_unchoose.png" id="1_normal"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/btn_choose.png" id="2_active"]
 [ext_resource type="FontFile" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="3_font"]
+[ext_resource type="Script" path="res://scripts/ui/dialogue_choice_button.gd" id="4_button"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_normal"]
 atlas = ExtResource("1_normal")
@@ -13,6 +14,7 @@ atlas = ExtResource("2_active")
 region = Rect2(0, 20, 720, 100)
 
 [node name="DialogueChoiceButton" type="TextureButton"]
+script = ExtResource("4_button")
 custom_minimum_size = Vector2(720, 100)
 offset_right = 720.0
 offset_bottom = 100.0
