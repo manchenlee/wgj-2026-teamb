@@ -214,19 +214,17 @@ func _test_safe_word_threshold_flow() -> void:
 	game._push_next_dialogue_event(0)
 	game._on_choice_selected("option_2", "Stop")
 	_assert(not game._has_failed_safe_word_choice and not game._first_safe_word_dialogue_active, "Correct safe-word answer did not preserve repeat eligibility.")
-	var probe_rng := RandomNumberGenerator.new()
-	var repeat_seed := -1
-	for seed_value in range(100):
-		probe_rng.seed = seed_value
-		if probe_rng.randf() < CONFIG.SAFE_WORD_EVENT_CHANCE:
-			repeat_seed = seed_value
-			break
-	_assert(repeat_seed >= 0, "Could not find a deterministic safe-word repeat draw.")
-	game.feedback_rng.seed = repeat_seed
-	game.psychological_dialogue_controller.reset()
-	game._push_next_dialogue_event(0)
-	safe_condition = game.psychological_dialogue_controller.current_entry.get("condition", {})
-	_assert(safe_condition.get("event", "") == "safe_word", "Safe-word dialogue did not remain available after the guaranteed appearance.")
+	var saw_repeat_safe_word := false
+	var previous_id := "psychological_dialogue_02"
+	for index in range(100):
+		game.psychological_dialogue_controller.reset()
+		game._push_next_dialogue_event(0)
+		var entry_id := str(game.psychological_dialogue_controller.current_entry.get("id", ""))
+		_assert(entry_id != previous_id, "Psychological dialogue repeated immediately after reset.")
+		if entry_id == "psychological_dialogue_02":
+			saw_repeat_safe_word = true
+		previous_id = entry_id
+	_assert(saw_repeat_safe_word, "Safe-word dialogue did not remain in the equal-probability pool.")
 	game.reset_run()
 	_assert(not game._safe_word_threshold_reached and not game._first_safe_word_shown, "New run retained the previous threshold event.")
 	game.start_direct_in_phase_2()

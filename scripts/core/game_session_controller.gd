@@ -87,7 +87,6 @@ var arousal_model = ArousalModelClass.new()
 var psychological_dialogue_controller = DialogueChoiceControllerClass.new()
 var physiological_dialogue_controller = DialogueChoiceControllerClass.new()
 var spot_manager: InteractionSpotManager = null
-var feedback_rng := RandomNumberGenerator.new()
 var debug_overlay = null
 var run_active: bool = true
 var _has_failed_safe_word_choice: bool = false
@@ -168,7 +167,6 @@ func _ready() -> void:
 		set_process_unhandled_input(false)
 		return
 
-	feedback_rng.randomize()
 	_tail_rng.randomize()
 	character_area.set_body_visual_anchor(background_anchor)
 	set_process_unhandled_input(true)
@@ -996,8 +994,8 @@ func _reset_run_for_phase_index(phase_index: int) -> void:
 	_apply_phase_by_index(phase_index)
 	arousal_model.reset()
 	_sync_physiological_visual_band(false)
-	psychological_dialogue_controller.reset()
-	physiological_dialogue_controller.reset()
+	psychological_dialogue_controller.reset(true)
+	physiological_dialogue_controller.reset(true)
 	if overlay_animator != null:
 		overlay_animator.play_idle()
 	if breathing_controller != null and breathing_controller.has_method("start_breathing"):
@@ -1195,13 +1193,14 @@ func _push_next_dialogue_event(mode: InteractionMode) -> void:
 	_invalidate_reading_step()
 	var controller: DialogueChoiceController = _get_dialogue_controller(mode)
 	var should_force_safe_word: bool = not _has_failed_safe_word_choice \
-			and controller.has_safe_word_event() \
-			and (_safe_word_pending or (_first_safe_word_shown \
-			and feedback_rng.randf() < Config.SAFE_WORD_EVENT_CHANCE))
+			and controller.has_safe_word_event() and _safe_word_pending
+	var include_safe_word: bool = not _has_failed_safe_word_choice \
+			and _first_safe_word_shown and controller.has_safe_word_event()
 	var prompt: Dictionary = controller.next_event(
 		arousal_model.physical,
 		arousal_model.emotional,
-		should_force_safe_word
+		should_force_safe_word,
+		include_safe_word
 	)
 	if prompt.is_empty():
 		return

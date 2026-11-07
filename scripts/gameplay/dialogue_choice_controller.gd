@@ -16,6 +16,7 @@ var _queued_response_lines: Array = []
 var _queued_response_speakers: Array = []
 var _data_source_property: String = "psychological_dialogue_data_source"
 var _choices_enabled: bool = true
+var _last_entry_id: String = ""
 
 func _init() -> void:
 	rng.randomize()
@@ -39,7 +40,7 @@ func is_safe_word_choice_pending() -> bool:
 	var condition := current_entry.get("condition", {}) as Dictionary
 	return str(condition.get("event", "")) == "safe_word"
 
-func reset() -> void:
+func reset(clear_history: bool = false) -> void:
 	current_prompt = {}
 	current_entry = {}
 	current_feedback_index = -1
@@ -47,8 +48,10 @@ func reset() -> void:
 	current_line = ""
 	_queued_response_lines.clear()
 	_queued_response_speakers.clear()
+	if clear_history:
+		_last_entry_id = ""
 
-func next_event(physical: float, emotional: float, force_safe_word: bool = false) -> Dictionary:
+func next_event(physical: float, emotional: float, force_safe_word: bool = false, include_safe_word: bool = false) -> Dictionary:
 	if choice_prompt_pending:
 		return {}
 	if not _queued_response_lines.is_empty():
@@ -56,7 +59,7 @@ func next_event(physical: float, emotional: float, force_safe_word: bool = false
 		var queued_speaker := str(_queued_response_speakers.pop_front()) if not _queued_response_speakers.is_empty() else ""
 		return {"text": current_line, "speaker": queued_speaker}
 	if current_entry.is_empty():
-		current_entry = _select_entry(physical, emotional, force_safe_word)
+		current_entry = _select_entry(physical, emotional, force_safe_word, include_safe_word)
 		current_feedback_index = -1
 	current_prompt = _build_next_prompt(current_entry)
 	current_line = str(current_prompt.get("text", ""))
@@ -172,13 +175,25 @@ func _load_feedback_entries() -> void:
 				entry.erase("choice")
 			entries.append(entry)
 
-func _select_entry(physical: float, emotional: float, force_safe_word: bool = false) -> Dictionary:
+func _select_entry(physical: float, emotional: float, force_safe_word: bool = false, include_safe_word: bool = false) -> Dictionary:
+	var matches: Array[Dictionary] = []
 	if force_safe_word:
-		return _select_safe_word_entry()
-	var matches := _get_matching_entries(physical, emotional)
+		matches = _get_safe_word_entries()
+	else:
+		matches = _get_matching_entries(physical, emotional)
+		if include_safe_word:
+			matches.append_array(_get_safe_word_entries())
 	if matches.is_empty():
 		return {}
-	return matches[rng.randi_range(0, matches.size() - 1)].duplicate(true)
+	var alternatives: Array[Dictionary] = []
+	for entry in matches:
+		if str(entry.get("id", "")) != _last_entry_id:
+			alternatives.append(entry)
+	if not alternatives.is_empty():
+		matches = alternatives
+	var selected := matches[rng.randi_range(0, matches.size() - 1)].duplicate(true)
+	_last_entry_id = str(selected.get("id", ""))
+	return selected
 
 func _get_matching_entries(physical: float, emotional: float) -> Array[Dictionary]:
 
@@ -221,7 +236,7 @@ func _get_phase_independent_entry_signature(entry: Dictionary) -> String:
 	semantic_entry["condition"] = condition
 	return JSON.stringify(semantic_entry)
 
-func _select_safe_word_entry() -> Dictionary:
+func _get_safe_word_entries() -> Array[Dictionary]:
 	var matches: Array[Dictionary] = []
 	for entry_variant in entries:
 		var entry := entry_variant as Dictionary
@@ -229,9 +244,7 @@ func _select_safe_word_entry() -> Dictionary:
 		if str(condition.get("event", "")) == "safe_word":
 			matches.append(entry)
 
-	if matches.is_empty():
-		return {}
-	return matches[rng.randi_range(0, matches.size() - 1)].duplicate(true)
+	return matches
 
 func _build_next_prompt(entry: Dictionary) -> Dictionary:
 	if entry.is_empty():

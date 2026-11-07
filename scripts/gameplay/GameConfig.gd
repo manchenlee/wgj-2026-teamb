@@ -18,7 +18,6 @@ const FEEDBACK_MESSAGE_TEXT: String = "……"
 const RESPONSE_BUTTON_TEXT: String = "……"
 const SAFE_WORD_DEFAULT: String = "紅色"
 const SAFE_WORD_MAX_LENGTH: int = 16
-const SAFE_WORD_EVENT_CHANCE: float = 0.15
 
 static func normalize_safe_word(value: String) -> String:
 	var cleaned := ""

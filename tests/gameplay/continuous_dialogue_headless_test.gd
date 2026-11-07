@@ -21,6 +21,7 @@ func _run() -> void:
 	_test_psychological_merged_pool()
 	_test_physiological_dialogue_is_disabled()
 	_test_safe_word_remains_special()
+	_test_equal_draws_without_immediate_repeats()
 	if _failures.is_empty():
 		print("Continuous-dialogue headless tests passed.")
 		quit(0)
@@ -59,6 +60,29 @@ func _test_safe_word_remains_special() -> void:
 			_assert(candidate.get("condition", {}).get("event", "") != "safe_word", "Safe-word event entered the ordinary condition pool.")
 	var safe_word_entry: Dictionary = controller._select_entry(60.0, 60.0, true)
 	_assert(safe_word_entry.get("id", "") == "psychological_dialogue_02", "Forced safe-word selection changed: %s" % str(safe_word_entry.get("id", "")))
+
+
+func _test_equal_draws_without_immediate_repeats() -> void:
+	var controller = _make_controller("psychological_dialogue_data_source", true)
+	var counts := {
+		"psychological_dialogue_01": 0,
+		"psychological_dialogue_02": 0,
+		"psychological_dialogue_03": 0,
+		"psychological_dialogue_04": 0,
+	}
+	controller.rng.seed = 42
+	var previous_id := ""
+	for index in range(4000):
+		var entry: Dictionary = controller._select_entry(60.0, 60.0, false, true)
+		var entry_id := str(entry.get("id", ""))
+		_assert(entry_id != previous_id, "Dialogue repeated immediately on draw %d." % index)
+		counts[entry_id] = int(counts.get(entry_id, 0)) + 1
+		previous_id = entry_id
+		controller.reset()
+	for entry_id in counts:
+		_assert(abs(int(counts[entry_id]) - 1000) < 100, "Dialogue %s was not drawn at the same rate: %s" % [entry_id, str(counts)])
+	controller.reset(true)
+	_assert(controller._last_entry_id.is_empty(), "New run kept the previous dialogue ID.")
 
 
 func _make_controller(data_source_property: String, choices_enabled: bool):
