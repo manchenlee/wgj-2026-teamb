@@ -41,7 +41,7 @@ func apply_decay(delta: float) -> void:
 	emotional_activity_grace_remaining = maxf(emotional_activity_grace_remaining - delta, 0.0)
 
 	if physical_activity_grace_remaining <= 0.0:
-		physical = Config.clamp_value(physical - _get_config_value("physical_decay_rate", 2.0) * delta)
+		physical = Config.clamp_value(physical - _get_config_value("physical_decay_rate", 1.0) * delta)
 	if emotional_activity_grace_remaining <= 0.0:
 		emotional = Config.clamp_value(emotional - _get_config_value("emotional_decay_rate", 0.3) * delta)
 
