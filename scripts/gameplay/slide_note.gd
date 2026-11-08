@@ -3,8 +3,8 @@ extends InteractionNote
 
 const HEART_TEXTURE := preload("res://assets/art/ui/gameplay/img_heart.png")
 const NOTE_LABEL_FONT := preload("res://assets/fonts/ShipporiMincho-Bold.ttf")
-const SLIDE_COLOR := Color(1.0, 0.42, 0.47, 0.88)
-const SLIDE_COMPLETED_COLOR := Color(0.93, 0.29, 0.42, 0.96)
+const SLIDE_COLOR := Color("#85CCFFE0")
+const SLIDE_COMPLETED_COLOR := Color("#85CCFFF5")
 
 var checkpoint_radius: float = 40.0
 var checkpoints: PackedVector2Array = PackedVector2Array()
@@ -94,7 +94,7 @@ func _draw() -> void:
 
 	for index in range(checkpoints.size() - 1):
 		var segment_completed := _armed and index < _next_checkpoint_index - 1
-		var line_color := SLIDE_COMPLETED_COLOR if segment_completed else Color(1.0, 0.32, 0.36, 0.72)
+		var line_color := SLIDE_COMPLETED_COLOR if segment_completed else Color("#85CCFFB8")
 		draw_line(checkpoints[index], checkpoints[index + 1], line_color, checkpoint_radius * 2.0, true)
 
 	var target_index := _get_target_index()
@@ -103,7 +103,7 @@ func _draw() -> void:
 		var is_current := index == target_index
 		var fill_color := SLIDE_COMPLETED_COLOR if is_completed else SLIDE_COLOR
 		if is_current:
-			fill_color = Color(1.0, 0.48, 0.52, 0.96)
+			fill_color = SLIDE_COMPLETED_COLOR
 		_draw_note_circle(checkpoints[index], checkpoint_radius, fill_color)
 		var font_size := maxi(16, int(round(checkpoint_radius * 0.58)))
 		var label_size := NOTE_LABEL_FONT.get_string_size(
@@ -185,6 +185,10 @@ func _get_approach_center() -> Vector2:
 
 func _get_approach_target_radius() -> float:
 	return checkpoint_radius
+
+
+func _get_approach_color() -> Color:
+	return SLIDE_COMPLETED_COLOR
 
 
 func _is_inside_target(position_to_test: Vector2) -> bool:
