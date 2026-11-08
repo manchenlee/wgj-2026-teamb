@@ -228,7 +228,7 @@ func _on_resumed() -> void:
 
 
 func _start_drag(local_position: Vector2, touch_index: int) -> void:
-	if checkpoints.is_empty() or not _is_inside_drag_start(local_position):
+	if is_dragging() or checkpoints.is_empty() or not _is_inside_drag_start(local_position):
 		return
 	_mouse_held = touch_index < 0
 	_active_touch_index = touch_index
@@ -237,6 +237,10 @@ func _start_drag(local_position: Vector2, touch_index: int) -> void:
 	_pointer_was_inside_target = _is_inside_target(local_position)
 	_begin_interaction()
 	if not _armed:
+		_activate_current_target()
+		_pointer_was_inside_target = _is_inside_target(local_position)
+	elif _pointer_was_inside_target:
+		# Pressing the next unvisited checkpoint resumes at that checkpoint.
 		_activate_current_target()
 		_pointer_was_inside_target = _is_inside_target(local_position)
 

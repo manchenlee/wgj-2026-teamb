@@ -53,6 +53,7 @@ func _run() -> void:
 	await _test_rub_force_resolution()
 	await _test_ordered_progression_and_fast_crossing()
 	await _test_slide_drag_continues_from_unfinished_segment()
+	await _test_slide_resume_from_next_checkpoint()
 	await _test_suspend_resume_requires_fresh_crossing()
 	await _test_timeout_resolves_once()
 	await _test_force_resolution_resolves_once()
@@ -624,6 +625,40 @@ func _test_slide_drag_continues_from_unfinished_segment() -> void:
 	spot._input(_screen_drag_event(test_points[3], 2))
 	_assert(counts.progress == 3 and counts.completed == 1, "Touch continuation did not finish Slide exactly once.")
 	spot.queue_free()
+	await process_frame
+
+
+func _test_slide_resume_from_next_checkpoint() -> void:
+	var spot := _make_spot()
+	var counts := {"progress": 0, "completed": 0}
+	spot.progressed.connect(func(_delta: float) -> void: counts.progress += 1)
+	spot.completed.connect(func() -> void: counts.completed += 1)
+	spot._input(_mouse_button_event(test_points[0], true))
+	spot._input(_mouse_motion_event(test_points[1]))
+	spot._input(_mouse_button_event(test_points[1], false))
+	_assert(counts.progress == 1, "Slide setup did not reach checkpoint 1.")
+	spot._input(_mouse_button_event(test_points[3], true))
+	_assert(not spot.is_dragging() and counts.progress == 1, "A later checkpoint skipped the active Slide target.")
+	spot._input(_mouse_button_event(test_points[2], true))
+	_assert(counts.progress == 2 and spot.get_next_checkpoint_index() == 3, "Pressing the unvisited checkpoint did not resume Slide.")
+	spot._input(_mouse_motion_event(test_points[3]))
+	_assert(counts.progress == 3 and counts.completed == 1, "Sliding after a checkpoint resume did not complete Slide once.")
+	spot.queue_free()
+	await process_frame
+
+	var touch_spot := _make_spot()
+	var touch_counts := {"progress": 0, "completed": 0}
+	touch_spot.progressed.connect(func(_delta: float) -> void: touch_counts.progress += 1)
+	touch_spot.completed.connect(func() -> void: touch_counts.completed += 1)
+	touch_spot._input(_screen_touch_event(test_points[0], true, 1))
+	touch_spot._input(_screen_drag_event(test_points[1], 1))
+	touch_spot._input(_screen_touch_event(test_points[1], false, 1))
+	touch_spot._input(_screen_touch_event(test_points[2], true, 1))
+	_assert(touch_counts.progress == 2, "Touch press on the unvisited checkpoint did not resume Slide.")
+	touch_spot._input(_screen_touch_event(test_points[2], false, 1))
+	touch_spot._input(_screen_touch_event(test_points[3], true, 1))
+	_assert(touch_counts.progress == 3 and touch_counts.completed == 1, "Touch press on the final checkpoint did not complete Slide once.")
+	touch_spot.queue_free()
 	await process_frame
 
 

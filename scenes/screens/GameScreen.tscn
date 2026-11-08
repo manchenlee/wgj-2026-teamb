@@ -17,7 +17,9 @@
 [ext_resource type="PackedScene" path="res://scenes/components/CurrentSpeechBubble.tscn" id="14_speech_bubble"]
 [ext_resource type="Script" uid="uid://1hkwnhoxho74" path="res://scripts/presentation/failure_flash.gd" id="15_failure_flash"]
 [ext_resource type="PackedScene" path="res://scenes/components/InteractionModeToggle.tscn" id="16_mode_toggle"]
-[ext_resource type="Script" path="res://scripts/ui/psychological_vignette.gd" id="17_vignette"]
+[ext_resource type="Script" path="res://scripts/ui/psychological_mask.gd" id="17_psychological_mask"]
+[ext_resource type="Texture2D" path="res://assets/art/background/game_background_mask.png" id="18_background_mask"]
+[ext_resource type="Texture2D" path="res://assets/art/background/psychological_mask.png" id="19_psychological_mask"]
 
 [node name="GameScreen" type="Control" unique_id=2039179595]
 custom_minimum_size = Vector2(1440, 1024)
@@ -890,6 +892,20 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(1, 0.52, 0.32, 0.72)
 
+[node name="GameBackgroundMask" type="TextureRect" parent="."]
+z_index = 1
+z_as_relative = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("18_background_mask")
+expand_mode = 1
+stretch_mode = 6
+
 [node name="ConversationViewport" type="Control" parent="." unique_id=1454768142]
 z_index = 8
 layout_mode = 1
@@ -976,7 +992,8 @@ alignment = 1
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="PsychologicalVignette" type="ColorRect" parent="."]
+[node name="PsychologicalMask" type="TextureRect" parent="."]
+modulate = Color(1, 1, 1, 0)
 z_index = 7
 z_as_relative = false
 layout_mode = 1
@@ -986,7 +1003,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-script = ExtResource("17_vignette")
+texture = ExtResource("19_psychological_mask")
+expand_mode = 1
+stretch_mode = 6
+script = ExtResource("17_psychological_mask")
 
 [node name="DebugRegionTint" type="ColorRect" parent="HudLayer/TopHudLeft/StatusHUD" unique_id=74340883]
 visible = false
