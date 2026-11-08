@@ -9,14 +9,16 @@ signal debug_requested
 @onready var _logo: TextureRect = $Logo
 @onready var _debug_hotspot: Button = $BottomBar/DebugHotspot
 @onready var _background: TextureRect = $Background
-@onready var _cover_overlay: TextureRect = $CoverOverlay
+@onready var _hover_cover: TextureRect = $HoverCover
 @onready var _skip_button: TextureButton = $SkipButton
 
+const COVER_FRAME_SECONDS: float = 1.0 / 8.0
 const _COVER_1 := preload("res://assets/art/screens/title/cover_1.png")
 const _COVER_2 := preload("res://assets/art/screens/title/cover_2.png")
 const _COVER_3 := preload("res://assets/art/screens/title/cover_3.png")
 
 var _hover_tween: Tween
+var _hover_cover_tween: Tween
 var _transitioning := false
 var _start_button_base_scale := Vector2.ONE
 
@@ -49,8 +51,8 @@ func _ready() -> void:
 
 	_background.visible = true
 	_background.modulate.a = 1.0
-	_cover_overlay.visible = false
-	_cover_overlay.modulate.a = 0.0
+	_hover_cover.visible = false
+	_hover_cover.modulate.a = 0.0
 	_skip_button.visible = false
 	_skip_button.modulate.a = 0.0
 	_animate_in()
@@ -70,9 +72,22 @@ func _on_button_mouse_entered() -> void:
 	_hover_tween = create_tween().set_trans(Tween.TRANS_SINE).set_parallel(true)
 	_hover_tween.tween_property(_start_button_root, "scale", _start_button_base_scale * 1.04, 0.15)
 	_hover_tween.tween_property(_start_button_root, "modulate", Color(1.08, 1.08, 1.08, 1.0), 0.15)
+	_fade_hover_cover(1.0)
 
 func _on_button_mouse_exited() -> void:
+	if _transitioning:
+		return
 	_reset_start_button_visual(true)
+	_fade_hover_cover(0.0)
+
+func _fade_hover_cover(target_alpha: float) -> void:
+	if _hover_cover_tween:
+		_hover_cover_tween.kill()
+	_hover_cover.visible = true
+	_hover_cover_tween = create_tween().set_trans(Tween.TRANS_SINE)
+	_hover_cover_tween.tween_property(_hover_cover, "modulate:a", target_alpha, 0.25)
+	if is_zero_approx(target_alpha):
+		_hover_cover_tween.tween_callback(func() -> void: _hover_cover.visible = false)
 
 func _play_cover_transition() -> void:
 	if _transitioning:
@@ -82,36 +97,22 @@ func _play_cover_transition() -> void:
 	if _hover_tween:
 		_hover_tween.kill()
 		_hover_tween = null
+	if _hover_cover_tween:
+		_hover_cover_tween.kill()
+		_hover_cover_tween = null
+	if _hover_cover.visible:
+		_background.texture = _hover_cover.texture
+		_hover_cover.visible = false
 	_start_button_root.visible = false
 	_start_button_root.modulate.a = 0.0
 	_start_button_root.scale = _start_button_base_scale
+	_logo.visible = false
+	_background.texture = _COVER_1
 
-	var tween := create_tween().set_trans(Tween.TRANS_SINE)
-	tween.tween_property(_logo, "modulate:a", 0.0, 0.3)
-	tween.tween_callback(func() -> void:
-		_skip_button.visible = true
-	)
-	tween.tween_property(_skip_button, "modulate:a", 1.0, 0.3)
-	tween.tween_callback(func() -> void: _begin_cover_crossfade(_COVER_1))
-	tween.tween_property(_cover_overlay, "modulate:a", 1.0, 0.5)
-	tween.tween_callback(func() -> void: _commit_cover_crossfade())
-	tween.tween_interval(0.3)
-	tween.tween_callback(func() -> void: _begin_cover_crossfade(_COVER_2))
-	tween.tween_property(_cover_overlay, "modulate:a", 1.0, 0.5)
-	tween.tween_callback(func() -> void: _commit_cover_crossfade())
-	tween.tween_interval(0.3)
-	tween.tween_callback(func() -> void: _begin_cover_crossfade(_COVER_3))
-	tween.tween_property(_cover_overlay, "modulate:a", 1.0, 0.5)
-	tween.tween_callback(func() -> void: _commit_cover_crossfade())
-	tween.tween_interval(0.3)
+	var tween := create_tween()
+	tween.tween_interval(COVER_FRAME_SECONDS)
+	tween.tween_callback(func() -> void: _background.texture = _COVER_2)
+	tween.tween_interval(COVER_FRAME_SECONDS)
+	tween.tween_callback(func() -> void: _background.texture = _COVER_3)
+	tween.tween_interval(COVER_FRAME_SECONDS)
 	tween.tween_callback(func() -> void: start_pressed.emit())
-
-func _begin_cover_crossfade(next_texture: Texture2D) -> void:
-	_cover_overlay.texture = next_texture
-	_cover_overlay.visible = true
-	_cover_overlay.modulate.a = 0.0
-
-func _commit_cover_crossfade() -> void:
-	_background.texture = _cover_overlay.texture
-	_cover_overlay.modulate.a = 0.0
-	_cover_overlay.visible = false
