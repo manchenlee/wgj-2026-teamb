@@ -12,7 +12,7 @@ signal debug_requested
 @onready var _hover_cover: TextureRect = $HoverCover
 @onready var _skip_button: TextureButton = $SkipButton
 
-const COVER_FRAME_SECONDS: float = 1.0 / 8.0
+const COVER_FRAME_SECONDS: float = 1.0 / 6.0
 const _COVER_1 := preload("res://assets/art/screens/title/cover_1.png")
 const _COVER_2 := preload("res://assets/art/screens/title/cover_2.png")
 const _COVER_3 := preload("res://assets/art/screens/title/cover_3.png")
