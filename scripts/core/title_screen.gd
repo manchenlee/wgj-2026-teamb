@@ -100,16 +100,16 @@ func _play_cover_transition() -> void:
 	if _hover_cover_tween:
 		_hover_cover_tween.kill()
 		_hover_cover_tween = null
-	if _hover_cover.visible:
-		_background.texture = _hover_cover.texture
-		_hover_cover.visible = false
+	_hover_cover.visible = false
 	_start_button_root.visible = false
 	_start_button_root.modulate.a = 0.0
 	_start_button_root.scale = _start_button_base_scale
 	_logo.visible = false
-	_background.texture = _COVER_1
+	_background.texture = _hover_cover.texture
 
 	var tween := create_tween()
+	tween.tween_interval(COVER_FRAME_SECONDS)
+	tween.tween_callback(func() -> void: _background.texture = _COVER_1)
 	tween.tween_interval(COVER_FRAME_SECONDS)
 	tween.tween_callback(func() -> void: _background.texture = _COVER_2)
 	tween.tween_interval(COVER_FRAME_SECONDS)
