@@ -63,7 +63,7 @@ const SPOT_CHECKPOINT_RADIUS: float = 52.0
 const SPOT_CHECKPOINT_SPACING: float = 120.0
 
 # Rub Note tuning.
-const RUB_REQUIRED_SCRUB_DISTANCE: float = 600.0
+const RUB_REQUIRED_SCRUB_DISTANCE: float = 400.0
 const RUB_VALID_MOTION_THRESHOLD: float = 3.0
 const RUB_MAX_DELTA_PER_EVENT: float = 24.0
 const RUB_TARGET_RADIUS: float = 80.0

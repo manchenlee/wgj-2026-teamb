@@ -3,7 +3,7 @@ extends InteractionNote
 
 const HEART_TEXTURE := preload("res://assets/art/ui/gameplay/img_heart.png")
 
-var required_scrub_distance: float = 600.0
+var required_scrub_distance: float = 400.0
 var valid_motion_threshold: float = 3.0
 var max_delta_per_event: float = 24.0
 var target_center: Vector2 = Vector2(212.0, 212.0)
@@ -31,7 +31,7 @@ func _ready() -> void:
 
 func setup(config: Dictionary) -> void:
 	super.setup(config)
-	required_scrub_distance = float(config.get("required_scrub_distance", 600.0))
+	required_scrub_distance = float(config.get("required_scrub_distance", 400.0))
 	valid_motion_threshold = float(config.get("valid_motion_threshold", 3.0))
 	max_delta_per_event = float(config.get("max_delta_per_event", 24.0))
 	target_center = config.get("target_center", Vector2(212.0, 212.0)) as Vector2
