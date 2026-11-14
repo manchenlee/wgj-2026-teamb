@@ -7,9 +7,9 @@ const OPENING_SCENE := preload("res://scenes/screens/OpeningScreen.tscn")
 const SAFE_WORD_SCENE := preload("res://scenes/screens/SafeWordScreen.tscn")
 const GAME_SCENE := preload("res://scenes/screens/GameScreen.tscn")
 const ENDING_SCENE := preload("res://scenes/screens/EndingScreen.tscn")
+const MidiPitchTimelineClass := preload("res://scripts/gameplay/midi_pitch_timeline.gd")
 const BGM_DEFAULT := preload("res://assets/audio/bgm/default.mp3")
-const BGM_OVERALL_HIGH := preload("res://assets/audio/bgm/overall_high.mp3")
-const BGM_OVERALL_LOW := preload("res://assets/audio/bgm/overall_low.mp3")
+const BGM_GAMEPLAY := preload("res://assets/audio/bgm/piano_gameplay.ogg")
 const BGM_ENDING := preload("res://assets/audio/bgm/ending.mp3")
 const TENTACLE_CURSOR := preload("res://assets/art/ui/gameplay/img_tentacle.png")
 const TENTACLE_CURSOR_SIZE := Vector2i(192, 192)
@@ -18,6 +18,8 @@ const BGM_SILENT_VOLUME_DB := -40.0
 const BGM_CROSSFADE_DURATION := 1.0
 const SCREEN_TRANSITION_DURATION := 0.3
 const SCREEN_TRANSITION_COLOR := Color(0, 0, 0, 1)
+
+@export var midi_rest_default_open_string_pitch: int = 69
 
 @onready var screen_container: Control = $ScreenContainer
 @onready var debug_overlay = $DebugOverlay
@@ -36,11 +38,15 @@ var bgm_playback_positions := {}
 var current_bgm_key: String = ""
 var bgm_tween: Tween
 var screen_transition_tween: Tween
+var violin_timeline: MidiPitchTimeline = MidiPitchTimelineClass.new()
 
 func _ready() -> void:
 	_update_mouse_cursor()
 	_setup_bgm_players()
 	_setup_bgm_library()
+	violin_timeline.default_open_string_pitch = midi_rest_default_open_string_pitch
+	if not violin_timeline.load_from_file("res://data/violin_timeline.json"):
+		push_warning("Violin MIDI timeline could not be loaded.")
 	debug_overlay.stage_jump_requested.connect(_show_stage)
 	debug_overlay.values_requested.connect(_apply_debug_values)
 	debug_overlay.force_ending_requested.connect(_force_ending)
@@ -295,8 +301,7 @@ func _configure_bgm_player(player: AudioStreamPlayer) -> void:
 func _setup_bgm_library() -> void:
 	bgm_library = {
 		"default": _prepare_bgm_stream(BGM_DEFAULT, true),
-		"overall_high": _prepare_bgm_stream(BGM_OVERALL_HIGH, true),
-		"overall_low": _prepare_bgm_stream(BGM_OVERALL_LOW, true),
+		"gameplay": _prepare_bgm_stream(BGM_GAMEPLAY, true),
 		"ending": _prepare_bgm_stream(BGM_ENDING, true)
 	}
 	bgm_playback_positions.clear()
@@ -307,7 +312,15 @@ func _prepare_bgm_stream(stream: AudioStream, should_loop: bool) -> AudioStream:
 	var prepared_stream := stream.duplicate(true)
 	if prepared_stream is AudioStreamMP3:
 		prepared_stream.loop = should_loop
+	elif prepared_stream is AudioStreamOggVorbis:
+		prepared_stream.loop = should_loop
 	return prepared_stream
+
+
+func get_gameplay_midi_pitch() -> int:
+	if current_bgm_key != "gameplay" or active_bgm_player == null or not active_bgm_player.playing:
+		return -1
+	return violin_timeline.get_pitch_at_time(active_bgm_player.get_playback_position())
 
 func _play_bgm(track_key: String, use_fade: bool) -> void:
 	if not bgm_library.has(track_key):

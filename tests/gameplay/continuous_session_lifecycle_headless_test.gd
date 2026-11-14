@@ -98,7 +98,7 @@ func _test_continuous_band_progression_and_dialogue_pool() -> void:
 	game.choice_timeout_timer.start(4.0)
 	game.request_character_expression(COMPATIBILITY_SOURCE, PROFILE_SCRIPT.ExpressionState.POSITIVE)
 	game.has_switched_to_game_bgm = true
-	game.last_requested_bgm_key = "overall_high"
+	game.last_requested_bgm_key = "gameplay"
 	game.arousal_model.emotional = 60.0
 	game.arousal_model.peak = 42.0
 	game.arousal_model.peak_has_activated = true
