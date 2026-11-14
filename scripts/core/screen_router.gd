@@ -153,6 +153,7 @@ func _show_game(safe_word: String = Config.SAFE_WORD_DEFAULT, fade_from_opening:
 	if current_safe_word.is_empty():
 		current_safe_word = Config.SAFE_WORD_DEFAULT
 	screen.safe_word = current_safe_word
+	screen.midi_pitch_provider = Callable(self, "get_gameplay_midi_pitch")
 	screen.ending_requested.connect(_show_ending)
 	screen.bgm_requested.connect(_on_game_bgm_requested)
 	screen.debug_overlay = debug_overlay

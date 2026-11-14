@@ -7,6 +7,8 @@ signal progressed(progress_delta: float)
 signal completed()
 signal expired(progress_ratio: float)
 signal visual_motion(direction: Vector2, intensity: float)
+signal audio_note_reached()
+signal audio_motion_valid()
 
 var spot_lifetime: float = 7.0
 var approach_start_scale: float = 2.0

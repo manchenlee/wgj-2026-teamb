@@ -11,6 +11,7 @@ const DirectionSequenceControllerClass := preload("res://scripts/gameplay/direct
 const DialogueChoiceControllerClass := preload("res://scripts/gameplay/dialogue_choice_controller.gd")
 const EndingEvaluatorClass := preload("res://scripts/gameplay/ending_evaluator.gd")
 const InteractionSpotManagerClass := preload("res://scripts/gameplay/interaction_spot_manager.gd")
+const ViolinSamplePlayerClass := preload("res://scripts/gameplay/violin_sample_player.gd")
 const ENDING_SCENE := preload("res://scenes/screens/EndingScreen.tscn")
 const GAME_SCENE := preload("res://scenes/screens/GameScreen.tscn")
 const TITLE_SCENE := preload("res://scenes/screens/TitleScreen.tscn")
@@ -43,6 +44,12 @@ enum CharacterExpressionSource {
 @export var show_legacy_arousal_visualization: bool = false
 @export var debug_start_phase_id: String = ""
 @export var safe_word: String = Config.SAFE_WORD_DEFAULT
+@export var violin_pizzicato_sample: AudioStream
+@export var violin_arco_sample: AudioStream
+@export var violin_tremolo_sample: AudioStream
+@export_range(36, 96) var violin_sample_root_pitch: int = 69
+@export_range(0.1, 0.15, 0.005) var violin_rub_inactivity_seconds: float = 0.125
+@export_range(0.25, 0.4, 0.01) var violin_rub_pitch_change_seconds: float = 0.32
 @export var shared_character_alignment_offset: Vector2 = Vector2.ZERO
 
 @onready var character_alignment_root: Control = $CharacterAlignmentRoot
@@ -88,6 +95,8 @@ var arousal_model = ArousalModelClass.new()
 var psychological_dialogue_controller = DialogueChoiceControllerClass.new()
 var physiological_dialogue_controller = DialogueChoiceControllerClass.new()
 var spot_manager: InteractionSpotManager = null
+var violin_audio: ViolinSamplePlayer = null
+var midi_pitch_provider: Callable
 var debug_overlay = null
 var run_active: bool = true
 var _has_failed_safe_word_choice: bool = false
@@ -178,6 +187,20 @@ func _ready() -> void:
 	physiological_dialogue_timer.timeout.connect(_on_physiological_dialogue_timer_timeout)
 	choice_timeout_timer.timeout.connect(_on_choice_timeout)
 	_setup_spot_manager()
+	violin_audio = ViolinSamplePlayerClass.new()
+	violin_audio.pitch_provider = midi_pitch_provider
+	violin_audio.pizzicato_sample = violin_pizzicato_sample
+	violin_audio.arco_sample = violin_arco_sample
+	violin_audio.tremolo_sample = violin_tremolo_sample
+	violin_audio.sample_root_pitch = violin_sample_root_pitch
+	violin_audio.rub_inactivity_seconds = violin_rub_inactivity_seconds
+	violin_audio.rub_pitch_change_seconds = violin_rub_pitch_change_seconds
+	add_child(violin_audio)
+	spot_manager.click_audio_requested.connect(violin_audio.play_click)
+	spot_manager.slide_audio_requested.connect(violin_audio.play_slide_checkpoint)
+	spot_manager.rub_audio_motion.connect(violin_audio.rub_motion)
+	spot_manager.rub_audio_ended.connect(violin_audio.end_rub)
+	spot_manager.audio_cancel_requested.connect(violin_audio.stop_all)
 	reset_run()
 	if breathing_controller != null and breathing_controller.has_method("is_debug_breathing_enabled") \
 			and breathing_controller.is_debug_breathing_enabled():
@@ -1573,6 +1596,8 @@ func _get_texture_content_rect(texture_rect: TextureRect, texture_size: Vector2)
 # ---------------------------------------------------------------------------
 
 func _stop_runtime_timers() -> void:
+	if violin_audio != null:
+		violin_audio.stop_all()
 	_invalidate_reading_step()
 	physiological_dialogue_timer.stop()
 	spot_spawn_timer.stop()

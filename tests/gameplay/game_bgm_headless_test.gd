@@ -18,6 +18,10 @@ func _run() -> void:
 	)
 	root.add_child(game)
 	await process_frame
+	_assert(game.violin_audio != null, "Gameplay violin audio backend was not created.")
+	_assert(game.spot_manager.click_audio_requested.is_connected(game.violin_audio.play_click), "Click audio route is missing.")
+	_assert(game.spot_manager.slide_audio_requested.is_connected(game.violin_audio.play_slide_checkpoint), "Slide audio route is missing.")
+	_assert(game.spot_manager.rub_audio_motion.is_connected(game.violin_audio.rub_motion), "Rub audio route is missing.")
 
 	_assert(not requests.is_empty(), "Entering gameplay did not request a BGM track.")
 	if not requests.is_empty():

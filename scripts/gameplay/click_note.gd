@@ -37,6 +37,7 @@ func _gui_input(event: InputEvent) -> void:
 	if press_direction == Vector2.ZERO:
 		press_direction = Vector2.RIGHT
 	visual_motion.emit(press_direction, 1.0)
+	audio_note_reached.emit()
 	progressed.emit(1.0)
 	_resolve_completed()
 

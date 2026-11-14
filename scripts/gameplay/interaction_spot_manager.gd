@@ -30,6 +30,11 @@ signal spot_scrub_ended()
 signal spot_telemetry_updated(telemetry: Dictionary)
 signal physiological_spot_completed()
 signal physiological_spot_failed(progress_ratio: float, penalty: float)
+signal click_audio_requested()
+signal slide_audio_requested()
+signal rub_audio_motion(source_id: int)
+signal rub_audio_ended(source_id: int)
+signal audio_cancel_requested()
 
 # Set by GameSessionController before activation.
 var _arousal_model = null
@@ -168,6 +173,7 @@ func start() -> void:
 
 
 func stop() -> void:
+	audio_cancel_requested.emit()
 	if _character_presenter != null:
 		_character_presenter.clear_body_motion()
 	_active = false
@@ -188,6 +194,7 @@ func stop() -> void:
 func suspend() -> void:
 	if not _active or _suspended:
 		return
+	audio_cancel_requested.emit()
 	_suspended = true
 	if _character_presenter != null:
 		_character_presenter.clear_body_motion()
@@ -376,6 +383,8 @@ func _spawn_note_type(requested_note_type: int = -1) -> void:
 	spot.interaction_started.connect(_on_spot_scrub_started.bind(spot))
 	spot.interaction_ended.connect(_on_spot_scrub_ended.bind(spot))
 	spot.visual_motion.connect(_on_spot_visual_motion.bind(spot))
+	spot.audio_note_reached.connect(_on_spot_audio_note_reached.bind(spot))
+	spot.audio_motion_valid.connect(_on_spot_audio_motion_valid.bind(spot))
 	spot.progressed.connect(_on_spot_progressed.bind(spot))
 	spot.completed.connect(_on_spot_completed.bind(spot))
 	spot.expired.connect(_on_spot_expired.bind(spot))
@@ -629,6 +638,8 @@ func _on_spot_scrub_started(spot: InteractionNote) -> void:
 func _on_spot_scrub_ended(spot: InteractionNote) -> void:
 	if _character_presenter != null and spot is RubNote:
 		_character_presenter.end_rub_tremor(spot.get_instance_id())
+	if spot is RubNote:
+		rub_audio_ended.emit(spot.get_instance_id())
 	emit_signal("spot_scrub_ended")
 
 
@@ -644,6 +655,20 @@ func _on_spot_visual_motion(direction: Vector2, intensity: float, spot: Interact
 		_character_presenter.update_rub_tremor(spot.get_instance_id(), intensity)
 
 
+func _on_spot_audio_note_reached(spot: InteractionNote) -> void:
+	if not _active or _suspended:
+		return
+	if spot is ClickNote:
+		click_audio_requested.emit()
+	elif spot is SlideNote:
+		slide_audio_requested.emit()
+
+
+func _on_spot_audio_motion_valid(spot: InteractionNote) -> void:
+	if _active and not _suspended and spot is RubNote:
+		rub_audio_motion.emit(spot.get_instance_id())
+
+
 func _on_spot_progressed(progress_delta: float, _spot: InteractionNote) -> void:
 	if _arousal_model == null:
 		return
@@ -656,6 +681,8 @@ func _on_spot_progressed(progress_delta: float, _spot: InteractionNote) -> void:
 
 
 func _on_spot_completed(spot: InteractionNote) -> void:
+	if spot is RubNote:
+		rub_audio_ended.emit(spot.get_instance_id())
 	_active_spots = _active_spots.filter(func(s): return is_instance_valid(s) and s != spot)
 	_disconnect_spot(spot)
 	var bonus: float = _get_config_value("spot_completion_bonus", Config.SPOT_COMPLETION_BONUS)
@@ -685,6 +712,8 @@ func _on_spot_completed(spot: InteractionNote) -> void:
 
 
 func _on_spot_expired(progress_ratio: float, spot: InteractionNote, is_timeout_failure: bool = true) -> void:
+	if spot is RubNote:
+		rub_audio_ended.emit(spot.get_instance_id())
 	_active_spots = _active_spots.filter(func(s): return is_instance_valid(s) and s != spot)
 	_disconnect_spot(spot)
 	var penalty := 0.0
@@ -724,6 +753,12 @@ func _disconnect_spot(spot: InteractionNote) -> void:
 	var motion_callback := _on_spot_visual_motion.bind(spot)
 	if spot.visual_motion.is_connected(motion_callback):
 		spot.visual_motion.disconnect(motion_callback)
+	var audio_callback := _on_spot_audio_note_reached.bind(spot)
+	if spot.audio_note_reached.is_connected(audio_callback):
+		spot.audio_note_reached.disconnect(audio_callback)
+	var rub_audio_callback := _on_spot_audio_motion_valid.bind(spot)
+	if spot.audio_motion_valid.is_connected(rub_audio_callback):
+		spot.audio_motion_valid.disconnect(rub_audio_callback)
 	var progressed_callback := _on_spot_progressed.bind(spot)
 	if spot.progressed.is_connected(progressed_callback):
 		spot.progressed.disconnect(progressed_callback)

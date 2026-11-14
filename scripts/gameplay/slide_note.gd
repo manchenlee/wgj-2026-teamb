@@ -151,6 +151,7 @@ func _activate_current_target() -> void:
 	if not _armed:
 		_armed = true
 		_next_checkpoint_index = 1
+		audio_note_reached.emit()
 		_restart_lifetime()
 		queue_redraw()
 		return
@@ -158,6 +159,7 @@ func _activate_current_target() -> void:
 	if _next_checkpoint_index <= 0 or _next_checkpoint_index >= checkpoints.size():
 		return
 	_next_checkpoint_index += 1
+	audio_note_reached.emit()
 	var segment_direction := (checkpoints[_next_checkpoint_index - 1] - checkpoints[_next_checkpoint_index - 2]).normalized()
 	visual_motion.emit(segment_direction, 1.0)
 	var required_count := checkpoints.size() - 1
