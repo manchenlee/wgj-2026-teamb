@@ -8,7 +8,9 @@ extends Node
 @export_range(36, 96) var sample_root_pitch: int = 69
 @export_range(2, 24) var max_voices: int = 8
 @export_range(0.1, 0.15, 0.005) var rub_inactivity_seconds: float = 0.125
-@export_range(0.25, 0.4, 0.01) var rub_pitch_change_seconds: float = 0.32
+@export_range(-12.0, 18.0, 0.5) var violin_gain_db: float = 10.0
+
+const VIOLIN_BUS: StringName = &"Violin"
 
 var pitch_provider: Callable
 var _voices: Array[AudioStreamPlayer] = []
@@ -16,8 +18,6 @@ var _voice_serial: int = 0
 var _rub_player: AudioStreamPlayer
 var _rub_source_id: int = 0
 var _rub_idle: float = 0.0
-var _rub_pitch_elapsed: float = 0.0
-var _rub_pitch: int = -1
 var _arco_player: AudioStreamPlayer
 var _voice_generation: Dictionary = {}
 var _voice_tweens: Dictionary = {}
@@ -31,12 +31,12 @@ func _process(delta: float) -> void:
 	if _rub_source_id == 0:
 		return
 	_rub_idle += delta
-	_rub_pitch_elapsed += delta
 	if _rub_idle >= rub_inactivity_seconds:
 		stop_rub()
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_ensure_violin_bus()
 	if pizzicato_sample == null:
 		pizzicato_sample = _make_development_sample(&"pizzicato")
 	if arco_sample == null:
@@ -46,13 +46,25 @@ func _ready() -> void:
 	for i in max_voices:
 		var player := AudioStreamPlayer.new()
 		player.name = "ViolinVoice%d" % i
-		player.bus = "Master"
+		player.bus = VIOLIN_BUS
 		add_child(player)
 		_voices.append(player)
 	_rub_player = AudioStreamPlayer.new()
 	_rub_player.name = "ViolinRub"
-	_rub_player.bus = "Master"
+	_rub_player.bus = VIOLIN_BUS
 	add_child(_rub_player)
+
+func _ensure_violin_bus() -> void:
+	var bus_index := AudioServer.get_bus_index(VIOLIN_BUS)
+	if bus_index < 0:
+		AudioServer.add_bus()
+		bus_index = AudioServer.bus_count - 1
+		AudioServer.set_bus_name(bus_index, String(VIOLIN_BUS))
+		AudioServer.set_bus_send(bus_index, &"Master")
+		var limiter := AudioEffectHardLimiter.new()
+		limiter.ceiling_db = -6.0
+		AudioServer.add_bus_effect(bus_index, limiter)
+	AudioServer.set_bus_volume_db(bus_index, violin_gain_db)
 
 func play_click() -> void:
 	var pitch := _current_pitch()
@@ -113,15 +125,13 @@ func _release_voice(voice: AudioStreamPlayer, duration: float) -> void:
 	)
 
 func rub_motion(source_id: int) -> void:
-	var pitch := _current_pitch()
-	if pitch < 0:
-		return
 	if _rub_source_id != source_id or not _rub_player.playing:
+		var pitch := _current_pitch()
+		if pitch < 0:
+			return
 		if _rub_tween != null:
 			_rub_tween.kill()
 		_rub_source_id = source_id
-		_rub_pitch = pitch
-		_rub_pitch_elapsed = 0.0
 		_rub_player.stop()
 		_rub_player.stream = tremolo_sample
 		_rub_player.pitch_scale = pow(2.0, float(pitch - sample_root_pitch) / 12.0)
@@ -129,10 +139,6 @@ func rub_motion(source_id: int) -> void:
 		_rub_player.play()
 		_rub_tween = create_tween()
 		_rub_tween.tween_property(_rub_player, "volume_db", -16.0, 0.04)
-	elif pitch != _rub_pitch and _rub_pitch_elapsed >= rub_pitch_change_seconds:
-		_rub_pitch = pitch
-		_rub_pitch_elapsed = 0.0
-		_rub_player.pitch_scale = pow(2.0, float(pitch - sample_root_pitch) / 12.0)
 	_rub_idle = 0.0
 
 func end_rub(source_id: int) -> void:
@@ -153,7 +159,6 @@ func stop_all() -> void:
 
 func stop_rub() -> void:
 	_rub_source_id = 0
-	_rub_pitch = -1
 	if _rub_player != null:
 		if _rub_tween != null:
 			_rub_tween.kill()

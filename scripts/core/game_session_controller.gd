@@ -49,7 +49,7 @@ enum CharacterExpressionSource {
 @export var violin_tremolo_sample: AudioStream
 @export_range(36, 96) var violin_sample_root_pitch: int = 69
 @export_range(0.1, 0.15, 0.005) var violin_rub_inactivity_seconds: float = 0.125
-@export_range(0.25, 0.4, 0.01) var violin_rub_pitch_change_seconds: float = 0.32
+@export_range(-12.0, 18.0, 0.5) var violin_gain_db: float = 10.0
 @export var shared_character_alignment_offset: Vector2 = Vector2.ZERO
 
 @onready var character_alignment_root: Control = $CharacterAlignmentRoot
@@ -194,7 +194,7 @@ func _ready() -> void:
 	violin_audio.tremolo_sample = violin_tremolo_sample
 	violin_audio.sample_root_pitch = violin_sample_root_pitch
 	violin_audio.rub_inactivity_seconds = violin_rub_inactivity_seconds
-	violin_audio.rub_pitch_change_seconds = violin_rub_pitch_change_seconds
+	violin_audio.violin_gain_db = violin_gain_db
 	add_child(violin_audio)
 	spot_manager.click_audio_requested.connect(violin_audio.play_click)
 	spot_manager.slide_audio_requested.connect(violin_audio.play_slide_checkpoint)

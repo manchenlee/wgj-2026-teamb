@@ -5,6 +5,7 @@ const AUDIO_SCRIPT := preload("res://scripts/gameplay/violin_sample_player.gd")
 
 var _pitch: int = 69
 var _requests: int = 0
+var _pitch_queries: int = 0
 var _failures: Array[String] = []
 
 func _initialize() -> void:
@@ -14,6 +15,11 @@ func _run() -> void:
 	var audio := AUDIO_SCRIPT.new() as ViolinSamplePlayer
 	audio.pitch_provider = Callable(self, "_get_pitch")
 	root.add_child(audio)
+	var violin_bus := AudioServer.get_bus_index(&"Violin")
+	if violin_bus < 0 or not is_equal_approx(AudioServer.get_bus_volume_db(violin_bus), audio.violin_gain_db):
+		_fail("Configurable violin gain was not applied")
+	if violin_bus >= 0 and not AudioServer.get_bus_effect(violin_bus, 0) is AudioEffectHardLimiter:
+		_fail("Overlapping violin voices have no limiter")
 	var click := CLICK_SCENE.instantiate() as ClickNote
 	click.setup({"target_center": Vector2(84, 84), "target_radius": 40.0})
 	root.add_child(click)
@@ -28,6 +34,8 @@ func _run() -> void:
 	click._gui_input(_press(Vector2(84, 84)))
 	if _requests != 1 or audio._voice_serial != 1:
 		_fail("Successful Click did not trigger once")
+	if _pitch_queries != 1:
+		_fail("Successful Click did not query pitch exactly once")
 	elif not is_equal_approx(audio._voices[0].pitch_scale, pow(2.0, 3.0 / 12.0)):
 		_fail("Click pitch was not read at input time")
 	click._gui_input(_press(Vector2(84, 84)))
@@ -55,6 +63,7 @@ func _run() -> void:
 		quit(1)
 
 func _get_pitch() -> int:
+	_pitch_queries += 1
 	return _pitch
 
 func _press(position: Vector2) -> InputEventMouseButton:
