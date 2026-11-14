@@ -2,6 +2,7 @@ extends SceneTree
 
 const MANAGER := preload("res://scripts/gameplay/interaction_spot_manager.gd")
 const PHASE := preload("res://data/phases/phase_config.gd")
+const CONTROLLER := preload("res://scripts/core/game_session_controller.gd")
 
 var failures: Array[String] = []
 
@@ -16,6 +17,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	_test_default_and_fallback_loading()
 	var production := MANAGER.new() as InteractionSpotManager
 	_check(production.load_chart_file("res://data/violin_interaction_chart.json"), "Production chart failed to load")
 	_check(production.get_chart_debug_state()["mode"] == "Production", "Production mode mislabeled")
@@ -25,6 +27,9 @@ func _run() -> void:
 		var first := MANAGER.new() as InteractionSpotManager
 		var second := MANAGER.new() as InteractionSpotManager
 		var path := "res://data/violin_interaction_chart_%s_variants.json" % mode.to_lower()
+		if mode == "High" and not FileAccess.file_exists(path):
+			# Export packs intentionally omit the development-only High chart.
+			continue
 		_check(first.load_chart_variant_bank(path, mode, 2026), "%s bank failed" % mode)
 		_check(second.load_chart_variant_bank(path, mode, 2026), "%s bank failed twice" % mode)
 		_check(first._chart_events == second._chart_events, "%s selection was not deterministic" % mode)
@@ -92,6 +97,33 @@ func _run() -> void:
 		for failure in failures:
 			push_error(failure)
 		quit(1)
+
+
+func _test_default_and_fallback_loading() -> void:
+	var controller := CONTROLLER.new()
+	var manager := MANAGER.new() as InteractionSpotManager
+	controller._load_interaction_chart(manager)
+	var requested_mode := OS.get_environment("VIOLIN_CHART_MODE").strip_edges().to_lower() if OS.is_debug_build() else ""
+	var expected_mode := requested_mode.capitalize() if requested_mode in ["production", "moderate", "high"] else "Moderate"
+	_check(manager.get_chart_debug_state()["mode"] == expected_mode, "Fresh chart selection did not match the launch mode")
+	if expected_mode == "Moderate":
+		_check(manager.get_chart_loop_stats()["intended_pitch_opportunities"] >= 273, "Default Moderate bank did not provide its playable coverage")
+	var missing := MANAGER.new() as InteractionSpotManager
+	controller._load_interaction_chart(missing, "res://data/missing_moderate_variants.json")
+	if expected_mode == "Moderate":
+		_check(missing.get_chart_debug_state()["mode"] == "Production" and missing._chart_events.size() == 73, "Missing Moderate bank did not fall back to legacy chart")
+	var invalid_path := "user://invalid_moderate_chart_variants.json"
+	var invalid_file := FileAccess.open(invalid_path, FileAccess.WRITE)
+	_check(invalid_file != null, "Could not create invalid bank fixture")
+	if invalid_file != null:
+		invalid_file.store_string('{"schema_version": 0}')
+		invalid_file.close()
+		var invalid := MANAGER.new() as InteractionSpotManager
+		controller._load_interaction_chart(invalid, invalid_path)
+		if expected_mode == "Moderate":
+			_check(invalid.get_chart_debug_state()["mode"] == "Production" and invalid._chart_events.size() == 73, "Invalid Moderate bank did not fall back to legacy chart")
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(invalid_path))
+	controller.free()
 
 
 func _context() -> Dictionary:

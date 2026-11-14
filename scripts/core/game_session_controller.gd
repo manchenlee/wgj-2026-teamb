@@ -236,21 +236,7 @@ func _setup_spot_manager() -> void:
 		push_error("GameSessionController: CharacterPromptRegion not found.")
 		return
 	spot_manager.setup(arousal_model, character_area, prompt_layer, character_prompt_region, spot_spawn_timer)
-	var production_path := "res://data/violin_interaction_chart.json"
-	spot_manager.load_chart_file(production_path)
-	# Development launch variables only; shipped builds always use the production chart.
-	if OS.is_debug_build():
-		var mode := OS.get_environment("VIOLIN_CHART_MODE").strip_edges().to_lower()
-		if mode.is_empty():
-			mode = "moderate"
-		if mode in ["moderate", "high"]:
-			var seed_text := OS.get_environment("VIOLIN_CHART_SEED").strip_edges()
-			var run_seed := int(seed_text) if seed_text.is_valid_int() else 2026
-			var bank_path := "res://data/violin_interaction_chart_%s_variants.json" % mode
-			if not spot_manager.load_chart_variant_bank(bank_path, mode.capitalize(), run_seed):
-				push_warning("MIDI chart variant bank unavailable; using Production: %s" % bank_path)
-		elif mode != "production":
-			push_warning("Unknown VIOLIN_CHART_MODE '%s'; using Production" % mode)
+	_load_interaction_chart(spot_manager)
 	spot_manager.bgm_position_provider = bgm_position_provider
 	spot_manager.spot_scrub_started.connect(_on_spot_scrub_started)
 	spot_manager.spot_scrub_ended.connect(_on_spot_scrub_ended)
@@ -258,6 +244,25 @@ func _setup_spot_manager() -> void:
 	spot_manager.physiological_spot_completed.connect(_on_physiological_spot_completed)
 	spot_manager.physiological_spot_failed.connect(_on_physiological_spot_failed)
 	_configure_pose_layers()
+
+
+func _load_interaction_chart(manager: InteractionSpotManager, moderate_bank_path: String = "res://data/violin_interaction_chart_moderate_variants.json") -> void:
+	# Keep the original chart available if the approved variant bank cannot be loaded.
+	manager.load_chart_file("res://data/violin_interaction_chart.json")
+	var mode := "moderate"
+	if OS.is_debug_build():
+		var requested_mode := OS.get_environment("VIOLIN_CHART_MODE").strip_edges().to_lower()
+		if requested_mode in ["production", "moderate", "high"]:
+			mode = requested_mode
+		elif not requested_mode.is_empty():
+			push_warning("Unknown VIOLIN_CHART_MODE '%s'; using Moderate" % requested_mode)
+	if mode == "production":
+		return
+	var seed_text := OS.get_environment("VIOLIN_CHART_SEED").strip_edges() if OS.is_debug_build() else ""
+	var run_seed := int(seed_text) if seed_text.is_valid_int() else 2026
+	var bank_path := moderate_bank_path if mode == "moderate" else "res://data/violin_interaction_chart_high_variants.json"
+	if not manager.load_chart_variant_bank(bank_path, mode.capitalize(), run_seed):
+		push_warning("MIDI chart variant bank unavailable; using legacy Production: %s" % bank_path)
 
 # ---------------------------------------------------------------------------
 # Phase management
@@ -1368,7 +1373,7 @@ func _begin_ending_transition(ending_type: String) -> void:
 	if ending_transition_started:
 		return
 	ending_transition_started = true
-	_stop_runtime_timers()
+	_stop_runtime_timers(true)
 	run_active = false
 	_update_character_visual_state(ending_type)
 	if current_presentation_phase == 5 and roundi(Config.clamp_value(arousal_model.physical)) == 100 \
@@ -1623,15 +1628,15 @@ func _get_texture_content_rect(texture_rect: TextureRect, texture_size: Vector2)
 # Timer helpers
 # ---------------------------------------------------------------------------
 
-func _stop_runtime_timers() -> void:
-	if violin_audio != null:
+func _stop_runtime_timers(preserve_violin_audio: bool = false) -> void:
+	if violin_audio != null and not preserve_violin_audio:
 		violin_audio.stop_all()
 	_invalidate_reading_step()
 	physiological_dialogue_timer.stop()
 	spot_spawn_timer.stop()
 	choice_timeout_timer.stop()
 	if spot_manager != null:
-		spot_manager.stop()
+		spot_manager.stop(not preserve_violin_audio)
 	if failure_flash != null:
 		failure_flash.clear_flash()
 	if overlay_animator != null:

@@ -446,10 +446,11 @@ func start() -> void:
 		_schedule_next_spot(Config.SPOT_INITIAL_SPAWN_DELAY)
 
 
-func stop() -> void:
+func stop(cancel_audio: bool = true) -> void:
 	if _chart_enabled and _active:
 		_print_chart_loop_stats(_chart_loop_index)
-	audio_cancel_requested.emit()
+	if cancel_audio:
+		audio_cancel_requested.emit()
 	if _character_presenter != null:
 		_character_presenter.clear_body_motion()
 	_active = false
