@@ -49,11 +49,11 @@ func _run() -> void:
 	_pitch = 76
 	rub._process_pointer_move(Vector2(108, 108))
 	_check(is_equal_approx(audio._rub_player.pitch_scale, initial_pitch) and _pitch_queries == 5, "Rub pitch held during rapid transition")
-	for i in 8:
-		await create_timer(0.05).timeout
+	for i in 16:
+		audio._process(0.025)
 		rub._process_pointer_move(Vector2(128, 108) if i % 2 == 0 else Vector2(108, 108))
 	_check(is_equal_approx(audio._rub_player.pitch_scale, initial_pitch) and _pitch_queries == 5, "Continuous Rub keeps one pitch after old change interval")
-	await create_timer(0.16).timeout
+	audio._process(0.16)
 	_check(audio._rub_source_id == 0, "Rub inactivity timeout")
 	rub._process_pointer_move(Vector2(128, 108))
 	_check(audio._rub_source_id == rub.get_instance_id(), "Rub resumes after inactivity")

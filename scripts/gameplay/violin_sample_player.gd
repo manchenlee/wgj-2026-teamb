@@ -1,10 +1,16 @@
 class_name ViolinSamplePlayer
 extends Node
 
-# Replace these streams with licensed recordings. The generated tones are development placeholders.
+const ClefBackendClass := preload("res://scripts/gameplay/violin_clef_backend.gd")
+
+# These streams and generated tones remain available when no usable SF2 is configured.
 @export var pizzicato_sample: AudioStream
 @export var arco_sample: AudioStream
 @export var tremolo_sample: AudioStream
+@export var soundfont_path: String = ""
+@export_range(0, 127) var pizzicato_preset: int = 45
+@export_range(0, 127) var arco_preset: int = 40
+@export_range(0, 127) var tremolo_preset: int = 44
 @export_range(36, 96) var sample_root_pitch: int = 69
 @export_range(2, 24) var max_voices: int = 8
 @export_range(0.1, 0.15, 0.005) var rub_inactivity_seconds: float = 0.125
@@ -22,10 +28,13 @@ var _arco_player: AudioStreamPlayer
 var _voice_generation: Dictionary = {}
 var _voice_tweens: Dictionary = {}
 var _rub_tween: Tween
+var _clef_backend: ViolinClefBackend
+var _clef_arco_token: int = 0
+var _clef_rub_token: int = 0
 
 func _process(delta: float) -> void:
 	if get_tree().paused:
-		if _rub_source_id != 0 or _voices.any(func(voice: AudioStreamPlayer) -> bool: return voice.playing):
+		if _rub_source_id != 0 or _voices.any(func(voice: AudioStreamPlayer) -> bool: return voice.playing) or (_clef_backend != null and _clef_backend.active_note_count() > 0):
 			stop_all()
 		return
 	if _rub_source_id == 0:
@@ -37,6 +46,14 @@ func _process(delta: float) -> void:
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_ensure_violin_bus()
+	_clef_backend = ClefBackendClass.new()
+	var soundfont_override := OS.get_environment("VIOLIN_SF2_PATH")
+	_clef_backend.soundfont_path = soundfont_override if not soundfont_override.is_empty() else soundfont_path
+	_clef_backend.pizzicato_preset = pizzicato_preset
+	_clef_backend.arco_preset = arco_preset
+	_clef_backend.tremolo_preset = tremolo_preset
+	_clef_backend.max_notes = max_voices
+	add_child(_clef_backend)
 	if pizzicato_sample == null:
 		pizzicato_sample = _make_development_sample(&"pizzicato")
 	if arco_sample == null:
@@ -70,6 +87,8 @@ func play_click() -> void:
 	var pitch := _current_pitch()
 	if pitch < 0:
 		return
+	if _clef_backend.is_available() and _clef_backend.play_note(pizzicato_preset, pitch, 108, 0.18) != 0:
+		return
 	var voice := _next_voice()
 	voice.stream = pizzicato_sample
 	voice.pitch_scale = pow(2.0, float(pitch - sample_root_pitch) / 12.0)
@@ -94,6 +113,12 @@ func play_slide_checkpoint() -> void:
 	var pitch := _current_pitch()
 	if pitch < 0:
 		return
+	if _clef_backend.is_available():
+		if _clef_arco_token != 0:
+			_clef_backend.release_note(_clef_arco_token)
+		_clef_arco_token = _clef_backend.play_note(arco_preset, pitch, 105, 0.35)
+		if _clef_arco_token != 0:
+			return
 	if _arco_player != null and _arco_player.playing:
 		_release_voice(_arco_player, 0.09)
 	var voice := _next_voice()
@@ -125,10 +150,18 @@ func _release_voice(voice: AudioStreamPlayer, duration: float) -> void:
 	)
 
 func rub_motion(source_id: int) -> void:
-	if _rub_source_id != source_id or not _rub_player.playing:
+	if _rub_source_id != source_id or (_clef_backend.is_available() and _clef_rub_token == 0) or (not _clef_backend.is_available() and not _rub_player.playing):
 		var pitch := _current_pitch()
 		if pitch < 0:
 			return
+		if _clef_backend.is_available():
+			if _clef_rub_token != 0:
+				_clef_backend.release_note(_clef_rub_token)
+			_clef_rub_token = _clef_backend.play_note(tremolo_preset, pitch, 100)
+			if _clef_rub_token != 0:
+				_rub_source_id = source_id
+				_rub_idle = 0.0
+				return
 		if _rub_tween != null:
 			_rub_tween.kill()
 		_rub_source_id = source_id
@@ -146,6 +179,10 @@ func end_rub(source_id: int) -> void:
 		stop_rub()
 
 func stop_all() -> void:
+	if _clef_backend != null:
+		_clef_backend.force_stop_all()
+	_clef_arco_token = 0
+	_clef_rub_token = 0
 	for tween: Tween in _voice_tweens.values():
 		tween.kill()
 	_voice_tweens.clear()
@@ -159,7 +196,12 @@ func stop_all() -> void:
 
 func stop_rub() -> void:
 	_rub_source_id = 0
+	if _clef_rub_token != 0:
+		_clef_backend.release_note(_clef_rub_token)
+		_clef_rub_token = 0
 	if _rub_player != null:
+		if not _rub_player.playing:
+			return
 		if _rub_tween != null:
 			_rub_tween.kill()
 		var player := _rub_player
@@ -172,6 +214,8 @@ func stop_rub() -> void:
 		)
 
 func _exit_tree() -> void:
+	if _clef_backend != null:
+		_clef_backend.force_stop_all()
 	for voice in _voices:
 		voice.stop()
 	if _rub_player != null:

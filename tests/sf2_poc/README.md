@@ -5,8 +5,9 @@ They do not connect to the game session, MIDI timeline, or interaction audio.
 The copied Clef source is MIT licensed; see `addons/clef/LICENSE.txt`.
 Source revision: `kenyonxu/clef` commit `8ec3f97227272c8757dbe0f99d217dcba649bf4b`.
 
-No SoundFont is bundled. Set `SF2_POC_PATH` to a locally available SF2 file
-whose license permits your intended use. The test font was GeneralUser GS
+Set `SF2_POC_PATH` to a locally available SF2 file for the isolated probe.
+The production project now includes GeneralUser GS as its default font. The
+original probe used GeneralUser GS
 v2.0.3 from `mrbumpy409/GeneralUser-GS` commit
 `684543d5e5efaef08d02be50dcda8d552478fa60`. Its author license is in
 that repository's `documentation/LICENSE.txt`; review the contained-sample
@@ -28,3 +29,19 @@ the same +10 dB gain and -6 dB hard limiter used by the current audio backend.
 
 The probe measures API call duration and voice lifecycle. It cannot measure
 audible input-to-output latency or perceived sound quality in headless mode.
+
+## Gameplay integration
+
+The game session defaults to the bundled GeneralUser GS SF2. Set
+`VIOLIN_SF2_PATH` before launching the game, or change
+`violin_soundfont_path` on the game session scene, to use another licensed
+`.sf2` file. An empty or unreadable path selects the procedural fallback. The
+three exported preset numbers default to 45 (Click), 40 (Slide), and 44 (Rub)
+and can be changed with the SoundFont. See the bundled font's `LICENSE.txt`
+and `SOURCE.md` before redistribution.
+
+The production check uses the bundled default SoundFont:
+
+```powershell
+& 'C:\path\to\Godot_v4.6.2-stable_win64_console.exe' --headless --path . --script res://tests/gameplay/violin_clef_integration_headless_test.gd
+```
