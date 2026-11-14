@@ -468,10 +468,11 @@ func stop(cancel_audio: bool = true) -> void:
 	_active_spots.clear()
 
 
-func suspend() -> void:
+func suspend(cancel_audio: bool = true) -> void:
 	if not _active or _suspended:
 		return
-	audio_cancel_requested.emit()
+	if cancel_audio:
+		audio_cancel_requested.emit()
 	_suspended = true
 	if _character_presenter != null:
 		_character_presenter.clear_body_motion()

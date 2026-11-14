@@ -948,7 +948,7 @@ func set_legacy_arousal_visualization_visible(legacy_visible: bool) -> void:
 	if arousal_visualization != null:
 		arousal_visualization.visible = legacy_visible
 
-func _set_interaction_mode(next_mode: InteractionMode, force_sync: bool = false) -> void:
+func _set_interaction_mode(next_mode: InteractionMode, force_sync: bool = false, preserve_note_audio: bool = false) -> void:
 	if interaction_mode == next_mode and not force_sync:
 		return
 	if _first_safe_word_dialogue_active and next_mode == InteractionMode.PHYSIOLOGICAL:
@@ -962,10 +962,10 @@ func _set_interaction_mode(next_mode: InteractionMode, force_sync: bool = false)
 	interaction_mode = next_mode
 	if entering_psychological_mode:
 		_start_new_psychological_dialogue()
-	_sync_interaction_mode_state()
+	_sync_interaction_mode_state(preserve_note_audio)
 	interaction_mode_changed.emit(interaction_mode)
 
-func _sync_interaction_mode_state() -> void:
+func _sync_interaction_mode_state(preserve_note_audio: bool = false) -> void:
 	var psychological_active := interaction_mode == InteractionMode.PSYCHOLOGICAL
 	psychological_mask.set_psychological_active(psychological_active)
 	status_hud.set_physical_mode_active(not psychological_active)
@@ -984,7 +984,7 @@ func _sync_interaction_mode_state() -> void:
 		choice_timeout_timer.set_paused(false)
 	if spot_manager != null:
 		if psychological_active:
-			spot_manager.suspend()
+			spot_manager.suspend(not preserve_note_audio)
 		else:
 			spot_manager.resume()
 	if psychological_active:
@@ -1133,7 +1133,7 @@ func _on_physiological_spot_completed() -> void:
 	current_combo += 1
 	max_combo = maxi(max_combo, current_combo)
 	status_hud.update_combo(current_combo, true)
-	_show_pending_safe_word_after_spot()
+	_show_pending_safe_word_after_spot(true)
 
 
 func _on_physiological_spot_failed(_progress_ratio: float, _penalty: float) -> void:
@@ -1153,10 +1153,10 @@ func _track_safe_word_threshold() -> bool:
 	return _safe_word_pending
 
 
-func _show_pending_safe_word_after_spot() -> void:
+func _show_pending_safe_word_after_spot(preserve_note_audio: bool = false) -> void:
 	_track_safe_word_threshold()
 	if _safe_word_pending and interaction_mode == InteractionMode.PHYSIOLOGICAL:
-		_set_interaction_mode(InteractionMode.PSYCHOLOGICAL)
+		_set_interaction_mode(InteractionMode.PSYCHOLOGICAL, false, preserve_note_audio)
 
 # ---------------------------------------------------------------------------
 # Dialogue
