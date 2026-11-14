@@ -1,240 +1,413 @@
-"""Build a deterministic, offline physiological chart from violin_timeline.json.
+"""Build deterministic phrase-first candidate charts. Never overwrites production.
 
-This tool has no runtime dependency. Run from the project root:
-    python tools/generate_violin_chart.py
+    python tools/generate_violin_chart.py [--seed 2026] [--loop-index 0]
+
+Loop variants are generated offline; runtime switching is not enabled.
 """
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
+import random
 from collections import Counter
+from dataclasses import dataclass
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
-TIMELINE_PATH = ROOT / "data" / "violin_timeline.json"
-CHART_PATH = ROOT / "data" / "violin_interaction_chart.json"
-REPORT_PATH = ROOT / "data" / "violin_interaction_chart_report.md"
-
-LEAD_SECONDS = 0.8
-MIN_SPAWN_SPACING_SECONDS = 1.1
-CLICK_MAX_DURATION_SECONDS = 0.45
-SLIDE_MAX_ONSET_GAP_SECONDS = 0.52
-SLIDE_MIN_SPAN_SECONDS = 0.4
-RUB_MIN_SPAN_SECONDS = 1.6
-RUB_MAX_SPAN_SECONDS = 2.8
-RUB_MAX_REST_SECONDS = 0.5
+SOURCE = ROOT / "data" / "violin_timeline.json"
+PRODUCTION = ROOT / "data" / "violin_interaction_chart.json"
+LEAD = 0.8
+FAST_GAP = 0.18
+PHRASE_GAP = 0.52
 MAX_ACTIVE = 3
-CLICK_LIFETIME_SECONDS = 2.0
-SLIDE_CHECKPOINT_TIMEOUT_SECONDS = 2.0
-RUB_LIFETIME_SECONDS = 4.0
-TYPE_CYCLE = ("click", "slide", "click", "rub")
+STRATEGIES = ("moderate", "high")
 
 
-def seconds(value: float) -> float:
-    return round(value, 6)
+@dataclass(frozen=True)
+class Candidate:
+    kind: str
+    indices: tuple[int, ...]
+    priority: int
+    phrase: int
+    essential: bool = False
 
 
-def slide_group(notes: list[dict], index: int, accepted_count: int) -> list[int]:
-    target_size = 3 + ((accepted_count // len(TYPE_CYCLE)) % 4)
-    group = [index]
-    for next_index in range(index + 1, min(index + target_size, len(notes))):
-        previous = notes[next_index - 1]
-        current = notes[next_index]
-        if current["start"] - previous["start"] > SLIDE_MAX_ONSET_GAP_SECONDS:
-            break
-        group.append(next_index)
-    if len(group) < 3 or notes[group[-1]]["start"] - notes[index]["start"] < SLIDE_MIN_SPAN_SECONDS:
-        return []
-    return group
-
-
-def rub_phrase(notes: list[dict], index: int) -> list[int]:
-    group = [index]
-    for next_index in range(index + 1, len(notes)):
-        previous = notes[next_index - 1]
-        current = notes[next_index]
-        if current["start"] - previous["end"] > RUB_MAX_REST_SECONDS:
-            break
-        if current["start"] - notes[index]["start"] > RUB_MAX_SPAN_SECONDS:
-            break
-        group.append(next_index)
-        if current["end"] - notes[index]["start"] >= RUB_MIN_SPAN_SECONDS:
-            break
-    if notes[group[-1]]["end"] - notes[index]["start"] < RUB_MIN_SPAN_SECONDS:
-        return []
-    return group
-
-
-def candidate(notes: list[dict], index: int, kind: str, accepted_count: int) -> list[int]:
-    if kind == "click":
-        note = notes[index]
-        return [index] if note["end"] - note["start"] <= CLICK_MAX_DURATION_SECONDS else []
-    if kind == "slide":
-        return slide_group(notes, index, accepted_count)
-    return rub_phrase(notes, index)
-
-
-def occupancy_seconds(kind: str, note_count: int) -> float:
-    if kind == "click":
-        return CLICK_LIFETIME_SECONDS
-    if kind == "rub":
-        return RUB_LIFETIME_SECONDS
-    # Initial deadline plus a fresh two-second deadline at each reached point.
-    return SLIDE_CHECKPOINT_TIMEOUT_SECONDS * note_count
+def _rng(seed: int, loop_index: int, key: str) -> random.Random:
+    digest = hashlib.sha256(f"{seed}:{loop_index}:{key}".encode()).digest()
+    return random.Random(int.from_bytes(digest[:8], "big"))
 
 
 def validate_timeline(timeline: dict) -> tuple[list[dict], float]:
     notes = timeline["notes"]
     duration = float(timeline["loop_duration_seconds"])
-    if duration <= 0 or not isinstance(notes, list) or not notes:
-        raise ValueError("MIDI timeline has no usable notes or loop duration")
-    previous_start = -1.0
+    if duration <= 0 or not notes:
+        raise ValueError("Empty MIDI timeline")
+    previous = -1.0
     for note in notes:
         start, end, pitch = note["start"], note["end"], note["pitch"]
-        if start < previous_start or start < 0 or end <= start or end > duration + 0.02 or not 0 <= pitch <= 127:
+        if start < previous or start < 0 or end <= start or end > duration + 0.02 or not 0 <= pitch <= 127:
             raise ValueError("Invalid MIDI note order, duration, or pitch")
-        previous_start = start
+        previous = start
     return notes, duration
 
 
-def generate_chart(timeline: dict, source_hash: str) -> tuple[dict, dict]:
-    notes, duration = validate_timeline(timeline)
-    events: list[dict] = []
-    reservations: list[tuple[float, float]] = []
-    selected: set[int] = set()
-    reasons: Counter[str] = Counter()
-    index = 0
-    while index < len(notes):
-        kind = TYPE_CYCLE[len(events) % len(TYPE_CYCLE)]
-        group = candidate(notes, index, kind, len(events))
-        if not group:
-            reasons["unsuitable_for_next_type"] += 1
-            index += 1
-            continue
-        start = notes[index]["start"]
-        spawn = start - LEAD_SECONDS
-        release = spawn + occupancy_seconds(kind, len(group))
-        if spawn < 0 or release > duration:
-            reasons["loop_boundary"] += 1
-            index += 1
-            continue
-        if events and spawn - events[-1]["spawn_time"] < MIN_SPAWN_SPACING_SECONDS - 0.000001:
-            reasons["spawn_spacing"] += 1
-            index += 1
-            continue
-        overlap = sum(a < release and spawn < b for a, b in reservations)
-        if overlap >= MAX_ACTIVE:
-            reasons["estimated_active_cap"] += 1
-            index += 1
-            continue
+def phrase_ranges(notes: list[dict]) -> list[tuple[int, int]]:
+    """Use rests, onset gaps, and pitch leaps after slower notes as boundaries."""
+    starts = [0]
+    for i in range(1, len(notes)):
+        gap = notes[i]["start"] - notes[i - 1]["start"]
+        rest = notes[i]["start"] - notes[i - 1]["end"]
+        leap = abs(notes[i]["pitch"] - notes[i - 1]["pitch"])
+        if gap > PHRASE_GAP or rest > 0.35 or (gap > 0.32 and leap >= 12):
+            starts.append(i)
+    return [(start, starts[k + 1] - 1 if k + 1 < len(starts) else len(notes) - 1)
+            for k, start in enumerate(starts)]
 
-        checkpoints = [
-            {"note_index": note_index, "time": seconds(notes[note_index]["start"]), "pitch": notes[note_index]["pitch"]}
-            for note_index in group
-        ]
-        pitch_source = max(group, key=lambda n: (notes[n]["end"] - notes[n]["start"], -n)) if kind == "rub" else group[0]
-        event = {
-            "id": f"{kind}_{index:04d}",
-            "type": kind,
-            "spawn_time": seconds(spawn),
-            "source_start_time": seconds(start),
-            "source_end_time": seconds(max(notes[n]["end"] for n in group)),
-            "pitch": notes[pitch_source]["pitch"],
-            "pitch_note_index": pitch_source,
-            "note_indices": group,
-            "checkpoints": checkpoints if kind == "slide" else [],
-        }
-        events.append(event)
-        reservations.append((spawn, release))
-        selected.update(group)
-        index = group[-1] + 1
 
-    # Sweep half-open worst-case occupancy intervals, processing releases first.
-    edges = [(a, 1) for a, _ in reservations] + [(b, -1) for _, b in reservations]
-    active = peak_active = 0
+def fast_runs(notes: list[dict]) -> list[tuple[int, int]]:
+    """Close onset spacing is fast; this does not assert notation as triplets."""
+    runs = []
+    start = 0
+    for i in range(len(notes) - 1):
+        if notes[i + 1]["start"] - notes[i]["start"] > FAST_GAP:
+            if i - start + 1 >= 3:
+                runs.append((start, i))
+            start = i + 1
+    if len(notes) - start >= 3:
+        runs.append((start, len(notes) - 1))
+    return runs
+
+
+def _chunks(indices: list[int], rng: random.Random, vary: bool) -> list[tuple[int, ...]]:
+    """Partition a phrase into complete 3-6 note figures, never dropping notes."""
+    result = []
+    remaining = indices[:]
+    while remaining:
+        if len(remaining) <= 6:
+            size = len(remaining)
+        elif len(remaining) - 6 in (1, 2):
+            size = len(remaining) - 3
+        else:
+            size = 6
+        if vary and size == 6 and len(remaining) > 6 and rng.random() < 0.2:
+            result.extend((tuple(remaining[:3]), tuple(remaining[3:6])))
+        else:
+            result.append(tuple(remaining[:size]))
+        remaining = remaining[size:]
+    return result
+
+
+def _source_candidates(notes: list[dict], strategy: str, seed: int, loop_index: int) -> tuple[list[Candidate], dict]:
+    fast = fast_runs(notes)
+    fast_indices = {i for a, b in fast for i in range(a, b + 1)}
+    candidates = []
+    skeleton = []
+    for phrase_id, (a, b) in enumerate(fast):
+        rng = _rng(seed, loop_index, f"fast:{a}")
+        chunks = _chunks(list(range(a, b + 1)), rng, strategy == "high" and loop_index > 0)
+        for k, indices in enumerate(chunks):
+            essential = k == 0 or k == len(chunks) - 1
+            if strategy == "moderate" and not essential and k % 2:
+                continue
+            candidates.append(Candidate("slide", indices, 100 if essential else 85, phrase_id, essential))
+            if essential:
+                skeleton.append(indices)
+
+    # Split slow material at every fast passage so Rub cannot absorb a run.
+    secondary = []
+    for a, b in phrase_ranges(notes):
+        block = []
+        for i in range(a, b + 1):
+            if i in fast_indices:
+                if block:
+                    secondary.append(block)
+                    block = []
+            else:
+                block.append(i)
+        if block:
+            secondary.append(block)
+
+    for phrase_id, block in enumerate(secondary, start=len(fast)):
+        rng = _rng(seed, loop_index, f"secondary:{block[0]}")
+        if len(block) >= 3:
+            chunks = _chunks(block, rng, strategy == "high" and loop_index > 0)
+            phase = rng.randrange(2)
+            for k, indices in enumerate(chunks):
+                if len(indices) < 3 or strategy == "moderate" and k % 2 != phase:
+                    continue
+                movement = sum(notes[j]["pitch"] != notes[j - 1]["pitch"] for j in indices[1:])
+                candidates.append(Candidate("slide", indices, 65 + min(movement, 5), phrase_id))
+        for i in block:
+            length = notes[i]["end"] - notes[i]["start"]
+            if length >= 0.75:
+                # One sustained source note per Rub: all selected pitches stay playable.
+                candidates.append(Candidate("rub", (i,), 55, phrase_id))
+            elif length <= 0.45:
+                previous = notes[i]["start"] - notes[i - 1]["start"] if i else 99.0
+                following = notes[i + 1]["start"] - notes[i]["start"] if i + 1 < len(notes) else 99.0
+                accent = min(previous, following) > 0.35 or notes[i].get("velocity", 0) >= 100
+                if accent or len(block) == 1:
+                    candidates.append(Candidate("click", (i,), 45 if accent else 35, phrase_id))
+    return candidates, {"fast_runs": fast, "skeleton": skeleton}
+
+
+def _lifetime(candidate: Candidate, slide_seconds: float | None) -> float:
+    if candidate.kind == "slide":
+        return 2.0 * len(candidate.indices) if slide_seconds is None else slide_seconds
+    return 2.0 if candidate.kind == "click" else 4.0
+
+
+def occupancy(events: list[Candidate], notes: list[dict], duration: float,
+              slide_seconds: float | None) -> dict:
+    """Circular-loop occupancy plus chronological cap-only skip estimate."""
+    intervals = []
+    for event in events:
+        spawn = notes[event.indices[0]]["start"] - LEAD
+        end = spawn + _lifetime(event, slide_seconds)
+        intervals.append((spawn, end, event))
+    edges = []
+    cross = 0
+    for start, end, _ in intervals:
+        edges.extend(((start, 1), (end, -1)))
+        if end > duration:
+            cross += 1
+            edges.extend(((start - duration, 1), (end - duration, -1)))
+    active = peak = 0
     for _, delta in sorted(edges, key=lambda edge: (edge[0], edge[1])):
         active += delta
-        peak_active = max(peak_active, active)
-    if peak_active > MAX_ACTIVE:
-        raise AssertionError("Generated chart exceeds the configured active cap")
-    if any(len(event["checkpoints"]) not in range(3, 7) for event in events if event["type"] == "slide"):
-        raise AssertionError("Slide group length is outside 3–6")
-    if len(selected) != sum(len(event["note_indices"]) for event in events):
-        raise AssertionError("A MIDI note was assigned to multiple events")
+        peak = max(peak, active)
+    kept = []
+    skipped = []
+    # Estimate capacity on an ordinary loop, carrying tail interactions from
+    # the previous loop. This has no position/psychological-mode model.
+    for start, end, event in sorted(intervals, key=lambda entry: entry[0]):
+        overlaps = [(a, b) for a, b, _ in kept if a < end and start < b]
+        overlaps += [(a - duration, b - duration) for a, b, _ in intervals if b > duration and a - duration < end and start < b - duration]
+        local = [(start, 1), (end, -1)]
+        for a, b in overlaps:
+            local.extend(((max(a, start), 1), (min(b, end), -1)))
+        count = local_peak = 0
+        for _, delta in sorted(local, key=lambda edge: (edge[0], edge[1])):
+            count += delta
+            local_peak = max(local_peak, count)
+        if local_peak > MAX_ACTIVE:
+            skipped.append(event)
+        else:
+            kept.append((start, end, event))
+    return {"peak": peak, "cross_loop": cross, "cap_skips": len(skipped)}
 
-    config = {
-        "spawn_lead_seconds": LEAD_SECONDS,
-        "minimum_spawn_spacing_seconds": MIN_SPAWN_SPACING_SECONDS,
-        "max_active": MAX_ACTIVE,
-        "click_lifetime_seconds": CLICK_LIFETIME_SECONDS,
-        "slide_checkpoint_timeout_seconds": SLIDE_CHECKPOINT_TIMEOUT_SECONDS,
-        "rub_lifetime_seconds": RUB_LIFETIME_SECONDS,
-    }
+
+def _select(notes: list[dict], duration: float, candidates: list[Candidate],
+            strategy: str) -> tuple[list[Candidate], Counter, list[tuple[Candidate, str]]]:
+    chosen = []
+    rejected = Counter()
+    rejected_essential = []
+    used = set()
+    spacing = 1.5 if strategy == "moderate" else 0.28
+    for candidate in sorted(candidates, key=lambda c: (-c.priority, notes[c.indices[0]]["start"], c.indices)):
+        spawn = notes[candidate.indices[0]]["start"] - LEAD
+        reason = ""
+        if spawn < 0 or spawn >= duration:
+            reason = "spawn_boundary"
+        elif used.intersection(candidate.indices):
+            reason = "already_covered"
+        elif not candidate.essential and any(abs(spawn - (notes[c.indices[0]]["start"] - LEAD)) < spacing for c in chosen):
+            reason = "secondary_spacing"
+        elif strategy == "moderate" and occupancy(chosen + [candidate], notes, duration, 2.5)["peak"] > MAX_ACTIVE:
+            reason = "estimated_active_cap"
+        if reason:
+            rejected[reason] += 1
+            if candidate.essential:
+                rejected_essential.append((candidate, reason))
+        else:
+            chosen.append(candidate)
+            used.update(candidate.indices)
+    return sorted(chosen, key=lambda c: notes[c.indices[0]]["start"]), rejected, rejected_essential
+
+
+def validate_chart(chart: dict, notes: list[dict]) -> None:
+    previous_spawn = -1.0
+    seen_ids = set()
+    seen_notes = set()
+    for event in chart["events"]:
+        indices = event["note_indices"]
+        spawn = event["spawn_time"]
+        if not indices or event["id"] in seen_ids or not previous_spawn < spawn < chart["loop_duration_seconds"]:
+            raise ValueError("Duplicate, unordered, or out-of-range event")
+        if any(i < 0 or i >= len(notes) or i in seen_notes for i in indices):
+            raise ValueError("Duplicate or invalid MIDI note index")
+        if indices != list(range(indices[0], indices[-1] + 1)):
+            raise ValueError("Interaction drops a source note inside its group")
+        if event["pitch"] != notes[event["pitch_note_index"]]["pitch"]:
+            raise ValueError("Pitch binding mismatch")
+        checkpoints = event["checkpoints"]
+        if event["type"] == "slide":
+            if not 3 <= len(indices) <= 6 or len(checkpoints) != len(indices):
+                raise ValueError("Slide requires 3-6 notes")
+            for i, checkpoint in zip(indices, checkpoints):
+                if checkpoint["note_index"] != i or checkpoint["pitch"] != notes[i]["pitch"] or abs(checkpoint["time"] - notes[i]["start"]) > 0.000002:
+                    raise ValueError("Checkpoint lost MIDI timing or pitch")
+        elif event["type"] in ("click", "rub"):
+            if len(indices) != 1 or checkpoints:
+                raise ValueError("Click/Rub must have one source note")
+        else:
+            raise ValueError("Invalid interaction type")
+        seen_ids.add(event["id"])
+        seen_notes.update(indices)
+        previous_spawn = spawn
+
+
+def generate_chart(timeline: dict, source_hash: str, strategy: str, seed: int = 2026,
+                   loop_index: int = 0) -> tuple[dict, dict]:
+    if strategy not in STRATEGIES or loop_index < 0:
+        raise ValueError("Invalid strategy or loop index")
+    notes, duration = validate_timeline(timeline)
+    candidates, source = _source_candidates(notes, strategy, seed, loop_index)
+    selected, rejected, rejected_essential = _select(notes, duration, candidates, strategy)
+    events = []
+    for candidate in selected:
+        indices = list(candidate.indices)
+        first = notes[indices[0]]
+        checkpoints = [{"note_index": i, "time": round(notes[i]["start"], 6), "pitch": notes[i]["pitch"]}
+                       for i in indices] if candidate.kind == "slide" else []
+        events.append({
+            "id": f"{candidate.kind}_{indices[0]:04d}",
+            "type": candidate.kind,
+            "spawn_time": round(first["start"] - LEAD, 6),
+            "source_start_time": round(first["start"], 6),
+            "source_end_time": round(max(notes[i]["end"] for i in indices), 6),
+            "pitch": first["pitch"], "pitch_note_index": indices[0],
+            "note_indices": indices, "checkpoints": checkpoints,
+        })
     chart = {
         "schema_version": 1,
         "source_timeline": "res://data/violin_timeline.json",
         "source_sha256": source_hash,
         "loop_duration_seconds": duration,
-        "generation_config": config,
+        "generation_config": {
+            "strategy": strategy, "run_seed": seed, "loop_index": loop_index,
+            "placement_seed_for_future_runtime": int.from_bytes(
+                hashlib.sha256(f"{seed}:{loop_index}:placement".encode()).digest()[:4], "big"),
+            "spawn_lead_seconds": LEAD, "max_active": MAX_ACTIVE,
+            "slide_checkpoint_timeout_seconds": 2.0,
+        },
         "events": events,
     }
+    validate_chart(chart, notes)
     analysis = {
-        "note_count": len(notes),
-        "selected_note_count": len(selected),
-        "skipped_note_count": len(notes) - len(selected),
-        "selected_by_type": Counter(
-            event["type"] for event in events for _ in event["note_indices"]
-        ),
-        "event_counts": Counter(event["type"] for event in events),
-        "slide_sizes": Counter(len(event["checkpoints"]) for event in events if event["type"] == "slide"),
-        "peak_active": peak_active,
-        "estimated_overlap_events": sum(
-            any(other_start < end and start < other_end for other_start, other_end in reservations[:i] + reservations[i + 1:])
-            for i, (start, end) in enumerate(reservations)
-        ),
-        "rejection_reasons": reasons,
+        "candidate_count": len(candidates), "rejections": dict(rejected),
+        "fast_runs": source["fast_runs"], "skeleton": source["skeleton"],
+        "rejected_essential": [
+            {"note_index": c.indices[0], "time": round(notes[c.indices[0]]["start"], 6), "reason": reason}
+            for c, reason in rejected_essential
+        ],
     }
     return chart, analysis
 
 
-def report(chart: dict, analysis: dict) -> str:
-    counts = analysis["event_counts"]
-    sizes = analysis["slide_sizes"]
-    selected_by_type = analysis["selected_by_type"]
-    duration = chart["loop_duration_seconds"]
+def metrics(chart: dict) -> dict:
     events = chart["events"]
-    return f"""# 小提琴 MIDI 生理互動譜面分析（離線第 1 階段）
+    return {
+        "events": len(events),
+        "types": dict(Counter(e["type"] for e in events)),
+        "nominal": len({i for e in events for i in e["note_indices"]}),
+        "playable": sum(len(e["note_indices"]) if e["type"] == "slide" else 1 for e in events),
+        "sizes": dict(Counter(len(e["checkpoints"]) for e in events if e["type"] == "slide")),
+    }
 
-- 來源：`data/violin_timeline.json`；SHA-256：`{chart['source_sha256']}`；循環 {duration:.3f} 秒。
-- 譜面：{len(events)} 件（Click {counts['click']}、Slide {counts['slide']}、Rub {counts['rub']}），平均 {len(events) * 60 / duration:.1f} 件／分鐘。
-- MIDI 音符：共 {analysis['note_count']} 個；納入 {analysis['selected_note_count']} 個（{analysis['selected_note_count'] / analysis['note_count']:.1%}），略過 {analysis['skipped_note_count']} 個。略過原因含密度限制及不適合下一類互動的音，單一音符不會重複分配。
-- 納入音符按互動分：Click {selected_by_type['click']}、Slide {selected_by_type['slide']}、Rub {selected_by_type['rub']}。譜面 `note_indices` 可追溯每個納入音；其餘 MIDI 索引即為略過音。
-- Slide 組大小：{', '.join(f'{n} 音 {sizes[n]} 組' for n in range(3, 7))}。起點包含在組內；每點有來源索引、起點秒數與音高。秒數只作譜面資料，不作輸入判定。
-- 預告：來源首音前 {LEAD_SECONDS:.1f} 秒生成；相鄰生成至少 {MIN_SPAWN_SPACING_SECONDS:.1f} 秒。Click 保留 2 秒、Rub 保留 4 秒、Slide 估算每點最多 2 秒，未增加節奏命中視窗。
-- 最保守占用估算：峰值同時 {analysis['peak_active']} 件（上限 {MAX_ACTIVE}）；有占用重疊的事件 {analysis['estimated_overlap_events']} 件。此為最晚到期估算；玩家提早完成會降低實際並存數。
-- 候選未採用次數（可多次落在最終略過的音附近）：類型不合 {analysis['rejection_reasons']['unsuitable_for_next_type']}、最小生成間距 {analysis['rejection_reasons']['spawn_spacing']}、估算並存上限 {analysis['rejection_reasons']['estimated_active_cap']}、循環邊界 {analysis['rejection_reasons']['loop_boundary']}。
 
-## 規則與剩餘衝突
+def passage_metrics(chart: dict, a: int, b: int) -> tuple[int, int]:
+    nominal = playable = 0
+    for event in chart["events"]:
+        for i in event["note_indices"]:
+            if a <= i <= b:
+                nominal += 1
+                playable += event["type"] != "rub" or event["pitch_note_index"] == i
+    return nominal, playable
 
-- 固定類型序列 Click／Slide／Click／Rub；Click 取 ≤{CLICK_MAX_DURATION_SECONDS:.2f} 秒的短音；Slide 取連續 3–6 音；Rub 取至少 {RUB_MIN_SPAN_SECONDS:.1f} 秒的連續樂句，並選句中最長音的音高。這是離線選曲規則，並不改變既有完成與失敗條件。
-- Rub 的樂句可能比單一音長；譜面音高應在每次連續按住摩擦時鎖定。Slide 的各點音高應於到點播放時取對應欄位。第 1 階段未接入音效。
-- 心理模式會暫停已存在的生理互動，但背景音樂仍行進。未來排程須跳過心理模式期間錯過的譜面事件且不處罰，恢復時仍保留已暫停的互動；因此實際占用可能超過此處按音樂時間計算的預估，執行時仍須檢查 3 件上限並跳過無法生成的事件。
-- 錨點、遮罩、擺放避讓與姿勢切換只能在執行時確認；即使譜面估算允許，實際位置不安全的事件仍須跳過且不處罰。循環首尾也不安排跨界仍未到期的互動，以免重播時重複生成。
 
-此報告由 `python tools/generate_violin_chart.py` 與譜面同時產生；第 1 階段未變更執行時程式、場景或計分。
-"""
+def report(charts: dict[str, tuple[dict, dict]], timeline: dict) -> str:
+    notes, duration = validate_timeline(timeline)
+    all_charts = {"production": (json.loads(PRODUCTION.read_text(encoding="utf-8")), {})} | charts
+    lines = [
+        "# Violin MIDI 候選 chart 比較（離線估算）", "",
+        "正式 chart 未覆寫。以下容量略過數是模型估算，不是實際遊玩結果。", "",
+        "| 策略 | 互動（Click/Slide/Rub） | 名義選音 | 可逐音觸發 | Slide 3/4/5/6 點 |",
+        "|---|---:|---:|---:|---:|",
+    ]
+    for name, (chart, _) in all_charts.items():
+        m = metrics(chart)
+        c, s, r = (m["types"].get(t, 0) for t in ("click", "slide", "rub"))
+        sizes = "/".join(str(m["sizes"].get(i, 0)) for i in range(3, 7))
+        lines.append(f"| {name} | {m['events']} ({c}/{s}/{r}) | {m['nominal']}/{len(notes)} ({m['nominal']/len(notes):.1%}) | {m['playable']}/{len(notes)} ({m['playable']/len(notes):.1%}) | {sizes} |")
+    lines += [
+        "", "## 12 段快速片語", "",
+        "| 起訖秒 | 原音符 | production 名義／可逐音 | moderate 名義／可逐音 | high 名義／可逐音 |",
+        "|---|---:|---:|---:|---:|",
+    ]
+    for a, b in fast_runs(notes):
+        row = [f"{notes[a]['start']:.3f}–{notes[b]['start']:.3f}", str(b - a + 1)]
+        row += [f"{x}／{y}" for chart, _ in all_charts.values() for x, y in [passage_metrics(chart, a, b)]]
+        lines.append("| " + " | ".join(row) + " |")
+    lines += [
+        "", "## 佔用與漏生模型", "",
+        "Click 2 秒、Rub 4 秒；Slide 假設 1.5 秒（快）、2.5 秒（典型）、每點耗滿 2 秒（最壞）。",
+        "容量估算包含跨圈尾端互動，只模擬最多 3 個物件；無法推算錨點、遮罩、心理模式或玩家真實速度。", "",
+        "六點 Slide 需要較大的安全路徑；若角色遮罩或既有互動使其無法放置，runtime 會以 unsafe_placement 略過整個片語。",
+        "心理模式保留的舊互動也可能占用下一次生點名額。這兩種略過沒有可靠的離線百分比，須在遊玩測試量測。", "",
+    ]
+    for name, (chart, analysis) in charts.items():
+        candidates = [Candidate(e["type"], tuple(e["note_indices"]), 0, 0) for e in chart["events"]]
+        estimates = [occupancy(candidates, notes, duration, seconds) for seconds in (1.5, 2.5, None)]
+        cross_loop = [
+            f"{e['source_start_time']:.3f}s {e['type']}({len(e['note_indices'])}音)"
+            for e in chart["events"]
+            if e["spawn_time"] + (2 * len(e["note_indices"]) if e["type"] == "slide"
+                                   else 2 if e["type"] == "click" else 4) > duration
+        ]
+        skip_summary = "／".join(
+            f"{estimate['cap_skips']} ({estimate['cap_skips'] / len(chart['events']):.1%})"
+            for estimate in estimates
+        )
+        lines += [
+            f"### {name}", "",
+            f"- 快／典型／最壞：峰值 {'／'.join(str(e['peak']) for e in estimates)}；容量略過 "
+            f"{skip_summary}。",
+            f"- 跨圈存活事件：{'／'.join(str(e['cross_loop']) for e in estimates)}。跨圈期間若舊互動仍存在，下一圈事件可能被略過。",
+            f"- 最壞跨圈來源：{', '.join(cross_loop) if cross_loop else '無'}。",
+            f"- 候選 {analysis['candidate_count']}；離線拒絕 {analysis['rejections']}。", "",
+            f"- 無法保留的骨架組：{analysis['rejected_essential'] or '無'}。", "",
+        ]
+    lines += [
+        "## 變體機制", "",
+        "固定 run_seed 與 loop_index 為每個片語導出獨立 RNG。快速片語首尾完整組是固定骨架；",
+        "次要片語選取與 High 的六音／兩個三音分組可變，原 MIDI 起音、索引及音高不變。",
+        "每份 chart 另存 placement_seed_for_future_runtime，供未來位置隨機化重現；目前 runtime 不讀取它。",
+        "Slide 仍由玩家依序通過檢查點；不施加節奏判定，故實際發聲時點可能偏離 MIDI。",
+        "變體僅離線輸出；目前 runtime 仍只載入正式 chart。", "",
+    ]
+    return "\n".join(lines)
 
 
 def main() -> None:
-    source = TIMELINE_PATH.read_bytes()
-    chart, analysis = generate_chart(json.loads(source), hashlib.sha256(source).hexdigest())
-    CHART_PATH.write_text(json.dumps(chart, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    REPORT_PATH.write_text(report(chart, analysis), encoding="utf-8")
-    print(f"Generated {len(chart['events'])} events; selected {analysis['selected_note_count']} MIDI notes; peak estimated active {analysis['peak_active']}.")
-    print(f"Chart: {CHART_PATH.relative_to(ROOT)}")
-    print(f"Report: {REPORT_PATH.relative_to(ROOT)}")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--seed", type=int, default=2026)
+    parser.add_argument("--loop-index", type=int, default=0)
+    args = parser.parse_args()
+    source = SOURCE.read_bytes()
+    timeline = json.loads(source)
+    charts = {name: generate_chart(timeline, hashlib.sha256(source).hexdigest(), name,
+                                   args.seed, args.loop_index) for name in STRATEGIES}
+    suffix = "" if args.loop_index == 0 else f"_loop_{args.loop_index}"
+    for name, (chart, _) in charts.items():
+        output = ROOT / "data" / f"violin_interaction_chart_{name}{suffix}.json"
+        output.write_text(json.dumps(chart, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(f"{name}: {len(chart['events'])} interactions -> {output.relative_to(ROOT)}")
+    output = ROOT / "data" / f"violin_interaction_chart_candidates_report{suffix}.md"
+    output.write_text(report(charts, timeline), encoding="utf-8")
+    print(f"Report -> {output.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":
