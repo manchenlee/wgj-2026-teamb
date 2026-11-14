@@ -63,6 +63,11 @@ var _chart_loop_index: int = 0
 var _chart_last_position: float = -1.0
 var _chart_skip_counts: Dictionary = {}
 var _chart_last_skip: String = ""
+var _chart_mode: String = "Production"
+var _chart_run_seed: int = 2026
+var _chart_variants: Array[Dictionary] = []
+var _chart_variant_index: int = -1
+var _chart_loop_stats: Dictionary = {}
 
 const CHART_SPAWN_GRACE_SECONDS: float = 0.25
 
@@ -107,6 +112,9 @@ func load_chart_file(path: String) -> bool:
 
 func set_chart_data(data: Dictionary) -> bool:
 	_chart_enabled = true
+	_chart_variants.clear()
+	_chart_variant_index = -1
+	_chart_mode = "Production"
 	_chart_events.clear()
 	_chart_loop_duration = float(data.get("loop_duration_seconds", 0.0))
 	var raw_events: Variant = data.get("events", [])
@@ -142,7 +150,84 @@ func set_chart_data(data: Dictionary) -> bool:
 	_chart_last_position = -1.0
 	_chart_skip_counts.clear()
 	_chart_last_skip = ""
+	_chart_loop_stats.clear()
+	_begin_chart_loop_stats()
 	return true
+
+
+func load_chart_variant_bank(path: String, mode: String, run_seed: int) -> bool:
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return false
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary or int(parsed.get("schema_version", -1)) != 1 \
+			or String(parsed.get("strategy", "")) != mode.to_lower() \
+			or String(parsed.get("source_sha256", "")).is_empty():
+		return false
+	var variants: Variant = parsed.get("variants", [])
+	if not variants is Array or variants.is_empty() or int(parsed.get("variant_count", -1)) != variants.size():
+		return false
+	var validated: Array[Dictionary] = []
+	for entry: Variant in variants:
+		if not entry is Dictionary:
+			return false
+		var chart: Dictionary = entry
+		var config: Variant = chart.get("generation_config", {})
+		if not config is Dictionary:
+			return false
+		var checker := InteractionSpotManager.new()
+		if String(chart.get("source_sha256", "")) != String(parsed.get("source_sha256", "")) \
+				or String(config.get("strategy", "")) != mode.to_lower() \
+				or not checker.set_chart_data(chart) or (not validated.is_empty() \
+				and not is_equal_approx(float(chart["loop_duration_seconds"]), float(validated[0]["loop_duration_seconds"]))):
+			return false
+		validated.append(chart)
+	_chart_variants = validated
+	_chart_enabled = true
+	_chart_mode = mode
+	_chart_run_seed = run_seed
+	_chart_loop_index = 0
+	_chart_last_position = -1.0
+	_chart_skip_counts.clear()
+	_chart_last_skip = ""
+	_chart_loop_stats.clear()
+	_select_chart_variant(0)
+	return true
+
+
+func _select_chart_variant(loop_index: int) -> void:
+	if _chart_variants.is_empty():
+		return
+	_chart_variant_index = posmod(_chart_run_seed - 2026 + loop_index, _chart_variants.size())
+	var chart: Dictionary = _chart_variants[_chart_variant_index]
+	_chart_events.clear()
+	for event: Dictionary in chart["events"]:
+		_chart_events.append(event)
+	_chart_loop_duration = float(chart["loop_duration_seconds"])
+	_chart_next_index = 0
+	_begin_chart_loop_stats()
+
+
+func _begin_chart_loop_stats() -> void:
+	if not _chart_enabled:
+		return
+	var intended := 0
+	for event: Dictionary in _chart_events:
+		intended += (event["checkpoints"] as Array).size() if String(event["type"]) == "slide" else 1
+	_chart_loop_stats[_chart_loop_index] = {
+		"mode": _chart_mode, "run_seed": _chart_run_seed, "loop_index": _chart_loop_index,
+		"variant_index": _chart_variant_index, "scheduled": _chart_events.size(),
+		"intended_pitch_opportunities": intended, "spawned": 0, "skipped": 0,
+		"completed": 0, "expired": 0, "skip_reasons": {},
+		"spawned_types": {"click": 0, "slide": 0, "rub": 0},
+		"spawned_pitch_opportunities": 0, "triggered_pitches": 0,
+		"slide_sizes": {3: 0, 4: 0, 5: 0, 6: 0},
+	}
+
+
+func get_chart_loop_stats(loop_index: int = -1) -> Dictionary:
+	var requested := _chart_loop_index if loop_index < 0 else loop_index
+	return (_chart_loop_stats.get(requested, {}) as Dictionary).duplicate(true)
 
 
 func advance_chart(playback_position: float = -1.0) -> void:
@@ -160,9 +245,14 @@ func advance_chart(playback_position: float = -1.0) -> void:
 		# A new scene or run attaches to an already playing BGM at its current point.
 		_skip_chart_before(position, "late_attach")
 	elif position + CHART_SPAWN_GRACE_SECONDS < _chart_last_position:
-		_skip_chart_remaining("loop_wrap_missed")
+		_skip_chart_remaining("psychological_mode" if _suspended else "loop_wrap_missed")
+		_print_chart_loop_stats(_chart_loop_index)
 		_chart_loop_index += 1
-		_chart_next_index = 0
+		if _chart_variants.is_empty():
+			_chart_next_index = 0
+			_begin_chart_loop_stats()
+		else:
+			_select_chart_variant(_chart_loop_index)
 	_chart_last_position = position
 	while _chart_next_index < _chart_events.size():
 		var event: Dictionary = _chart_events[_chart_next_index]
@@ -175,9 +265,13 @@ func advance_chart(playback_position: float = -1.0) -> void:
 		elif position - spawn > CHART_SPAWN_GRACE_SECONDS:
 			_record_chart_skip(event, "missed_time")
 		else:
+			if not _chart_variants.is_empty():
+				_rng.seed = ("%d:%d:%s" % [_chart_run_seed, _chart_loop_index, String(event["id"])]).hash()
 			var reason := _spawn_note_type(_chart_note_type(String(event["type"])), event)
 			if reason != "spawned":
 				_record_chart_skip(event, reason)
+			else:
+				_record_chart_spawn(event)
 
 
 func _skip_chart_before(position: float, reason: String) -> void:
@@ -195,9 +289,33 @@ func _skip_chart_remaining(reason: String) -> void:
 
 func _record_chart_skip(event: Dictionary, reason: String) -> void:
 	_chart_skip_counts[reason] = int(_chart_skip_counts.get(reason, 0)) + 1
+	var stats: Dictionary = _chart_loop_stats.get(_chart_loop_index, {})
+	if not stats.is_empty():
+		stats["skipped"] = int(stats["skipped"]) + 1
+		var reasons: Dictionary = stats["skip_reasons"]
+		reasons[reason] = int(reasons.get(reason, 0)) + 1
 	_chart_last_skip = "%d:%s:%s" % [_chart_loop_index, String(event["id"]), reason]
 	chart_event_skipped.emit(String(event["id"]), reason)
 	print_debug("InteractionSpotManager: skipped chart event %s (%s)" % [String(event["id"]), reason])
+
+
+func _record_chart_spawn(event: Dictionary) -> void:
+	var stats: Dictionary = _chart_loop_stats[_chart_loop_index]
+	var kind := String(event["type"])
+	stats["spawned"] = int(stats["spawned"]) + 1
+	var types: Dictionary = stats["spawned_types"]
+	# A Rub represents one pitch opportunity, even when its source phrase is longer.
+	var pitch_count := (event["checkpoints"] as Array).size() if kind == "slide" else 1
+	stats["spawned_pitch_opportunities"] = int(stats["spawned_pitch_opportunities"]) + pitch_count
+	if kind == "slide":
+		var sizes: Dictionary = stats["slide_sizes"]
+		sizes[pitch_count] = int(sizes.get(pitch_count, 0)) + 1
+	types[kind] = int(types.get(kind, 0)) + 1
+
+
+func _print_chart_loop_stats(loop_index: int) -> void:
+	if OS.is_debug_build():
+		print("MIDI chart loop stats: ", JSON.stringify(get_chart_loop_stats(loop_index)))
 
 
 func _chart_note_type(kind: String) -> int:
@@ -209,6 +327,9 @@ func _chart_note_type(kind: String) -> int:
 
 func get_chart_debug_state() -> Dictionary:
 	return {
+		"mode": _chart_mode,
+		"run_seed": _chart_run_seed,
+		"variant_index": _chart_variant_index,
 		"loop": _chart_loop_index,
 		"next_index": _chart_next_index,
 		"skip_counts": _chart_skip_counts.duplicate(),
@@ -312,8 +433,13 @@ func start() -> void:
 			if position >= 0.0:
 				if position + CHART_SPAWN_GRACE_SECONDS < _chart_last_position:
 					_skip_chart_remaining("loop_wrap_missed")
+					_print_chart_loop_stats(_chart_loop_index)
 					_chart_loop_index += 1
-					_chart_next_index = 0
+					if _chart_variants.is_empty():
+						_chart_next_index = 0
+						_begin_chart_loop_stats()
+					else:
+						_select_chart_variant(_chart_loop_index)
 				_skip_chart_before(fposmod(position, _chart_loop_duration), "restart_elapsed")
 				_chart_last_position = fposmod(position, _chart_loop_duration)
 	else:
@@ -321,6 +447,8 @@ func start() -> void:
 
 
 func stop() -> void:
+	if _chart_enabled and _active:
+		_print_chart_loop_stats(_chart_loop_index)
 	audio_cancel_requested.emit()
 	if _character_presenter != null:
 		_character_presenter.clear_body_motion()
@@ -535,6 +663,7 @@ func _spawn_note_type(requested_note_type: int = -1, chart_event: Dictionary = {
 	spot.set_meta("placement_rect", placement_rect)
 	if not chart_event.is_empty():
 		spot.set_meta("chart_id", String(chart_event["id"]))
+		spot.set_meta("chart_loop_index", _chart_loop_index)
 		spot.set_meta("bound_pitch", int(chart_event["pitch"]))
 		if note_type == NoteType.SLIDE:
 			var pitches := PackedInt32Array()
@@ -796,6 +925,8 @@ func _clamp_center_to_bounds(center: Vector2, radius: float) -> Vector2:
 
 func _on_spot_scrub_started(spot: InteractionNote) -> void:
 	spot.set_meta("was_interacted", true)
+	if spot is RubNote:
+		spot.set_meta("rub_pitch_triggered", false)
 	emit_signal("spot_scrub_started")
 
 
@@ -823,17 +954,30 @@ func _on_spot_audio_note_reached(spot: InteractionNote) -> void:
 	if not _active or _suspended:
 		return
 	if spot is ClickNote:
+		_count_chart_pitch_trigger(spot)
 		click_audio_requested.emit(int(spot.get_meta("bound_pitch", -1)))
 	elif spot is SlideNote:
 		var pitches: PackedInt32Array = spot.get_meta("checkpoint_pitches", PackedInt32Array())
 		var reached_index := (spot as SlideNote).get_next_checkpoint_index() - 1
 		var pitch := pitches[reached_index] if reached_index >= 0 and reached_index < pitches.size() else -1
+		_count_chart_pitch_trigger(spot)
 		slide_audio_requested.emit(pitch)
 
 
 func _on_spot_audio_motion_valid(spot: InteractionNote) -> void:
 	if _active and not _suspended and spot is RubNote:
+		if not bool(spot.get_meta("rub_pitch_triggered", false)):
+			_count_chart_pitch_trigger(spot)
+			spot.set_meta("rub_pitch_triggered", true)
 		rub_audio_motion.emit(spot.get_instance_id(), int(spot.get_meta("bound_pitch", -1)))
+
+
+func _count_chart_pitch_trigger(spot: InteractionNote) -> void:
+	if not spot.has_meta("chart_loop_index"):
+		return
+	var stats: Dictionary = _chart_loop_stats.get(int(spot.get_meta("chart_loop_index")), {})
+	if not stats.is_empty():
+		stats["triggered_pitches"] = int(stats["triggered_pitches"]) + 1
 
 
 func _on_spot_progressed(progress_delta: float, _spot: InteractionNote) -> void:
@@ -848,6 +992,7 @@ func _on_spot_progressed(progress_delta: float, _spot: InteractionNote) -> void:
 
 
 func _on_spot_completed(spot: InteractionNote) -> void:
+	_record_chart_outcome(spot, "completed")
 	if spot is RubNote:
 		rub_audio_ended.emit(spot.get_instance_id())
 	_active_spots = _active_spots.filter(func(s): return is_instance_valid(s) and s != spot)
@@ -879,6 +1024,7 @@ func _on_spot_completed(spot: InteractionNote) -> void:
 
 
 func _on_spot_expired(progress_ratio: float, spot: InteractionNote, is_timeout_failure: bool = true) -> void:
+	_record_chart_outcome(spot, "expired")
 	if spot is RubNote:
 		rub_audio_ended.emit(spot.get_instance_id())
 	_active_spots = _active_spots.filter(func(s): return is_instance_valid(s) and s != spot)
@@ -908,6 +1054,17 @@ func _on_spot_expired(progress_ratio: float, spot: InteractionNote, is_timeout_f
 		]
 	)
 	_emit_telemetry()
+
+
+func _record_chart_outcome(spot: InteractionNote, outcome: String) -> void:
+	if not spot.has_meta("chart_loop_index"):
+		return
+	var owner_loop := int(spot.get_meta("chart_loop_index"))
+	var stats: Dictionary = _chart_loop_stats.get(owner_loop, {})
+	if not stats.is_empty():
+		stats[outcome] = int(stats[outcome]) + 1
+		if owner_loop < _chart_loop_index:
+			_print_chart_loop_stats(owner_loop)
 
 
 func _disconnect_spot(spot: InteractionNote) -> void:

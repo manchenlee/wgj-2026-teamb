@@ -178,6 +178,7 @@ func _test_psychological_skip_and_resume() -> void:
 	resumed_manager.resume()
 	_check(resumed_manager._active_spots.size() == 1, "Resume spawned an event crossed while hidden")
 	_check(resumed_manager.get_chart_debug_state()["skip_counts"].get("psychological_mode", 0) == 1, "Resume did not mark crossed event as psychological skip")
+	_check(resumed_manager.get_chart_loop_stats()["skip_reasons"].get("psychological_mode", 0) == 1, "Loop statistics missed the psychological skip")
 	_dispose(resumed)
 
 
@@ -308,7 +309,10 @@ func _test_router_clock_connection() -> void:
 	await process_frame
 	var game: Variant = router.current_screen
 	_check(game != null and game.bgm_position_provider.is_valid(), "Game did not receive the router BGM clock")
-	_check(game.spot_manager._chart_enabled and game.spot_manager._chart_events.size() == 73, "Game did not load the Stage 1 chart")
+	_check(game.spot_manager._chart_enabled and game.spot_manager._chart_events.size() > 0, "Game did not load a chart")
+	var requested_mode := OS.get_environment("VIOLIN_CHART_MODE").strip_edges().to_lower()
+	var expected_mode := requested_mode.capitalize() if requested_mode in ["production", "moderate", "high"] else "Moderate"
+	_check(game.spot_manager.get_chart_debug_state()["mode"] == expected_mode, "Debug game selected the wrong chart mode")
 	_check(game.spot_spawn_timer.is_stopped(), "Gameplay started random spot scheduling")
 	_check(router.current_bgm_key == "gameplay", "Gameplay changed the piano BGM route")
 	_check(router.get_gameplay_bgm_position() >= 0.0, "Router did not expose the playing piano position")

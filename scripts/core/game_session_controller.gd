@@ -236,7 +236,21 @@ func _setup_spot_manager() -> void:
 		push_error("GameSessionController: CharacterPromptRegion not found.")
 		return
 	spot_manager.setup(arousal_model, character_area, prompt_layer, character_prompt_region, spot_spawn_timer)
-	spot_manager.load_chart_file("res://data/violin_interaction_chart.json")
+	var production_path := "res://data/violin_interaction_chart.json"
+	spot_manager.load_chart_file(production_path)
+	# Development launch variables only; shipped builds always use the production chart.
+	if OS.is_debug_build():
+		var mode := OS.get_environment("VIOLIN_CHART_MODE").strip_edges().to_lower()
+		if mode.is_empty():
+			mode = "moderate"
+		if mode in ["moderate", "high"]:
+			var seed_text := OS.get_environment("VIOLIN_CHART_SEED").strip_edges()
+			var run_seed := int(seed_text) if seed_text.is_valid_int() else 2026
+			var bank_path := "res://data/violin_interaction_chart_%s_variants.json" % mode
+			if not spot_manager.load_chart_variant_bank(bank_path, mode.capitalize(), run_seed):
+				push_warning("MIDI chart variant bank unavailable; using Production: %s" % bank_path)
+		elif mode != "production":
+			push_warning("Unknown VIOLIN_CHART_MODE '%s'; using Production" % mode)
 	spot_manager.bgm_position_provider = bgm_position_provider
 	spot_manager.spot_scrub_started.connect(_on_spot_scrub_started)
 	spot_manager.spot_scrub_ended.connect(_on_spot_scrub_ended)
