@@ -1,0 +1,1520 @@
+{
+  "schema_version": 1,
+  "source_timeline": "res://data/violin_timeline.json",
+  "source_sha256": "7cda3f0ed1cf4b0423af8a1cb3e181a64ccd41cfd73be3a177cf6588c63e6063",
+  "loop_duration_seconds": 145.540563,
+  "generation_config": {
+    "spawn_lead_seconds": 0.8,
+    "minimum_spawn_spacing_seconds": 1.1,
+    "max_active": 3,
+    "click_lifetime_seconds": 2.0,
+    "slide_checkpoint_timeout_seconds": 2.0,
+    "rub_lifetime_seconds": 4.0
+  },
+  "events": [
+    {
+      "id": "click_0001",
+      "type": "click",
+      "spawn_time": 2.103228,
+      "source_start_time": 2.903227,
+      "source_end_time": 3.09597,
+      "pitch": 71,
+      "pitch_note_index": 1,
+      "note_indices": [
+        1
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "slide_0006",
+      "type": "slide",
+      "spawn_time": 4.619358,
+      "source_start_time": 5.419358,
+      "source_end_time": 6.579843,
+      "pitch": 71,
+      "pitch_note_index": 6,
+      "note_indices": [
+        6,
+        7,
+        8
+      ],
+      "checkpoints": [
+        {
+          "note_index": 6,
+          "time": 5.419358,
+          "pitch": 71
+        },
+        {
+          "note_index": 7,
+          "time": 5.806455,
+          "pitch": 79
+        },
+        {
+          "note_index": 8,
+          "time": 6.193552,
+          "pitch": 78
+        }
+      ]
+    },
+    {
+      "id": "click_0009",
+      "type": "click",
+      "spawn_time": 5.780649,
+      "source_start_time": 6.580649,
+      "source_end_time": 6.96694,
+      "pitch": 76,
+      "pitch_note_index": 9,
+      "note_indices": [
+        9
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "rub_0012",
+      "type": "rub",
+      "spawn_time": 6.94194,
+      "source_start_time": 7.74194,
+      "source_end_time": 9.676619,
+      "pitch": 71,
+      "pitch_note_index": 12,
+      "note_indices": [
+        12,
+        13,
+        14
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "click_0015",
+      "type": "click",
+      "spawn_time": 8.877425,
+      "source_start_time": 9.677425,
+      "source_end_time": 9.870167,
+      "pitch": 71,
+      "pitch_note_index": 15,
+      "note_indices": [
+        15
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "slide_0020",
+      "type": "slide",
+      "spawn_time": 11.200007,
+      "source_start_time": 12.000007,
+      "source_end_time": 13.160492,
+      "pitch": 71,
+      "pitch_note_index": 20,
+      "note_indices": [
+        20,
+        21,
+        22,
+        23
+      ],
+      "checkpoints": [
+        {
+          "note_index": 20,
+          "time": 12.000007,
+          "pitch": 71
+        },
+        {
+          "note_index": 21,
+          "time": 12.387104,
+          "pitch": 72
+        },
+        {
+          "note_index": 22,
+          "time": 12.774201,
+          "pitch": 71
+        },
+        {
+          "note_index": 23,
+          "time": 12.96775,
+          "pitch": 69
+        }
+      ]
+    },
+    {
+      "id": "click_0024",
+      "type": "click",
+      "spawn_time": 12.361298,
+      "source_start_time": 13.161298,
+      "source_end_time": 13.547589,
+      "pitch": 69,
+      "pitch_note_index": 24,
+      "note_indices": [
+        24
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "rub_0027",
+      "type": "rub",
+      "spawn_time": 13.909686,
+      "source_start_time": 14.709686,
+      "source_end_time": 16.644365,
+      "pitch": 71,
+      "pitch_note_index": 29,
+      "note_indices": [
+        27,
+        28,
+        29,
+        30
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "click_0031",
+      "type": "click",
+      "spawn_time": 15.845171,
+      "source_start_time": 16.645171,
+      "source_end_time": 17.031462,
+      "pitch": 76,
+      "pitch_note_index": 31,
+      "note_indices": [
+        31
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "slide_0036",
+      "type": "slide",
+      "spawn_time": 18.167753,
+      "source_start_time": 18.967753,
+      "source_end_time": 21.289529,
+      "pitch": 76,
+      "pitch_note_index": 36,
+      "note_indices": [
+        36,
+        37,
+        38,
+        39
+      ],
+      "checkpoints": [
+        {
+          "note_index": 36,
+          "time": 18.967753,
+          "pitch": 76
+        },
+        {
+          "note_index": 37,
+          "time": 19.35485,
+          "pitch": 72
+        },
+        {
+          "note_index": 38,
+          "time": 19.741947,
+          "pitch": 76
+        },
+        {
+          "note_index": 39,
+          "time": 20.129044,
+          "pitch": 71
+        }
+      ]
+    },
+    {
+      "id": "click_0040",
+      "type": "click",
+      "spawn_time": 20.490335,
+      "source_start_time": 21.290335,
+      "source_end_time": 21.483077,
+      "pitch": 67,
+      "pitch_note_index": 40,
+      "note_indices": [
+        40
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "rub_0045",
+      "type": "rub",
+      "spawn_time": 21.651626,
+      "source_start_time": 22.451626,
+      "source_end_time": 24.386305,
+      "pitch": 69,
+      "pitch_note_index": 53,
+      "note_indices": [
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "click_0054",
+      "type": "click",
+      "spawn_time": 23.587111,
+      "source_start_time": 24.387111,
+      "source_end_time": 24.773402,
+      "pitch": 69,
+      "pitch_note_index": 54,
+      "note_indices": [
+        54
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "slide_0060",
+      "type": "slide",
+      "spawn_time": 26.29679,
+      "source_start_time": 27.09679,
+      "source_end_time": 28.644372,
+      "pitch": 67,
+      "pitch_note_index": 60,
+      "note_indices": [
+        60,
+        61,
+        62,
+        63,
+        64,
+        65
+      ],
+      "checkpoints": [
+        {
+          "note_index": 60,
+          "time": 27.09679,
+          "pitch": 67
+        },
+        {
+          "note_index": 61,
+          "time": 27.483887,
+          "pitch": 67
+        },
+        {
+          "note_index": 62,
+          "time": 27.677436,
+          "pitch": 69
+        },
+        {
+          "note_index": 63,
+          "time": 27.870984,
+          "pitch": 71
+        },
+        {
+          "note_index": 64,
+          "time": 28.258081,
+          "pitch": 71
+        },
+        {
+          "note_index": 65,
+          "time": 28.451629,
+          "pitch": 71
+        }
+      ]
+    },
+    {
+      "id": "click_0066",
+      "type": "click",
+      "spawn_time": 27.845178,
+      "source_start_time": 28.645178,
+      "source_end_time": 28.83792,
+      "pitch": 74,
+      "pitch_note_index": 66,
+      "note_indices": [
+        66
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "rub_0072",
+      "type": "rub",
+      "spawn_time": 29.006469,
+      "source_start_time": 29.806469,
+      "source_end_time": 31.741148,
+      "pitch": 68,
+      "pitch_note_index": 76,
+      "note_indices": [
+        72,
+        73,
+        74,
+        75,
+        76,
+        77
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "click_0078",
+      "type": "click",
+      "spawn_time": 30.941954,
+      "source_start_time": 31.741954,
+      "source_end_time": 32.128245,
+      "pitch": 76,
+      "pitch_note_index": 78,
+      "note_indices": [
+        78
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "slide_0083",
+      "type": "slide",
+      "spawn_time": 33.264536,
+      "source_start_time": 34.064536,
+      "source_end_time": 35.225021,
+      "pitch": 72,
+      "pitch_note_index": 83,
+      "note_indices": [
+        83,
+        84,
+        85
+      ],
+      "checkpoints": [
+        {
+          "note_index": 83,
+          "time": 34.064536,
+          "pitch": 72
+        },
+        {
+          "note_index": 84,
+          "time": 34.451633,
+          "pitch": 76
+        },
+        {
+          "note_index": 85,
+          "time": 34.83873,
+          "pitch": 81
+        }
+      ]
+    },
+    {
+      "id": "click_0086",
+      "type": "click",
+      "spawn_time": 34.425827,
+      "source_start_time": 35.225827,
+      "source_end_time": 35.612118,
+      "pitch": 81,
+      "pitch_note_index": 86,
+      "note_indices": [
+        86
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "rub_0091",
+      "type": "rub",
+      "spawn_time": 37.264538,
+      "source_start_time": 38.064538,
+      "source_end_time": 39.741152,
+      "pitch": 79,
+      "pitch_note_index": 94,
+      "note_indices": [
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "click_0104",
+      "type": "click",
+      "spawn_time": 38.941959,
+      "source_start_time": 39.741959,
+      "source_end_time": 39.870185,
+      "pitch": 71,
+      "pitch_note_index": 104,
+      "note_indices": [
+        104
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "slide_0113",
+      "type": "slide",
+      "spawn_time": 40.10325,
+      "source_start_time": 40.90325,
+      "source_end_time": 41.612121,
+      "pitch": 66,
+      "pitch_note_index": 113,
+      "note_indices": [
+        113,
+        114,
+        115,
+        116
+      ],
+      "checkpoints": [
+        {
+          "note_index": 113,
+          "time": 40.90325,
+          "pitch": 66
+        },
+        {
+          "note_index": 114,
+          "time": 41.032282,
+          "pitch": 67
+        },
+        {
+          "note_index": 115,
+          "time": 41.225831,
+          "pitch": 64
+        },
+        {
+          "note_index": 116,
+          "time": 41.419379,
+          "pitch": 67
+        }
+      ]
+    },
+    {
+      "id": "click_0120",
+      "type": "click",
+      "spawn_time": 41.393573,
+      "source_start_time": 42.193573,
+      "source_end_time": 42.386315,
+      "pitch": 67,
+      "pitch_note_index": 120,
+      "note_indices": [
+        120
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "rub_0124",
+      "type": "rub",
+      "spawn_time": 42.554864,
+      "source_start_time": 43.354864,
+      "source_end_time": 45.031478,
+      "pitch": 76,
+      "pitch_note_index": 124,
+      "note_indices": [
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "click_0131",
+      "type": "click",
+      "spawn_time": 44.232284,
+      "source_start_time": 45.032284,
+      "source_end_time": 45.16051,
+      "pitch": 80,
+      "pitch_note_index": 131,
+      "note_indices": [
+        131
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "slide_0147",
+      "type": "slide",
+      "spawn_time": 46.296802,
+      "source_start_time": 47.096802,
+      "source_end_time": 47.999222,
+      "pitch": 71,
+      "pitch_note_index": 147,
+      "note_indices": [
+        147,
+        148,
+        149,
+        150,
+        151
+      ],
+      "checkpoints": [
+        {
+          "note_index": 147,
+          "time": 47.096802,
+          "pitch": 71
+        },
+        {
+          "note_index": 148,
+          "time": 47.225834,
+          "pitch": 72
+        },
+        {
+          "note_index": 149,
+          "time": 47.419382,
+          "pitch": 69
+        },
+        {
+          "note_index": 150,
+          "time": 47.612931,
+          "pitch": 72
+        },
+        {
+          "note_index": 151,
+          "time": 47.80648,
+          "pitch": 76
+        }
+      ]
+    },
+    {
+      "id": "click_0154",
+      "type": "click",
+      "spawn_time": 47.587125,
+      "source_start_time": 48.387125,
+      "source_end_time": 48.579867,
+      "pitch": 72,
+      "pitch_note_index": 154,
+      "note_indices": [
+        154
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "rub_0158",
+      "type": "rub",
+      "spawn_time": 48.748416,
+      "source_start_time": 49.548416,
+      "source_end_time": 51.22503,
+      "pitch": 81,
+      "pitch_note_index": 158,
+      "note_indices": [
+        158,
+        159,
+        160,
+        161,
+        162,
+        163,
+        164,
+        165,
+        166,
+        167,
+        168
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "click_0169",
+      "type": "click",
+      "spawn_time": 50.425836,
+      "source_start_time": 51.225836,
+      "source_end_time": 51.354062,
+      "pitch": 69,
+      "pitch_note_index": 169,
+      "note_indices": [
+        169
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "slide_0183",
+      "type": "slide",
+      "spawn_time": 52.490354,
+      "source_start_time": 53.290354,
+      "source_end_time": 54.063741,
+      "pitch": 69,
+      "pitch_note_index": 183,
+      "note_indices": [
+        183,
+        184,
+        185,
+        186,
+        187,
+        188
+      ],
+      "checkpoints": [
+        {
+          "note_index": 183,
+          "time": 53.290354,
+          "pitch": 69
+        },
+        {
+          "note_index": 184,
+          "time": 53.419386,
+          "pitch": 67
+        },
+        {
+          "note_index": 185,
+          "time": 53.548418,
+          "pitch": 64
+        },
+        {
+          "note_index": 186,
+          "time": 53.677451,
+          "pitch": 66
+        },
+        {
+          "note_index": 187,
+          "time": 53.806483,
+          "pitch": 67
+        },
+        {
+          "note_index": 188,
+          "time": 53.935515,
+          "pitch": 66
+        }
+      ]
+    },
+    {
+      "id": "click_0192",
+      "type": "click",
+      "spawn_time": 53.651645,
+      "source_start_time": 54.451645,
+      "source_end_time": 54.579871,
+      "pitch": 71,
+      "pitch_note_index": 192,
+      "note_indices": [
+        192
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "rub_0206",
+      "type": "rub",
+      "spawn_time": 55.716162,
+      "source_start_time": 56.516162,
+      "source_end_time": 58.192776,
+      "pitch": 72,
+      "pitch_note_index": 207,
+      "note_indices": [
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212,
+        213,
+        214,
+        215,
+        216,
+        217,
+        218
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "click_0219",
+      "type": "click",
+      "spawn_time": 57.393582,
+      "source_start_time": 58.193582,
+      "source_end_time": 58.321808,
+      "pitch": 64,
+      "pitch_note_index": 219,
+      "note_indices": [
+        219
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "slide_0237",
+      "type": "slide",
+      "spawn_time": 60.748423,
+      "source_start_time": 61.548423,
+      "source_end_time": 62.708908,
+      "pitch": 67,
+      "pitch_note_index": 237,
+      "note_indices": [
+        237,
+        238,
+        239
+      ],
+      "checkpoints": [
+        {
+          "note_index": 237,
+          "time": 61.548423,
+          "pitch": 67
+        },
+        {
+          "note_index": 238,
+          "time": 61.93552,
+          "pitch": 70
+        },
+        {
+          "note_index": 239,
+          "time": 62.322617,
+          "pitch": 73
+        }
+      ]
+    },
+    {
+      "id": "click_0240",
+      "type": "click",
+      "spawn_time": 61.909714,
+      "source_start_time": 62.709714,
+      "source_end_time": 63.096005,
+      "pitch": 76,
+      "pitch_note_index": 240,
+      "note_indices": [
+        240
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "rub_0246",
+      "type": "rub",
+      "spawn_time": 64.232296,
+      "source_start_time": 65.032296,
+      "source_end_time": 67.741169,
+      "pitch": 70,
+      "pitch_note_index": 248,
+      "note_indices": [
+        246,
+        247,
+        248
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "click_0249",
+      "type": "click",
+      "spawn_time": 66.941975,
+      "source_start_time": 67.741975,
+      "source_end_time": 67.870201,
+      "pitch": 67,
+      "pitch_note_index": 249,
+      "note_indices": [
+        249
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "slide_0265",
+      "type": "slide",
+      "spawn_time": 68.993589,
+      "source_start_time": 69.793589,
+      "source_end_time": 70.321815,
+      "pitch": 70,
+      "pitch_note_index": 265,
+      "note_indices": [
+        265,
+        266,
+        267,
+        268
+      ],
+      "checkpoints": [
+        {
+          "note_index": 265,
+          "time": 69.793589,
+          "pitch": 70
+        },
+        {
+          "note_index": 266,
+          "time": 69.948428,
+          "pitch": 82
+        },
+        {
+          "note_index": 267,
+          "time": 70.064557,
+          "pitch": 85
+        },
+        {
+          "note_index": 268,
+          "time": 70.193589,
+          "pitch": 73
+        }
+      ]
+    },
+    {
+      "id": "click_0274",
+      "type": "click",
+      "spawn_time": 70.149235,
+      "source_start_time": 70.949235,
+      "source_end_time": 71.114558,
+      "pitch": 79,
+      "pitch_note_index": 274,
+      "note_indices": [
+        274
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "rub_0277",
+      "type": "rub",
+      "spawn_time": 74.296818,
+      "source_start_time": 75.096818,
+      "source_end_time": 77.031497,
+      "pitch": 71,
+      "pitch_note_index": 279,
+      "note_indices": [
+        277,
+        278,
+        279,
+        280
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "click_0281",
+      "type": "click",
+      "spawn_time": 76.232303,
+      "source_start_time": 77.032303,
+      "source_end_time": 77.418594,
+      "pitch": 76,
+      "pitch_note_index": 281,
+      "note_indices": [
+        281
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "slide_0283",
+      "type": "slide",
+      "spawn_time": 77.393594,
+      "source_start_time": 78.193594,
+      "source_end_time": 80.128273,
+      "pitch": 71,
+      "pitch_note_index": 283,
+      "note_indices": [
+        283,
+        284,
+        285,
+        286,
+        287
+      ],
+      "checkpoints": [
+        {
+          "note_index": 283,
+          "time": 78.193594,
+          "pitch": 71
+        },
+        {
+          "note_index": 284,
+          "time": 78.580691,
+          "pitch": 79
+        },
+        {
+          "note_index": 285,
+          "time": 78.967788,
+          "pitch": 78
+        },
+        {
+          "note_index": 286,
+          "time": 79.354885,
+          "pitch": 76
+        },
+        {
+          "note_index": 287,
+          "time": 79.741982,
+          "pitch": 72
+        }
+      ]
+    },
+    {
+      "id": "click_0288",
+      "type": "click",
+      "spawn_time": 79.329079,
+      "source_start_time": 80.129079,
+      "source_end_time": 80.51537,
+      "pitch": 76,
+      "pitch_note_index": 288,
+      "note_indices": [
+        288
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "rub_0290",
+      "type": "rub",
+      "spawn_time": 80.877467,
+      "source_start_time": 81.677467,
+      "source_end_time": 83.612146,
+      "pitch": 71,
+      "pitch_note_index": 290,
+      "note_indices": [
+        290,
+        291,
+        292,
+        293,
+        294,
+        295
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "click_0297",
+      "type": "click",
+      "spawn_time": 83.974243,
+      "source_start_time": 84.774243,
+      "source_end_time": 85.160534,
+      "pitch": 71,
+      "pitch_note_index": 297,
+      "note_indices": [
+        297
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "slide_0301",
+      "type": "slide",
+      "spawn_time": 85.135534,
+      "source_start_time": 85.935534,
+      "source_end_time": 87.483116,
+      "pitch": 69,
+      "pitch_note_index": 301,
+      "note_indices": [
+        301,
+        302,
+        303
+      ],
+      "checkpoints": [
+        {
+          "note_index": 301,
+          "time": 85.935534,
+          "pitch": 69
+        },
+        {
+          "note_index": 302,
+          "time": 86.322631,
+          "pitch": 69
+        },
+        {
+          "note_index": 303,
+          "time": 86.709728,
+          "pitch": 75
+        }
+      ]
+    },
+    {
+      "id": "click_0305",
+      "type": "click",
+      "spawn_time": 87.264567,
+      "source_start_time": 88.064567,
+      "source_end_time": 88.25731,
+      "pitch": 71,
+      "pitch_note_index": 305,
+      "note_indices": [
+        305
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "rub_0308",
+      "type": "rub",
+      "spawn_time": 88.619407,
+      "source_start_time": 89.419407,
+      "source_end_time": 91.354086,
+      "pitch": 76,
+      "pitch_note_index": 309,
+      "note_indices": [
+        308,
+        309,
+        310,
+        311
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "click_0312",
+      "type": "click",
+      "spawn_time": 90.554892,
+      "source_start_time": 91.354892,
+      "source_end_time": 91.741183,
+      "pitch": 78,
+      "pitch_note_index": 312,
+      "note_indices": [
+        312
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "slide_0318",
+      "type": "slide",
+      "spawn_time": 93.45812,
+      "source_start_time": 94.25812,
+      "source_end_time": 95.031507,
+      "pitch": 69,
+      "pitch_note_index": 318,
+      "note_indices": [
+        318,
+        319,
+        320
+      ],
+      "checkpoints": [
+        {
+          "note_index": 318,
+          "time": 94.25812,
+          "pitch": 69
+        },
+        {
+          "note_index": 319,
+          "time": 94.451668,
+          "pitch": 71
+        },
+        {
+          "note_index": 320,
+          "time": 94.838765,
+          "pitch": 71
+        }
+      ]
+    },
+    {
+      "id": "click_0323",
+      "type": "click",
+      "spawn_time": 94.619411,
+      "source_start_time": 95.41941,
+      "source_end_time": 95.612153,
+      "pitch": 72,
+      "pitch_note_index": 323,
+      "note_indices": [
+        323
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "rub_0329",
+      "type": "rub",
+      "spawn_time": 95.780702,
+      "source_start_time": 96.580702,
+      "source_end_time": 98.321832,
+      "pitch": 69,
+      "pitch_note_index": 330,
+      "note_indices": [
+        329,
+        330,
+        331,
+        332,
+        333
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "click_0334",
+      "type": "click",
+      "spawn_time": 97.522638,
+      "source_start_time": 98.322638,
+      "source_end_time": 98.708929,
+      "pitch": 69,
+      "pitch_note_index": 334,
+      "note_indices": [
+        334
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "slide_0338",
+      "type": "slide",
+      "spawn_time": 99.458123,
+      "source_start_time": 100.258123,
+      "source_end_time": 101.225059,
+      "pitch": 67,
+      "pitch_note_index": 338,
+      "note_indices": [
+        338,
+        339,
+        340,
+        341
+      ],
+      "checkpoints": [
+        {
+          "note_index": 338,
+          "time": 100.258123,
+          "pitch": 67
+        },
+        {
+          "note_index": 339,
+          "time": 100.451672,
+          "pitch": 69
+        },
+        {
+          "note_index": 340,
+          "time": 100.64522,
+          "pitch": 71
+        },
+        {
+          "note_index": 341,
+          "time": 101.032317,
+          "pitch": 71
+        }
+      ]
+    },
+    {
+      "id": "click_0343",
+      "type": "click",
+      "spawn_time": 100.619414,
+      "source_start_time": 101.419414,
+      "source_end_time": 101.612156,
+      "pitch": 74,
+      "pitch_note_index": 343,
+      "note_indices": [
+        343
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "rub_0349",
+      "type": "rub",
+      "spawn_time": 101.780705,
+      "source_start_time": 102.580705,
+      "source_end_time": 104.515384,
+      "pitch": 68,
+      "pitch_note_index": 353,
+      "note_indices": [
+        349,
+        350,
+        351,
+        352,
+        353,
+        354
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "click_0355",
+      "type": "click",
+      "spawn_time": 103.71619,
+      "source_start_time": 104.51619,
+      "source_end_time": 104.902481,
+      "pitch": 76,
+      "pitch_note_index": 355,
+      "note_indices": [
+        355
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "slide_0360",
+      "type": "slide",
+      "spawn_time": 106.038772,
+      "source_start_time": 106.838772,
+      "source_end_time": 109.160548,
+      "pitch": 72,
+      "pitch_note_index": 360,
+      "note_indices": [
+        360,
+        361,
+        362,
+        363,
+        364
+      ],
+      "checkpoints": [
+        {
+          "note_index": 360,
+          "time": 106.838772,
+          "pitch": 72
+        },
+        {
+          "note_index": 361,
+          "time": 107.225869,
+          "pitch": 76
+        },
+        {
+          "note_index": 362,
+          "time": 107.612966,
+          "pitch": 81
+        },
+        {
+          "note_index": 363,
+          "time": 108.000063,
+          "pitch": 81
+        },
+        {
+          "note_index": 364,
+          "time": 108.38716,
+          "pitch": 81
+        }
+      ]
+    },
+    {
+      "id": "click_0366",
+      "type": "click",
+      "spawn_time": 108.942,
+      "source_start_time": 109.742,
+      "source_end_time": 109.934742,
+      "pitch": 71,
+      "pitch_note_index": 366,
+      "note_indices": [
+        366
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "rub_0369",
+      "type": "rub",
+      "spawn_time": 110.167807,
+      "source_start_time": 110.967807,
+      "source_end_time": 112.644421,
+      "pitch": 76,
+      "pitch_note_index": 377,
+      "note_indices": [
+        369,
+        370,
+        371,
+        372,
+        373,
+        374,
+        375,
+        376,
+        377,
+        378,
+        379,
+        380,
+        381
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "click_0382",
+      "type": "click",
+      "spawn_time": 111.845227,
+      "source_start_time": 112.645227,
+      "source_end_time": 112.773453,
+      "pitch": 72,
+      "pitch_note_index": 382,
+      "note_indices": [
+        382
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "slide_0396",
+      "type": "slide",
+      "spawn_time": 113.97426,
+      "source_start_time": 114.77426,
+      "source_end_time": 115.934745,
+      "pitch": 64,
+      "pitch_note_index": 396,
+      "note_indices": [
+        396,
+        397,
+        398,
+        399
+      ],
+      "checkpoints": [
+        {
+          "note_index": 396,
+          "time": 114.77426,
+          "pitch": 64
+        },
+        {
+          "note_index": 397,
+          "time": 114.967809,
+          "pitch": 67
+        },
+        {
+          "note_index": 398,
+          "time": 115.161357,
+          "pitch": 71
+        },
+        {
+          "note_index": 399,
+          "time": 115.354906,
+          "pitch": 76
+        }
+      ]
+    },
+    {
+      "id": "click_0400",
+      "type": "click",
+      "spawn_time": 115.135552,
+      "source_start_time": 115.935552,
+      "source_end_time": 116.128294,
+      "pitch": 76,
+      "pitch_note_index": 400,
+      "note_indices": [
+        400
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "rub_0403",
+      "type": "rub",
+      "spawn_time": 116.361359,
+      "source_start_time": 117.161359,
+      "source_end_time": 118.837973,
+      "pitch": 84,
+      "pitch_note_index": 405,
+      "note_indices": [
+        403,
+        404,
+        405,
+        406,
+        407,
+        408,
+        409,
+        410,
+        411,
+        412,
+        413,
+        414,
+        415
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "click_0416",
+      "type": "click",
+      "spawn_time": 118.038779,
+      "source_start_time": 118.838779,
+      "source_end_time": 118.967005,
+      "pitch": 77,
+      "pitch_note_index": 416,
+      "note_indices": [
+        416
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "slide_0434",
+      "type": "slide",
+      "spawn_time": 121.329104,
+      "source_start_time": 122.129103,
+      "source_end_time": 122.837975,
+      "pitch": 81,
+      "pitch_note_index": 434,
+      "note_indices": [
+        434,
+        435,
+        436
+      ],
+      "checkpoints": [
+        {
+          "note_index": 434,
+          "time": 122.129103,
+          "pitch": 81
+        },
+        {
+          "note_index": 435,
+          "time": 122.322652,
+          "pitch": 81
+        },
+        {
+          "note_index": 436,
+          "time": 122.709749,
+          "pitch": 84
+        }
+      ]
+    },
+    {
+      "id": "click_0441",
+      "type": "click",
+      "spawn_time": 122.554911,
+      "source_start_time": 123.354911,
+      "source_end_time": 123.483137,
+      "pitch": 78,
+      "pitch_note_index": 441,
+      "note_indices": [
+        441
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "rub_0450",
+      "type": "rub",
+      "spawn_time": 123.716202,
+      "source_start_time": 124.516202,
+      "source_end_time": 126.192816,
+      "pitch": 67,
+      "pitch_note_index": 451,
+      "note_indices": [
+        450,
+        451,
+        452,
+        453,
+        454,
+        455,
+        456,
+        457,
+        458,
+        459,
+        460
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "click_0461",
+      "type": "click",
+      "spawn_time": 125.393622,
+      "source_start_time": 126.193622,
+      "source_end_time": 126.321848,
+      "pitch": 67,
+      "pitch_note_index": 461,
+      "note_indices": [
+        461
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "slide_0514",
+      "type": "slide",
+      "spawn_time": 133.522659,
+      "source_start_time": 134.322659,
+      "source_end_time": 135.870241,
+      "pitch": 67,
+      "pitch_note_index": 514,
+      "note_indices": [
+        514,
+        515,
+        516,
+        517
+      ],
+      "checkpoints": [
+        {
+          "note_index": 514,
+          "time": 134.322659,
+          "pitch": 67
+        },
+        {
+          "note_index": 515,
+          "time": 134.709756,
+          "pitch": 70
+        },
+        {
+          "note_index": 516,
+          "time": 135.096853,
+          "pitch": 73
+        },
+        {
+          "note_index": 517,
+          "time": 135.48395,
+          "pitch": 76
+        }
+      ]
+    },
+    {
+      "id": "click_0518",
+      "type": "click",
+      "spawn_time": 135.071047,
+      "source_start_time": 135.871047,
+      "source_end_time": 136.257338,
+      "pitch": 67,
+      "pitch_note_index": 518,
+      "note_indices": [
+        518
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "rub_0521",
+      "type": "rub",
+      "spawn_time": 136.232338,
+      "source_start_time": 137.032338,
+      "source_end_time": 139.354114,
+      "pitch": 83,
+      "pitch_note_index": 523,
+      "note_indices": [
+        521,
+        522,
+        523,
+        524
+      ],
+      "checkpoints": []
+    },
+    {
+      "id": "click_0526",
+      "type": "click",
+      "spawn_time": 139.716211,
+      "source_start_time": 140.516211,
+      "source_end_time": 140.644437,
+      "pitch": 67,
+      "pitch_note_index": 526,
+      "note_indices": [
+        526
+      ],
+      "checkpoints": []
+    }
+  ]
+}

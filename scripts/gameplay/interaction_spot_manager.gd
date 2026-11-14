@@ -30,11 +30,12 @@ signal spot_scrub_ended()
 signal spot_telemetry_updated(telemetry: Dictionary)
 signal physiological_spot_completed()
 signal physiological_spot_failed(progress_ratio: float, penalty: float)
-signal click_audio_requested()
-signal slide_audio_requested()
-signal rub_audio_motion(source_id: int)
+signal click_audio_requested(pitch: int)
+signal slide_audio_requested(pitch: int)
+signal rub_audio_motion(source_id: int, pitch: int)
 signal rub_audio_ended(source_id: int)
 signal audio_cancel_requested()
+signal chart_event_skipped(event_id: String, reason: String)
 
 # Set by GameSessionController before activation.
 var _arousal_model = null
@@ -53,6 +54,17 @@ var _available_anchor_ids: Array[String] = []
 var _active_spots: Array[InteractionNote] = []
 var _active: bool = false
 var _suspended: bool = false
+var bgm_position_provider: Callable
+var _chart_enabled: bool = false
+var _chart_events: Array[Dictionary] = []
+var _chart_loop_duration: float = 0.0
+var _chart_next_index: int = 0
+var _chart_loop_index: int = 0
+var _chart_last_position: float = -1.0
+var _chart_skip_counts: Dictionary = {}
+var _chart_last_skip: String = ""
+
+const CHART_SPAWN_GRACE_SECONDS: float = 0.25
 
 # Per-session rolling telemetry (accumulated across spots)
 var _telemetry_incremental_gain: float = 0.0
@@ -78,6 +90,130 @@ func setup(
 	_anchor_region = anchor_region
 	_spawn_timer = spawn_timer
 	_spawn_timer.timeout.connect(_on_spawn_timer_timeout)
+
+
+func load_chart_file(path: String) -> bool:
+	_chart_enabled = true
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		push_error("Interaction chart could not be opened: %s" % path)
+		return false
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary or not set_chart_data(parsed):
+		push_error("Interaction chart is invalid: %s" % path)
+		return false
+	return true
+
+
+func set_chart_data(data: Dictionary) -> bool:
+	_chart_enabled = true
+	_chart_events.clear()
+	_chart_loop_duration = float(data.get("loop_duration_seconds", 0.0))
+	var raw_events: Variant = data.get("events", [])
+	if int(data.get("schema_version", -1)) != 1 or _chart_loop_duration <= 0.0 or not raw_events is Array:
+		return false
+	var previous_spawn := -1.0
+	var ids: Dictionary = {}
+	for entry: Variant in raw_events:
+		if not entry is Dictionary:
+			return false
+		var event: Dictionary = entry
+		var event_id := String(event.get("id", ""))
+		var kind := String(event.get("type", ""))
+		var spawn := float(event.get("spawn_time", -1.0))
+		var pitch := int(event.get("pitch", -1))
+		var checkpoints: Variant = event.get("checkpoints", [])
+		if event_id.is_empty() or ids.has(event_id) or not kind in ["click", "slide", "rub"] \
+				or spawn <= previous_spawn or spawn < 0.0 or spawn >= _chart_loop_duration \
+				or pitch < 0 or pitch > 127 or not checkpoints is Array:
+			return false
+		if kind == "slide":
+			if checkpoints.size() < 3 or checkpoints.size() > 6:
+				return false
+			for checkpoint: Variant in checkpoints:
+				if not checkpoint is Dictionary or int(checkpoint.get("pitch", -1)) < 0 \
+						or int(checkpoint.get("pitch", -1)) > 127:
+					return false
+		ids[event_id] = true
+		previous_spawn = spawn
+		_chart_events.append(event)
+	_chart_next_index = 0
+	_chart_loop_index = 0
+	_chart_last_position = -1.0
+	_chart_skip_counts.clear()
+	_chart_last_skip = ""
+	return true
+
+
+func advance_chart(playback_position: float = -1.0) -> void:
+	if not _chart_enabled or not _active or _chart_loop_duration <= 0.0:
+		return
+	var position := playback_position
+	if position < 0.0:
+		if not bgm_position_provider.is_valid():
+			return
+		position = float(bgm_position_provider.call())
+	if position < 0.0:
+		return
+	position = fposmod(position, _chart_loop_duration)
+	if _chart_last_position < 0.0:
+		# A new scene or run attaches to an already playing BGM at its current point.
+		_skip_chart_before(position, "late_attach")
+	elif position + CHART_SPAWN_GRACE_SECONDS < _chart_last_position:
+		_skip_chart_remaining("loop_wrap_missed")
+		_chart_loop_index += 1
+		_chart_next_index = 0
+	_chart_last_position = position
+	while _chart_next_index < _chart_events.size():
+		var event: Dictionary = _chart_events[_chart_next_index]
+		var spawn := float(event["spawn_time"])
+		if spawn > position:
+			break
+		_chart_next_index += 1
+		if _suspended:
+			_record_chart_skip(event, "psychological_mode")
+		elif position - spawn > CHART_SPAWN_GRACE_SECONDS:
+			_record_chart_skip(event, "missed_time")
+		else:
+			var reason := _spawn_note_type(_chart_note_type(String(event["type"])), event)
+			if reason != "spawned":
+				_record_chart_skip(event, reason)
+
+
+func _skip_chart_before(position: float, reason: String) -> void:
+	while _chart_next_index < _chart_events.size() \
+			and float(_chart_events[_chart_next_index]["spawn_time"]) <= position:
+		_record_chart_skip(_chart_events[_chart_next_index], reason)
+		_chart_next_index += 1
+
+
+func _skip_chart_remaining(reason: String) -> void:
+	while _chart_next_index < _chart_events.size():
+		_record_chart_skip(_chart_events[_chart_next_index], reason)
+		_chart_next_index += 1
+
+
+func _record_chart_skip(event: Dictionary, reason: String) -> void:
+	_chart_skip_counts[reason] = int(_chart_skip_counts.get(reason, 0)) + 1
+	_chart_last_skip = "%d:%s:%s" % [_chart_loop_index, String(event["id"]), reason]
+	chart_event_skipped.emit(String(event["id"]), reason)
+	print_debug("InteractionSpotManager: skipped chart event %s (%s)" % [String(event["id"]), reason])
+
+
+func _chart_note_type(kind: String) -> int:
+	match kind:
+		"click": return NoteType.CLICK
+		"rub": return NoteType.RUB
+		_: return NoteType.SLIDE
+
+
+func get_chart_debug_state() -> Dictionary:
+	return {
+		"loop": _chart_loop_index,
+		"next_index": _chart_next_index,
+		"skip_counts": _chart_skip_counts.duplicate(),
+		"last_skip": _chart_last_skip,
+	}
 
 
 func set_phase_config(phase_config) -> void:
@@ -169,7 +305,19 @@ func start() -> void:
 	_spawn_timer.set_paused(false)
 	_telemetry_reset()
 	_telemetry_physical_at_session_start = _arousal_model.physical if _arousal_model != null else 0.0
-	_schedule_next_spot(Config.SPOT_INITIAL_SPAWN_DELAY)
+	if _chart_enabled:
+		# A restart does not replay chart entries already passed in this BGM loop.
+		if _chart_last_position >= 0.0 and bgm_position_provider.is_valid():
+			var position := float(bgm_position_provider.call())
+			if position >= 0.0:
+				if position + CHART_SPAWN_GRACE_SECONDS < _chart_last_position:
+					_skip_chart_remaining("loop_wrap_missed")
+					_chart_loop_index += 1
+					_chart_next_index = 0
+				_skip_chart_before(fposmod(position, _chart_loop_duration), "restart_elapsed")
+				_chart_last_position = fposmod(position, _chart_loop_duration)
+	else:
+		_schedule_next_spot(Config.SPOT_INITIAL_SPAWN_DELAY)
 
 
 func stop() -> void:
@@ -207,11 +355,16 @@ func suspend() -> void:
 func resume() -> void:
 	if not _active or not _suspended:
 		return
+	if _chart_enabled:
+		# Consume events crossed while hidden before accepting new chart spawns.
+		advance_chart()
 	_suspended = false
 	_active_spots = _active_spots.filter(func(spot): return is_instance_valid(spot))
 	for spot in _active_spots:
 		spot.set_suspended(false)
 	_spawn_timer.set_paused(false)
+	if _chart_enabled:
+		return
 	if _active_spots.is_empty():
 		_spawn_note_type()
 		_schedule_next_spot()
@@ -255,7 +408,7 @@ func force_expire_spot() -> void:
 # ---------------------------------------------------------------------------
 
 func _on_spawn_timer_timeout() -> void:
-	if not _active or _suspended:
+	if not _active or _suspended or _chart_enabled:
 		return
 	_spawn_note_type()
 	# Keep scheduling: timer fires repeatedly until max active count is reached.
@@ -264,7 +417,7 @@ func _on_spawn_timer_timeout() -> void:
 
 
 func _schedule_next_spot(override_delay: float = -1.0) -> void:
-	if not _active or _suspended:
+	if not _active or _suspended or _chart_enabled:
 		return
 	var delay: float
 	if override_delay >= 0.0:
@@ -288,18 +441,18 @@ func _get_occupied_anchor_ids() -> Array[String]:
 	return occupied
 
 
-func _spawn_note_type(requested_note_type: int = -1) -> void:
+func _spawn_note_type(requested_note_type: int = -1, chart_event: Dictionary = {}) -> String:
 	if not _active or _suspended:
-		return
+		return "inactive"
 	# Prune any stale references first.
 	_active_spots = _active_spots.filter(func(s): return is_instance_valid(s))
 
 	if _active_spots.size() >= _get_max_active_spots():
-		return  # already at cap
+		return "active_cap"
 
 	if _available_anchor_ids.is_empty():
 		push_warning("InteractionSpotManager: no anchor IDs available. Cannot spawn spot.")
-		return
+		return "no_anchors"
 
 	# Pick an anchor not already occupied by a live spot.
 	var occupied := _get_occupied_anchor_ids()
@@ -309,11 +462,11 @@ func _spawn_note_type(requested_note_type: int = -1) -> void:
 			available_now.append(id)
 
 	if available_now.is_empty():
-		return  # all anchors occupied
+		return "anchors_occupied"
 
 	if _anchor_region == null or not _anchor_region.has_method("get_interaction_spot_global_rect"):
 		push_warning("InteractionSpotManager: anchor region is unavailable. Cannot spawn spot.")
-		return
+		return "anchor_region_missing"
 
 	var note_type: int = requested_note_type
 	if note_type < 0:
@@ -326,10 +479,11 @@ func _spawn_note_type(requested_note_type: int = -1) -> void:
 		else _get_config_value("spot_checkpoint_radius", Config.SPOT_CHECKPOINT_RADIUS)
 	)
 	var placement_radius := radius * 2.0 + 4.0 if is_circular_note else radius
-	var placement := _find_clear_placement(note_type, available_now, placement_radius, radius)
+	var slide_point_count := (chart_event.get("checkpoints", []) as Array).size() if note_type == NoteType.SLIDE and not chart_event.is_empty() else -1
+	var placement := _find_clear_placement(note_type, available_now, placement_radius, radius, slide_point_count)
 	if placement.is_empty():
 		print_debug("InteractionSpotManager: no non-overlapping placement available for %s." % _note_type_name(note_type))
-		return
+		return "unsafe_placement"
 	var anchor_id: String = placement.anchor_id
 	var local_center: Vector2 = placement.center
 	var placement_rect: Rect2 = placement.rect
@@ -379,6 +533,14 @@ func _spawn_note_type(requested_note_type: int = -1) -> void:
 	spot.set_meta("anchor_id", anchor_id)
 	spot.set_meta("note_type", note_type)
 	spot.set_meta("placement_rect", placement_rect)
+	if not chart_event.is_empty():
+		spot.set_meta("chart_id", String(chart_event["id"]))
+		spot.set_meta("bound_pitch", int(chart_event["pitch"]))
+		if note_type == NoteType.SLIDE:
+			var pitches := PackedInt32Array()
+			for checkpoint: Dictionary in chart_event["checkpoints"]:
+				pitches.append(int(checkpoint["pitch"]))
+			spot.set_meta("checkpoint_pitches", pitches)
 
 	spot.interaction_started.connect(_on_spot_scrub_started.bind(spot))
 	spot.interaction_ended.connect(_on_spot_scrub_ended.bind(spot))
@@ -402,13 +564,15 @@ func _spawn_note_type(requested_note_type: int = -1) -> void:
 			_active_spots.size()
 		]
 	)
+	return "spawned"
 
 
 func _find_clear_placement(
 	note_type: int,
 	available_anchor_ids: Array[String],
 	placement_radius: float,
-	target_radius: float
+	target_radius: float,
+	slide_point_count: int = -1
 ) -> Dictionary:
 	var anchor_ids := available_anchor_ids.duplicate()
 	_shuffle_strings(anchor_ids)
@@ -429,7 +593,7 @@ func _find_clear_placement(
 			var candidate_rect: Rect2
 			var points := PackedVector2Array()
 			if note_type == NoteType.SLIDE:
-				var checkpoint_count: int = int(_get_config_value(
+				var checkpoint_count: int = slide_point_count - 1 if slide_point_count >= 2 else int(_get_config_value(
 					"spot_required_checkpoint_count",
 					Config.SPOT_REQUIRED_CHECKPOINT_COUNT
 				))
@@ -464,7 +628,7 @@ func _find_clear_placement(
 		var points := PackedVector2Array()
 		var candidate_rect: Rect2
 		if note_type == NoteType.SLIDE:
-			var checkpoint_count: int = int(_get_config_value("spot_required_checkpoint_count", Config.SPOT_REQUIRED_CHECKPOINT_COUNT))
+			var checkpoint_count: int = slide_point_count - 1 if slide_point_count >= 2 else int(_get_config_value("spot_required_checkpoint_count", Config.SPOT_REQUIRED_CHECKPOINT_COUNT))
 			var spacing: float = _get_config_value("spot_checkpoint_spacing", Config.SPOT_CHECKPOINT_SPACING)
 			points = _generate_sequence_points(local_center, checkpoint_count, spacing, target_radius)
 			if points.is_empty():
@@ -659,14 +823,17 @@ func _on_spot_audio_note_reached(spot: InteractionNote) -> void:
 	if not _active or _suspended:
 		return
 	if spot is ClickNote:
-		click_audio_requested.emit()
+		click_audio_requested.emit(int(spot.get_meta("bound_pitch", -1)))
 	elif spot is SlideNote:
-		slide_audio_requested.emit()
+		var pitches: PackedInt32Array = spot.get_meta("checkpoint_pitches", PackedInt32Array())
+		var reached_index := (spot as SlideNote).get_next_checkpoint_index() - 1
+		var pitch := pitches[reached_index] if reached_index >= 0 and reached_index < pitches.size() else -1
+		slide_audio_requested.emit(pitch)
 
 
 func _on_spot_audio_motion_valid(spot: InteractionNote) -> void:
 	if _active and not _suspended and spot is RubNote:
-		rub_audio_motion.emit(spot.get_instance_id())
+		rub_audio_motion.emit(spot.get_instance_id(), int(spot.get_meta("bound_pitch", -1)))
 
 
 func _on_spot_progressed(progress_delta: float, _spot: InteractionNote) -> void:

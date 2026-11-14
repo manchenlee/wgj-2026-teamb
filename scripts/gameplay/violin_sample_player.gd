@@ -83,8 +83,8 @@ func _ensure_violin_bus() -> void:
 		AudioServer.add_bus_effect(bus_index, limiter)
 	AudioServer.set_bus_volume_db(bus_index, violin_gain_db)
 
-func play_click() -> void:
-	var pitch := _current_pitch()
+func play_click(bound_pitch: int = -1) -> void:
+	var pitch := _pitch_for_event(bound_pitch)
 	if pitch < 0:
 		return
 	if _clef_backend.is_available() and _clef_backend.play_note(pizzicato_preset, pitch, 108, 0.18) != 0:
@@ -98,6 +98,9 @@ func play_click() -> void:
 func _current_pitch() -> int:
 	return int(pitch_provider.call()) if pitch_provider.is_valid() else -1
 
+func _pitch_for_event(bound_pitch: int) -> int:
+	return bound_pitch if bound_pitch >= 0 and bound_pitch <= 127 else _current_pitch()
+
 func _next_voice() -> AudioStreamPlayer:
 	var voice := _voices[_voice_serial % _voices.size()]
 	_voice_serial += 1
@@ -109,8 +112,8 @@ func _next_voice() -> AudioStreamPlayer:
 	_voice_generation[voice] = _voice_serial
 	return voice
 
-func play_slide_checkpoint() -> void:
-	var pitch := _current_pitch()
+func play_slide_checkpoint(bound_pitch: int = -1) -> void:
+	var pitch := _pitch_for_event(bound_pitch)
 	if pitch < 0:
 		return
 	if _clef_backend.is_available():
@@ -149,9 +152,9 @@ func _release_voice(voice: AudioStreamPlayer, duration: float) -> void:
 			voice.stop()
 	)
 
-func rub_motion(source_id: int) -> void:
+func rub_motion(source_id: int, bound_pitch: int = -1) -> void:
 	if _rub_source_id != source_id or (_clef_backend.is_available() and _clef_rub_token == 0) or (not _clef_backend.is_available() and not _rub_player.playing):
-		var pitch := _current_pitch()
+		var pitch := _pitch_for_event(bound_pitch)
 		if pitch < 0:
 			return
 		if _clef_backend.is_available():

@@ -154,6 +154,7 @@ func _show_game(safe_word: String = Config.SAFE_WORD_DEFAULT, fade_from_opening:
 		current_safe_word = Config.SAFE_WORD_DEFAULT
 	screen.safe_word = current_safe_word
 	screen.midi_pitch_provider = Callable(self, "get_gameplay_midi_pitch")
+	screen.bgm_position_provider = Callable(self, "get_gameplay_bgm_position")
 	screen.ending_requested.connect(_show_ending)
 	screen.bgm_requested.connect(_on_game_bgm_requested)
 	screen.debug_overlay = debug_overlay
@@ -319,9 +320,15 @@ func _prepare_bgm_stream(stream: AudioStream, should_loop: bool) -> AudioStream:
 
 
 func get_gameplay_midi_pitch() -> int:
-	if current_bgm_key != "gameplay" or active_bgm_player == null or not active_bgm_player.playing:
+	var position := get_gameplay_bgm_position()
+	if position < 0.0:
 		return -1
-	return violin_timeline.get_pitch_at_time(active_bgm_player.get_playback_position())
+	return violin_timeline.get_pitch_at_time(position)
+
+func get_gameplay_bgm_position() -> float:
+	if current_bgm_key != "gameplay" or active_bgm_player == null or not active_bgm_player.playing:
+		return -1.0
+	return active_bgm_player.get_playback_position()
 
 func _play_bgm(track_key: String, use_fade: bool) -> void:
 	if not bgm_library.has(track_key):

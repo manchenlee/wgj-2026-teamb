@@ -101,6 +101,7 @@ var physiological_dialogue_controller = DialogueChoiceControllerClass.new()
 var spot_manager: InteractionSpotManager = null
 var violin_audio: ViolinSamplePlayer = null
 var midi_pitch_provider: Callable
+var bgm_position_provider: Callable
 var debug_overlay = null
 var run_active: bool = true
 var _has_failed_safe_word_choice: bool = false
@@ -235,6 +236,8 @@ func _setup_spot_manager() -> void:
 		push_error("GameSessionController: CharacterPromptRegion not found.")
 		return
 	spot_manager.setup(arousal_model, character_area, prompt_layer, character_prompt_region, spot_spawn_timer)
+	spot_manager.load_chart_file("res://data/violin_interaction_chart.json")
+	spot_manager.bgm_position_provider = bgm_position_provider
 	spot_manager.spot_scrub_started.connect(_on_spot_scrub_started)
 	spot_manager.spot_scrub_ended.connect(_on_spot_scrub_ended)
 	spot_manager.spot_telemetry_updated.connect(_on_spot_telemetry_updated)
@@ -811,6 +814,8 @@ func _process(delta: float) -> void:
 	if not run_active:
 		_update_phase_debug_label()
 		return
+	if spot_manager != null:
+		spot_manager.advance_chart()
 	arousal_model.apply_decay(delta)
 	arousal_model.update_peak(delta)
 	_update_choice_timer_visual()
@@ -1075,6 +1080,7 @@ func get_debug_state() -> Dictionary:
 		"emotional": int(round(arousal_model.emotional)),
 		"peak": int(round(arousal_model.peak)),
 		"spot": spot_state,
+		"chart": spot_manager.get_chart_debug_state() if spot_manager != null else {},
 		"spot_incr": "%.1f" % float(telemetry.get("incremental_gain", 0.0)),
 		"spot_bonus": "%.1f" % float(telemetry.get("completion_bonus", 0.0)),
 		"spot_penalty": "%.1f" % float(telemetry.get("penalty", 0.0)),
