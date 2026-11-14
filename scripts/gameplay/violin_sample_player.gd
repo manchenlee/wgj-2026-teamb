@@ -14,7 +14,7 @@ const ClefBackendClass := preload("res://scripts/gameplay/violin_clef_backend.gd
 @export_range(36, 96) var sample_root_pitch: int = 69
 @export_range(2, 24) var max_voices: int = 8
 @export_range(0.1, 0.15, 0.005) var rub_inactivity_seconds: float = 0.125
-@export_range(-12.0, 18.0, 0.5) var violin_gain_db: float = 10.0
+@export_range(-12.0, 18.0, 0.5) var violin_gain_db: float = 0.0
 
 const VIOLIN_BUS: StringName = &"Violin"
 
