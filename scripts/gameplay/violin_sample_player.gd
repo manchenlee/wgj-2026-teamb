@@ -16,7 +16,7 @@ const ClefBackendClass := preload("res://scripts/gameplay/violin_clef_backend.gd
 
 const VIOLIN_BUS: StringName = &"Violin"
 const RUB_BOW_RATE_HZ: float = 8.0
-const RUB_BOW_DEPTH_DB: float = 4.0
+const RUB_BOW_DEPTH_DB: float = 8.0
 
 var pitch_provider: Callable
 var _voices: Array[AudioStreamPlayer] = []

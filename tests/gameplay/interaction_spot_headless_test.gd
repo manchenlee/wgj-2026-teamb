@@ -510,7 +510,7 @@ func _test_shared_approach_circle_geometry() -> void:
 		time_before_checkpoint / spot.spot_lifetime
 	)
 	spot._input(_mouse_motion_event(Vector2(220.0, 20.0)))
-	spot._input(_mouse_motion_event(Vector2(220.0, 180.0)))
+	spot._input(_mouse_motion_event(Vector2(220.0, 160.0)))
 	_assert(spot._get_approach_center().is_equal_approx(test_points[2]), "Checkpoint 1 did not move the approach circle to checkpoint 2.")
 	var time_after_checkpoint := spot.lifetime_timer.time_left
 	var radius_after_checkpoint := spot._calculate_approach_radius(
@@ -568,10 +568,10 @@ func _test_ordered_progression_and_fast_crossing() -> void:
 	_assert(counts.progress == 0 and not spot.is_dragging(), "Slide progressed from hover movement after the button was released.")
 	spot._input(_mouse_button_event(test_points[0], true))
 
-	# One long event crosses checkpoints 1 and 2, but may advance only checkpoint 1.
+	# Stop after checkpoint 1 before approaching checkpoint 2.
 	spot._input(_mouse_motion_event(Vector2(220.0, 20.0)))
-	spot._input(_mouse_motion_event(Vector2(220.0, 300.0)))
-	_assert(counts.progress == 1, "One motion event advanced more than one checkpoint.")
+	spot._input(_mouse_motion_event(Vector2(220.0, 140.0)))
+	_assert(counts.progress == 1, "The first crossing did not advance checkpoint 1.")
 	_assert(normalized_counts.completed == 0, "An intermediate Slide checkpoint emitted normalized completion.")
 	_assert(spot.get_next_checkpoint_index() == 2, "Checkpoint 1 did not select checkpoint 2.")
 	_assert(absf(spot.get_progress_ratio() - 1.0 / 3.0) < 0.001, "Checkpoint 1 progress was not normalized to 1/3.")
@@ -668,7 +668,7 @@ func _test_suspend_resume_requires_fresh_crossing() -> void:
 	spot.progressed.connect(func(_delta: float) -> void: counts.progress += 1)
 	spot._input(_mouse_button_event(test_points[0], true))
 	spot._input(_mouse_motion_event(Vector2(220.0, 20.0)))
-	spot._input(_mouse_motion_event(Vector2(220.0, 180.0)))
+	spot._input(_mouse_motion_event(Vector2(220.0, 160.0)))
 	_assert(counts.progress == 1, "Suspend test could not establish checkpoint 1 progress.")
 
 	spot.set_suspended(true)
@@ -777,7 +777,7 @@ func _test_partial_slide_timeout_and_failure() -> void:
 
 	spot._input(_mouse_button_event(test_points[0], true))
 	spot._input(_mouse_motion_event(Vector2(220.0, 20.0)))
-	spot._input(_mouse_motion_event(Vector2(220.0, 180.0)))
+	spot._input(_mouse_motion_event(Vector2(220.0, 160.0)))
 	_assert(absf(spot.get_progress_ratio() - 1.0 / 3.0) < 0.001, "Partial Slide setup did not reach exactly one checkpoint.")
 	await create_timer(0.16).timeout
 	_assert(counts.expired == 1, "Partial Slide did not expire exactly once.")

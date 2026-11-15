@@ -130,20 +130,22 @@ func _process_pointer_move(new_pos: Vector2) -> void:
 
 	var previous_pos := _last_pointer_pos
 	_last_pointer_pos = new_pos
-	var target_index := _get_target_index()
-	if target_index < 0 or target_index >= checkpoints.size():
-		return
-
-	var target := checkpoints[target_index]
-	var intersects_target := _segment_intersects_circle(previous_pos, new_pos, target, checkpoint_radius)
-	var valid_crossing := not _pointer_was_inside_target and intersects_target
-	if valid_crossing:
+	var last_crossing_fraction := -1.0
+	while not _resolved:
+		var target_index := _get_target_index()
+		if target_index < 0 or target_index >= checkpoints.size():
+			break
+		var crossing_fraction := _segment_circle_entry_fraction(
+			previous_pos, new_pos, checkpoints[target_index], checkpoint_radius
+		)
+		if _pointer_was_inside_target or crossing_fraction < 0.0 \
+				or crossing_fraction < last_crossing_fraction:
+			break
+		last_crossing_fraction = crossing_fraction
 		_activate_current_target()
-		# The same motion event may never activate the newly selected target.
-		_pointer_was_inside_target = _is_inside_target(new_pos)
-		return
-
-	_pointer_was_inside_target = new_pos.distance_squared_to(target) <= checkpoint_radius * checkpoint_radius
+		# The next target must be entered after this one on the same motion segment.
+		_pointer_was_inside_target = false
+	_pointer_was_inside_target = _is_inside_target(new_pos)
 
 
 func _activate_current_target() -> void:
@@ -200,19 +202,27 @@ func _is_inside_target(position_to_test: Vector2) -> bool:
 	return position_to_test.distance_squared_to(checkpoints[target_index]) <= checkpoint_radius * checkpoint_radius
 
 
-func _segment_intersects_circle(
+func _segment_circle_entry_fraction(
 	segment_start: Vector2,
 	segment_end: Vector2,
 	circle_center: Vector2,
 	circle_radius: float
-) -> bool:
+) -> float:
 	var segment := segment_end - segment_start
 	var segment_length_squared := segment.length_squared()
+	var offset := segment_start - circle_center
+	if offset.length_squared() <= circle_radius * circle_radius:
+		return 0.0
 	if segment_length_squared <= 0.0001:
-		return segment_start.distance_squared_to(circle_center) <= circle_radius * circle_radius
-	var projection := clampf((circle_center - segment_start).dot(segment) / segment_length_squared, 0.0, 1.0)
-	var closest_point := segment_start + segment * projection
-	return closest_point.distance_squared_to(circle_center) <= circle_radius * circle_radius
+		return -1.0
+	var projection := -offset.dot(segment) / segment_length_squared
+	var closest_distance_squared := (offset + segment * projection).length_squared()
+	var radius_squared := circle_radius * circle_radius
+	if closest_distance_squared > radius_squared:
+		return -1.0
+	var half_span := sqrt((radius_squared - closest_distance_squared) / segment_length_squared)
+	var entry_fraction := projection - half_span
+	return entry_fraction if entry_fraction >= 0.0 and entry_fraction <= 1.0 else -1.0
 
 
 func _set_note_input_enabled(enabled: bool) -> void:
