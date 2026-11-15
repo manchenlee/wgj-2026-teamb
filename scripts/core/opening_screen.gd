@@ -59,11 +59,13 @@ func _ready() -> void:
 	_skip_button_base_scale = _skip_button_root.scale
 	_skip_button_root.pivot_offset = _skip_button_root.size * 0.5
 	resized.connect(_layout_character_stage)
+	background.resized.connect(_layout_background)
 	_load_opening_script()
 	_active_branch = TutorialReturn.SECOND_BRANCH if safe_word_completed else TutorialReturn.FIRST_BRANCH
 	_choice_buttons = $DialogueUi/ChoiceButtons
 	resized.connect(_layout_dialogue_ui)
 	_layout_character_stage()
+	_layout_background()
 	_layout_dialogue_ui()
 	if not start_step_id.is_empty():
 		_current_entry_index = _find_step_index(start_step_id)
@@ -191,6 +193,7 @@ func _apply_entry(entry: Dictionary) -> void:
 	if bool(entry.get("non_dialogue", false)):
 		_advance_script()
 		return
+	_reset_effect_state()
 	_apply_background(str(entry.get("background", DEFAULT_BACKGROUND_PATH)))
 	_apply_backdrop_tint(entry.get("backdrop_tint", null))
 	_apply_character(entry.get("character", {}))
@@ -279,7 +282,6 @@ func _apply_character(character_data_variant: Variant) -> void:
 	if not is_character_visible:
 		return
 
-	_reset_effect_state()
 	_apply_base_character(str(character_data.get("base", "")))
 	if bool(character_data.get("clear_layers", false)):
 		_clear_all_layers()
@@ -370,18 +372,16 @@ func _apply_effect(effect_data: Dictionary) -> void:
 func _play_shake_effect(duration: float, strength: float, loops: int) -> void:
 	if _shake_tween != null and _shake_tween.is_running():
 		_shake_tween.kill()
-	var rest_position := _pivot_rest_position + _current_character_offset
-	character_root.position = rest_position
-	character_glow_root.position = rest_position
+	background.position = Vector2.ZERO
+	background.scale = Vector2.ONE * (1.005 + 2.0 * absf(strength) / maxf(background.size.x, 1.0))
 	_shake_tween = create_tween()
 	_shake_tween.set_parallel(false)
 	var segment_duration := maxf(duration / max(loops * 2, 1), 0.03)
 	for loop_index in range(max(loops, 1)):
 		var offset := Vector2(strength if loop_index % 2 == 0 else -strength, 0.0)
-		_shake_tween.tween_property(character_root, "position", rest_position + offset, segment_duration)
-		_shake_tween.parallel().tween_property(character_glow_root, "position", rest_position + offset, segment_duration)
-		_shake_tween.tween_property(character_root, "position", rest_position, segment_duration)
-		_shake_tween.parallel().tween_property(character_glow_root, "position", rest_position, segment_duration)
+		_shake_tween.tween_property(background, "position", offset, segment_duration)
+		_shake_tween.tween_property(background, "position", Vector2.ZERO, segment_duration)
+	_shake_tween.tween_callback(func() -> void: background.scale = Vector2.ONE)
 
 func _play_glow_effect(duration: float, strength: float, glow_color: Color) -> void:
 	if _glow_tween != null and _glow_tween.is_running():
@@ -426,6 +426,8 @@ func _reset_effect_state() -> void:
 		_glow_tween.kill()
 	if _fade_tween != null and _fade_tween.is_running():
 		_fade_tween.kill()
+	background.position = Vector2.ZERO
+	background.scale = Vector2.ONE
 	character_root.position = _pivot_rest_position + _current_character_offset
 	character_root.modulate.a = 1.0
 	character_glow_root.position = _pivot_rest_position + _current_character_offset
@@ -438,6 +440,9 @@ func _layout_character_stage() -> void:
 	_pivot_rest_position = Vector2.ZERO
 	character_root.position = _pivot_rest_position + _current_character_offset
 	character_glow_root.position = _pivot_rest_position + _current_character_offset
+
+func _layout_background() -> void:
+	background.pivot_offset = background.size * 0.5
 
 func _create_stage_sprite(node_name: String, is_glow: bool = false) -> TextureRect:
 	var sprite := TextureRect.new()
