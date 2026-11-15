@@ -14,6 +14,11 @@ const SUCCESS_HEART_TEXTURE := preload("res://assets/art/ui/gameplay/img_heart.p
 const SUCCESS_HEART_COUNT := 5
 const SUCCESS_HEART_RISE_DISTANCE := 52.0
 const SUCCESS_HEART_LIFETIME := 0.72
+const BODY_MOTION_MAX_OFFSET := 3.5
+const CLICK_JOLT_AMPLITUDE := 2.5
+const SLIDE_SWAY_AMPLITUDE := 3.2
+const RUB_TREMOR_AMPLITUDE := 1.5
+const RUB_TREMOR_FREQUENCY := 7.0
 
 @onready var character_placeholder: TextureRect = $CharacterVisualAnchor/CharacterPlaceholder
 @onready var prompt_layer: Control = $PromptLayer
@@ -153,9 +158,9 @@ func _process(delta: float) -> void:
 		_rub_target_intensity = 0.0
 	var rub_time_constant := 0.04 if _rub_target_intensity > _rub_intensity else 0.045
 	_rub_intensity = lerpf(_rub_intensity, _rub_target_intensity, 1.0 - exp(-delta / rub_time_constant))
-	_rub_phase += TAU * 13.5 * delta
-	var rub_offset := Vector2(sin(_rub_phase), sin(_rub_phase + PI * 0.5) * 0.65) * (0.9 * _rub_intensity)
-	_body_offset = (_motion_offset + rub_offset).limit_length(3.5)
+	_rub_phase += TAU * RUB_TREMOR_FREQUENCY * delta
+	var rub_offset := Vector2(sin(_rub_phase), sin(_rub_phase + PI * 0.5) * 0.65) * (RUB_TREMOR_AMPLITUDE * _rub_intensity)
+	_body_offset = (_motion_offset + rub_offset).limit_length(BODY_MOTION_MAX_OFFSET)
 	_body_visual_anchor.position = _body_rest_position + _body_offset
 
 func _update_body_motion(delta: float) -> void:
@@ -163,7 +168,7 @@ func _update_body_motion(delta: float) -> void:
 		_slide_remaining = maxf(_slide_remaining - delta, 0.0)
 		var slide_target := Vector2.ZERO
 		if _slide_remaining > 0.10:
-			slide_target = _motion_direction * 2.5
+			slide_target = _motion_direction * SLIDE_SWAY_AMPLITUDE
 		elif _slide_remaining > 0.05:
 			slide_target = _motion_direction * -0.45
 		_motion_offset = _motion_offset.lerp(slide_target, 1.0 - exp(-delta / 0.045))
@@ -177,7 +182,7 @@ func _update_body_motion(delta: float) -> void:
 	var duration := 0.16 if _motion_kind != "accent" else 0.14
 	var t := clampf(_motion_elapsed / duration, 0.0, 1.0)
 	var profile := 0.0
-	var amplitude := 1.8
+	var amplitude := CLICK_JOLT_AMPLITUDE
 	if _motion_kind == "failure":
 		amplitude = 3.2
 		profile = t / 0.16 if t < 0.16 else (1.0 - t) / 0.84
