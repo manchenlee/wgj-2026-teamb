@@ -97,7 +97,7 @@ func setup(
 	_spawn_timer.timeout.connect(_on_spawn_timer_timeout)
 
 
-func load_chart_file(path: String) -> bool:
+func load_chart_file(path: String, mode: String = "Production") -> bool:
 	_chart_enabled = true
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
@@ -107,6 +107,8 @@ func load_chart_file(path: String) -> bool:
 	if not parsed is Dictionary or not set_chart_data(parsed):
 		push_error("Interaction chart is invalid: %s" % path)
 		return false
+	_chart_mode = mode
+	_begin_chart_loop_stats()
 	return true
 
 
@@ -212,14 +214,19 @@ func _begin_chart_loop_stats() -> void:
 	if not _chart_enabled:
 		return
 	var intended := 0
+	var gap_fill_clicks := 0
 	for event: Dictionary in _chart_events:
 		intended += (event["checkpoints"] as Array).size() if String(event["type"]) == "slide" else 1
+		if String(event.get("origin", "")) == "gap_fill" and String(event["type"]) == "click":
+			gap_fill_clicks += 1
 	_chart_loop_stats[_chart_loop_index] = {
 		"mode": _chart_mode, "run_seed": _chart_run_seed, "loop_index": _chart_loop_index,
 		"variant_index": _chart_variant_index, "scheduled": _chart_events.size(),
 		"intended_pitch_opportunities": intended, "spawned": 0, "skipped": 0,
 		"completed": 0, "expired": 0, "skip_reasons": {},
 		"spawned_types": {"click": 0, "slide": 0, "rub": 0},
+		"scheduled_gap_fill_clicks": gap_fill_clicks, "spawned_gap_fill_clicks": 0,
+		"skipped_gap_fill_clicks": 0, "gap_fill_skip_reasons": {},
 		"spawned_pitch_opportunities": 0, "triggered_pitches": 0,
 		"slide_sizes": {3: 0, 4: 0, 5: 0, 6: 0},
 	}
@@ -289,20 +296,29 @@ func _skip_chart_remaining(reason: String) -> void:
 
 func _record_chart_skip(event: Dictionary, reason: String) -> void:
 	_chart_skip_counts[reason] = int(_chart_skip_counts.get(reason, 0)) + 1
+	var is_gap_fill := String(event.get("origin", "")) == "gap_fill"
 	var stats: Dictionary = _chart_loop_stats.get(_chart_loop_index, {})
 	if not stats.is_empty():
 		stats["skipped"] = int(stats["skipped"]) + 1
 		var reasons: Dictionary = stats["skip_reasons"]
 		reasons[reason] = int(reasons.get(reason, 0)) + 1
+		if is_gap_fill:
+			stats["skipped_gap_fill_clicks"] = int(stats["skipped_gap_fill_clicks"]) + 1
+			var gap_reasons: Dictionary = stats["gap_fill_skip_reasons"]
+			gap_reasons[reason] = int(gap_reasons.get(reason, 0)) + 1
 	_chart_last_skip = "%d:%s:%s" % [_chart_loop_index, String(event["id"]), reason]
 	chart_event_skipped.emit(String(event["id"]), reason)
-	print_debug("InteractionSpotManager: skipped chart event %s (%s)" % [String(event["id"]), reason])
+	print_debug("InteractionSpotManager: skipped %s %s (%s)" % [
+		"Gap Fill Click" if is_gap_fill else "chart event", String(event["id"]), reason])
 
 
 func _record_chart_spawn(event: Dictionary) -> void:
 	var stats: Dictionary = _chart_loop_stats[_chart_loop_index]
 	var kind := String(event["type"])
 	stats["spawned"] = int(stats["spawned"]) + 1
+	if String(event.get("origin", "")) == "gap_fill":
+		stats["spawned_gap_fill_clicks"] = int(stats["spawned_gap_fill_clicks"]) + 1
+		print_debug("InteractionSpotManager: spawned Gap Fill Click %s" % String(event["id"]))
 	var types: Dictionary = stats["spawned_types"]
 	# A Rub represents one pitch opportunity, even when its source phrase is longer.
 	var pitch_count := (event["checkpoints"] as Array).size() if kind == "slide" else 1

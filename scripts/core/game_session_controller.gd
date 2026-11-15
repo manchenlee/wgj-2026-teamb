@@ -242,23 +242,32 @@ func _setup_spot_manager() -> void:
 	_configure_pose_layers()
 
 
-func _load_interaction_chart(manager: InteractionSpotManager, moderate_bank_path: String = "res://data/violin_interaction_chart_moderate_variants.json") -> void:
-	# Keep the original chart available if the approved variant bank cannot be loaded.
-	manager.load_chart_file("res://data/violin_interaction_chart.json")
-	var mode := "moderate"
+func _load_interaction_chart(manager: InteractionSpotManager, gap_fill_bank_path: String = "res://data/violin_interaction_chart_moderate_gap_fill_variants.json") -> void:
+	# The original Moderate chart remains the last fallback for shipped builds.
+	if not manager.load_chart_file("res://data/violin_interaction_chart_moderate.json", "Moderate"):
+		push_error("Original Moderate chart unavailable.")
+	var mode := "moderate_gap_fill"
 	if OS.is_debug_build():
 		var requested_mode := OS.get_environment("VIOLIN_CHART_MODE").strip_edges().to_lower()
-		if requested_mode in ["production", "moderate", "high"]:
+		if requested_mode in ["production", "moderate", "moderate_gap_fill", "high"]:
 			mode = requested_mode
 		elif not requested_mode.is_empty():
-			push_warning("Unknown VIOLIN_CHART_MODE '%s'; using Moderate" % requested_mode)
+			push_warning("Unknown VIOLIN_CHART_MODE '%s'; using Moderate + Gap Fill" % requested_mode)
 	if mode == "production":
+		if not manager.load_chart_file("res://data/violin_interaction_chart.json"):
+			push_warning("Development Production chart unavailable; using original Moderate")
 		return
 	var seed_text := OS.get_environment("VIOLIN_CHART_SEED").strip_edges() if OS.is_debug_build() else ""
 	var run_seed := int(seed_text) if seed_text.is_valid_int() else 2026
+	var moderate_bank_path := "res://data/violin_interaction_chart_moderate_variants.json"
+	if mode == "moderate_gap_fill":
+		if manager.load_chart_variant_bank(gap_fill_bank_path, "Moderate_Gap_Fill", run_seed):
+			return
+		push_warning("Gap Fill bank unavailable; using original Moderate variants: %s" % gap_fill_bank_path)
+		mode = "moderate"
 	var bank_path := moderate_bank_path if mode == "moderate" else "res://data/violin_interaction_chart_high_variants.json"
 	if not manager.load_chart_variant_bank(bank_path, mode.capitalize(), run_seed):
-		push_warning("MIDI chart variant bank unavailable; using legacy Production: %s" % bank_path)
+		push_warning("MIDI chart variant bank unavailable; using original Moderate chart: %s" % bank_path)
 
 # ---------------------------------------------------------------------------
 # Phase management

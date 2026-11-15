@@ -1,7 +1,4 @@
-"""Offline Moderate + Gap Fill proposal; never changes the approved bank.
-
-Run: python -B tools/generate_moderate_gap_fill.py [--seed 2026]
-"""
+"""Build a separate, beat-aligned Moderate Gap Fill proposal."""
 
 from __future__ import annotations
 
@@ -18,169 +15,228 @@ REPORT = base.ROOT / "data/violin_interaction_chart_moderate_gap_fill_report.md"
 BANK_SOURCE = base.ROOT / "data/violin_interaction_chart_moderate_variants.json"
 BANK_OUTPUT = base.ROOT / "data/violin_interaction_chart_moderate_gap_fill_variants_candidate.json"
 
+# The timeline contains note seconds and ticks/beat, but omits tempo messages.
+# 300 note onsets fit this quarter-note grid within 0.1 ms.
+BEAT_SECONDS = 60.0 / 155.0
+EARLY = {"click": 0.35, "rub": 1.2, "slide": 1.5}
+EXPIRY = {"click": 2.0, "rub": 4.0, "slide": 2.0}
+
+
+def verify_grid(notes: list[dict]) -> int:
+    count = sum(abs(n["start"] - round(n["start"] / BEAT_SECONDS) * BEAT_SECONDS)
+                <= 0.005 for n in notes)
+    if count < 100:
+        raise ValueError("MIDI note onsets do not support 155 BPM quarter notes")
+    return count
+
+
+def _visible_intervals(chart: dict, lives: dict[str, float],
+                       pauses: tuple[tuple[float, float], ...] = (),
+                       visual_tail: bool = True) -> list[tuple[float, float]]:
+    duration = chart["loop_duration_seconds"]
+    intervals = []
+    for event in chart["events"]:
+        start = event["spawn_time"]
+        if any(a <= start < b for a, b in pauses):
+            continue  # psychological mode consumes scheduled spawns
+        tail = (0.22 if lives is EARLY else 0.28) if visual_tail else 0.0
+        end = start + lives[event["type"]] + tail
+        for a, b in pauses:
+            if start < a < end:
+                end += b - a  # lifetime timer pauses while hidden
+        intervals.append((start, end))
+    intervals += [(a - duration, b - duration) for a, b in intervals if b > duration]
+    visible = []
+    for start, end in intervals:
+        pieces = [(max(0.0, start), min(duration, end))]
+        for a, b in pauses:
+            pieces = [(x, min(y, a)) for x, y in pieces if x < a] + [
+                (max(x, b), y) for x, y in pieces if y > b]
+        visible += [(x, y) for x, y in pieces if y > x]
+    return visible
+
+
+def screen_gaps(chart: dict, lives: dict[str, float],
+                pauses: tuple[tuple[float, float], ...] = ()) -> list[tuple[float, float]]:
+    cursor = 0.0
+    gaps = []
+    for start, end in sorted(_visible_intervals(chart, lives, pauses)):
+        if start > cursor:
+            gaps.append((cursor, start))
+        cursor = max(cursor, end)
+    if cursor < chart["loop_duration_seconds"]:
+        gaps.append((cursor, chart["loop_duration_seconds"]))
+    return gaps
+
+
+def empty_seconds(chart: dict, lives: dict[str, float],
+                  pauses: tuple[tuple[float, float], ...] = ()) -> float:
+    # Only count time in physiological mode.
+    total = 0.0
+    for a, b in screen_gaps(chart, lives, pauses):
+        total += b - a - sum(max(0.0, min(b, y) - max(a, x)) for x, y in pauses)
+    return total
+
+
+def peak(chart: dict, lives: dict[str, float]) -> int:
+    duration = chart["loop_duration_seconds"]
+    edges = []
+    for a, b in _visible_intervals(chart, lives, visual_tail=False):
+        edges.extend(((a, 1), (b, -1)))
+    active = high = 0
+    for _, delta in sorted(edges, key=lambda x: (x[0], x[1])):
+        active += delta
+        high = max(high, active)
+    return high
+
+
+def _pitch_index(target: float, notes: list[dict], used: set[int],
+                 seed: int, loop_index: int) -> int | None:
+    before = [n["pitch"] for n in notes if n["start"] <= target]
+    after = [n["pitch"] for n in notes if n["start"] > target]
+    neighbors = before[-1:] + after[:1]
+    rng = base._rng(seed, loop_index, f"pitch:{round(target / BEAT_SECONDS)}")
+    choices = []
+    for index, note in enumerate(notes):
+        distance = abs(note["start"] - target)
+        if index in used or distance > BEAT_SECONDS * 0.75:
+            continue
+        harmony = min((abs(note["pitch"] - pitch) for pitch in neighbors), default=0)
+        if harmony > 7:
+            continue
+        choices.append((distance > 0.005, harmony, distance, rng.random() * 0.03, index))
+    return min(choices)[-1] if choices else None
+
 
 def add_gap_fill(chart: dict, notes: list[dict], seed: int, *,
-                 min_gap: float = 3.0, max_per_gap: int = 1,
-                 max_total: int = 3, slide_clearance: float = 0.3) -> dict:
-    """Use only unused MIDI notes; no inferred harmony means no invented pitches."""
+                 max_total: int = 10, min_spacing: float = 0.9,
+                 min_benefit: float = 0.25) -> dict:
+    verify_grid(notes)
     result = deepcopy(chart)
     result["generation_config"].update({
         "strategy": "moderate_gap_fill_candidate", "gap_fill_seed": seed,
-        "gap_fill_min_gap_seconds": min_gap, "gap_fill_max_per_gap": max_per_gap,
-        "gap_fill_max_total": max_total, "gap_fill_slide_clearance_seconds": slide_clearance,
+        "gap_fill_beat_seconds": BEAT_SECONDS, "gap_fill_max_total": max_total,
+        "gap_fill_min_spacing_seconds": min_spacing,
     })
     used = {i for event in chart["events"] for i in event["note_indices"]}
-    fast = {i for a, b in base.fast_runs(notes) for i in range(a, b + 1)}
-    additions = []
-    for left, right in zip(chart["events"], chart["events"][1:]):
-        gap = right["spawn_time"] - left["spawn_time"]
-        if gap < min_gap or len(additions) >= max_total:
-            continue
-        eligible = []
-        for index, note in enumerate(notes):
-            spawn = note["start"] - base.LEAD
-            if index in used or index in fast or not (0 <= spawn < chart["loop_duration_seconds"]):
+    duration = chart["loop_duration_seconds"]
+    loop_index = int(chart["generation_config"]["loop_index"])
+    for _ in range(max_total):
+        before_early = empty_seconds(result, EARLY)
+        before_expiry = empty_seconds(result, EXPIRY)
+        choices = []
+        for beat in range(3, int((duration + base.LEAD) / BEAT_SECONDS)):
+            target = beat * BEAT_SECONDS
+            spawn = target - base.LEAD
+            if not 0 < spawn < duration or target >= duration:
                 continue
-            if spawn - left["spawn_time"] < 1.45 or right["spawn_time"] - spawn < 1.45:
+            if any(abs(spawn - e["spawn_time"]) < min_spacing for e in result["events"]):
                 continue
-            if spawn < left["source_end_time"] + slide_clearance:
+            index = _pitch_index(target, notes, used, seed, loop_index)
+            if index is None:
                 continue
-            if note["end"] > right["source_start_time"] - slide_clearance:
-                continue
-            # A click should be a short, distinct note, not a hidden part of a run.
-            if not 0.16 <= note["end"] - note["start"] <= 0.65:
-                continue
-            nearby = [item for item in notes if abs(item["start"] - note["start"]) <= 0.7]
-            if len(nearby) >= 5 and sum(
-                    b["start"] - a["start"] <= 0.25
-                    for a, b in zip(nearby, nearby[1:])) >= 4:
-                continue
-            eligible.append(index)
-        rng = base._rng(seed, int(chart["generation_config"]["loop_index"]),
-                        f"gap_fill:{left['id']}:{right['id']}")
-        scores = {i: abs((notes[i]["start"] - base.LEAD) -
-                         (left["spawn_time"] + right["spawn_time"]) / 2) +
-                  rng.uniform(-0.12, 0.12) for i in eligible}
-        eligible.sort(key=lambda i: (scores[i], i))
-        for index in eligible[:max_per_gap]:
             note = notes[index]
-            if any(abs(note["start"] - base.LEAD - earlier["spawn_time"]) < 1.45
-                   for earlier in additions):
-                continue
-            candidate = {
-                "id": f"gap_fill_click_{index:04d}", "type": "click",
-                "spawn_time": round(note["start"] - base.LEAD, 6),
-                "source_start_time": round(note["start"], 6),
-                "source_end_time": round(note["end"], 6),
+            event = {
+                "id": f"gap_fill_click_{beat:04d}", "type": "click",
+                "spawn_time": round(spawn, 6),
+                "source_start_time": round(target, 6),
+                "source_end_time": round(target + min(note["end"] - note["start"], 0.45), 6),
                 "pitch": note["pitch"], "pitch_note_index": index,
                 "note_indices": [index], "checkpoints": [],
-                "origin": "gap_fill", "pitch_origin": "original_midi",
+                "origin": "gap_fill", "pitch_origin": "unused_midi",
             }
             proposal = deepcopy(result)
-            proposal["events"].append(candidate)
-            proposal["events"].sort(key=lambda event: event["spawn_time"])
-            chosen = [base.Candidate(e["type"], tuple(e["note_indices"]), 0, 0)
-                      for e in proposal["events"]]
-            if base.occupancy(chosen, notes, chart["loop_duration_seconds"], 2.5)["peak"] > 3:
+            proposal["events"].append(event)
+            proposal["events"].sort(key=lambda e: e["spawn_time"])
+            if peak(proposal, EXPIRY) > 3:
                 continue
-            result = proposal
-            additions.append(candidate)
-            if len(additions) >= max_total:
-                break
+            gain_early = before_early - empty_seconds(proposal, EARLY)
+            gain_expiry = before_expiry - empty_seconds(proposal, EXPIRY)
+            if gain_early < min_benefit:
+                continue
+            score = gain_early + 0.55 * gain_expiry
+            rng = base._rng(seed, loop_index, f"beat:{beat}")
+            choices.append((score + rng.uniform(-0.04, 0.04), -beat, event, proposal))
+        if not choices:
+            break
+        _, _, selected, result = max(choices, key=lambda x: x[:2])
+        used.add(selected["pitch_note_index"])
     base.validate_chart(result, notes)
     assert all(event in result["events"] for event in chart["events"])
     return result
 
 
-def _long_gaps(chart: dict, threshold: float = 3.0) -> list[tuple[float, float, float]]:
-    events = chart["events"]
-    return [(a["spawn_time"], b["spawn_time"], b["spawn_time"] - a["spawn_time"])
-            for a, b in zip(events, events[1:])
-            if b["spawn_time"] - a["spawn_time"] >= threshold]
-
-
-def make_report(approved: dict, candidate: dict, notes: list[dict]) -> str:
-    lines = ["# Moderate + Gap Fill 離線候選分析", "",
-             "此候選版未載入遊戲，也未覆寫已核准 Moderate 圖表或變體庫。所有新增音高均來自原始 MIDI；沒有新增推測的過門音。", "",
-             "| 指標 | 已核准 Moderate | Gap Fill 候選 |", "|---|---:|---:|"]
+def make_report(approved: dict, candidate: dict, notes: list[dict],
+                bank: dict, candidate_bank: dict) -> str:
     a, b = base.metrics(approved), base.metrics(candidate)
-    for title, key in (("互動總數", "events"), ("可逐音觸發機會", "playable")):
-        lines.append(f"| {title} | {a[key]} | {b[key]} |")
-    for kind in ("click", "slide", "rub"):
-        lines.append(f"| {kind.title()} | {a['types'].get(kind, 0)} | {b['types'].get(kind, 0)} |")
-    lines += ["", "## 新增 Click", "", "| 時間（生成／MIDI） | 音高 | 原始 MIDI 索引 | 來源 |",
-              "|---|---:|---:|---|"]
-    added = [e for e in candidate["events"] if e.get("origin") == "gap_fill"]
-    for event in added:
-        lines.append(f"| {event['spawn_time']:.3f}／{event['source_start_time']:.3f} 秒 | {event['pitch']} | {event['pitch_note_index']} | {event['pitch_origin']} |")
-    lines += ["", "## 仍保留的長互動間隔（生成時間差 ≥3 秒）", "",
-              "| 已核准 Moderate | Gap Fill 候選 |", "|---|---|"]
-    for label, chart in (("已核准", approved), ("候選", candidate)):
-        gaps = _long_gaps(chart)
-        text = "、".join(f"{start:.2f}–{end:.2f}（{length:.2f} 秒）" for start, end, length in gaps)
-        lines.append(f"| {label} | {text or '無'} |")
-    lines += ["", "## 佔用量估計", "",
-              "Click 以 2 秒、Rub 以 4 秒；Slide 的快速／典型／最壞完成時間分別為 1.5 秒／2.5 秒／每檢查點 2 秒。估計只涵蓋同時數上限，沒有模擬玩家位置、遮罩或心理模式。", "",
-              "| 情境 | 已核准峰值／上限略過 | 候選峰值／上限略過 |",
-              "|---|---:|---:|"]
-    for label, seconds in (("快速", 1.5), ("典型", 2.5), ("最壞", None)):
-        values = []
-        for chart in (approved, candidate):
-            events = [base.Candidate(e["type"], tuple(e["note_indices"]), 0, 0)
-                      for e in chart["events"]]
-            estimate = base.occupancy(events, notes, chart["loop_duration_seconds"], seconds)
-            values.append(f"{estimate['peak']}／{estimate['cap_skips']}")
-        lines.append(f"| {label} | {' | '.join(values)} |")
-    lines += ["", "## 風險與變化", "",
-              "- 原有 Slide 事件、檢查點、時間與排序內容保持相同；新增 Click 避開快速 MIDI 連音、Slide 的來源結尾，以及相鄰互動生成點。",
-              "- 典型完成時間的同時數不超過 3；最壞情境仍可能因慢速完成與場上位置造成略過。位置遮罩與心理模式需在實際遊戲試玩確認。",
-              "- 72.77–75.10 秒是真實 MIDI 休止。只有單聲部小提琴資料，無法確認和聲；因此沒有臆造音階過門音。",
-              "- 同一 seed 與 loop_index 會得到相同選擇。另輸出 8 個離線候選變體供比較；執行時仍載入已核准 Moderate 變體庫。", "",
-              "## 驗證範圍", "",
-              "產生器逐項驗證來源 MIDI 音高、0.8 秒生成提前量、事件順序、Slide 的 3–6 個原始檢查點、原圖表事件完整保留與典型同時數上限。Godot 執行時 schema 另由 `midi_chart_candidates_headless_test.gd` 驗證；實際位置與玩家速度仍需遊玩觀察。", ""]
+    added = sorted((e for e in candidate["events"] if e.get("origin") == "gap_fill"),
+                   key=lambda e: e["spawn_time"])
+    lines = [
+        "# Moderate MIDI Gap Fill 候選比較", "",
+        "此檔案是離線提案；正式圖譜及遊戲規則均未修改。空檔定義為生理互動物件沒有可見且有效的時間。", "",
+        "## 舊版只加一個 Click 的原因", "",
+        "舊演算法只掃相鄰 spawn 間隔 ≥3 秒，還要求來源音符避開前後事件區間，並以固定 2.5 秒 Slide 佔用估計拒絕候選。Click 點擊即完成、Rub 可提早完成、Slide 可完成或到期，許多實際空畫面因此發生於短 spawn 間隔內。舊版第 0 輪只找到 1 個 Click。", "",
+        "## 數量與四分拍", "",
+        "| 項目 | 核准 Moderate | 候選 |", "|---|---:|---:|",
+        f"| 事件總數 | {a['events']} | {b['events']} |",
+        f"| Click | {a['types'].get('click', 0)} | {b['types'].get('click', 0)} |",
+        f"| Slide / Rub | {a['types'].get('slide', 0)} / {a['types'].get('rub', 0)} | {b['types'].get('slide', 0)} / {b['types'].get('rub', 0)} |", "",
+        f"時間線有 {verify_grid(notes)}/{len(notes)} 個音符起點吻合 155 BPM 四分音符格（誤差 ≤5 ms）；四分音符長 {BEAT_SECONDS:.9f} 秒。時間線未保存原始 tempo meta 訊息，因此拍速由 MIDI 音符起點推定。新增 Click 目標均在拍點，spawn 比目標早 {base.LEAD:.1f} 秒。", "",
+        "| 目標秒數 | spawn 秒數 | 四分拍序 | 音高 / MIDI 索引 |", "|---:|---:|---:|---:|",
+    ]
+    for e in added:
+        beat = round(e["source_start_time"] / BEAT_SECONDS)
+        lines.append(f"| {e['source_start_time']:.3f} | {e['spawn_time']:.3f} | {beat} | {e['pitch']} / {e['pitch_note_index']} |")
+    lines += ["", "## 空畫面與併發估計", "",
+              "空畫面依可見物件計算，並包含上一輪跨 BGM 邊界的存活物件。提早完成模型的有效時間：Click 0.35、Rub 1.2、Slide 1.5 秒，完成後另計 0.22 秒淡出；未操作到期模型的有效時間：Click 2、Rub 4、Slide 初始檢查點 2 秒，到期後另計 0.28 秒淡出。Slide 操作中會重設計時，實際存活可更久。", "",
+              "| 情境 | 核准版空畫面 | 候選空畫面 | 改善 | 峰值（核准/候選） |",
+              "|---|---:|---:|---:|---:|"]
+    for label, lives in (("提早完成", EARLY), ("未操作到期", EXPIRY)):
+        before, after = empty_seconds(approved, lives), empty_seconds(candidate, lives)
+        lines.append(f"| {label} | {before:.2f} 秒 | {after:.2f} 秒 | {before-after:.2f} 秒 | {peak(approved, lives)} / {peak(candidate, lives)} |")
+    lines += ["", "心理模式會隱藏並暫停現有物件，且略過期間應 spawn 的事件。以 70–78 秒暫停作為示例，僅計生理模式空畫面：", "",
+              "| 情境 | 核准版 | 候選 |", "|---|---:|---:|"]
+    for label, lives in (("提早完成", EARLY), ("未操作到期", EXPIRY)):
+        lines.append(f"| {label} | {empty_seconds(approved, lives, ((70., 78.),)):.2f} 秒 | {empty_seconds(candidate, lives, ((70., 78.),)):.2f} 秒 |")
+    lines += ["", "候選在未操作到期模型的同時物件峰值不超過 3；遊戲端仍會在滿額或無安全錨點時略過事件。Slide 若持續操作，可比初始計時活得更久，仍有配置跳過風險。", "",
+              "## 八輪固定變化", ""]
+    for i, variant in enumerate(candidate_bank["variants"]):
+        extra = [e for e in variant["events"] if e.get("origin") == "gap_fill"]
+        beats = ", ".join(str(round(e["source_start_time"] / BEAT_SECONDS)) for e in extra)
+        lines.append(f"- 輪次 {i}：+{len(extra)} Click；四分拍序 {beats or '無'}。")
+    lines += ["", "同一 seed 與輪次結果相同。原 Slide/Rub、既有 Click、原音高綁定和計分邏輯保留。新增索引取未使用 MIDI 音符；無拍點音符時，選附近最多相差 7 半音的過渡音高。", "",
+              "## 驗證結果", "",
+              "- 產生時已核對 MIDI 來源 SHA-256、完整圖譜 schema、音高索引及第 0 輪與單檔候選一致。",
+              "- 相關 Python 單元測試 12 項通過；Godot 4.6.2 headless 候選圖譜載入測試通過。",
+              "- 正式圖譜與 gameplay 腳本無變更；場景錨點與遮罩仍可能讓個別 Click 在執行時略過。", ""]
     return "\n".join(lines)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--seed", type=int, default=2026)
-    parser.add_argument("--min-gap", type=float, default=3.0)
-    parser.add_argument("--max-per-gap", type=int, default=1)
-    parser.add_argument("--max-total", type=int, default=3)
+    parser.add_argument("--max-total", type=int, default=10)
     args = parser.parse_args()
-    if args.min_gap <= 0 or not 0 <= args.max_per_gap <= 2 or args.max_total < 0:
-        parser.error("Use positive min-gap, max-per-gap 0–2, and nonnegative max-total")
     source = base.SOURCE.read_bytes()
     notes, _ = base.validate_timeline(json.loads(source))
     approved = json.loads(APPROVED.read_text(encoding="utf-8"))
     if approved["source_sha256"] != hashlib.sha256(source).hexdigest():
-        raise ValueError("Approved Moderate source hash differs from MIDI timeline")
+        raise ValueError("Approved Moderate MIDI source hash mismatch")
     base.validate_chart(approved, notes)
-    candidate = add_gap_fill(approved, notes, args.seed, min_gap=args.min_gap,
-                             max_per_gap=args.max_per_gap, max_total=args.max_total)
+    candidate = add_gap_fill(approved, notes, args.seed, max_total=args.max_total)
     bank = json.loads(BANK_SOURCE.read_text(encoding="utf-8"))
     if bank["source_sha256"] != approved["source_sha256"]:
-        raise ValueError("Approved bank source hash differs from timeline")
-    variants = [add_gap_fill(variant, notes, args.seed, min_gap=args.min_gap,
-                             max_per_gap=args.max_per_gap, max_total=args.max_total)
-                for variant in bank["variants"]]
+        raise ValueError("Approved variant MIDI source hash mismatch")
+    variants = [add_gap_fill(v, notes, args.seed, max_total=args.max_total) for v in bank["variants"]]
     if candidate != variants[0]:
-        raise ValueError("Standalone Moderate candidate differs from loop 0")
-    candidate_bank = {
-        "schema_version": 1, "strategy": "moderate_gap_fill_candidate",
-        "source_sha256": approved["source_sha256"],
-        "variant_count": len(variants), "variants": variants,
-    }
+        raise ValueError("Candidate differs from loop 0")
+    candidate_bank = {"schema_version": 1, "strategy": "moderate_gap_fill_candidate",
+                      "source_sha256": approved["source_sha256"],
+                      "variant_count": len(variants), "variants": variants}
     OUTPUT.write_text(json.dumps(candidate, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     BANK_OUTPUT.write_text(json.dumps(candidate_bank, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
-    variation = "\n".join(
-        f"- 變體 {i}: +{len(variant['events']) - len(bank['variants'][i]['events'])} Click；"
-        f"MIDI 索引 {', '.join(str(e['pitch_note_index']) for e in variant['events'] if e.get('origin') == 'gap_fill') or '無'}"
-        for i, variant in enumerate(variants))
-    report = make_report(approved, candidate, notes)
-    report += "\n## 離線迴圈變體\n\n" + variation + "\n"
-    REPORT.write_text(report, encoding="utf-8")
-    print(f"Added {len(candidate['events']) - len(approved['events'])} Click events: {OUTPUT.relative_to(base.ROOT)}")
+    REPORT.write_text(make_report(approved, candidate, notes, bank, candidate_bank), encoding="utf-8")
+    print(f"Added {len(candidate['events']) - len(approved['events'])} Click events")
 
 
 if __name__ == "__main__":

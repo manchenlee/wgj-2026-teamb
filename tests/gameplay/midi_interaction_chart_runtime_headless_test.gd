@@ -189,6 +189,7 @@ func _test_active_cap_and_placement_skip() -> void:
 		_event("c", "click", 2.7, [64]),
 		_event("d", "click", 3.8, [65]),
 	]
+	events[3]["origin"] = "gap_fill"
 	var context := _make_manager(events)
 	var manager := context["manager"] as InteractionSpotManager
 	manager.start()
@@ -197,6 +198,10 @@ func _test_active_cap_and_placement_skip() -> void:
 		manager.advance_chart(position)
 	_check(manager._active_spots.size() == 3, "Chart spawning exceeded the three-spot cap")
 	_check(manager.get_chart_debug_state()["skip_counts"].get("active_cap", 0) == 1, "Active-cap skip reason was not recorded")
+	var stats := manager.get_chart_loop_stats()
+	_check(stats["scheduled_gap_fill_clicks"] == 1 and stats["skipped_gap_fill_clicks"] == 1, "Gap Fill skip was not distinguished")
+	_check(stats["gap_fill_skip_reasons"].get("active_cap", 0) == 1, "Gap Fill capacity reason was not recorded")
+	_check(is_equal_approx((context["arousal"] as FakeArousal).physical, 40.0), "Skipped Gap Fill event changed score")
 	for i in manager._active_spots.size():
 		for j in range(i + 1, manager._active_spots.size()):
 			var first: Rect2 = manager._active_spots[i].get_meta("placement_rect")
@@ -268,13 +273,16 @@ func _test_slide_sizes_and_bound_audio() -> void:
 
 
 func _test_click_and_rub_pitch_routes() -> void:
-	var click_context := _make_manager([_event("click", "click", 0.5, [73])])
+	var gap_click_event := _event("click", "click", 0.5, [73])
+	gap_click_event["origin"] = "gap_fill"
+	var click_context := _make_manager([gap_click_event])
 	var click_manager := click_context["manager"] as InteractionSpotManager
 	var clicks: Array[int] = []
 	click_manager.click_audio_requested.connect(func(pitch: int) -> void: clicks.append(pitch))
 	click_manager.start()
 	click_manager.advance_chart(0.0)
 	click_manager.advance_chart(0.5)
+	_check(click_manager.get_chart_loop_stats()["spawned_gap_fill_clicks"] == 1, "Gap Fill spawn was not distinguished")
 	var click := click_manager._active_spots[0] as ClickNote
 	var press := InputEventMouseButton.new()
 	press.button_index = MOUSE_BUTTON_LEFT
@@ -311,8 +319,12 @@ func _test_router_clock_connection() -> void:
 	_check(game != null and game.bgm_position_provider.is_valid(), "Game did not receive the router BGM clock")
 	_check(game.spot_manager._chart_enabled and game.spot_manager._chart_events.size() > 0, "Game did not load a chart")
 	var requested_mode := OS.get_environment("VIOLIN_CHART_MODE").strip_edges().to_lower() if OS.is_debug_build() else ""
-	var expected_mode := requested_mode.capitalize() if requested_mode in ["production", "moderate", "high"] else "Moderate"
+	var expected_mode := requested_mode.capitalize() if requested_mode in ["production", "moderate", "high"] else "Moderate_Gap_Fill"
+	if requested_mode == "moderate_gap_fill":
+		expected_mode = "Moderate_Gap_Fill"
 	_check(game.spot_manager.get_chart_debug_state()["mode"] == expected_mode, "Game selected the wrong chart mode")
+	if expected_mode == "Moderate_Gap_Fill":
+		_check(game.spot_manager.get_chart_loop_stats()["scheduled_gap_fill_clicks"] == 10, "Game missed default Gap Fill bank")
 	_check(game.spot_spawn_timer.is_stopped(), "Gameplay started random spot scheduling")
 	_check(router.current_bgm_key == "gameplay", "Gameplay changed the piano BGM route")
 	_check(router.get_gameplay_bgm_position() >= 0.0, "Router did not expose the playing piano position")

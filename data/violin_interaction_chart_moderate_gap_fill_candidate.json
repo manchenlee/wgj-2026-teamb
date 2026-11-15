@@ -12,10 +12,9 @@
     "max_active": 3,
     "slide_checkpoint_timeout_seconds": 2.0,
     "gap_fill_seed": 2026,
-    "gap_fill_min_gap_seconds": 3.0,
-    "gap_fill_max_per_gap": 1,
-    "gap_fill_max_total": 3,
-    "gap_fill_slide_clearance_seconds": 0.3
+    "gap_fill_beat_seconds": 0.3870967741935484,
+    "gap_fill_max_total": 10,
+    "gap_fill_min_spacing_seconds": 0.9
   },
   "events": [
     {
@@ -300,6 +299,21 @@
       ]
     },
     {
+      "id": "gap_fill_click_0059",
+      "type": "click",
+      "spawn_time": 22.03871,
+      "source_start_time": 22.83871,
+      "source_end_time": 23.031452,
+      "pitch": 72,
+      "pitch_note_index": 47,
+      "note_indices": [
+        47
+      ],
+      "checkpoints": [],
+      "origin": "gap_fill",
+      "pitch_origin": "unused_midi"
+    },
+    {
       "id": "slide_0052",
       "type": "slide",
       "spawn_time": 23.006466,
@@ -405,6 +419,21 @@
       ]
     },
     {
+      "id": "gap_fill_click_0079",
+      "type": "click",
+      "spawn_time": 29.780645,
+      "source_start_time": 30.580645,
+      "source_end_time": 30.966936,
+      "pitch": 69,
+      "pitch_note_index": 75,
+      "note_indices": [
+        75
+      ],
+      "checkpoints": [],
+      "origin": "gap_fill",
+      "pitch_origin": "unused_midi"
+    },
+    {
       "id": "slide_0078",
       "type": "slide",
       "spawn_time": 30.941954,
@@ -478,6 +507,21 @@
           "pitch": 81
         }
       ]
+    },
+    {
+      "id": "gap_fill_click_0095",
+      "type": "click",
+      "spawn_time": 35.974194,
+      "source_start_time": 36.774194,
+      "source_end_time": 36.966936,
+      "pitch": 71,
+      "pitch_note_index": 89,
+      "note_indices": [
+        89
+      ],
+      "checkpoints": [],
+      "origin": "gap_fill",
+      "pitch_origin": "unused_midi"
     },
     {
       "id": "slide_0091",
@@ -705,6 +749,21 @@
           "pitch": 72
         }
       ]
+    },
+    {
+      "id": "gap_fill_click_0126",
+      "type": "click",
+      "spawn_time": 47.974194,
+      "source_start_time": 48.774194,
+      "source_end_time": 49.224194,
+      "pitch": 81,
+      "pitch_note_index": 156,
+      "note_indices": [
+        156
+      ],
+      "checkpoints": [],
+      "origin": "gap_fill",
+      "pitch_origin": "unused_midi"
     },
     {
       "id": "slide_0159",
@@ -1076,6 +1135,21 @@
       "checkpoints": []
     },
     {
+      "id": "gap_fill_click_0162",
+      "type": "click",
+      "spawn_time": 61.909677,
+      "source_start_time": 62.709677,
+      "source_end_time": 63.095968,
+      "pitch": 76,
+      "pitch_note_index": 240,
+      "note_indices": [
+        240
+      ],
+      "checkpoints": [],
+      "origin": "gap_fill",
+      "pitch_origin": "unused_midi"
+    },
+    {
       "id": "slide_0243",
       "type": "slide",
       "spawn_time": 63.071005,
@@ -1261,11 +1335,11 @@
       ]
     },
     {
-      "id": "gap_fill_click_0277",
+      "id": "gap_fill_click_0194",
       "type": "click",
-      "spawn_time": 74.296818,
-      "source_start_time": 75.096818,
-      "source_end_time": 75.676657,
+      "spawn_time": 74.296774,
+      "source_start_time": 75.096774,
+      "source_end_time": 75.546774,
       "pitch": 71,
       "pitch_note_index": 277,
       "note_indices": [
@@ -1273,7 +1347,7 @@
       ],
       "checkpoints": [],
       "origin": "gap_fill",
-      "pitch_origin": "original_midi"
+      "pitch_origin": "unused_midi"
     },
     {
       "id": "slide_0280",
@@ -1562,6 +1636,21 @@
       ]
     },
     {
+      "id": "gap_fill_click_0247",
+      "type": "click",
+      "spawn_time": 94.812903,
+      "source_start_time": 95.612903,
+      "source_end_time": 95.805645,
+      "pitch": 72,
+      "pitch_note_index": 324,
+      "note_indices": [
+        324
+      ],
+      "checkpoints": [],
+      "origin": "gap_fill",
+      "pitch_origin": "unused_midi"
+    },
+    {
       "id": "slide_0329",
       "type": "slide",
       "spawn_time": 95.780702,
@@ -1667,6 +1756,21 @@
       ]
     },
     {
+      "id": "gap_fill_click_0267",
+      "type": "click",
+      "spawn_time": 102.554839,
+      "source_start_time": 103.354839,
+      "source_end_time": 103.741129,
+      "pitch": 69,
+      "pitch_note_index": 352,
+      "note_indices": [
+        352
+      ],
+      "checkpoints": [],
+      "origin": "gap_fill",
+      "pitch_origin": "unused_midi"
+    },
+    {
       "id": "slide_0355",
       "type": "slide",
       "spawn_time": 103.71619,
@@ -1740,6 +1844,21 @@
           "pitch": 81
         }
       ]
+    },
+    {
+      "id": "gap_fill_click_0283",
+      "type": "click",
+      "spawn_time": 108.748387,
+      "source_start_time": 109.548387,
+      "source_end_time": 109.741129,
+      "pitch": 71,
+      "pitch_note_index": 366,
+      "note_indices": [
+        366
+      ],
+      "checkpoints": [],
+      "origin": "gap_fill",
+      "pitch_origin": "unused_midi"
     },
     {
       "id": "slide_0368",
@@ -2367,6 +2486,21 @@
         514
       ],
       "checkpoints": []
+    },
+    {
+      "id": "gap_fill_click_0350",
+      "type": "click",
+      "spawn_time": 134.683871,
+      "source_start_time": 135.483871,
+      "source_end_time": 135.870162,
+      "pitch": 76,
+      "pitch_note_index": 517,
+      "note_indices": [
+        517
+      ],
+      "checkpoints": [],
+      "origin": "gap_fill",
+      "pitch_origin": "unused_midi"
     },
     {
       "id": "slide_0520",

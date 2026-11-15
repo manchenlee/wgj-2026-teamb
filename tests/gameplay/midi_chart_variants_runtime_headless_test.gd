@@ -23,7 +23,7 @@ func _run() -> void:
 	_check(production.get_chart_debug_state()["mode"] == "Production", "Production mode mislabeled")
 	_check(not production.load_chart_variant_bank("res://data/missing_chart_variants.json", "Moderate", 2026), "Missing bank unexpectedly loaded")
 	_check(production._chart_events.size() == 73 and production.get_chart_debug_state()["mode"] == "Production", "Missing bank did not retain Production fallback")
-	for mode in ["Moderate", "High"]:
+	for mode in ["Moderate", "High", "Moderate_Gap_Fill"]:
 		var first := MANAGER.new() as InteractionSpotManager
 		var second := MANAGER.new() as InteractionSpotManager
 		var path := "res://data/violin_interaction_chart_%s_variants.json" % mode.to_lower()
@@ -40,7 +40,7 @@ func _run() -> void:
 		_check(changed_seed._chart_events != first._chart_events, "%s alternate seed produced same chart" % mode)
 	var context := _context()
 	var manager := context["manager"] as InteractionSpotManager
-	_check(manager.load_chart_variant_bank("res://data/violin_interaction_chart_moderate_variants.json", "Moderate", 2026), "Runtime bank load failed")
+	_check(manager.load_chart_variant_bank("res://data/violin_interaction_chart_moderate_gap_fill_variants.json", "Moderate_Gap_Fill", 2026), "Runtime Gap Fill bank load failed")
 	manager.start()
 	var six_event: Dictionary = {}
 	for event: Dictionary in manager._chart_events:
@@ -64,6 +64,17 @@ func _run() -> void:
 		_check(manager._chart_loop_index == 1, "Loop index did not advance")
 		_check(manager._active_spots.has(slide), "Cross-loop Slide was removed")
 		_check(manager.get_chart_debug_state()["variant_index"] == 1, "Next loop did not select next variant")
+		_check(manager.get_chart_loop_stats(0)["scheduled_gap_fill_clicks"] == 10, "First loop lost Gap Fill Clicks")
+		_check(manager.get_chart_loop_stats(1)["scheduled_gap_fill_clicks"] == 10, "Second loop lost Gap Fill Clicks")
+		var first_gap_ids: Array[String] = []
+		for event: Dictionary in JSON.parse_string(FileAccess.get_file_as_string("res://data/violin_interaction_chart_moderate_gap_fill_variants.json"))["variants"][0]["events"]:
+			if String(event.get("origin", "")) == "gap_fill":
+				first_gap_ids.append(String(event["id"]))
+		var next_gap_ids: Array[String] = []
+		for event: Dictionary in manager._chart_events:
+			if String(event.get("origin", "")) == "gap_fill":
+				next_gap_ids.append(String(event["id"]))
+		_check(first_gap_ids != next_gap_ids, "Consecutive BGM loops reused identical Gap Fill beats")
 		var prior_events: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/violin_interaction_chart_moderate.json"))["events"]
 		_check(manager._chart_events != prior_events, "Consecutive Moderate loops selected identical events")
 		var first_next: Dictionary = manager._chart_events[0]
@@ -104,14 +115,17 @@ func _test_default_and_fallback_loading() -> void:
 	var manager := MANAGER.new() as InteractionSpotManager
 	controller._load_interaction_chart(manager)
 	var requested_mode := OS.get_environment("VIOLIN_CHART_MODE").strip_edges().to_lower() if OS.is_debug_build() else ""
-	var expected_mode := requested_mode.capitalize() if requested_mode in ["production", "moderate", "high"] else "Moderate"
+	var expected_mode := requested_mode.capitalize() if requested_mode in ["production", "moderate", "high"] else "Moderate_Gap_Fill"
+	if requested_mode == "moderate_gap_fill":
+		expected_mode = "Moderate_Gap_Fill"
 	_check(manager.get_chart_debug_state()["mode"] == expected_mode, "Fresh chart selection did not match the launch mode")
-	if expected_mode == "Moderate":
-		_check(manager.get_chart_loop_stats()["intended_pitch_opportunities"] >= 273, "Default Moderate bank did not provide its playable coverage")
+	if expected_mode == "Moderate_Gap_Fill":
+		_check(manager.get_chart_loop_stats()["scheduled_gap_fill_clicks"] == 10, "Fresh launch did not schedule ten Gap Fill Clicks")
+		_check(manager.get_chart_loop_stats()["intended_pitch_opportunities"] >= 283, "Default Gap Fill bank lost playable coverage")
 	var missing := MANAGER.new() as InteractionSpotManager
 	controller._load_interaction_chart(missing, "res://data/missing_moderate_variants.json")
-	if expected_mode == "Moderate":
-		_check(missing.get_chart_debug_state()["mode"] == "Production" and missing._chart_events.size() == 73, "Missing Moderate bank did not fall back to legacy chart")
+	if expected_mode == "Moderate_Gap_Fill":
+		_check(missing.get_chart_debug_state()["mode"] == "Moderate" and missing._chart_events.size() == 72, "Missing Gap Fill bank did not fall back to Moderate")
 	var invalid_path := "user://invalid_moderate_chart_variants.json"
 	var invalid_file := FileAccess.open(invalid_path, FileAccess.WRITE)
 	_check(invalid_file != null, "Could not create invalid bank fixture")
@@ -120,8 +134,8 @@ func _test_default_and_fallback_loading() -> void:
 		invalid_file.close()
 		var invalid := MANAGER.new() as InteractionSpotManager
 		controller._load_interaction_chart(invalid, invalid_path)
-		if expected_mode == "Moderate":
-			_check(invalid.get_chart_debug_state()["mode"] == "Production" and invalid._chart_events.size() == 73, "Invalid Moderate bank did not fall back to legacy chart")
+		if expected_mode == "Moderate_Gap_Fill":
+			_check(invalid.get_chart_debug_state()["mode"] == "Moderate" and invalid._chart_events.size() == 72, "Invalid Gap Fill bank did not fall back to Moderate")
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(invalid_path))
 	controller.free()
 
