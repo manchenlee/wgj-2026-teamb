@@ -1173,6 +1173,9 @@ func _on_psychological_dialogue_timer_timeout(generation: int) -> void:
 func _on_dialogue_bubble_advance_requested() -> void:
 	if not dialogue_panel.current_speech_bubble.is_visible_in_tree():
 		return
+	if dialogue_panel.current_speech_bubble.is_streaming():
+		dialogue_panel.current_speech_bubble.finish_dialogue_stream()
+		return
 	_advance_psychological_dialogue(_reading_step_generation)
 
 func _advance_psychological_dialogue(generation: int) -> void:
@@ -1304,6 +1307,8 @@ func _dialogue_speaker_type(authored_speaker: String) -> String:
 
 func _schedule_next_dialogue_message(mode: InteractionMode, displayed_text: String = "") -> void:
 	var wait_time := active_phase_config.reading_duration_for_text(displayed_text)
+	if mode == InteractionMode.PSYCHOLOGICAL:
+		wait_time = maxf(wait_time, dialogue_panel.current_speech_bubble.get_stream_duration() + 0.5)
 	var timer := _get_dialogue_timer(mode)
 	if mode == InteractionMode.PSYCHOLOGICAL:
 		_invalidate_reading_step()

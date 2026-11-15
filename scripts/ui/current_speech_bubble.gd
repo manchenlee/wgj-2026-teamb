@@ -4,6 +4,8 @@ extends Control
 
 signal advance_requested()
 
+const STREAM_CHARACTERS_PER_SECOND := 40.0
+
 @export var max_width: float = 420.0:
 	set(value):
 		max_width = maxf(value, 120.0)
@@ -21,9 +23,18 @@ signal advance_requested()
 @onready var text_label: Label = $MarginContainer/TextLabel
 @onready var speaker_label: Label = $SpeakerLabel
 
+var _stream_progress: float = 0.0
+
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	set_process(false)
 	_refresh_layout()
+
+func _process(delta: float) -> void:
+	_stream_progress += delta * STREAM_CHARACTERS_PER_SECOND
+	text_label.visible_characters = mini(int(_stream_progress), text_label.get_total_character_count())
+	if not is_streaming():
+		finish_dialogue_stream()
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT \
@@ -35,7 +46,25 @@ func set_dialogue_text(text_value: String) -> void:
 	if not is_node_ready():
 		return
 	text_label.text = text_value.strip_edges()
+	_stream_progress = 0.0
+	text_label.visible_characters = 0 if not text_label.text.is_empty() else -1
+	set_process(not text_label.text.is_empty())
 	_refresh_layout()
+
+func is_streaming() -> bool:
+	return is_node_ready() and text_label.visible_characters >= 0 \
+			and text_label.visible_characters < text_label.get_total_character_count()
+
+func finish_dialogue_stream() -> void:
+	if not is_node_ready():
+		return
+	text_label.visible_characters = -1
+	set_process(false)
+
+func get_stream_duration() -> float:
+	if not is_node_ready():
+		return 0.0
+	return float(text_label.get_total_character_count()) / STREAM_CHARACTERS_PER_SECOND
 
 func set_speaker_text(speaker_text: String) -> void:
 	if is_node_ready():
@@ -52,7 +81,6 @@ func _refresh_layout() -> void:
 	if not is_node_ready():
 		return
 	var horizontal_margin := text_margins.x + text_margins.z
-	var vertical_margin := text_margins.y + text_margins.w
 	var label_width := maxf(1.0, max_width - horizontal_margin)
 
 	margin_container.add_theme_constant_override("margin_left", int(round(text_margins.x)))

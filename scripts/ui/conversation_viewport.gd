@@ -40,6 +40,7 @@ func clear_history() -> void:
 	_history.clear()
 	_active_character_line = ""
 	if current_speech_bubble != null:
+		current_speech_bubble.finish_dialogue_stream()
 		current_speech_bubble.visible = false
 
 func append_history(line: String, speaker_type: String = "companion") -> void:
@@ -53,6 +54,7 @@ func append_history(line: String, speaker_type: String = "companion") -> void:
 
 func restore_current_character_line(line: String) -> void:
 	_show_current_character_line(line.strip_edges())
+	current_speech_bubble.finish_dialogue_stream()
 
 func set_choice_timeout_progress(_progress: float) -> void:
 	pass

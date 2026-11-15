@@ -96,6 +96,9 @@ func _input(event: InputEvent) -> void:
 
 func advance_input_handled() -> void:
 	get_viewport().set_input_as_handled()
+	if dialogue_bubble.is_streaming():
+		dialogue_bubble.finish_dialogue_stream()
+		return
 	_advance_script()
 
 func _on_skip_pressed() -> void:
@@ -230,6 +233,9 @@ func _show_entry_choices(entry: Dictionary) -> void:
 		var choice_id := str(choice.get("id", ""))
 		button.pressed.connect(func() -> void:
 			if _transition_requested or generation != _choice_generation or str((_entries[_current_entry_index] as Dictionary).get("id", "")) != entry_id:
+				return
+			if dialogue_bubble.is_streaming():
+				dialogue_bubble.finish_dialogue_stream()
 				return
 			if choice_id == "tutorial":
 				_tutorial_return_branch = _active_branch
