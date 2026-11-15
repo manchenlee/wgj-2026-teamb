@@ -3,6 +3,7 @@ extends Control
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
 const ENDING_TEXTS_PATH := "res://assets/dialogue/endings.json"
 const VISUAL_NOVEL_SCENE := preload("res://scenes/screens/OpeningScreen.tscn")
+const ENDING_IMAGE_FADE_DURATION := 0.4
 const DEFAULT_ENDING_TEXTS := {
 	Config.SUCCESS_ENDING: {
 		"title": "整體興奮值滿",
@@ -43,6 +44,7 @@ signal back_to_title_pressed
 var pending_result_type: String = ""
 var ending_texts_by_type: Dictionary = {}
 var _novel_screen: Control
+var _novel_transitioning: bool = false
 
 func _ready() -> void:
 	ending_texts_by_type = _load_ending_texts()
@@ -107,9 +109,24 @@ func _apply_result(result_type: String) -> void:
 	body_label.text = "未知結局。\n\n尚未找到對應的 ending 文案。"
 
 func _finish_novel() -> void:
-	if _novel_screen != null:
-		_novel_screen.queue_free()
-		_novel_screen = null
+	if _novel_screen == null or _novel_transitioning:
+		return
+	_novel_transitioning = true
+	var fade_overlay := ColorRect.new()
+	fade_overlay.color = Color(0, 0, 0, 0)
+	fade_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(fade_overlay)
+	fade_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	var fade_tween := create_tween()
+	fade_tween.tween_property(fade_overlay, "color:a", 1.0, ENDING_IMAGE_FADE_DURATION)
+	fade_tween.tween_callback(_show_ending_image)
+	fade_tween.tween_property(fade_overlay, "color:a", 0.0, ENDING_IMAGE_FADE_DURATION)
+	fade_tween.tween_callback(fade_overlay.queue_free)
+
+func _show_ending_image() -> void:
+	_novel_screen.queue_free()
+	_novel_screen = null
 	$OuterMargin/Layout/RestartButtons.visible = true
 
 func _load_ending_texts() -> Dictionary:
