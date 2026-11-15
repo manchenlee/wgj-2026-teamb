@@ -235,13 +235,7 @@
       "character": {
         "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
-      },
-      "effects": [
-        {
-          "type": "shake",
-          "duration": 0.36
-        }
-      ]
+      }
     },
     {
       "id": "r29",
@@ -251,7 +245,13 @@
       "character": {
         "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
-      }
+      },
+      "effects": [
+        {
+          "type": "shake",
+          "duration": 0.36
+        }
+      ]
     },
     {
       "id": "r30",

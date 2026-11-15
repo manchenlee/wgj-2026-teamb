@@ -73,7 +73,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.is_pressed() and not event.is_echo() and event.keycode == KEY_F1:
 		debug_overlay.toggle()
 
-func _show_title() -> void:
+func _show_title(fade_from_ending: bool = false) -> void:
 	safe_word_completed = false
 	current_safe_word = Config.SAFE_WORD_DEFAULT
 	current_screen_id = Config.SCREEN_TITLE
@@ -81,8 +81,10 @@ func _show_title() -> void:
 	screen.start_pressed.connect(_show_warning)
 	screen.skip_pressed.connect(_show_safe_word)
 	screen.debug_requested.connect(func() -> void: debug_overlay.visible = true)
-	_swap_screen(screen)
-	_play_bgm("default", false)
+	_swap_screen(screen, fade_from_ending)
+	if fade_from_ending:
+		bgm_playback_positions["default"] = 0.0
+	_play_bgm("default", fade_from_ending)
 
 func _show_warning() -> void:
 	current_screen_id = Config.SCREEN_WARNING
@@ -168,8 +170,8 @@ func _show_ending(ending_type: String) -> void:
 	current_screen_id = Config.SCREEN_ENDING
 	var screen := ENDING_SCENE.instantiate()
 	screen.set_result(ending_type)
-	screen.restart_pressed.connect(func() -> void: _show_game(current_safe_word))
-	screen.back_to_title_pressed.connect(_show_title)
+	screen.restart_pressed.connect(func() -> void: _show_game(current_safe_word, true))
+	screen.back_to_title_pressed.connect(func() -> void: _show_title(true))
 	_swap_screen(screen)
 	_play_bgm("ending", true)
 	debug_overlay.sync_live_readout({
