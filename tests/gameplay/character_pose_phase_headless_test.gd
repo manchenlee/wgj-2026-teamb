@@ -17,9 +17,19 @@ func _run() -> void:
     var phase_one = POSE_PROFILE.new(1)
     _check(phase_one.pose_name == "sitting", "Phase 1 does not use the sitting pose fallback.")
     _check(phase_one.get_texture_path("overall_init") == "res://assets/art/character/sitting/complete.png", "Phase 1 fallback points to another pose.")
-    _check(POSE_PROFILE.new(3).pose_name == "lying", "Phase 3 does not use the lying pose.")
+    _check(POSE_PROFILE.new(3).pose_name == "standing", "Phase 3 does not use the standing pose.")
+    _check(POSE_PROFILE.new(3).get_texture_path("overall_init") == "res://assets/art/character/standing/complete.png", "Phase 3 loads the wrong character art.")
+    _check(POSE_PROFILE.new(3).get_face_texture_paths()["face_positive"] == "res://assets/art/character/standing/face_positive.png", "Phase 3 loads the wrong positive face.")
     _check(POSE_PROFILE.new(4).pose_name == "prone", "Phase 4 does not use the prone pose.")
-    _check(POSE_PROFILE.new(5).pose_name == "standing", "Phase 5 does not use the standing pose.")
+    _check(POSE_PROFILE.new(5).pose_name == "lying", "Phase 5 does not use the lying pose.")
+    _check(POSE_PROFILE.new(5).get_texture_path("overall_init") == "res://assets/art/character/lying/complete.png", "Phase 5 loads the wrong character art.")
+    _check(POSE_PROFILE.new(5).get_face_texture_paths()["face_positive"] == "res://assets/art/character/lying/face_positive.png", "Phase 5 loads the wrong positive face.")
+    for phase in [1, 2]:
+        var sitting_profile = POSE_PROFILE.new(phase)
+        for index in range(3):
+            var tail_number: int = [2, 1, 3][index]
+            _check(sitting_profile.get_tail_frame_paths()[index].ends_with("tail_%d.png" % tail_number), "Phase %d uses the wrong tail at stage %d." % [phase, index])
+            _check(sitting_profile.get_tail_tentacle_paths()[index][0].ends_with("tail_%d_1.png" % tail_number), "Phase %d uses the wrong tail tentacle at stage %d." % [phase, index])
     for phase in range(1, 6):
         var profile = POSE_PROFILE.new(phase)
         _check(profile.get_tail_frame_paths().size() == 3, "Phase %d tail is not mapped to three frames." % phase)
@@ -49,10 +59,18 @@ func _run() -> void:
     game._sync_physiological_visual_band()
     game._advance_tail_animation(0.1)
     _check(game._tail_frame_index == 0, "Score below 20 did not select the first sitting tail stage.")
+    _check(game.pose_tail_layer.texture.resource_path.ends_with("tail_2.png"), "Score below 20 did not show tail_2.")
+    _check(game.tentacle_layer._tail_tracks[0]["layer"].texture.resource_path.contains("tail_2_"), "Score below 20 did not show the tail_2 tentacle.")
     _check(game.current_presentation_phase == 2, "Physiology decay regressed the pose.")
+    game.arousal_model.physical = 20.0
+    game._advance_tail_animation(0.1)
+    _check(game.pose_tail_layer.texture.resource_path.ends_with("tail_1.png"), "Score 20 did not show tail_1.")
+    _check(game.tentacle_layer._tail_tracks[1]["layer"].texture.resource_path.contains("tail_1_"), "Score 20 did not show the tail_1 tentacle.")
     game.arousal_model.physical = 30.0
     game._advance_tail_animation(0.1)
     _check(game._tail_frame_index == 2, "Score 30 did not select the third sitting tail stage.")
+    _check(game.pose_tail_layer.texture.resource_path.ends_with("tail_3.png"), "Score 30 did not show tail_3.")
+    _check(game.tentacle_layer._tail_tracks[2]["layer"].texture.resource_path.contains("tail_3_"), "Score 30 did not show the tail_3 tentacle.")
     for step in range(30):
         game.tentacle_layer.advance(0.15)
         for track in game.tentacle_layer._tracks:
@@ -62,19 +80,23 @@ func _run() -> void:
     game.arousal_model.physical = 40.0
     game._sync_physiological_visual_band()
     _check(game.current_presentation_phase == 3, "Physiology 40 did not reach Phase 3.")
-    _check(game.active_character_profile.pose_name == "lying", "Phase 3 did not show the lying pose.")
+    _check(game.active_character_profile.pose_name == "standing", "Phase 3 did not show the standing pose.")
+    _check(game.tentacle_layer._tracks.size() == 4, "Phase 3 did not load its standing tentacles.")
+    _check(game.tentacle_layer._tail_tracks.is_empty(), "Phase 3 loaded the lying tail tentacles.")
     game.arousal_model.physical = 80.0
     game._sync_physiological_visual_band()
     _check(game.current_presentation_phase == 5, "Physiology 80 did not reach Phase 5.")
-    _check(game.active_character_profile.pose_name == "standing", "Phase 5 did not show the standing pose.")
+    _check(game.active_character_profile.pose_name == "lying", "Phase 5 did not show the lying pose.")
+    _check(game.tentacle_layer._tracks.size() == 4, "Phase 5 did not load its lying tentacles.")
+    _check(game.tentacle_layer._tail_tracks.size() == 3, "Phase 5 did not load its lying tail tentacles.")
     for step in range(18):
         game._advance_tail_animation(0.13)
         for track in game.tentacle_layer._tracks + game.tentacle_layer._tail_tracks:
-            _check(track["layer"].visible, "A standing tentacle disappeared while animating.")
+            _check(track["layer"].visible, "A lying tentacle disappeared while animating.")
         for track in game.tentacle_layer._tail_tracks:
             _check(track["layer"].texture.resource_path.ends_with("_%d.png" % (game._tail_frame_index + 1)),
-                "A standing tail tentacle frame lost sync with the base tail.")
-    _check(game.active_character_profile.get_shooting_tail_path().ends_with("tail_shooting.png"), "Standing shooting tail is unavailable.")
+                "A lying tail tentacle frame lost sync with the base tail.")
+    _check(game.active_character_profile.get_shooting_tail_path().ends_with("tail_shooting.png"), "Lying shooting tail is unavailable.")
     game.set_shooting_tail_active(true)
     _check(game.pose_tail_layer.texture != null, "Shooting tail was not displayed by the presentation API.")
     game.set_shooting_tail_active(false)

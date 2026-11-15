@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://duge8s7iykjmg"
-path="res://.godot/imported/tail_shooting.png-652d2055b368bd2a94fb9377fdf5c744.ctex"
+uid="uid://dlrx85rols25l"
+path="res://.godot/imported/tail_center_3.png-58b183a8d440716dd2250300170c0e16.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/character/standing/tail_shooting.png"
-dest_files=["res://.godot/imported/tail_shooting.png-652d2055b368bd2a94fb9377fdf5c744.ctex"]
+source_file="res://assets/art/tentacles/lying/tail_center_3.png"
+dest_files=["res://.godot/imported/tail_center_3.png-58b183a8d440716dd2250300170c0e16.ctex"]
 
 [params]
 

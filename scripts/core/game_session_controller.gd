@@ -364,7 +364,7 @@ func set_shooting_tail_active(active: bool) -> void:
 func _update_shooting_tail_layer() -> void:
 	if pose_tail_layer == null or active_character_profile == null:
 		return
-	if shooting_tail_active and active_character_profile.pose_name == "standing":
+	if shooting_tail_active and active_character_profile.pose_name == "lying":
 		var shooting_path: String = active_character_profile.get_shooting_tail_path()
 		_apply_phase_layer_texture(pose_tail_layer, _load_texture_from_asset_path(shooting_path))
 	elif not _tail_frames.is_empty():
@@ -380,7 +380,7 @@ func _advance_tail_animation(delta: float) -> void:
 			_update_shooting_tail_layer()
 			tentacle_layer.set_tail_index(_tail_frame_index)
 		return
-	if _tail_frames.size() != 3 or (shooting_tail_active and active_character_profile.pose_name == "standing"):
+	if _tail_frames.size() != 3 or (shooting_tail_active and active_character_profile.pose_name == "lying"):
 		return
 	_tail_elapsed += delta
 	if _tail_elapsed < _tail_frame_duration:

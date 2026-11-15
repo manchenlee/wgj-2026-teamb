@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://715y7105hu1"
-path="res://.godot/imported/tail_right_1.png-05a4556aecd25dfaa888ca7e8fa3ba4f.ctex"
+uid="uid://gcdcmu83a4co"
+path="res://.godot/imported/tail_left_1.png-56a2efaf87731354a89f68d481f96c14.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/tentacles/standing/tail_right_1.png"
-dest_files=["res://.godot/imported/tail_right_1.png-05a4556aecd25dfaa888ca7e8fa3ba4f.ctex"]
+source_file="res://assets/art/tentacles/lying/tail_left_1.png"
+dest_files=["res://.godot/imported/tail_left_1.png-56a2efaf87731354a89f68d481f96c14.ctex"]
 
 [params]
 

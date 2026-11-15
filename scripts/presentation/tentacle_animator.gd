@@ -67,15 +67,15 @@ func _update_textures() -> void:
 	for track in _tracks:
 		_show_track(track, true)
 	for index in range(_tail_tracks.size()):
-		# Sitting: tail 1/2/3 are score stages. Standing: all three
+		# Sitting: tail 2/1/3 are score stages. Lying: all three
 		# tail attachments follow the corresponding base-tail frame.
-		_show_track(_tail_tracks[index], _pose_name == "standing" or index == _tail_index)
+		_show_track(_tail_tracks[index], _pose_name == "lying" or index == _tail_index)
 
 func _show_track(track: Dictionary, selected: bool) -> void:
 	var layer := track["layer"] as TextureRect
 	var elapsed := float(track["time"])
 	var frame := floori(elapsed / float(track["frame_seconds"])) % 3
-	if _pose_name == "standing" and _tail_tracks.has(track):
+	if _pose_name == "lying" and _tail_tracks.has(track):
 		frame = _tail_index
 	layer.texture = track["frames"][frame]
 	layer.visible = selected

@@ -1,6 +1,8 @@
 class_name PoseCharacterProfile
 extends PhaseCharacterProfile
 
+const SITTING_TAIL_STAGE_ORDER := [2, 1, 3]
+
 const PROMPT_ANCHOR_LAYOUT := {
 	"HeadLeft": Rect2(160.0, 100.0, 80.0, 80.0),
 	"HeadRight": Rect2(280.0, 130.0, 80.0, 80.0),
@@ -35,11 +37,11 @@ func _init(phase: int = 1) -> void:
 	presentation_phase = clampi(phase, 1, 5)
 	match presentation_phase:
 		3:
-			pose_name = "lying"
+			pose_name = "standing"
 		4:
 			pose_name = "prone"
 		5:
-			pose_name = "standing"
+			pose_name = "lying"
 		_:
 			pose_name = "sitting"
 	var root := "res://assets/art/character/%s/" % pose_name
@@ -74,6 +76,11 @@ func get_face_texture_paths() -> Dictionary:
 
 func get_tail_frame_paths() -> Array[String]:
 	var root := "res://assets/art/character/%s/" % pose_name
+	if pose_name == "sitting":
+		var paths: Array[String] = []
+		for stage in SITTING_TAIL_STAGE_ORDER:
+			paths.append(root + "tail_%d.png" % stage)
+		return paths
 	return [root + "tail_1.png", root + "tail_2.png", root + "tail_3.png"]
 
 func get_tentacle_part_paths() -> Array:
@@ -89,16 +96,16 @@ func get_tentacle_part_paths() -> Array:
 func get_tail_tentacle_paths() -> Array:
 	var paths: Array = []
 	if pose_name == "sitting":
-		for stage in range(1, 4):
+		for stage in SITTING_TAIL_STAGE_ORDER:
 			var frames: Array[String] = []
 			for frame in range(1, 4):
 				frames.append("res://assets/art/tentacles/sitting/tail_%d_%d.png" % [stage, frame])
 			paths.append(frames)
-	elif pose_name == "standing":
+	elif pose_name == "lying":
 		for side in ["left", "center", "right"]:
 			var frames: Array[String] = []
 			for frame in range(1, 4):
-				frames.append("res://assets/art/tentacles/standing/tail_%s_%d.png" % [side, frame])
+				frames.append("res://assets/art/tentacles/lying/tail_%s_%d.png" % [side, frame])
 			paths.append(frames)
 	return paths
 
@@ -106,6 +113,6 @@ func get_interaction_mask_path() -> String:
 	return "res://assets/art/character/%s/interaction_mask.png" % pose_name
 
 func get_shooting_tail_path() -> String:
-	if pose_name == "standing":
-		return "res://assets/art/character/standing/tail_shooting.png"
+	if pose_name == "lying":
+		return "res://assets/art/character/lying/tail_shooting.png"
 	return ""
