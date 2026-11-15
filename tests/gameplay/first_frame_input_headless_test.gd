@@ -61,6 +61,44 @@ func _run() -> void:
 	slide.queue_free()
 	await process_frame
 
+	# A held press from before the Slide exists must be recovered by its first motion.
+	root.push_input(_button(Vector2(500.0, 200.0), true), true)
+	var late_slide := SLIDE_SCENE.instantiate() as SlideNote
+	late_slide.setup({
+		"checkpoints": PackedVector2Array([
+			Vector2(100.0, 100.0), Vector2(200.0, 100.0), Vector2(300.0, 100.0)
+		]),
+		"checkpoint_radius": 40.0,
+	})
+	late_slide.position = Vector2(400.0, 100.0)
+	root.add_child(late_slide)
+	var recovered_audio := {"count": 0}
+	late_slide.audio_note_reached.connect(func() -> void: recovered_audio.count += 1)
+	var held_motion := _motion(Vector2(750.0, 200.0))
+	held_motion.relative = Vector2(250.0, 0.0)
+	root.push_input(held_motion, true)
+	_assert(late_slide._resolved and recovered_audio.count == 3,
+		"Slide did not recover a pre-spawn press and emit all notes on the first motion.")
+	root.push_input(_button(Vector2(750.0, 200.0), false), true)
+	late_slide.queue_free()
+	await process_frame
+
+	var outside_slide := SLIDE_SCENE.instantiate() as SlideNote
+	outside_slide.setup({
+		"checkpoints": PackedVector2Array([Vector2(100.0, 100.0), Vector2(200.0, 100.0)]),
+		"checkpoint_radius": 40.0,
+	})
+	outside_slide.position = Vector2(400.0, 100.0)
+	root.add_child(outside_slide)
+	root.push_input(_button(Vector2(420.0, 200.0), true), true)
+	var outside_motion := _motion(Vector2(620.0, 200.0))
+	outside_motion.relative = Vector2(200.0, 0.0)
+	root.push_input(outside_motion, true)
+	_assert(not outside_slide.is_armed(), "A visible press outside the start incorrectly armed Slide.")
+	root.push_input(_button(Vector2(620.0, 200.0), false), true)
+	outside_slide.queue_free()
+	await process_frame
+
 	# The cursor is already over the location where the Rub note appears.
 	root.push_input(_motion(Vector2(508.0, 208.0)), true)
 	var rub := RUB_SCENE.instantiate() as RubNote

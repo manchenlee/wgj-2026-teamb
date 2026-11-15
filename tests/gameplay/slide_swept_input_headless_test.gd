@@ -86,6 +86,27 @@ func _run() -> void:
 	scaled.queue_free()
 	await process_frame
 
+	# A fast corner can pass through a checkpoint while the frame's endpoint chord misses it.
+	var original_accumulation := Input.use_accumulated_input
+	Input.use_accumulated_input = true
+	var curved := _make_slide(PackedVector2Array([
+		Vector2(100, 100), Vector2(200, 100), Vector2(300, 100)
+	]))
+	var concurrent := _make_slide(points)
+	_check(not Input.use_accumulated_input, "Slide did not preserve raw mouse motion events.")
+	curved._input(_button(Vector2(100, 100), true))
+	curved._input(_motion(Vector2(200, 100)))
+	curved._input(_motion(Vector2(100, 200)))
+	_check(curved.get_next_checkpoint_index() == 2,
+		"A checkpoint on a fast curved path was missed despite raw motion samples.")
+	curved.queue_free()
+	await process_frame
+	_check(not Input.use_accumulated_input, "Removing one Slide restored accumulation while another remained.")
+	concurrent.queue_free()
+	await process_frame
+	_check(Input.use_accumulated_input, "Removing the final Slide did not restore input accumulation.")
+	Input.use_accumulated_input = original_accumulation
+
 	if _failures.is_empty():
 		print("Slide swept input tests passed.")
 		quit(0)

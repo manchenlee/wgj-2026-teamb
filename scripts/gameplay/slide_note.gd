@@ -6,6 +6,9 @@ const NOTE_LABEL_FONT := preload("res://assets/fonts/ShipporiMincho-Bold.ttf")
 const SLIDE_COLOR := Color("#85CCFFE0")
 const SLIDE_COMPLETED_COLOR := Color("#85CCFFF5")
 
+static var _precision_input_users: int = 0
+static var _previous_accumulated_input: bool = true
+
 var checkpoint_radius: float = 40.0
 var checkpoints: PackedVector2Array = PackedVector2Array()
 
@@ -15,12 +18,23 @@ var _has_pointer_sample: bool = false
 var _last_pointer_pos: Vector2 = Vector2.ZERO
 var _pointer_was_inside_target: bool = false
 var _mouse_held: bool = false
+var _awaiting_first_mouse_event: bool = true
 var _active_touch_index: int = -1
 
 
 func _ready() -> void:
+	if _precision_input_users == 0:
+		_previous_accumulated_input = Input.use_accumulated_input
+		Input.use_accumulated_input = false
+	_precision_input_users += 1
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	super._ready()
+
+
+func _exit_tree() -> void:
+	_precision_input_users -= 1
+	if _precision_input_users == 0:
+		Input.use_accumulated_input = _previous_accumulated_input
 
 
 func setup(config: Dictionary) -> void:
@@ -60,16 +74,31 @@ func _input(event: InputEvent) -> void:
 		if mouse_button.button_index != MOUSE_BUTTON_LEFT:
 			return
 		var local_position := _to_local_pointer_position(mouse_button.position)
+		_awaiting_first_mouse_event = false
 		if mouse_button.pressed:
 			if _active_touch_index < 0:
 				_start_drag(local_position, -1)
-		elif _mouse_held:
-			_stop_dragging()
+		else:
+			if _mouse_held:
+				_stop_dragging()
 		return
-	if event is InputEventMouseMotion and _mouse_held:
+	if event is InputEventMouseMotion:
 		var mouse_motion := event as InputEventMouseMotion
 		var local_position := _to_local_pointer_position(mouse_motion.position)
-		_process_pointer_move(local_position)
+		if _mouse_held:
+			_process_pointer_move(local_position)
+		elif _awaiting_first_mouse_event and not _armed and _active_touch_index < 0 \
+				and (mouse_motion.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0 and not checkpoints.is_empty():
+			# A press may precede this note's first input frame. Recover from the
+			# held-button motion without waiting for another click or mouse sample.
+			var previous_position := _to_local_pointer_position(mouse_motion.position - mouse_motion.relative)
+			var entry := _segment_circle_entry_fraction(
+				previous_position, local_position, checkpoints[0], checkpoint_radius
+			)
+			if entry >= 0.0:
+				_start_drag(previous_position.lerp(local_position, clampf(entry + 0.0001, 0.0, 1.0)), -1)
+				_process_pointer_move(local_position)
+		_awaiting_first_mouse_event = false
 		return
 	if event is InputEventScreenTouch:
 		var screen_touch := event as InputEventScreenTouch
