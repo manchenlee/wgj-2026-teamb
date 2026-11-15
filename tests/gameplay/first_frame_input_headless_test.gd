@@ -61,7 +61,7 @@ func _run() -> void:
 	slide.queue_free()
 	await process_frame
 
-	# A held press from before the Slide exists must be recovered by its first motion.
+	# A held press from a preceding Click must not activate a newly spawned Slide.
 	root.push_input(_button(Vector2(500.0, 200.0), true), true)
 	var late_slide := SLIDE_SCENE.instantiate() as SlideNote
 	late_slide.setup({
@@ -77,8 +77,13 @@ func _run() -> void:
 	var held_motion := _motion(Vector2(750.0, 200.0))
 	held_motion.relative = Vector2(250.0, 0.0)
 	root.push_input(held_motion, true)
+	_assert(not late_slide.is_armed() and recovered_audio.count == 0,
+		"A pre-spawn Click press also activated the following Slide.")
+	root.push_input(_button(Vector2(750.0, 200.0), false), true)
+	root.push_input(_button(Vector2(500.0, 200.0), true), true)
+	root.push_input(held_motion, true)
 	_assert(late_slide._resolved and recovered_audio.count == 3,
-		"Slide did not recover a pre-spawn press and emit all notes on the first motion.")
+		"Slide did not respond to a new press after it appeared.")
 	root.push_input(_button(Vector2(750.0, 200.0), false), true)
 	late_slide.queue_free()
 	await process_frame

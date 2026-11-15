@@ -51,7 +51,7 @@ enum CharacterExpressionSource {
 @export_range(0, 127) var violin_arco_preset: int = 40
 @export_range(36, 96) var violin_sample_root_pitch: int = 69
 @export_range(0.1, 0.15, 0.005) var violin_rub_inactivity_seconds: float = 0.125
-@export_range(-12.0, 18.0, 0.5) var violin_gain_db: float = 0.0
+@export_range(-24.0, 18.0, 0.5) var violin_gain_db: float = -6.0
 @export var shared_character_alignment_offset: Vector2 = Vector2.ZERO
 
 @onready var character_alignment_root: Control = $CharacterAlignmentRoot
