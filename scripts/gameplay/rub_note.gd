@@ -43,7 +43,7 @@ func setup(config: Dictionary) -> void:
 
 func _process(delta: float) -> void:
 	super._process(delta)
-	_hint_orbit_angle = wrapf(_hint_orbit_angle + TAU * delta / HINT_ORBIT_PERIOD, 0.0, TAU)
+	_hint_orbit_angle = wrapf(_hint_orbit_angle - TAU * delta / HINT_ORBIT_PERIOD, 0.0, TAU)
 	_update_friction_hint_position()
 
 
