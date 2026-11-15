@@ -13,6 +13,7 @@ const BGM_GAMEPLAY := preload("res://assets/audio/bgm/piano_gameplay.ogg")
 const BGM_ENDING := preload("res://assets/audio/bgm/ending.mp3")
 const TENTACLE_CURSOR := preload("res://assets/art/ui/gameplay/img_tentacle.png")
 const TENTACLE_CURSOR_SIZE := Vector2i(192, 192)
+const MAX_CURSOR_SIZE := 256
 const BGM_TARGET_VOLUME_DB := -6.0
 const BGM_SILENT_VOLUME_DB := -40.0
 const BGM_CROSSFADE_DURATION := 1.0
@@ -39,8 +40,10 @@ var current_bgm_key: String = ""
 var bgm_tween: Tween
 var screen_transition_tween: Tween
 var violin_timeline: MidiPitchTimeline = MidiPitchTimelineClass.new()
+var _current_cursor_size := Vector2i.ZERO
 
 func _ready() -> void:
+	get_window().size_changed.connect(_update_mouse_cursor)
 	_update_mouse_cursor()
 	_setup_bgm_players()
 	_setup_bgm_library()
@@ -237,10 +240,19 @@ func _exit_tree() -> void:
 
 
 func _update_mouse_cursor() -> void:
+	var stretch_scale := get_viewport().get_stretch_transform().get_scale()
+	var cursor_scale: float = minf(stretch_scale.x, stretch_scale.y)
+	var cursor_size := Vector2i(
+		clampi(roundi(TENTACLE_CURSOR_SIZE.x * cursor_scale), 1, MAX_CURSOR_SIZE),
+		clampi(roundi(TENTACLE_CURSOR_SIZE.y * cursor_scale), 1, MAX_CURSOR_SIZE)
+	)
+	if cursor_size == _current_cursor_size:
+		return
+	_current_cursor_size = cursor_size
 	var cursor_image := TENTACLE_CURSOR.get_image()
-	cursor_image.resize(TENTACLE_CURSOR_SIZE.x, TENTACLE_CURSOR_SIZE.y, Image.INTERPOLATE_LANCZOS)
+	cursor_image.resize(cursor_size.x, cursor_size.y, Image.INTERPOLATE_LANCZOS)
 	var cursor_texture := ImageTexture.create_from_image(cursor_image)
-	var hotspot := Vector2(TENTACLE_CURSOR_SIZE) * 0.5
+	var hotspot := Vector2(cursor_size) * 0.5
 	Input.set_custom_mouse_cursor(cursor_texture, Input.CURSOR_ARROW, hotspot)
 	Input.set_custom_mouse_cursor(cursor_texture, Input.CURSOR_POINTING_HAND, hotspot)
 
