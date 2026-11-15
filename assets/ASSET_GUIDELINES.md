@@ -170,7 +170,7 @@ assets/theme/dialogue_theme.tres
 - `img_score.png`：遊戲畫面左上角整體興奮度計量圖示，搭配橫向進度條與 `/100` 數值。
 - `img_dialogue.png`：心理階段下方角色台詞框。
 - `btn_choose.png`、`btn_unchoose.png`：心理階段對話選項的 hover／按下與一般狀態。
-- `img_tentacle.png`、`btn_friction.png`：生理階段摩擦互動目標與左右摩擦提示。
+- `img_tentacle.png`、`btn_friction.svg`：生理階段摩擦互動目標與順時針繞圈提示。
 - `img_heart.png`：生理互動成功、路徑節點完成及角色正向回饋粒子。
 
 安全詞畫面不使用這批遊戲內 HUD 素材；它沿用 `art/background/curtain.jpg` 與角色圖，並在前導劇情之後以 `SafeWordScreen.tscn` 顯示置中輸入視窗。專案流程不再包含規則書畫面，規則資訊由前導劇情自然帶出。

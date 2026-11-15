@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://pdcgwgbt4nkc"
-path="res://.godot/imported/btn_friction.png-9d1bca682bc061b5563530cc5dbaca34.ctex"
+uid="uid://dvn4vo0p70e0"
+path="res://.godot/imported/btn_friction.svg-49d2c7289d390cfd2ca1131809e2e15f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/ui/gameplay/btn_friction.png"
-dest_files=["res://.godot/imported/btn_friction.png-9d1bca682bc061b5563530cc5dbaca34.ctex"]
+source_file="res://assets/art/ui/gameplay/btn_friction.svg"
+dest_files=["res://.godot/imported/btn_friction.svg-49d2c7289d390cfd2ca1131809e2e15f.ctex"]
 
 [params]
 
@@ -38,3 +38,6 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
+svg/scale=1.0
+editor/scale_with_editor_scale=false
+editor/convert_colors_with_editor_theme=false

@@ -2,6 +2,8 @@ class_name RubNote
 extends InteractionNote
 
 const HEART_TEXTURE := preload("res://assets/art/ui/gameplay/img_heart.png")
+const HINT_ORBIT_RADIUS: float = 12.0
+const HINT_ORBIT_PERIOD: float = 1.6
 
 var required_scrub_distance: float = 600.0
 var valid_motion_threshold: float = 3.0
@@ -14,19 +16,17 @@ var _mouse_held: bool = false
 var _active_touch_index: int = -1
 var _has_pointer_sample: bool = false
 var _last_pointer_pos: Vector2 = Vector2.ZERO
+var _hint_orbit_angle: float = -PI * 0.5
+
+@onready var friction_hint: TextureRect = $FrictionHint
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	super._ready()
-	var friction_hint := get_node_or_null("FrictionHint") as TextureRect
-	if friction_hint != null:
-		friction_hint.size = Vector2.ONE * target_radius * 0.95
-		friction_hint.position = target_center - friction_hint.size * 0.5
-		var rest_x := friction_hint.position.x
-		var tween := friction_hint.create_tween().set_loops()
-		tween.tween_property(friction_hint, "position:x", rest_x + 12.0, 0.42).set_trans(Tween.TRANS_SINE)
-		tween.tween_property(friction_hint, "position:x", rest_x - 12.0, 0.42).set_trans(Tween.TRANS_SINE)
+	friction_hint.size = Vector2.ONE * target_radius * 0.95
+	friction_hint.rotation = 0.0
+	_update_friction_hint_position()
 
 
 func setup(config: Dictionary) -> void:
@@ -37,10 +37,19 @@ func setup(config: Dictionary) -> void:
 	target_center = config.get("target_center", Vector2(212.0, 212.0)) as Vector2
 	target_radius = float(config.get("target_radius", 104.0))
 	if is_node_ready():
-		var friction_hint := get_node_or_null("FrictionHint") as TextureRect
-		if friction_hint != null:
-			friction_hint.size = Vector2.ONE * target_radius * 0.95
-			friction_hint.position = target_center - friction_hint.size * 0.5
+		friction_hint.size = Vector2.ONE * target_radius * 0.95
+		_update_friction_hint_position()
+
+
+func _process(delta: float) -> void:
+	super._process(delta)
+	_hint_orbit_angle = wrapf(_hint_orbit_angle + TAU * delta / HINT_ORBIT_PERIOD, 0.0, TAU)
+	_update_friction_hint_position()
+
+
+func _update_friction_hint_position() -> void:
+	friction_hint.position = target_center - friction_hint.size * 0.5 \
+		+ Vector2.from_angle(_hint_orbit_angle) * HINT_ORBIT_RADIUS
 
 
 func get_progress_ratio() -> float:

@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" path="res://scenes/components/InteractionNote.tscn" id="1_note"]
 [ext_resource type="Script" path="res://scripts/gameplay/rub_note.gd" id="2_rub"]
-[ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/btn_friction.png" id="4_friction"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/btn_friction.svg" id="4_friction"]
 
 [node name="RubNote" instance=ExtResource("1_note")]
 custom_minimum_size = Vector2(424, 424)
