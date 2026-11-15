@@ -539,7 +539,18 @@
         "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       },
-      "next": "r37"
+      "choices": [
+        {
+          "id": "tutorial",
+          "text": "先了解我們等等要做什麼",
+          "next": "r42"
+        },
+        {
+          "id": "start",
+          "text": "話都說完的話，我們就開始吧",
+          "next": "r63"
+        }
+      ]
     },
     {
       "id": "r63",
