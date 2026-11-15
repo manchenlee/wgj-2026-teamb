@@ -10,6 +10,7 @@ func _initialize() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
+	await _test_expression_inheritance()
 	await _test_branches_and_tutorial_returns()
 	await _test_skip_and_restart()
 	if failures.is_empty():
@@ -19,6 +20,21 @@ func _run() -> void:
 	for failure in failures:
 		push_error(failure)
 	quit(1)
+
+func _test_expression_inheritance() -> void:
+	var opening := OPENING_SCENE.instantiate()
+	root.add_child(opening)
+	await process_frame
+	_advance_to(opening, "r18")
+	_check(opening._current_expression == "neutral_talking", "Explicit opening expression was not applied.")
+	opening._advance_script()
+	_check(_step_id(opening) == "r19" and opening._current_expression == "neutral_talking", "Opening expression did not carry to the next dialogue.")
+	var texture: Texture2D = opening._base_sprite.texture
+	_check(texture != null and texture.resource_path.ends_with("/neutral_talking.png"), "Inherited opening expression did not display its image.")
+	_advance_to(opening, "r20")
+	_check(opening._current_expression == "neutral", "Explicit opening expression did not replace the inherited expression.")
+	opening.queue_free()
+	await process_frame
 
 func _test_branches_and_tutorial_returns() -> void:
 	var opening := OPENING_SCENE.instantiate()

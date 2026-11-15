@@ -58,7 +58,8 @@
       "text": "哇啊！好、好耀眼的光芒——咦？",
       "source_row": 10,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "surprised_highlight",
         "clear_layers": true
       },
       "effects": [
@@ -78,7 +79,8 @@
       "text": "……你是？",
       "source_row": 11,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "neutral",
         "clear_layers": false
       }
     },
@@ -88,7 +90,7 @@
       "text": "……",
       "source_row": 12,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -98,7 +100,7 @@
       "text": "…………",
       "source_row": 13,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -108,7 +110,7 @@
       "text": "我、我看看我的賣家訊息……！",
       "source_row": 14,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -117,7 +119,7 @@
       "text": "「尊敬的貴客，您的共鳴小提琴已抵達，期待您與他共譜一曲專屬你們的『合音』。」",
       "source_row": 15,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -127,7 +129,7 @@
       "text": "……共鳴……小提琴？",
       "source_row": 16,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -137,7 +139,8 @@
       "text": "這裡是……原來如此，你就是我的新主人吧。幹嘛這張臉？第一次見到小提琴嗎？",
       "source_row": 18,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "neutral_talking",
         "clear_layers": false
       }
     },
@@ -147,7 +150,7 @@
       "text": "（不是第一次見到小提琴，但還是第一次見到變成人樣的小提琴啊！）",
       "source_row": 19,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -157,7 +160,8 @@
       "text": "……又來了嗎？「調音」？",
       "source_row": 20,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "neutral",
         "clear_layers": false
       }
     },
@@ -167,7 +171,7 @@
       "text": "又來了？不對，等等。",
       "source_row": 21,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -177,7 +181,7 @@
       "text": "你、你說調音？你、你現在這個模樣，我要怎麼調音？",
       "source_row": 22,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -187,7 +191,8 @@
       "text": "你們……不就是用想用你的手做那些事情嗎？",
       "source_row": 23,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "look_away",
         "clear_layers": false
       }
     },
@@ -197,7 +202,7 @@
       "text": "那些事情……",
       "source_row": 24,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -207,7 +212,7 @@
       "text": "（那些事情？……啊，他說的是調音吧？）",
       "source_row": 26,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -217,7 +222,7 @@
       "text": "……你也和上一個人一樣，要用那繩子一樣的觸手把我捆起來，然後滴上蠟油和綁上束帶——",
       "source_row": 27,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -227,7 +232,7 @@
       "text": "繩子、蠟燭、束帶……等等！這、這些道具聽起來比起調音，更像是——",
       "source_row": 28,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       },
       "effects": [
@@ -243,7 +248,7 @@
       "text": "我！我沒有——不對，不是沒有！你、你得讓我調音，但、但我不想強迫你……",
       "source_row": 29,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -253,7 +258,8 @@
       "text": "…………",
       "source_row": 30,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "neutral",
         "clear_layers": false
       }
     },
@@ -263,7 +269,7 @@
       "text": "（完全不聽我說話……但，如果不鼓起勇氣調音的話，接下來的音樂發表會就完蛋了！）",
       "source_row": 31,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -273,7 +279,7 @@
       "text": "那個——",
       "source_row": 32,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -283,7 +289,8 @@
       "text": "……理由根本就無所謂，反正你也只是想做……想要調音對吧？",
       "source_row": 33,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "neutral_talking",
         "clear_layers": false
       }
     },
@@ -293,7 +300,7 @@
       "text": "（我也只是？難不成他以前也碰過其他演奏家嗎？）",
       "source_row": 34,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -303,7 +310,8 @@
       "text": "哼。",
       "source_row": 35,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "look_away",
         "clear_layers": false
       }
     },
@@ -313,7 +321,7 @@
       "text": "（就這樣躺下來了……好隨便的態度……）",
       "source_row": 36,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -323,7 +331,8 @@
       "text": "我知道了，為了我的音樂發表會，還請你配合。但是在這之前——",
       "source_row": 37,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "look_away",
         "clear_layers": false
       },
       "choices": [
@@ -356,7 +365,8 @@
       "text": "<待補教學圖>",
       "source_row": 42,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "look_away",
         "clear_layers": false
       },
       "hint": "＃預計跳出教學介面（圖片）",
@@ -368,7 +378,8 @@
       "non_dialogue": true,
       "source_row": 45,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "look_away",
         "clear_layers": false
       }
     },
@@ -378,7 +389,8 @@
       "text": "……你想說什麼？",
       "source_row": 46,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "neutral_talking",
         "clear_layers": false
       }
     },
@@ -388,7 +400,7 @@
       "text": "雖然接下來我們要做的事情……可能有點刺激，但我還是希望有個「臨界點」。",
       "source_row": 47,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -398,7 +410,7 @@
       "text": "簡單來說，就是只要你承受不了，只要說出一個「安全詞」，我就會立刻停下來——",
       "source_row": 48,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -408,7 +420,8 @@
       "text": "不需要。",
       "source_row": 49,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "neutral",
         "clear_layers": false
       }
     },
@@ -418,7 +431,7 @@
       "text": "咦？",
       "source_row": 50,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -428,7 +441,8 @@
       "text": "……真正興致上來的時候，不管說什麼你都停不下來，設置這個……沒有意義。",
       "source_row": 51,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "look_away",
         "clear_layers": false
       }
     },
@@ -438,7 +452,7 @@
       "text": "不會沒有意義！這是很重要的事情！",
       "source_row": 52,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -448,7 +462,7 @@
       "text": "我答應你，無論等等調音時發生什麼，無論我們處於什麼狀態，只要你喊出安全詞，我就會立刻停下。",
       "source_row": 53,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -458,7 +472,8 @@
       "text": "…………那你隨便設置一個吧。",
       "source_row": 54,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "neutral_talking",
         "clear_layers": false
       }
     },
@@ -468,7 +483,7 @@
       "text": "（他的眼神，明顯就是對我毫無信任……不過，安全詞可是這種特殊關係的基礎，我不能馬虎。）",
       "source_row": 55,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -478,7 +493,7 @@
       "text": "那，我設定的安全詞是——",
       "source_row": 56,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       },
       "action": "safe_word"
@@ -489,7 +504,8 @@
       "text": "那，剛剛那個，就是我們的「安全詞」了。",
       "source_row": 58,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "neutral",
         "clear_layers": false
       }
     },
@@ -499,7 +515,7 @@
       "text": "等等過程中，如果你有不舒服的話，一定要喊出來，知道嗎？",
       "source_row": 59,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -509,7 +525,8 @@
       "text": "…………",
       "source_row": 60,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "look_away",
         "clear_layers": false
       }
     },
@@ -519,7 +536,7 @@
       "text": "（又不理我了……好吧，既然安全詞設定好了的話，接下來要直接開始嗎？）",
       "source_row": 61,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       },
       "next": "r37"
@@ -529,7 +546,8 @@
       "non_dialogue": true,
       "source_row": 63,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "look_away",
         "clear_layers": false
       }
     },
@@ -539,7 +557,8 @@
       "text": "…………",
       "source_row": 64,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "neutral",
         "clear_layers": false
       }
     },
@@ -549,7 +568,7 @@
       "text": "（就這樣，迫在眉睫的音樂發表會，突然變成男人的小提琴，還有雖然不明所以，但內心深去卻了然於心的「調音」儀式……）",
       "source_row": 65,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       }
     },
@@ -559,7 +578,7 @@
       "text": "（雖然不知道接下來的相處中，能不能讓眼前的男人稍稍放下心防，但無論如何，為了我的音樂發表會，我都要「調教」你！）",
       "source_row": 66,
       "character": {
-        "base": "res://assets/art/character/opening_human_violin.png",
+        "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       },
       "action": "game"

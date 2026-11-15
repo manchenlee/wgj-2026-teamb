@@ -8,6 +8,7 @@ signal game_requested
 const OPENING_DATA_PATH := "res://assets/dialogue/opening.json"
 const SAFE_WORD_SCREEN_PATH := "res://scenes/screens/SafeWordScreen.tscn"
 const DEFAULT_BACKGROUND_PATH := "res://assets/art/background/curtain.jpg"
+const DEFAULT_OPENING_EXPRESSION := "neutral"
 const CHOICE_BUTTON_SCENE := preload("res://scenes/components/DialogueChoiceButton.tscn")
 const CHOICE_BUTTON_WIDTH := 720.0
 const CHOICE_HORIZONTAL_INSETS := 144.0
@@ -48,6 +49,7 @@ var _skip_hover_tween: Tween
 var _pivot_rest_position := Vector2.ZERO
 var _current_character_offset := Vector2.ZERO
 var _current_character_scale := Vector2.ONE
+var _current_expression: String = DEFAULT_OPENING_EXPRESSION
 var _skip_button_base_scale := Vector2.ONE
 
 func _ready() -> void:
@@ -282,7 +284,14 @@ func _apply_character(character_data_variant: Variant) -> void:
 	if not is_character_visible:
 		return
 
-	_apply_base_character(str(character_data.get("base", "")))
+	var base_path := str(character_data.get("base", ""))
+	if base_path.contains("{expression}"):
+		var expression := str(character_data.get("expression", _current_expression))
+		if expression.is_empty():
+			expression = _current_expression
+		base_path = base_path.replace("{expression}", expression)
+		_current_expression = expression
+	_apply_base_character(base_path)
 	if bool(character_data.get("clear_layers", false)):
 		_clear_all_layers()
 	_current_character_offset = _parse_vector2(character_data.get("offset", Vector2.ZERO), Vector2.ZERO)
