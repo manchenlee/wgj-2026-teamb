@@ -1,6 +1,10 @@
 class_name InteractionNote
 extends Control
 
+const GLOW_SEGMENT_COUNT: int = 96
+
+static var _glow_mesh_cache: Dictionary = {}
+
 signal interaction_started()
 signal interaction_ended()
 signal progressed(progress_delta: float)
@@ -127,36 +131,45 @@ func _draw_continuous_ring_glow(
 ) -> void:
 	if radius <= 0.0 or glow_width <= 0.0 or peak_alpha <= 0.0:
 		return
-	var segment_count := 96
+	var mesh_key := Vector2(radius, glow_width)
+	if not _glow_mesh_cache.has(mesh_key):
+		_glow_mesh_cache[mesh_key] = _build_ring_glow_mesh(radius, glow_width)
+	var glow_mesh: ArrayMesh = _glow_mesh_cache[mesh_key]
+	draw_mesh(glow_mesh, null, Transform2D(0.0, center), Color(color.r, color.g, color.b, peak_alpha))
+
+
+func _build_ring_glow_mesh(radius: float, glow_width: float) -> ArrayMesh:
 	var inner_radius := maxf(0.0, radius - glow_width)
 	var outer_radius := radius + glow_width
-	var transparent := Color(color.r, color.g, color.b, 0.0)
-	var peak := Color(color.r, color.g, color.b, peak_alpha)
-	for index in range(segment_count):
-		var angle_a := TAU * float(index) / float(segment_count)
-		var angle_b := TAU * float(index + 1) / float(segment_count)
-		var direction_a := Vector2.from_angle(angle_a)
-		var direction_b := Vector2.from_angle(angle_b)
-		# Two radial strips meet at the ring. Vertex colors are interpolated by
-		# the renderer, producing one smooth bloom instead of stacked bands.
-		draw_polygon(
-			PackedVector2Array([
-				center + direction_a * inner_radius,
-				center + direction_a * radius,
-				center + direction_b * radius,
-				center + direction_b * inner_radius,
-			]),
-			PackedColorArray([transparent, peak, peak, transparent])
-		)
-		draw_polygon(
-			PackedVector2Array([
-				center + direction_a * radius,
-				center + direction_a * outer_radius,
-				center + direction_b * outer_radius,
-				center + direction_b * radius,
-			]),
-			PackedColorArray([peak, transparent, transparent, peak])
-		)
+	var vertices := PackedVector2Array()
+	var colors := PackedColorArray()
+	var indices := PackedInt32Array()
+	for index in range(GLOW_SEGMENT_COUNT + 1):
+		var angle := TAU * float(index) / float(GLOW_SEGMENT_COUNT)
+		var direction := Vector2.from_angle(angle)
+		vertices.append(direction * inner_radius)
+		vertices.append(direction * radius)
+		vertices.append(direction * outer_radius)
+		colors.append(Color(1.0, 1.0, 1.0, 0.0))
+		colors.append(Color.WHITE)
+		colors.append(Color(1.0, 1.0, 1.0, 0.0))
+		if index == GLOW_SEGMENT_COUNT:
+			continue
+		var offset := index * 3
+		indices.append_array(PackedInt32Array([
+			offset, offset + 1, offset + 4,
+			offset, offset + 4, offset + 3,
+			offset + 1, offset + 2, offset + 5,
+			offset + 1, offset + 5, offset + 4,
+		]))
+	var arrays: Array = []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = vertices
+	arrays[Mesh.ARRAY_COLOR] = colors
+	arrays[Mesh.ARRAY_INDEX] = indices
+	var glow_mesh := ArrayMesh.new()
+	glow_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return glow_mesh
 
 
 func _calculate_approach_radius(remaining_ratio: float) -> float:
