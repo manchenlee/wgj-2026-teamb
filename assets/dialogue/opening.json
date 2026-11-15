@@ -223,6 +223,7 @@
       "source_row": 27,
       "character": {
         "base": "res://assets/art/character/opening/{expression}.png",
+        "expression": "neutral_talking",
         "clear_layers": false
       }
     },
