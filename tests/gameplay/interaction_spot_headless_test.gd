@@ -174,7 +174,7 @@ func _test_click_input_and_scoring() -> void:
 	scoring_note.progressed.connect(manager._on_spot_progressed.bind(scoring_note))
 	scoring_note.completed.connect(manager._on_spot_completed.bind(scoring_note))
 	scoring_note._gui_input(_mouse_button_event(scoring_note.target_center, true))
-	_assert(absf(model.physical - 43.0) < 0.001, "ClickNote did not apply the current +1 progress and +2 completion reward once.")
+	_assert(absf(model.physical - (40.0 + CONFIG.SPOT_PROGRESS_GAIN_TOTAL + CONFIG.SPOT_COMPLETION_BONUS)) < 0.001, "ClickNote did not apply the configured progress and completion reward once.")
 	_assert(normalized_counts.completed == 1, "ClickNote did not emit exactly one normalized physiological completion.")
 	scoring_note.queue_free()
 	await process_frame
@@ -207,7 +207,7 @@ func _test_click_timeout_and_failure() -> void:
 	await create_timer(0.12).timeout
 	_assert(counts.expired == 1, "Untouched ClickNote did not expire exactly once.")
 	_assert(absf(counts.ratio) < 0.001, "Untouched ClickNote timeout progress was not zero.")
-	_assert(absf(model.physical - 35.0) < 0.001, "ClickNote timeout did not apply the existing ignored penalty.")
+	_assert(absf(model.physical - (40.0 - CONFIG.SPOT_EXPIRY_PENALTY_IGNORED)) < 0.001, "ClickNote timeout did not apply the configured ignored penalty.")
 	_assert(counts.failed == 1, "ClickNote timeout did not emit the existing failure boundary once.")
 	note.force_complete()
 	_assert(counts.expired == 1, "Timed-out ClickNote resolved again after force completion.")
@@ -348,7 +348,7 @@ func _test_rub_completion_and_scoring() -> void:
 	_assert(counts.completed == 1, "RubNote did not complete exactly once.")
 	_assert(normalized_counts.completed == 1, "RubNote did not emit exactly one normalized physiological completion.")
 	_assert(counts.expired == 0, "Completed RubNote also expired.")
-	_assert(absf(model.physical - 43.0) < 0.001, "RubNote did not apply the current +1 progress and +2 completion reward once.")
+	_assert(absf(model.physical - (40.0 + CONFIG.SPOT_PROGRESS_GAIN_TOTAL + CONFIG.SPOT_COMPLETION_BONUS)) < 0.001, "RubNote did not apply the configured progress and completion reward once.")
 	note.force_complete()
 	_assert(counts.completed == 1, "Completed RubNote resolved more than once.")
 	note.queue_free()
@@ -393,7 +393,7 @@ func _test_rub_timeout_and_failure() -> void:
 	await create_timer(0.12).timeout
 	_assert(untouched_counts.expired == 1, "Untouched RubNote did not expire once.")
 	_assert(absf(untouched_counts.ratio) < 0.001, "Untouched RubNote timeout progress was not zero.")
-	_assert(absf(untouched_model.physical - 35.0) < 0.001, "Untouched RubNote did not use the ignored penalty.")
+	_assert(absf(untouched_model.physical - (40.0 - CONFIG.SPOT_EXPIRY_PENALTY_IGNORED)) < 0.001, "Untouched RubNote did not use the configured ignored penalty.")
 	_assert(untouched_counts.failed == 1, "Rub timeout did not emit the failure boundary once.")
 	untouched_note.queue_free()
 	await process_frame
@@ -418,7 +418,7 @@ func _test_rub_timeout_and_failure() -> void:
 	_assert(partial_counts.expired == 1, "Partially rubbed note did not expire once.")
 	_assert(partial_counts.failed == 1, "Partial Rub timeout did not emit one normalized physiological failure.")
 	_assert(absf(partial_counts.ratio - 0.24) < 0.001, "Partial Rub timeout reported incorrect normalized progress.")
-	_assert(absf(partial_model.physical - 38.24) < 0.001, "Partial Rub scoring or penalty routing changed unexpectedly.")
+	_assert(absf(partial_model.physical - (40.0 + 0.24 * CONFIG.SPOT_PROGRESS_GAIN_TOTAL - CONFIG.SPOT_EXPIRY_PENALTY_PARTIAL)) < 0.001, "Partial Rub scoring or penalty routing changed unexpectedly.")
 	partial_note.queue_free()
 	await process_frame
 
@@ -737,11 +737,11 @@ func _test_manager_scoring_and_failure_boundary() -> void:
 	scoring_manager._arousal_model = scoring_model
 	var spot := _make_spot()
 	scoring_manager._on_spot_progressed(1.0 / 3.0, spot)
-	_assert(absf(scoring_model.physical - (40.0 + 1.0 / 3.0)) < 0.001, "One checkpoint did not receive one third of the current +1 progress pool.")
+	_assert(absf(scoring_model.physical - (40.0 + CONFIG.SPOT_PROGRESS_GAIN_TOTAL / 3.0)) < 0.001, "One checkpoint did not receive one third of the configured progress pool.")
 	scoring_manager._on_spot_progressed(1.0 / 3.0, spot)
 	scoring_manager._on_spot_progressed(1.0 / 3.0, spot)
 	scoring_manager._on_spot_completed(spot)
-	_assert(absf(scoring_model.physical - 43.0) < 0.001, "Full Slide did not apply the current +1 progress and +2 completion reward once.")
+	_assert(absf(scoring_model.physical - (40.0 + CONFIG.SPOT_PROGRESS_GAIN_TOTAL + CONFIG.SPOT_COMPLETION_BONUS)) < 0.001, "Full Slide did not apply the configured progress and completion reward once.")
 
 	var failure_manager := SPOT_MANAGER_SCRIPT.new()
 	var failure_model := FakeArousalModel.new()
@@ -751,7 +751,7 @@ func _test_manager_scoring_and_failure_boundary() -> void:
 		func(_ratio: float, _penalty: float) -> void: counts.failed += 1
 	)
 	failure_manager._on_spot_expired(0.0, spot)
-	_assert(absf(failure_model.physical - 35.0) < 0.001, "Ignored-sequence timeout penalty was not applied.")
+	_assert(absf(failure_model.physical - (40.0 - CONFIG.SPOT_EXPIRY_PENALTY_IGNORED)) < 0.001, "Configured ignored-sequence timeout penalty was not applied.")
 	_assert(counts.failed == 1, "Timeout did not emit the failure boundary used by the red flash.")
 	spot.queue_free()
 	await process_frame

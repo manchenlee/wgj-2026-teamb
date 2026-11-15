@@ -17,7 +17,7 @@ var _last_pointer_pos: Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
-	mouse_filter = Control.MOUSE_FILTER_STOP
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	super._ready()
 	var friction_hint := get_node_or_null("FrictionHint") as TextureRect
 	if friction_hint != null:
@@ -51,45 +51,60 @@ func is_rubbing() -> bool:
 	return _mouse_held or _active_touch_index >= 0
 
 
+func _input(event: InputEvent) -> void:
+	# GUI focus can belong to a sibling Control on the first visible frame.
+	# Match SlideNote's viewport route, then validate against the Rub circle.
+	if _handle_input(event, true):
+		get_viewport().set_input_as_handled()
+
+
 func _gui_input(event: InputEvent) -> void:
+	# Keep the local-coordinate entry point for existing direct input tests.
+	if _handle_input(event, false):
+		accept_event()
+
+
+func _handle_input(event: InputEvent, global_coordinates: bool) -> bool:
 	if _resolved or _suspended or not visible:
-		return
+		return false
 	if event is InputEventMouseButton:
 		var mouse_button := event as InputEventMouseButton
 		if mouse_button.button_index != MOUSE_BUTTON_LEFT:
-			return
+			return false
+		var pointer_position := _to_local_pointer_position(mouse_button.position) if global_coordinates else mouse_button.position
 		if mouse_button.pressed:
-			if _active_touch_index < 0 and _is_inside_target(mouse_button.position):
+			if _active_touch_index < 0 and _is_inside_target(pointer_position):
 				_mouse_held = true
-				_set_pointer_sample(mouse_button.position)
+				_set_pointer_sample(pointer_position)
 				_begin_interaction()
-				accept_event()
+				return true
 		elif _mouse_held:
 			_stop_rubbing()
-			accept_event()
-		return
+			return true
+		return false
 	if event is InputEventMouseMotion and _mouse_held:
 		var mouse_motion := event as InputEventMouseMotion
-		_process_pointer_move(mouse_motion.position)
-		accept_event()
-		return
+		_process_pointer_move(_to_local_pointer_position(mouse_motion.position) if global_coordinates else mouse_motion.position)
+		return true
 	if event is InputEventScreenTouch:
 		var screen_touch := event as InputEventScreenTouch
+		var pointer_position := _to_local_pointer_position(screen_touch.position) if global_coordinates else screen_touch.position
 		if screen_touch.pressed:
-			if not _mouse_held and _active_touch_index < 0 and _is_inside_target(screen_touch.position):
+			if not _mouse_held and _active_touch_index < 0 and _is_inside_target(pointer_position):
 				_active_touch_index = screen_touch.index
-				_set_pointer_sample(screen_touch.position)
+				_set_pointer_sample(pointer_position)
 				_begin_interaction()
-				accept_event()
+				return true
 		elif screen_touch.index == _active_touch_index:
 			_stop_rubbing()
-			accept_event()
-		return
+			return true
+		return false
 	if event is InputEventScreenDrag:
 		var screen_drag := event as InputEventScreenDrag
 		if screen_drag.index == _active_touch_index:
-			_process_pointer_move(screen_drag.position)
-			accept_event()
+			_process_pointer_move(_to_local_pointer_position(screen_drag.position) if global_coordinates else screen_drag.position)
+			return true
+	return false
 
 
 func _notification(what: int) -> void:
@@ -195,7 +210,12 @@ func _get_approach_color() -> Color:
 func _set_note_input_enabled(enabled: bool) -> void:
 	if not enabled:
 		_stop_rubbing()
-	mouse_filter = Control.MOUSE_FILTER_STOP if enabled else Control.MOUSE_FILTER_IGNORE
+	set_process_input(enabled)
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
+func _to_local_pointer_position(global_position: Vector2) -> Vector2:
+	return get_global_transform_with_canvas().affine_inverse() * global_position
 
 
 func _on_suspended() -> void:
