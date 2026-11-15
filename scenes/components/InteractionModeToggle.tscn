@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/interaction_mode_toggle.gd" id="1_toggle"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/btn_talk_clicked.png" id="2_talk_clicked"]
@@ -7,9 +7,22 @@
 [ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/btn_music_clicked.png" id="5_music_clicked"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/btn_music_unclicked.png" id="6_music_unclicked"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/btn_music_warning.png" id="7_music_warning"]
+[ext_resource type="FontFile" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="8_bold"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_key_normal"]
+bg_color = Color(0.91, 0.92, 0.96, 0.16)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0.94)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
 
 [node name="InteractionModeToggle" type="Control"]
-custom_minimum_size = Vector2(160, 296)
+custom_minimum_size = Vector2(160, 326)
 mouse_filter = 2
 script = ExtResource("1_toggle")
 
@@ -57,14 +70,47 @@ offset_bottom = 1.0
 mouse_filter = 2
 text = "對話"
 
-[node name="ShortcutLabel" type="Label" parent="."]
+[node name="ShortcutGroup" type="Control" parent="."]
 layout_mode = 0
-offset_left = 54.0
-offset_top = 286.0
-offset_right = 106.0
-offset_bottom = 306.0
+offset_left = 60.0
+offset_top = 298.0
+offset_right = 100.0
+offset_bottom = 326.0
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.92, 0.86, 0.78, 0.86)
-theme_override_font_sizes/font_size = 12
-text = "Q 切換"
+
+[node name="ShortcutLabel" type="Button" parent="ShortcutGroup"]
+layout_mode = 0
+offset_top = 2.0
+offset_right = 24.0
+offset_bottom = 26.0
+focus_mode = 0
+mouse_filter = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_key_normal")
+
+[node name="KeyLetter" type="Label" parent="ShortcutGroup/ShortcutLabel"]
+layout_mode = 0
+offset_left = 1.0
+offset_top = -1.0
+offset_right = 25.0
+offset_bottom = 23.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("8_bold")
+theme_override_font_sizes/font_size = 15
+text = "Q"
 horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SwitchHint" type="Label" parent="ShortcutGroup"]
+layout_mode = 0
+offset_left = 24.0
+offset_right = 48.0
+offset_bottom = 28.0
+rotation = 1.5707964
+pivot_offset = Vector2(12, 14)
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.83, 0.83, 0.81, 1)
+theme_override_font_sizes/font_size = 17
+text = "⇄"
+horizontal_alignment = 1
+vertical_alignment = 1
