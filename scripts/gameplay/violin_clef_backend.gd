@@ -7,7 +7,6 @@ const MAX_CHANNELS: int = 16
 var soundfont_path: String = ""
 var pizzicato_preset: int = 45
 var arco_preset: int = 40
-var tremolo_preset: int = 44
 var max_notes: int = 8
 
 var bank: ClefBank
@@ -24,7 +23,7 @@ func _ready() -> void:
 	if not result.ok:
 		push_warning("Violin SF2 failed to load: %s" % result.error_message)
 		return
-	for preset in [pizzicato_preset, arco_preset, tremolo_preset]:
+	for preset in [pizzicato_preset, arco_preset]:
 		var found := false
 		for entry in result.data.presets:
 			if entry.bank == 0 and entry.preset_index == preset:
@@ -83,6 +82,7 @@ func release_note(token: int) -> void:
 		(_release_tweens[token] as Tween).kill()
 		_release_tweens.erase(token)
 	var channel: int = _notes[token]["channel"]
+	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("clef_ch_%d" % channel), 0.0)
 	for voice in pool.get_active_voices_for_channel(channel):
 		voice.quick_stop()
 	_notes[token]["releasing"] = true
@@ -93,6 +93,8 @@ func release_note(token: int) -> void:
 
 
 func force_stop_all() -> void:
+	for note: Dictionary in _notes.values():
+		AudioServer.set_bus_volume_db(AudioServer.get_bus_index("clef_ch_%d" % int(note["channel"])), 0.0)
 	for tween: Tween in _release_tweens.values():
 		tween.kill()
 	_release_tweens.clear()
@@ -103,6 +105,14 @@ func force_stop_all() -> void:
 
 func active_note_count() -> int:
 	return _notes.size()
+
+
+func set_note_attenuation_db(token: int, attenuation_db: float) -> void:
+	# A note owns its channel until its release tail ends. Only attenuate: no gain boost.
+	if not _notes.has(token) or _notes[token].get("releasing", false):
+		return
+	var channel: int = _notes[token]["channel"]
+	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("clef_ch_%d" % channel), clampf(attenuation_db, -80.0, 0.0))
 
 
 func _free_channel() -> int:
@@ -129,6 +139,7 @@ func _stop_token(token: int) -> void:
 	if not _notes.has(token):
 		return
 	var channel: int = _notes[token]["channel"]
+	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("clef_ch_%d" % channel), 0.0)
 	for voice in pool.get_active_voices_for_channel(channel):
 		voice.force_stop()
 	if _release_tweens.has(token):

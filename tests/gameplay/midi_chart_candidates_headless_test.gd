@@ -10,7 +10,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	for name in ["moderate", "high"]:
+	for name in ["moderate", "high", "moderate_gap_fill_candidate"]:
 		var manager := MANAGER_SCRIPT.new() as InteractionSpotManager
 		var path := "res://data/violin_interaction_chart_%s.json" % name
 		if not manager.load_chart_file(path):
@@ -26,6 +26,12 @@ func _run() -> void:
 				for checkpoint: Dictionary in event["checkpoints"]:
 					if int(checkpoint["pitch"]) < 0 or int(checkpoint["pitch"]) > 127:
 						_failures.append("%s checkpoint pitch invalid" % name)
+		if name == "moderate_gap_fill_candidate":
+			var approved := MANAGER_SCRIPT.new() as InteractionSpotManager
+			if not approved.load_chart_file("res://data/violin_interaction_chart_moderate.json"):
+				_failures.append("Approved Moderate unavailable")
+			elif manager._chart_events.size() != approved._chart_events.size() + 1:
+				_failures.append("Gap Fill event count differs from offline report")
 	if _failures.is_empty():
 		print("MIDI candidate chart runtime-schema tests passed.")
 		quit(0)

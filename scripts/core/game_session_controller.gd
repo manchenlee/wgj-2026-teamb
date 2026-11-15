@@ -46,11 +46,9 @@ enum CharacterExpressionSource {
 @export var safe_word: String = Config.SAFE_WORD_DEFAULT
 @export var violin_pizzicato_sample: AudioStream
 @export var violin_arco_sample: AudioStream
-@export var violin_tremolo_sample: AudioStream
 @export var violin_soundfont_path: String = "res://assets/audio/soundfonts/generaluser_gs/GeneralUser-GS.sf2"
 @export_range(0, 127) var violin_pizzicato_preset: int = 45
 @export_range(0, 127) var violin_arco_preset: int = 40
-@export_range(0, 127) var violin_tremolo_preset: int = 44
 @export_range(36, 96) var violin_sample_root_pitch: int = 69
 @export_range(0.1, 0.15, 0.005) var violin_rub_inactivity_seconds: float = 0.125
 @export_range(-12.0, 18.0, 0.5) var violin_gain_db: float = 0.0
@@ -196,11 +194,9 @@ func _ready() -> void:
 	violin_audio.pitch_provider = midi_pitch_provider
 	violin_audio.pizzicato_sample = violin_pizzicato_sample
 	violin_audio.arco_sample = violin_arco_sample
-	violin_audio.tremolo_sample = violin_tremolo_sample
 	violin_audio.soundfont_path = violin_soundfont_path
 	violin_audio.pizzicato_preset = violin_pizzicato_preset
 	violin_audio.arco_preset = violin_arco_preset
-	violin_audio.tremolo_preset = violin_tremolo_preset
 	violin_audio.sample_root_pitch = violin_sample_root_pitch
 	violin_audio.rub_inactivity_seconds = violin_rub_inactivity_seconds
 	violin_audio.violin_gain_db = violin_gain_db

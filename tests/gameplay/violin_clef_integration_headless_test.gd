@@ -34,7 +34,7 @@ func _run() -> void:
 	for note in timeline["notes"]:
 		pitches[note["pitch"]] = true
 	for pitch in pitches:
-		for preset in [audio.pizzicato_preset, audio.arco_preset, audio.tremolo_preset]:
+		for preset in [audio.pizzicato_preset, audio.arco_preset]:
 			_check(not audio._clef_backend.bank.get_instruments(preset, pitch, 100, 0).is_empty(), "SF2 preset %d lacks MIDI pitch %d" % [preset, pitch])
 	var click := CLICK_SCENE.instantiate() as ClickNote
 	click.setup({"target_center": Vector2(84, 84), "target_radius": 40.0})
@@ -85,6 +85,22 @@ func _run() -> void:
 	_check(audio._clef_rub_token == 0, "Inactive Rub did not release")
 	rub._process_pointer_move(Vector2(108, 108))
 	_check(_queries == rub_queries + 1 and _has_note(audio, 76), "Resumed Rub did not query new pitch")
+	audio.stop_rub()
+	audio.rub_motion(777, 69)
+	var token := audio._clef_rub_token
+	var voice_count := audio._clef_backend.pool.get_voice_count()
+	for i in 12:
+		audio._process(0.008)
+		audio.rub_motion(777, 76)
+	_check(audio._clef_rub_token == token and _has_note(audio, 69), "Rub retriggered or changed pitch")
+	_check(audio._clef_backend.pool.get_voice_count() == voice_count, "Rub added voices")
+	var channel: int = audio._clef_backend._notes[token]["channel"]
+	var bus_index := AudioServer.get_bus_index("clef_ch_%d" % channel)
+	var attenuation := AudioServer.get_bus_volume_db(bus_index)
+	_check(attenuation < -0.1 and attenuation >= -4.0, "Rub attenuation exceeded range or did not modulate")
+	audio._process(0.16)
+	_check(audio._clef_rub_token == 0, "Rub inactivity did not release")
+	_check(is_zero_approx(AudioServer.get_bus_volume_db(bus_index)), "Rub left channel attenuated")
 	audio.stop_all()
 	_check(audio._clef_backend.pool.get_voice_count() == 0, "Cancellation left SF2 voices")
 	audio.play_click()

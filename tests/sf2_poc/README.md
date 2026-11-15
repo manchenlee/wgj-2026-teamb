@@ -36,8 +36,10 @@ The game session defaults to the bundled GeneralUser GS SF2. Set
 `VIOLIN_SF2_PATH` before launching the game, or change
 `violin_soundfont_path` on the game session scene, to use another licensed
 `.sf2` file. An empty or unreadable path selects the procedural fallback. The
-three exported preset numbers default to 45 (Click), 40 (Slide), and 44 (Rub)
-and can be changed with the SoundFont. See the bundled font's `LICENSE.txt`
+two exported preset numbers default to 45 (Click) and 40 (Slide and Rub).
+Rub uses one sustained Violin note with bow-like amplitude modulation.
+The isolated proof-of-concept above still allows listening to preset 44 as a
+SoundFont reference; gameplay no longer uses it. See the bundled font's `LICENSE.txt`
 and `SOURCE.md` before redistribution.
 
 The production check uses the bundled default SoundFont:

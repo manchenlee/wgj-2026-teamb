@@ -6,24 +6,27 @@ const ClefBackendClass := preload("res://scripts/gameplay/violin_clef_backend.gd
 # These streams and generated tones remain available when no usable SF2 is configured.
 @export var pizzicato_sample: AudioStream
 @export var arco_sample: AudioStream
-@export var tremolo_sample: AudioStream
 @export var soundfont_path: String = ""
 @export_range(0, 127) var pizzicato_preset: int = 45
 @export_range(0, 127) var arco_preset: int = 40
-@export_range(0, 127) var tremolo_preset: int = 44
 @export_range(36, 96) var sample_root_pitch: int = 69
 @export_range(2, 24) var max_voices: int = 8
 @export_range(0.1, 0.15, 0.005) var rub_inactivity_seconds: float = 0.125
 @export_range(-12.0, 18.0, 0.5) var violin_gain_db: float = 0.0
 
 const VIOLIN_BUS: StringName = &"Violin"
+const RUB_BOW_RATE_HZ: float = 8.0
+const RUB_BOW_DEPTH_DB: float = 4.0
 
 var pitch_provider: Callable
 var _voices: Array[AudioStreamPlayer] = []
 var _voice_serial: int = 0
 var _rub_player: AudioStreamPlayer
+var _rub_violin_sample: AudioStreamWAV
 var _rub_source_id: int = 0
 var _rub_idle: float = 0.0
+var _rub_pitch: int = -1
+var _rub_modulation_time: float = 0.0
 var _arco_player: AudioStreamPlayer
 var _voice_generation: Dictionary = {}
 var _voice_tweens: Dictionary = {}
@@ -42,6 +45,14 @@ func _process(delta: float) -> void:
 	_rub_idle += delta
 	if _rub_idle >= rub_inactivity_seconds:
 		stop_rub()
+	else:
+		_rub_modulation_time += delta
+		# Bow-like amplitude motion: fixed MIDI pitch, one sustained note, attenuation only.
+		var attenuation_db := -0.5 * RUB_BOW_DEPTH_DB * (1.0 - cos(TAU * RUB_BOW_RATE_HZ * _rub_modulation_time))
+		if _clef_rub_token != 0:
+			_clef_backend.set_note_attenuation_db(_clef_rub_token, attenuation_db)
+		elif _rub_player.playing:
+			_rub_player.volume_db = -16.0 + attenuation_db
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -51,15 +62,13 @@ func _ready() -> void:
 	_clef_backend.soundfont_path = soundfont_override if not soundfont_override.is_empty() else soundfont_path
 	_clef_backend.pizzicato_preset = pizzicato_preset
 	_clef_backend.arco_preset = arco_preset
-	_clef_backend.tremolo_preset = tremolo_preset
 	_clef_backend.max_notes = max_voices
 	add_child(_clef_backend)
 	if pizzicato_sample == null:
 		pizzicato_sample = _make_development_sample(&"pizzicato")
 	if arco_sample == null:
 		arco_sample = _make_development_sample(&"arco")
-	if tremolo_sample == null:
-		tremolo_sample = _make_development_sample(&"tremolo")
+	_rub_violin_sample = _make_development_sample(&"rub_violin")
 	for i in max_voices:
 		var player := AudioStreamPlayer.new()
 		player.name = "ViolinVoice%d" % i
@@ -154,13 +163,15 @@ func _release_voice(voice: AudioStreamPlayer, duration: float) -> void:
 
 func rub_motion(source_id: int, bound_pitch: int = -1) -> void:
 	if _rub_source_id != source_id or (_clef_backend.is_available() and _clef_rub_token == 0) or (not _clef_backend.is_available() and not _rub_player.playing):
-		var pitch := _pitch_for_event(bound_pitch)
+		var pitch := _rub_pitch if _rub_source_id == source_id and _rub_pitch >= 0 else _pitch_for_event(bound_pitch)
 		if pitch < 0:
 			return
+		_rub_pitch = pitch
+		_rub_modulation_time = 0.0
 		if _clef_backend.is_available():
 			if _clef_rub_token != 0:
 				_clef_backend.release_note(_clef_rub_token)
-			_clef_rub_token = _clef_backend.play_note(tremolo_preset, pitch, 100)
+			_clef_rub_token = _clef_backend.play_note(arco_preset, pitch, 100)
 			if _clef_rub_token != 0:
 				_rub_source_id = source_id
 				_rub_idle = 0.0
@@ -169,7 +180,7 @@ func rub_motion(source_id: int, bound_pitch: int = -1) -> void:
 			_rub_tween.kill()
 		_rub_source_id = source_id
 		_rub_player.stop()
-		_rub_player.stream = tremolo_sample
+		_rub_player.stream = _rub_violin_sample
 		_rub_player.pitch_scale = pow(2.0, float(pitch - sample_root_pitch) / 12.0)
 		_rub_player.volume_db = -35.0
 		_rub_player.play()
@@ -199,6 +210,8 @@ func stop_all() -> void:
 
 func stop_rub() -> void:
 	_rub_source_id = 0
+	_rub_pitch = -1
+	_rub_modulation_time = 0.0
 	if _clef_rub_token != 0:
 		_clef_backend.release_note(_clef_rub_token)
 		_clef_rub_token = 0
@@ -234,15 +247,14 @@ func _make_development_sample(kind: StringName) -> AudioStreamWAV:
 	for i in count:
 		var t := float(i) / RATE
 		var envelope := exp(-19.0 * t) if kind == &"pizzicato" else minf(t * 35.0, 1.0) * minf((duration - t) * 12.0, 1.0)
-		var wobble := 1.0 + 0.14 * sin(TAU * 24.0 * t) if kind == &"tremolo" else 1.0
-		var wave := (sin(TAU * frequency * t) + 0.28 * sin(TAU * frequency * 2.0 * t)) * envelope * wobble * 0.24
+		var wave := (sin(TAU * frequency * t) + 0.28 * sin(TAU * frequency * 2.0 * t)) * envelope * 0.24
 		var value := int(clampf(wave, -1.0, 1.0) * 32767.0)
 		bytes.encode_s16(i * 2, value)
 	var sample := AudioStreamWAV.new()
 	sample.format = AudioStreamWAV.FORMAT_16_BITS
 	sample.mix_rate = RATE
 	sample.data = bytes
-	if kind == &"tremolo":
+	if kind == &"rub_violin":
 		sample.loop_mode = AudioStreamWAV.LOOP_FORWARD
 		sample.loop_begin = int(RATE * 0.06)
 		sample.loop_end = int(RATE * 0.62)
