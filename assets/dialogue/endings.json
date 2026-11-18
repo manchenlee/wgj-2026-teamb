@@ -1,7 +1,7 @@
 {
   "entries": {
     "peak_depletion_failure": {
-      "title": "結局一（兩者興奮度歸零）",
+      "title": "結局一",
       "steps": [
         {
           "speaker": "小提琴",
@@ -172,7 +172,7 @@
       ]
     },
     "physical_imbalance_failure": {
-      "title": "結局二（只有生理興奮度滿）",
+      "title": "結局二",
       "steps": [
         {
           "speaker": "小提琴",
@@ -369,7 +369,7 @@
       ]
     },
     "emotional_imbalance_failure": {
-      "title": "結局三 （只有心理興奮度滿）",
+      "title": "結局三",
       "steps": [
         {
           "speaker": "小提琴",
@@ -593,7 +593,7 @@
       ]
     },
     "success": {
-      "title": "結局三 （兩者皆滿，好結局）",
+      "title": "結局四",
       "steps": [
         {
           "speaker": "小提琴",
@@ -790,7 +790,7 @@
       ]
     },
     "safeword_ignored_failure": {
-      "title": "結局",
+      "title": "結局五",
       "body": "隨著一聲近乎崩裂的聲響，你的觸手纏上了小提琴的每一個支點，生扳硬扯，強行調整到了自己想要的音調。\n小提琴剛開始還會發出刺耳難耐的嘶鳴，隨著你觸手的勁道逐漸增加，反抗的弦鳴也變成了嗚咽的應和。\n終於，在調整完最後一個旋鈕後，小提琴發出了你理想中的，悅耳的哀鳴聲。\n你調教出了你理想的小提琴。\n只有琴聲的小提琴。"
     }
   }

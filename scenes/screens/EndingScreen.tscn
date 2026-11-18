@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/core/ending_screen.gd" id="1_ending"]
 [ext_resource type="Texture2D" path="res://assets/art/screens/ending/end01.png" id="2_end01"]
@@ -7,6 +7,8 @@
 [ext_resource type="Texture2D" path="res://assets/art/screens/ending/end04.png" id="5_end04"]
 [ext_resource type="Texture2D" path="res://assets/art/screens/ending/end05.png" id="6_end05"]
 [ext_resource type="PackedScene" path="res://scenes/components/SkipStyleButton.tscn" id="7_skip_style"]
+[ext_resource type="FontFile" path="res://assets/fonts/ShipporiMincho-Regular.ttf" id="8_chapter_regular"]
+[ext_resource type="FontFile" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="9_chapter_bold"]
 
 [node name="EndingScreen" type="Control"]
 layout_mode = 3
@@ -46,12 +48,49 @@ layout_mode = 2
 alignment = 1
 theme_override_constants/separation = 16
 
-[node name="HeadingLabel" type="Label" parent="OuterMargin/Layout"]
+[node name="ChapterTitleSpace" type="Control" parent="OuterMargin/Layout"]
 layout_mode = 2
-text = "結局"
-horizontal_alignment = 0
-theme_override_colors/font_color = Color(0.3, 0.1, 0.05, 1)
-theme_override_font_sizes/font_size = 44
+custom_minimum_size = Vector2(0, 150)
+
+[node name="ChapterTitle" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchor_top = 0.1
+anchor_bottom = 0.1
+offset_left = 60.0
+offset_right = 516.0
+offset_bottom = 180.0
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="ChapterNumber" type="Label" parent="ChapterTitle"]
+layout_mode = 2
+text = "— IV —"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.37, 0.19, 0.18, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("8_chapter_regular")
+theme_override_font_sizes/font_size = 25
+
+[node name="HeadingLabel" type="Label" parent="ChapterTitle"]
+layout_mode = 2
+text = "結局四"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.29, 0.1, 0.11, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 9
+theme_override_fonts/font = ExtResource("9_chapter_bold")
+theme_override_font_sizes/font_size = 52
+
+[node name="ChapterDiamond" type="Label" parent="ChapterTitle"]
+layout_mode = 2
+text = "◆"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.37, 0.19, 0.18, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("8_chapter_regular")
+theme_override_font_sizes/font_size = 16
 
 [node name="ResultSubtypeLabel" type="Label" parent="OuterMargin/Layout"]
 layout_mode = 2

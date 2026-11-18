@@ -4,6 +4,13 @@ const Config := preload("res://scripts/gameplay/GameConfig.gd")
 const ENDING_TEXTS_PATH := "res://assets/dialogue/endings.json"
 const VISUAL_NOVEL_SCENE := preload("res://scenes/screens/OpeningScreen.tscn")
 const ENDING_IMAGE_FADE_DURATION := 0.4
+const ROMAN_NUMERALS_BY_TYPE := {
+	Config.PEAK_DEPLETION_FAILURE_ENDING: "I",
+	Config.PHYSICAL_IMBALANCE_FAILURE_ENDING: "II",
+	Config.EMOTIONAL_IMBALANCE_FAILURE_ENDING: "III",
+	Config.SUCCESS_ENDING: "IV",
+	Config.SAFEWORD_IGNORED_FAILURE_ENDING: "V",
+}
 const DEFAULT_ENDING_TEXTS := {
 	Config.SUCCESS_ENDING: {
 		"title": "整體興奮值滿",
@@ -35,7 +42,8 @@ signal restart_pressed
 signal back_to_title_pressed
 
 @onready var _background: TextureRect = $Background
-@onready var heading_label: Label = get_node_or_null("OuterMargin/Layout/HeadingLabel")
+@onready var chapter_number_label: Label = get_node_or_null("ChapterTitle/ChapterNumber")
+@onready var heading_label: Label = get_node_or_null("ChapterTitle/HeadingLabel")
 @onready var result_label: Label = get_node_or_null("OuterMargin/Layout/ResultSubtypeLabel")
 @onready var body_label: Label = get_node_or_null("OuterMargin/Layout/EndingBody")
 @onready var restart_button: Button = get_node_or_null("OuterMargin/Layout/RestartButtons/RestartButton/Button")
@@ -76,9 +84,11 @@ func set_result(result_type: String) -> void:
 		_apply_result(result_type)
 
 func _apply_result(result_type: String) -> void:
-	if heading_label == null or result_label == null or body_label == null:
+	if chapter_number_label == null or heading_label == null or result_label == null or body_label == null:
 		push_error("EndingScreen: one or more label nodes not found.")
 		return
+
+	chapter_number_label.text = "— %s —" % ROMAN_NUMERALS_BY_TYPE.get(result_type, "?")
 
 	if _BG_BY_TYPE.has(result_type):
 		_background.texture = _BG_BY_TYPE[result_type]
