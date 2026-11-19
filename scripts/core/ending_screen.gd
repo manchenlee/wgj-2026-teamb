@@ -46,8 +46,8 @@ signal back_to_title_pressed
 @onready var heading_label: Label = get_node_or_null("ChapterTitle/HeadingLabel")
 @onready var result_label: Label = get_node_or_null("OuterMargin/Layout/ResultSubtypeLabel")
 @onready var body_label: Label = get_node_or_null("OuterMargin/Layout/EndingBody")
-@onready var restart_button: Button = get_node_or_null("OuterMargin/Layout/RestartButtons/RestartButton/Button")
-@onready var back_to_title_button: Button = get_node_or_null("OuterMargin/Layout/RestartButtons/BackToTitleButton/Button")
+@onready var restart_button: Button = get_node_or_null("ChapterTitle/RestartButtons/RestartButton/Button")
+@onready var back_to_title_button: Button = get_node_or_null("ChapterTitle/RestartButtons/BackToTitleButton/Button")
 
 var pending_result_type: String = ""
 var ending_texts_by_type: Dictionary = {}
@@ -103,7 +103,7 @@ func _apply_result(result_type: String) -> void:
 		if not steps.is_empty():
 			heading_label.text = ending_title
 			body_label.visible = false
-			$OuterMargin/Layout/RestartButtons.visible = false
+			$ChapterTitle/RestartButtons.visible = false
 			_novel_screen = VISUAL_NOVEL_SCENE.instantiate()
 			_novel_screen.set_dialogue_steps(steps, ending_title)
 			_novel_screen.continue_pressed.connect(_finish_novel)
@@ -137,7 +137,7 @@ func _finish_novel() -> void:
 func _show_ending_image() -> void:
 	_novel_screen.queue_free()
 	_novel_screen = null
-	$OuterMargin/Layout/RestartButtons.visible = true
+	$ChapterTitle/RestartButtons.visible = true
 
 func _load_ending_texts() -> Dictionary:
 	var file: FileAccess = FileAccess.open(ENDING_TEXTS_PATH, FileAccess.READ)

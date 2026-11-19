@@ -50,15 +50,14 @@ theme_override_constants/separation = 16
 
 [node name="ChapterTitleSpace" type="Control" parent="OuterMargin/Layout"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 150)
+custom_minimum_size = Vector2(0, 420)
 
 [node name="ChapterTitle" type="VBoxContainer" parent="."]
 layout_mode = 1
-anchor_top = 0.1
-anchor_bottom = 0.1
-offset_left = 60.0
-offset_right = 516.0
-offset_bottom = 180.0
+offset_left = 32.0
+offset_top = 24.0
+offset_right = 252.0
+offset_bottom = 450.0
 mouse_filter = 2
 theme_override_constants/separation = 8
 
@@ -92,6 +91,25 @@ theme_override_constants/outline_size = 5
 theme_override_fonts/font = ExtResource("8_chapter_regular")
 theme_override_font_sizes/font_size = 16
 
+[node name="RestartButtons" type="VBoxContainer" parent="ChapterTitle"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 12
+
+[node name="RestartButton" parent="ChapterTitle/RestartButtons" instance=ExtResource("7_skip_style")]
+layout_mode = 2
+button_text = "再度演奏"
+
+[node name="SkipLabel" parent="ChapterTitle/RestartButtons/RestartButton" index="1"]
+theme_override_colors/font_color = Color(0.32, 0.07, 0.12, 1)
+
+[node name="BackToTitleButton" parent="ChapterTitle/RestartButtons" instance=ExtResource("7_skip_style")]
+layout_mode = 2
+button_text = "回到標題"
+
+[node name="SkipLabel" parent="ChapterTitle/RestartButtons/BackToTitleButton" index="1"]
+theme_override_colors/font_color = Color(0.32, 0.07, 0.12, 1)
+
 [node name="ResultSubtypeLabel" type="Label" parent="OuterMargin/Layout"]
 layout_mode = 2
 visible = false
@@ -110,22 +128,3 @@ custom_minimum_size = Vector2(1, 0)
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.15, 0.08, 0.03, 1)
 theme_override_font_sizes/font_size = 30
-
-[node name="RestartButtons" type="HBoxContainer" parent="OuterMargin/Layout"]
-layout_mode = 2
-alignment = 0
-theme_override_constants/separation = 16
-
-[node name="RestartButton" parent="OuterMargin/Layout/RestartButtons" instance=ExtResource("7_skip_style")]
-layout_mode = 2
-button_text = "再度演奏"
-
-[node name="SkipLabel" parent="OuterMargin/Layout/RestartButtons/RestartButton" index="1"]
-theme_override_colors/font_color = Color(0.32, 0.07, 0.12, 1)
-
-[node name="BackToTitleButton" parent="OuterMargin/Layout/RestartButtons" instance=ExtResource("7_skip_style")]
-layout_mode = 2
-button_text = "回到標題"
-
-[node name="SkipLabel" parent="OuterMargin/Layout/RestartButtons/BackToTitleButton" index="1"]
-theme_override_colors/font_color = Color(0.32, 0.07, 0.12, 1)
