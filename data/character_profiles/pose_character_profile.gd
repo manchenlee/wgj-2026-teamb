@@ -51,8 +51,8 @@ func _init(phase: int = 1) -> void:
 	if merged_art:
 		var psychological_positive_name := "psychological_positive" if pose_name == "sitting" else "smile"
 		base_textures = {
-			"draft": root + "neutral.png",
-			"overall_init": root + "neutral.png",
+			"draft": root + "default.png",
+			"overall_init": root + "default.png",
 			"positive": root + "positive.png",
 			"psychological_positive": root + psychological_positive_name + ".png",
 			"negative": root + "negative.png",
@@ -66,7 +66,7 @@ func _init(phase: int = 1) -> void:
 	else:
 		base_textures = {"draft": root + "complete.png", "overall_init": root + "complete.png"}
 		expressions = {
-			ExpressionState.NEUTRAL: {"base_state_key": "overall_init", "face_state_key": "face_neutral"},
+			ExpressionState.NEUTRAL: {"base_state_key": "overall_init", "face_state_key": "face_default"},
 			ExpressionState.POSITIVE: {"base_state_key": "overall_init", "face_state_key": "face_positive"},
 			ExpressionState.PSYCHOLOGICAL_POSITIVE: {"base_state_key": "overall_init", "face_state_key": "face_psychological_positive"},
 			ExpressionState.NEGATIVE: {"base_state_key": "overall_init", "face_state_key": "face_negative"},
@@ -90,7 +90,7 @@ func get_face_texture_paths() -> Dictionary:
 		return {}
 	var root := "res://assets/art/character/%s/" % pose_name
 	return {
-		"face_neutral": root + "face_neutral.png",
+		"face_default": root + "face_default.png",
 		"face_positive": root + "face_positive.png",
 		"face_psychological_positive": root + "face_psychological_positive.png",
 		"face_negative": root + "face_negative.png",

@@ -16,6 +16,10 @@ func _run() -> void:
 	for phase in [1, 2, 5]:
 		var profile = POSE_PROFILE.new(phase)
 		_check(profile.get_face_texture_paths().is_empty(), "Merged pose still loads a separate face layer: %d" % phase)
+		_check(profile.get_texture_path("overall_init").ends_with("default.png"),
+			"Shy default art is not used for the starting state: %d" % phase)
+		var neutral_path: String = "res://assets/art/character/%s/neutral.png" % profile.pose_name
+		_check(ResourceLoader.exists(neutral_path), "Dialogue neutral art is missing: %s" % neutral_path)
 		for expression in [PROFILE.ExpressionState.NEUTRAL, PROFILE.ExpressionState.POSITIVE,
 				PROFILE.ExpressionState.PSYCHOLOGICAL_POSITIVE, PROFILE.ExpressionState.NEGATIVE]:
 			var state: Dictionary = profile.resolve_visual_state(0, expression)

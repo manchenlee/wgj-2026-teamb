@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bk70dqk1y8vfk"
-path="res://.godot/imported/expressionless.png-e2a4abfb0e42c4eff8ee481e880d1d37.ctex"
+uid="uid://cxnfhm38j8cs4"
+path="res://.godot/imported/default.png-20445d1d5ce957f64d048de895ad3593.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/character/sitting/expressionless.png"
-dest_files=["res://.godot/imported/expressionless.png-e2a4abfb0e42c4eff8ee481e880d1d37.ctex"]
+source_file="res://assets/art/character/lying/default.png"
+dest_files=["res://.godot/imported/default.png-20445d1d5ce957f64d048de895ad3593.ctex"]
 
 [params]
 
