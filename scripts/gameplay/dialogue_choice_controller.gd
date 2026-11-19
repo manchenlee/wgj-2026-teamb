@@ -130,6 +130,9 @@ func get_timeout_reply() -> String:
 func get_current_line() -> String:
 	return current_line
 
+func is_group_complete() -> bool:
+	return current_entry.is_empty() and _queued_response_lines.is_empty() and not choice_prompt_pending
+
 func has_safe_word_event() -> bool:
 	for entry_variant in entries:
 		var entry := entry_variant as Dictionary

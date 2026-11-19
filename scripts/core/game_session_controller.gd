@@ -151,6 +151,7 @@ var lower_score_mode: int = -1
 var current_combo: int = 0
 var max_combo: int = 0
 var _reading_step_active: bool = false
+var _group_gap_active: bool = false
 var _reading_step_generation: int = 0
 var _reading_step_advancing: bool = false
 var _last_reading_advance_frame: int = -1
@@ -1206,8 +1207,17 @@ func _advance_psychological_dialogue(generation: int) -> void:
 		return
 	_last_reading_advance_frame = frame
 	_reading_step_advancing = true
+	var was_group_gap := _group_gap_active
 	_invalidate_reading_step()
-	_push_next_dialogue_event(InteractionMode.PSYCHOLOGICAL)
+	if was_group_gap:
+		_push_next_dialogue_event(InteractionMode.PSYCHOLOGICAL)
+	elif psychological_dialogue_controller.is_group_complete():
+		dialogue_panel.hide_current_line()
+		_start_psychological_dialogue_timer(
+			randf_range(Config.PSYCHOLOGICAL_GROUP_GAP_MIN, Config.PSYCHOLOGICAL_GROUP_GAP_MAX), true
+		)
+	else:
+		_push_next_dialogue_event(InteractionMode.PSYCHOLOGICAL)
 	_reading_step_advancing = false
 
 func _on_physiological_dialogue_timer_timeout() -> void:
@@ -1325,17 +1335,24 @@ func _schedule_next_dialogue_message(mode: InteractionMode, displayed_text: Stri
 	var wait_time := active_phase_config.reading_duration_for_text(displayed_text)
 	if mode == InteractionMode.PSYCHOLOGICAL:
 		wait_time = maxf(wait_time, dialogue_panel.current_speech_bubble.get_stream_duration() + 0.5)
+		_start_psychological_dialogue_timer(wait_time, false)
+		return
 	var timer := _get_dialogue_timer(mode)
-	if mode == InteractionMode.PSYCHOLOGICAL:
-		_invalidate_reading_step()
-		_reading_step_active = true
-		_reading_timeout_callback = _on_psychological_dialogue_timer_timeout.bind(_reading_step_generation)
-		psychological_dialogue_timer.timeout.connect(_reading_timeout_callback, CONNECT_ONE_SHOT)
 	timer.start(wait_time)
 	timer.set_paused(interaction_mode != mode)
 
+func _start_psychological_dialogue_timer(wait_time: float, group_gap: bool) -> void:
+	_invalidate_reading_step()
+	_reading_step_active = true
+	_group_gap_active = group_gap
+	_reading_timeout_callback = _on_psychological_dialogue_timer_timeout.bind(_reading_step_generation)
+	psychological_dialogue_timer.timeout.connect(_reading_timeout_callback, CONNECT_ONE_SHOT)
+	psychological_dialogue_timer.start(wait_time)
+	psychological_dialogue_timer.set_paused(interaction_mode != InteractionMode.PSYCHOLOGICAL)
+
 func _invalidate_reading_step() -> void:
 	_reading_step_active = false
+	_group_gap_active = false
 	_reading_step_generation += 1
 	psychological_dialogue_timer.stop()
 	if _reading_timeout_callback.is_valid() \
@@ -1358,6 +1375,8 @@ func _restore_or_initialize_active_dialogue() -> void:
 	if interaction_mode == InteractionMode.PHYSIOLOGICAL:
 		if dialogue_panel != null:
 			dialogue_panel.visible = false
+		return
+	if _group_gap_active:
 		return
 	var controller: DialogueChoiceController = _get_dialogue_controller(interaction_mode)
 	var current_line: String = controller.get_current_line()

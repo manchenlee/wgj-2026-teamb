@@ -36,6 +36,12 @@ func refresh_active_dialogue_position() -> void:
 func hide_prompt() -> void:
 	pass
 
+func hide_current_line() -> void:
+	_active_character_line = ""
+	if current_speech_bubble != null:
+		current_speech_bubble.finish_dialogue_stream()
+		current_speech_bubble.visible = false
+
 func clear_history() -> void:
 	_history.clear()
 	_active_character_line = ""
