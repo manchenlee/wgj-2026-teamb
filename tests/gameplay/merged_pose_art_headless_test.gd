@@ -26,8 +26,9 @@ func _run() -> void:
 			var path: String = profile.get_texture_path(state.base_state_key)
 			_check(state.face_state_key.is_empty(), "Merged pose has a face state: %d" % phase)
 			_check(ResourceLoader.exists(path), "Merged image is missing: %s" % path)
-	_check(POSE_PROFILE.new(4).get_texture_path("psychological_positive").ends_with("smile.png"),
-		"Lying psychological reaction does not use the supplied smile image.")
+	_check(POSE_PROFILE.new(4).get_texture_path("psychological_positive") ==
+		"res://assets/art/character/lying/psychological_positive.png",
+		"Lying psychological reaction does not use its dedicated image.")
 	_check(not POSE_PROFILE.new(2).get_face_texture_paths().is_empty(), "Standing face layers were removed.")
 
 	var game = GAME_SCREEN.instantiate()

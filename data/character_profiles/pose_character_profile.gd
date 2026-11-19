@@ -49,12 +49,11 @@ func _init(phase: int = 1) -> void:
 	var expressions: Dictionary
 	var base_textures: Dictionary
 	if merged_art:
-		var psychological_positive_name := "psychological_positive" if pose_name == "sitting" else "smile"
 		base_textures = {
 			"draft": root + "default.png",
 			"overall_init": root + "default.png",
 			"positive": root + "positive.png",
-			"psychological_positive": root + psychological_positive_name + ".png",
+			"psychological_positive": root + "psychological_positive.png",
 			"negative": root + "negative.png",
 		}
 		expressions = {
