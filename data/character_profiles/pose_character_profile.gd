@@ -34,13 +34,13 @@ var presentation_phase: int = 1
 var pose_name: String = "sitting"
 
 func _init(phase: int = 1) -> void:
-	presentation_phase = clampi(phase, 1, 5)
+	presentation_phase = clampi(phase, 1, 4)
 	match presentation_phase:
-		3:
+		2:
 			pose_name = "standing"
-		4:
+		3:
 			pose_name = "prone"
-		5:
+		4:
 			pose_name = "lying"
 		_:
 			pose_name = "sitting"
@@ -72,7 +72,7 @@ func _init(phase: int = 1) -> void:
 			ExpressionState.NEGATIVE: {"base_state_key": "overall_init", "face_state_key": "face_negative"},
 		}
 	var mappings: Dictionary = {}
-	for band in range(5):
+	for band in range(4):
 		mappings[band] = expressions.duplicate(true)
 	super._init(
 		"phase_%d_profile" % presentation_phase,

@@ -109,7 +109,7 @@ func _test_continuous_band_progression_and_dialogue_pool() -> void:
 	var preserved_before := _capture_continuous_state(game, spots_before)
 	var overlay_visible_before: bool = game.phase_transition_overlay.visible
 
-	for band in range(1, 5):
+	for band in range(1, 4):
 		game.arousal_model.physical = _score_inside_band(band)
 		game._sync_physiological_visual_band()
 		_assert(game.current_visual_band == band, "Continuous run did not reach visual band %d." % band)
@@ -119,12 +119,12 @@ func _test_continuous_band_progression_and_dialogue_pool() -> void:
 
 	game.arousal_model.physical = 49.0
 	game._sync_physiological_visual_band()
-	_assert(game.current_visual_band == 4, "Lower physiology regressed the attained pose band.")
-	_assert(game._get_active_phase_id() == "phase_1", "Gameplay phase indicator changed at physical 49.")
+	_assert(game.current_visual_band == 3, "Lower physiology regressed the attained pose band.")
+	_assert(game._get_active_phase_id() == "phase_2", "Gameplay phase indicator changed at physical 49.")
 	game.arousal_model.physical = 50.0
 	game._sync_physiological_visual_band()
-	_assert(game.current_visual_band == 4, "Lower physiology regressed the attained pose band.")
-	_assert(game._get_active_phase_id() == "phase_2", "Gameplay phase indicator changed at physical 50.")
+	_assert(game.current_visual_band == 3, "Lower physiology regressed the attained pose band.")
+	_assert(game._get_active_phase_id() == "phase_3", "Gameplay phase indicator changed at physical 50.")
 	_assert(game.psychological_dialogue_controller.entries == dialogue_entries_before, "Band-family crossing reloaded/changed the psychological pool.")
 	_assert(game.physiological_dialogue_controller.entries == physiological_entries_before, "Band-family crossing reloaded/changed the physiological pool.")
 	_assert(_capture_continuous_state(game, spots_before) == preserved_before, "Band-family progression reset continuous history/dialogue/timers/notes/mode/BGM/expression state.")
@@ -137,7 +137,7 @@ func _test_continuous_band_progression_and_dialogue_pool() -> void:
 	game.arousal_model.physical = 100.0
 	game.arousal_model.emotional = 95.0
 	game._check_ending()
-	_assert(game.shooting_tail_active and endings.is_empty(), "Continuous flow skipped the Phase 5 tail hold.")
+	_assert(game.shooting_tail_active and endings.is_empty(), "Continuous flow skipped the Phase 4 tail hold.")
 	await create_timer(CONTROLLER_SCRIPT.ENDING_SHOOTING_TAIL_HOLD_SECONDS + 0.1).timeout
 	_assert(endings == [CONFIG.SUCCESS_ENDING], "Deterministic continuous flow did not finish at final success.")
 	await _free_game(game)
@@ -203,7 +203,7 @@ func _assert_runtime_penalty_depletion() -> void:
 	var endings: Array[String] = []
 	game.ending_requested.connect(func(result: String) -> void: endings.append(result))
 	game.phase_transition_overlay = null
-	game.arousal_model.physical = 5.0
+	game.arousal_model.physical = CONFIG.SPOT_EXPIRY_PENALTY_IGNORED
 	game.arousal_model.emotional = 50.0
 	game.arousal_model.peak = 50.0
 	game.arousal_model.peak_has_activated = true
@@ -400,7 +400,7 @@ func _test_physical_100_endings_hold_shooting_tail() -> void:
 		game.arousal_model.emotional = float(entry[0])
 		game._sync_physiological_visual_band()
 		game._check_ending()
-		_assert(game.current_presentation_phase == 5, "Physical 100 did not reach Phase 5.")
+		_assert(game.current_presentation_phase == 4, "Physical 100 did not reach Phase 4.")
 		_assert(game.shooting_tail_active, "%s did not switch to tail state 4." % entry[1])
 		_assert(game.pose_tail_layer.texture.resource_path.ends_with("tail_shooting.png"), "%s did not show the shooting tail." % entry[1])
 		_assert(not game.phase_transition_overlay.visible, "%s faded before the tail hold." % entry[1])
@@ -470,7 +470,7 @@ func _timer_state(timer: Timer) -> Dictionary:
 
 
 func _score_inside_band(band: int) -> float:
-	return (float(band) + 0.5) * 20.0
+	return (float(band) + 0.5) * 25.0
 
 
 func _candidate_ids(candidates: Array[Dictionary]) -> Array[String]:

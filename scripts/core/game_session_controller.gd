@@ -23,7 +23,7 @@ signal physiological_visual_band_changed(previous_band: int, current_band: int, 
 signal score_warning_changed(physical_low: bool, emotional_low: bool)
 signal score_imbalance_changed(active: bool, lower_mode: int)
 
-const PHYSIOLOGICAL_VISUAL_BAND_COUNT: int = 5
+const PHYSIOLOGICAL_VISUAL_BAND_COUNT: int = 4
 const PHYSIOLOGICAL_VISUAL_BAND_MIN: int = 0
 const PHYSIOLOGICAL_VISUAL_BAND_MAX: int = PHYSIOLOGICAL_VISUAL_BAND_COUNT - 1
 const PRESENTATION_PREFETCH_RESOURCES_PER_FRAME: int = 1
@@ -162,7 +162,7 @@ func _ready() -> void:
 	physiological_dialogue_controller.configure("physiological_dialogue_data_source", false)
 	_build_phase_sequence()
 	_apply_phase_by_index(_get_initial_phase_index())
-	for phase in range(1, 6):
+	for phase in range(1, PHYSIOLOGICAL_VISUAL_BAND_COUNT + 1):
 		_begin_character_presentation_prefetch(phase)
 	_update_character_visual_state()
 	_apply_overlay_motion_set()
@@ -339,7 +339,7 @@ func _configure_pose_layers() -> void:
 	if active_character_profile.pose_name == "sitting":
 		_tail_frame_index = physical_score_to_sitting_tail_stage(arousal_model.physical)
 	if pose_tail_layer != null:
-		_apply_phase_layer_texture(pose_tail_layer, _tail_frames[0] if not _tail_frames.is_empty() else null)
+		_apply_phase_layer_texture(pose_tail_layer, _tail_frames[_tail_frame_index] if not _tail_frames.is_empty() else null)
 	if spot_manager != null:
 		var mask_texture := _load_texture_from_asset_path(active_character_profile.get_interaction_mask_path())
 		spot_manager.set_interaction_mask(mask_texture, interaction_mask_anchor)
@@ -350,9 +350,9 @@ func _configure_pose_layers() -> void:
 static func physical_score_to_sitting_tail_stage(physical_score: float) -> int:
 	# Match the integer score shown by StatusHUD at threshold crossings.
 	var displayed_score := roundi(clampf(physical_score, 0.0, Config.MAX_VALUE))
-	if displayed_score < 20:
+	if displayed_score < 15:
 		return 0
-	if displayed_score < 30:
+	if displayed_score < 20:
 		return 1
 	return 2
 
@@ -847,11 +847,11 @@ func _process(delta: float) -> void:
 	_check_ending()
 
 static func physical_score_to_visual_band(physical_score: float) -> int:
-	return clampi(floori(clampf(physical_score, 0.0, 100.0) / 20.0), 0, 4)
+	return clampi(floori(clampf(physical_score, 0.0, Config.MAX_VALUE) / 25.0), 0, PHYSIOLOGICAL_VISUAL_BAND_MAX)
 
 
 static func visual_band_to_character_presentation_phase(visual_band: int) -> int:
-	return clampi(visual_band, 0, 4) + 1
+	return clampi(visual_band, PHYSIOLOGICAL_VISUAL_BAND_MIN, PHYSIOLOGICAL_VISUAL_BAND_MAX) + 1
 
 
 func _sync_character_presentation_phase_for_visual_band(visual_band: int) -> bool:
@@ -1386,7 +1386,7 @@ func _begin_ending_transition(ending_type: String) -> void:
 	_stop_runtime_timers(true)
 	run_active = false
 	_update_character_visual_state(ending_type)
-	if current_presentation_phase == 5 and roundi(Config.clamp_value(arousal_model.physical)) == 100 \
+	if current_presentation_phase == 4 and roundi(Config.clamp_value(arousal_model.physical)) == 100 \
 			and ending_type in [Config.SUCCESS_ENDING, Config.PHYSICAL_IMBALANCE_FAILURE_ENDING]:
 		set_shooting_tail_active(true)
 		var hold_tween := create_tween()
@@ -1530,7 +1530,7 @@ func _update_phase_debug_label() -> void:
 	phase_debug_label.text = "Phase: %s" % _get_active_phase_id()
 	phase_debug_label.visible = debug_overlay != null and debug_overlay.visible
 	if phase_skip_button != null:
-		var can_skip := _get_active_phase_id() != "phase_2"
+		var can_skip: bool = arousal_model.physical < Config.PHASE_2_PHYSICAL_THRESHOLD
 		phase_skip_button.visible = debug_overlay != null and debug_overlay.visible and can_skip
 		phase_skip_button.disabled = not can_skip
 
@@ -1723,12 +1723,10 @@ func _get_phase_value(property_name: String, fallback: Variant) -> Variant:
 	return fallback
 
 func _get_active_phase_id() -> String:
-	if arousal_model.physical >= Config.PHASE_2_PHYSICAL_THRESHOLD:
-		return "phase_2"
-	return "phase_1"
+	return "phase_%d" % visual_band_to_character_presentation_phase(physical_score_to_visual_band(arousal_model.physical))
 
 
 func _on_phase_2_skip_pressed() -> void:
-	if _get_active_phase_id() == "phase_2":
+	if arousal_model.physical >= Config.PHASE_2_PHYSICAL_THRESHOLD:
 		return
 	_reset_run_at_phase_2_threshold()
