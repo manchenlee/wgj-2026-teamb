@@ -89,12 +89,13 @@ func _test_branches_and_tutorial_returns() -> void:
 	root.add_child(completed_dialogue)
 	await process_frame
 	completed_dialogue._play_fade_in_effect(1.0, 0.0, 1.0)
-	var skips := [0]
-	completed_dialogue.skip_pressed.connect(func() -> void: skips[0] += 1)
+	var game_skips := [0]
+	completed_dialogue.game_requested.connect(func() -> void: game_skips[0] += 1)
 	completed_dialogue._on_skip_pressed()
 	completed_dialogue._on_skip_pressed()
 	completed_dialogue._advance_script()
-	_check(skips[0] == 1 and _step_id(completed_dialogue) == "r37", "Skip during completed-setup dialogue emitted twice or advanced stale dialogue.")
+	await create_timer(0.5).timeout
+	_check(game_skips[0] == 1 and _step_id(completed_dialogue) == "r37", "Skip during completed-setup dialogue did not fade to game once or advanced stale dialogue.")
 	completed_dialogue.queue_free()
 	await process_frame
 
@@ -125,6 +126,7 @@ func _test_skip_and_restart() -> void:
 	opening._play_fade_in_effect(1.0, 0.0, 1.0)
 	opening._on_skip_pressed()
 	opening._on_skip_pressed()
+	await create_timer(0.5).timeout
 	_check(main.current_screen_id == "game", "Skip during post-setup dialogue did not enter gameplay.")
 	await create_timer(0.65).timeout
 	_check(main.current_screen.safe_word == "測試安全詞", "Skip did not preserve the chosen safety word.")

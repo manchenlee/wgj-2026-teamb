@@ -114,6 +114,9 @@ func _on_skip_pressed() -> void:
 	get_viewport().set_input_as_handled()
 	if _transition_requested:
 		return
+	if safe_word_completed:
+		_request_game_transition()
+		return
 	_transition_requested = true
 	if skip_pressed.get_connections().is_empty():
 		get_tree().change_scene_to_file(SAFE_WORD_SCREEN_PATH)
@@ -152,8 +155,7 @@ func _advance_script() -> void:
 				safe_word_requested.emit()
 				return
 			"game":
-				_transition_requested = true
-				_play_ending_fade()
+				_request_game_transition()
 				return
 		if str(current_entry.get("id", "")) == "r42":
 			_active_branch = _tutorial_return_branch
@@ -173,7 +175,10 @@ func _advance_script() -> void:
 		var entry: Dictionary = entry_variant
 		_apply_entry(entry)
 
-func _play_ending_fade() -> void:
+func _request_game_transition() -> void:
+	if _transition_requested:
+		return
+	_transition_requested = true
 	if _ending_fade_tween != null and _ending_fade_tween.is_running():
 		_ending_fade_tween.kill()
 	ending_blackout.visible = true

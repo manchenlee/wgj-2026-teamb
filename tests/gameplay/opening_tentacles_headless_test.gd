@@ -29,6 +29,7 @@ func _run() -> void:
 	_check(finale.ending_blackout.color.a > 0.99 and game_requests[0] == 1, "Game must start after the screen reaches black.")
 	finale.queue_free()
 	await process_frame
+	await _check_skip_to_game_fade()
 	if failures.is_empty():
 		print("Opening tentacles headless test passed.")
 		quit(0)
@@ -36,6 +37,28 @@ func _run() -> void:
 	for failure in failures:
 		push_error(failure)
 	quit(1)
+
+func _check_skip_to_game_fade() -> void:
+	var opening := OPENING_SCENE.instantiate()
+	opening.start_step_id = "r66"
+	opening.safe_word_completed = true
+	root.add_child(opening)
+	await process_frame
+	await create_timer(0.5).timeout
+	var game_requests := [0]
+	var skip_requests := [0]
+	opening.game_requested.connect(func() -> void: game_requests[0] += 1)
+	opening.skip_pressed.connect(func() -> void: skip_requests[0] += 1)
+	opening._on_skip_pressed()
+	opening._on_skip_pressed()
+	await create_timer(0.22).timeout
+	_check(opening.ending_blackout.visible and opening.ending_blackout.color.a > 0.0 and opening.ending_blackout.color.a < 1.0, "Skip must use the same black fade as advancing the last line.")
+	_check(opening.opening_tentacles.visible and opening.dialogue_bubble.visible, "Skip fade must cover tentacles and dialogue together.")
+	_check(game_requests[0] == 0 and skip_requests[0] == 0, "Skip must wait for the fade before requesting game.")
+	await create_timer(0.3).timeout
+	_check(opening.ending_blackout.color.a > 0.99 and game_requests[0] == 1 and skip_requests[0] == 0, "Skip must request game once after reaching black.")
+	opening.queue_free()
+	await process_frame
 
 func _check_interlude(line_id: String, cue_id: String, next_id: String, check_violin: bool) -> void:
 	var opening := OPENING_SCENE.instantiate()
