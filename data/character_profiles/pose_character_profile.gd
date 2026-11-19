@@ -45,18 +45,38 @@ func _init(phase: int = 1) -> void:
 		_:
 			pose_name = "sitting"
 	var root := "res://assets/art/character/%s/" % pose_name
-	var expressions := {
-		ExpressionState.NEUTRAL: {"base_state_key": "overall_init", "face_state_key": "face_neutral"},
-		ExpressionState.POSITIVE: {"base_state_key": "overall_init", "face_state_key": "face_positive"},
-		ExpressionState.PSYCHOLOGICAL_POSITIVE: {"base_state_key": "overall_init", "face_state_key": "face_psychological_positive"},
-		ExpressionState.NEGATIVE: {"base_state_key": "overall_init", "face_state_key": "face_negative"},
-	}
+	var merged_art := pose_name == "sitting" or pose_name == "lying"
+	var expressions: Dictionary
+	var base_textures: Dictionary
+	if merged_art:
+		var psychological_positive_name := "psychological_positive" if pose_name == "sitting" else "smile"
+		base_textures = {
+			"draft": root + "neutral.png",
+			"overall_init": root + "neutral.png",
+			"positive": root + "positive.png",
+			"psychological_positive": root + psychological_positive_name + ".png",
+			"negative": root + "negative.png",
+		}
+		expressions = {
+			ExpressionState.NEUTRAL: {"base_state_key": "overall_init"},
+			ExpressionState.POSITIVE: {"base_state_key": "positive"},
+			ExpressionState.PSYCHOLOGICAL_POSITIVE: {"base_state_key": "psychological_positive"},
+			ExpressionState.NEGATIVE: {"base_state_key": "negative"},
+		}
+	else:
+		base_textures = {"draft": root + "complete.png", "overall_init": root + "complete.png"}
+		expressions = {
+			ExpressionState.NEUTRAL: {"base_state_key": "overall_init", "face_state_key": "face_neutral"},
+			ExpressionState.POSITIVE: {"base_state_key": "overall_init", "face_state_key": "face_positive"},
+			ExpressionState.PSYCHOLOGICAL_POSITIVE: {"base_state_key": "overall_init", "face_state_key": "face_psychological_positive"},
+			ExpressionState.NEGATIVE: {"base_state_key": "overall_init", "face_state_key": "face_negative"},
+		}
 	var mappings: Dictionary = {}
 	for band in range(5):
 		mappings[band] = expressions.duplicate(true)
 	super._init(
 		"phase_%d_profile" % presentation_phase,
-		{"draft": root + "complete.png", "overall_init": root + "complete.png"},
+		base_textures,
 		{}, {},
 		PROMPT_ANCHOR_LAYOUT,
 		INTERACTION_SPOT_ANCHOR_LAYOUT,
@@ -66,6 +86,8 @@ func _init(phase: int = 1) -> void:
 	)
 
 func get_face_texture_paths() -> Dictionary:
+	if pose_name == "sitting" or pose_name == "lying":
+		return {}
 	var root := "res://assets/art/character/%s/" % pose_name
 	return {
 		"face_neutral": root + "face_neutral.png",

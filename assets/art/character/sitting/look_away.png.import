@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b2fupt6hp5oxa"
-path="res://.godot/imported/face_negative.png-7efc0adb8a6a37f98077ed28026ab2f9.ctex"
+uid="uid://bo3wahr756wl0"
+path="res://.godot/imported/look_away.png-3647f10db791ea3819644a06352f0590.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/character/lying/face_negative.png"
-dest_files=["res://.godot/imported/face_negative.png-7efc0adb8a6a37f98077ed28026ab2f9.ctex"]
+source_file="res://assets/art/character/sitting/look_away.png"
+dest_files=["res://.godot/imported/look_away.png-3647f10db791ea3819644a06352f0590.ctex"]
 
 [params]
 

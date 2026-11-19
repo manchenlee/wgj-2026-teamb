@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cb7w27w34vxij"
-path="res://.godot/imported/face_neutral.png-0f41eba1b970daed4ba0fafbf8cbeb42.ctex"
+uid="uid://c63w6lbj7ois4"
+path="res://.godot/imported/expressionless.png-786c3553a1d5174f6003a6e740fd356c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/character/sitting/face_neutral.png"
-dest_files=["res://.godot/imported/face_neutral.png-0f41eba1b970daed4ba0fafbf8cbeb42.ctex"]
+source_file="res://assets/art/character/lying/expressionless.png"
+dest_files=["res://.godot/imported/expressionless.png-786c3553a1d5174f6003a6e740fd356c.ctex"]
 
 [params]
 

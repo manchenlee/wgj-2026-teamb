@@ -45,8 +45,8 @@ assets/art/character/{pose}/{subject}_{index}_{state}.png
 範例：
 
 ```text
-assets/art/character/sitting/complete.png
-assets/art/character/sitting/face_negative.png
+assets/art/character/sitting/neutral.png
+assets/art/character/sitting/negative.png
 assets/art/character/sitting/tail_1.png
 ```
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bcc5fckakmht2"
-path="res://.godot/imported/face_positive.png-9b83be4b4013a64a99a065f820463c60.ctex"
+uid="uid://ba2wk5r7ftqeq"
+path="res://.godot/imported/surprised_no_highlight.png-3345a45147bb28609167fb0cbc4d70b4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/character/sitting/face_positive.png"
-dest_files=["res://.godot/imported/face_positive.png-9b83be4b4013a64a99a065f820463c60.ctex"]
+source_file="res://assets/art/character/sitting/surprised_no_highlight.png"
+dest_files=["res://.godot/imported/surprised_no_highlight.png-3345a45147bb28609167fb0cbc4d70b4.ctex"]
 
 [params]
 

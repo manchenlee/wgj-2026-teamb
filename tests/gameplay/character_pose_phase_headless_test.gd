@@ -16,14 +16,15 @@ func _run() -> void:
         _check(CONTROLLER.physical_score_to_visual_band(entry[0]) == entry[1], "Incorrect boundary at %s" % entry[0])
     var phase_one = POSE_PROFILE.new(1)
     _check(phase_one.pose_name == "sitting", "Phase 1 does not use the sitting pose fallback.")
-    _check(phase_one.get_texture_path("overall_init") == "res://assets/art/character/sitting/complete.png", "Phase 1 fallback points to another pose.")
+    _check(phase_one.get_texture_path("overall_init") == "res://assets/art/character/sitting/neutral.png", "Phase 1 fallback points to another pose.")
+    _check(phase_one.get_face_texture_paths().is_empty(), "Sitting still loads a separate face.")
     _check(POSE_PROFILE.new(3).pose_name == "standing", "Phase 3 does not use the standing pose.")
     _check(POSE_PROFILE.new(3).get_texture_path("overall_init") == "res://assets/art/character/standing/complete.png", "Phase 3 loads the wrong character art.")
     _check(POSE_PROFILE.new(3).get_face_texture_paths()["face_positive"] == "res://assets/art/character/standing/face_positive.png", "Phase 3 loads the wrong positive face.")
     _check(POSE_PROFILE.new(4).pose_name == "prone", "Phase 4 does not use the prone pose.")
     _check(POSE_PROFILE.new(5).pose_name == "lying", "Phase 5 does not use the lying pose.")
-    _check(POSE_PROFILE.new(5).get_texture_path("overall_init") == "res://assets/art/character/lying/complete.png", "Phase 5 loads the wrong character art.")
-    _check(POSE_PROFILE.new(5).get_face_texture_paths()["face_positive"] == "res://assets/art/character/lying/face_positive.png", "Phase 5 loads the wrong positive face.")
+    _check(POSE_PROFILE.new(5).get_texture_path("overall_init") == "res://assets/art/character/lying/neutral.png", "Phase 5 loads the wrong character art.")
+    _check(POSE_PROFILE.new(5).get_face_texture_paths().is_empty(), "Lying still loads a separate face.")
     for phase in [1, 2]:
         var sitting_profile = POSE_PROFILE.new(phase)
         for index in range(3):
@@ -53,8 +54,10 @@ func _run() -> void:
         "Dialogue is drawn below the tentacles.")
     _check(game.character_area.get_node("PromptLayer").z_index > game.tentacle_layer.z_index,
         "Physiological notes are drawn below the tentacles.")
-    game.reset_run()
-    _check(game.current_presentation_phase == 2, "Initial physiology 20 should use Phase 2.")
+    game.current_presentation_phase = 1
+    game.active_character_profile = null
+    game._sync_character_presentation_phase_for_visual_band(1)
+    _check(game.current_presentation_phase == 2, "Visual band 1 should use Phase 2.")
     game.arousal_model.physical = 0.0
     game._sync_physiological_visual_band()
     game._advance_tail_animation(0.1)
@@ -102,11 +105,11 @@ func _run() -> void:
     game.set_shooting_tail_active(false)
     var pose_texture: Texture2D = game.background_placeholder.texture
     var token: int = game.request_character_expression(CONTROLLER.CharacterExpressionSource.PSYCHOLOGICAL, PROFILE.ExpressionState.PSYCHOLOGICAL_POSITIVE)
-    _check(game.resolve_character_visual_state().face_state_key == "face_psychological_positive", "Correct psychology choice did not select its happy face.")
-    _check(game.background_placeholder.texture == pose_texture, "Psychology expression changed pose.")
-    _check(game.phase_2_face_layer.texture != null, "Happy face art was not displayed.")
+    _check(game.resolve_character_visual_state().base_state_key == "psychological_positive", "Correct psychology choice did not select its happy art.")
+    _check(game.background_placeholder.texture != pose_texture, "Psychology expression did not change the merged image.")
+    _check(game.phase_2_face_layer.texture == null, "Lying still displays a separate face.")
     game.clear_character_expression(CONTROLLER.CharacterExpressionSource.PSYCHOLOGICAL, token)
-    _check(game.resolve_character_visual_state().face_state_key == "face_neutral", "Clearing psychology result did not restore neutral face.")
+    _check(game.resolve_character_visual_state().base_state_key == "overall_init", "Clearing psychology result did not restore neutral art.")
     _check(game._tail_frames.size() == 3, "Phase 5 tail does not have three frames.")
     _check(game.spot_manager._interaction_mask != null, "White mask was not supplied to note placement.")
     _check(game.background_placeholder.texture.resource_path != game.active_character_profile.get_interaction_mask_path(), "Mask was displayed as a normal pose layer.")
@@ -114,7 +117,7 @@ func _run() -> void:
     game._sync_physiological_visual_band()
     _check(game.current_presentation_phase == 5, "Phase 5 pose regressed after decay.")
     game.reset_run()
-    _check(game.current_presentation_phase == 2, "New run did not reset progression to its starting physiology.")
+    _check(game.current_presentation_phase == 1, "New run did not reset progression to its starting physiology.")
     game.queue_free()
     await process_frame
     if _failures.is_empty():

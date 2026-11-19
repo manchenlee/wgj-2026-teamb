@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://efdevljnv8te"
-path="res://.godot/imported/face_psychological_positive.png-62ace9abe898ad8c2a7e11a63994430d.ctex"
+uid="uid://2xnsy74h5ynq"
+path="res://.godot/imported/negative.png-d852133136a04a3c19fef0324d6b7454.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/character/sitting/face_psychological_positive.png"
-dest_files=["res://.godot/imported/face_psychological_positive.png-62ace9abe898ad8c2a7e11a63994430d.ctex"]
+source_file="res://assets/art/character/lying/negative.png"
+dest_files=["res://.godot/imported/negative.png-d852133136a04a3c19fef0324d6b7454.ctex"]
 
 [params]
 
