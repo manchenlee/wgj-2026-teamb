@@ -189,6 +189,10 @@ func _test_safe_word_threshold_flow() -> void:
 	root.add_child(game)
 	await process_frame
 	game.set_interaction_mode(1)
+	game.arousal_model.physical = 25.0
+	game._sync_physiological_visual_band()
+	_assert(game.current_presentation_phase == 2 and not game._safe_word_threshold_reached,
+		"Standing at physical 25 triggered the safe-word threshold.")
 	game.arousal_model.physical = 49.0
 	for index in range(50):
 		game.psychological_dialogue_controller.reset()
@@ -229,7 +233,8 @@ func _test_safe_word_threshold_flow() -> void:
 	_assert(not game._safe_word_threshold_reached and not game._first_safe_word_shown, "New run retained the previous threshold event.")
 	game.start_direct_in_phase_2()
 	safe_condition = game.psychological_dialogue_controller.current_entry.get("condition", {})
-	_assert(safe_condition.get("event", "") == "safe_word" and game._first_safe_word_shown, "Direct start at physical 50 did not show the first safe-word dialogue.")
+	_assert(game.arousal_model.physical == 25.0 and not game._safe_word_threshold_reached
+			and safe_condition.get("event", "") != "safe_word", "Direct start at phase 2 triggered the safe word before physical 50.")
 	game.reset_run()
 	game.set_interaction_mode(1)
 	game.arousal_model.physical = 100.0

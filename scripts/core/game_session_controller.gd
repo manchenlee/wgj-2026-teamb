@@ -1151,7 +1151,7 @@ func _on_physiological_spot_failed(_progress_ratio: float, _penalty: float) -> v
 
 func _track_safe_word_threshold() -> bool:
 	if not run_active or _safe_word_threshold_reached \
-			or arousal_model.physical < Config.PHASE_2_PHYSICAL_THRESHOLD:
+			or arousal_model.physical < Config.SAFE_WORD_PHYSICAL_THRESHOLD:
 		return false
 	_safe_word_threshold_reached = true
 	_safe_word_pending = psychological_dialogue_controller.has_safe_word_event()

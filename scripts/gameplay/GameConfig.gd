@@ -3,6 +3,7 @@ extends RefCounted
 
 const MAX_VALUE: float = 100.0
 const PHASE_2_PHYSICAL_THRESHOLD: float = 25.0
+const SAFE_WORD_PHYSICAL_THRESHOLD: float = 50.0
 
 # Temporary ending policy. Set false to restore the legacy peak-depletion
 # predicate without changing peak calculation or any of its other consumers.
