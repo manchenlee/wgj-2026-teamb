@@ -133,6 +133,8 @@ var _tail_frame_index: int = 0
 var _tail_elapsed: float = 0.0
 var _tail_frame_duration: float = 0.0
 var _tail_rng := RandomNumberGenerator.new()
+var _chart_run_rng := RandomNumberGenerator.new()
+var _last_chart_run_seed: int = -1
 const TAIL_TIME_UNIT: float = 0.35
 const ENDING_SHOOTING_TAIL_HOLD_SECONDS: float = 0.35
 const EXPRESSION_REACTION_DURATION: float = 0.5
@@ -181,6 +183,7 @@ func _ready() -> void:
 		return
 
 	_tail_rng.randomize()
+	_chart_run_rng.randomize()
 	character_area.set_body_visual_anchor(background_anchor)
 	set_process_unhandled_input(true)
 	choice_panel.choice_selected.connect(_on_choice_selected)
@@ -1052,6 +1055,8 @@ func _reset_run_for_phase_index(phase_index: int) -> void:
 	interaction_mode = InteractionMode.PSYCHOLOGICAL
 	_last_spot_telemetry = {}
 	_stop_runtime_timers()
+	if spot_manager != null:
+		spot_manager.restart_chart_run(_next_chart_run_seed())
 	dialogue_panel.clear_history()
 	_apply_phase_by_index(phase_index)
 	arousal_model.reset()
@@ -1068,6 +1073,17 @@ func _reset_run_for_phase_index(phase_index: int) -> void:
 	_set_interaction_mode(interaction_mode, true)
 	status_hud.update_combo(current_combo)
 	_update_presentation()
+
+
+func _next_chart_run_seed() -> int:
+	var seed_text := OS.get_environment("VIOLIN_CHART_SEED").strip_edges() if OS.is_debug_build() else ""
+	if seed_text.is_valid_int():
+		return int(seed_text)
+	var seed := _chart_run_rng.randi()
+	while seed == _last_chart_run_seed:
+		seed = _chart_run_rng.randi()
+	_last_chart_run_seed = seed
+	return seed
 
 # ---------------------------------------------------------------------------
 # Debug helpers

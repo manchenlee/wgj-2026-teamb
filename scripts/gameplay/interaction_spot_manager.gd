@@ -210,6 +210,22 @@ func _select_chart_variant(loop_index: int) -> void:
 	_begin_chart_loop_stats()
 
 
+func restart_chart_run(run_seed: int) -> void:
+	if not _chart_enabled:
+		return
+	_chart_run_seed = run_seed
+	_chart_loop_index = 0
+	_chart_next_index = 0
+	_chart_last_position = -1.0
+	_chart_skip_counts.clear()
+	_chart_last_skip = ""
+	_chart_loop_stats.clear()
+	if _chart_variants.is_empty():
+		_begin_chart_loop_stats()
+	else:
+		_select_chart_variant(0)
+
+
 func _begin_chart_loop_stats() -> void:
 	if not _chart_enabled:
 		return

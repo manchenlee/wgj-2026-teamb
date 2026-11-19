@@ -158,10 +158,12 @@ func _context() -> Dictionary:
 
 func _test_deterministic_placement() -> void:
 	var positions: Array[Vector2] = []
-	for attempt in range(2):
+	for seed in [2026, 2026, 2034]:
 		var context := _context()
 		var manager := context["manager"] as InteractionSpotManager
 		_check(manager.load_chart_variant_bank("res://data/violin_interaction_chart_moderate_variants.json", "Moderate", 2026), "Placement test bank failed")
+		manager.restart_chart_run(seed)
+		_check(manager.get_chart_debug_state()["variant_index"] == 0, "Placement seed changed the beat variant")
 		manager.start()
 		var event: Dictionary = manager._chart_events[0]
 		manager.advance_chart(float(event["spawn_time"]) - 0.1)
@@ -173,7 +175,8 @@ func _test_deterministic_placement() -> void:
 		(context["layer"] as Control).queue_free()
 		(context["anchor"] as Control).queue_free()
 		(context["timer"] as Timer).queue_free()
-	_check(positions.size() == 2 and positions[0] == positions[1], "Same seed/event produced different placement")
+	_check(positions.size() == 3 and positions[0] == positions[1], "Same seed/event produced different placement")
+	_check(positions.size() == 3 and positions[0] != positions[2], "New run reused the same note position")
 
 
 func _test_psychological_loop_wrap() -> void:
