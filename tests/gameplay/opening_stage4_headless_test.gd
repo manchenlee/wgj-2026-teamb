@@ -79,6 +79,7 @@ func _test_branches_and_tutorial_returns() -> void:
 	resumed.game_requested.connect(func() -> void: game_requests[0] += 1)
 	resumed._advance_script()
 	resumed._advance_script()
+	await create_timer(0.5).timeout
 	_check(game_requests[0] == 1, "Start Game action emitted more than once.")
 	resumed.queue_free()
 	await process_frame

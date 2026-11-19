@@ -53,6 +53,15 @@
       }
     },
     {
+      "id": "r9",
+      "source_row": 9,
+      "auto_interlude": true,
+      "character": {
+        "base": "res://assets/art/character/normal_violin.png",
+        "offset": [150, 0]
+      }
+    },
+    {
       "id": "r10",
       "speaker": "主角",
       "text": "哇啊！好、好耀眼的光芒——咦？",
@@ -62,6 +71,7 @@
         "expression": "surprised_highlight",
         "clear_layers": true
       },
+      "tentacles": "fade_out",
       "effects": [
         {
           "type": "flash",
@@ -207,6 +217,11 @@
       }
     },
     {
+      "id": "r25",
+      "source_row": 25,
+      "auto_interlude": true
+    },
+    {
       "id": "r26",
       "speaker": "主角",
       "text": "（那些事情？……啊，他說的是調音吧？）",
@@ -214,7 +229,8 @@
       "character": {
         "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
-      }
+      },
+      "tentacles": "fade_out"
     },
     {
       "id": "r27",
@@ -593,6 +609,7 @@
         "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       },
+      "tentacles": "fade_in",
       "action": "game"
     }
   ]

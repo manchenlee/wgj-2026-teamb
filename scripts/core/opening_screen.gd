@@ -12,6 +12,7 @@ const DEFAULT_OPENING_EXPRESSION := "neutral"
 const CHOICE_BUTTON_SCENE := preload("res://scenes/components/DialogueChoiceButton.tscn")
 const CHOICE_BUTTON_WIDTH := 720.0
 const CHOICE_HORIZONTAL_INSETS := 144.0
+const ENDING_FADE_DURATION := 0.45
 
 enum TutorialReturn { FIRST_BRANCH, SECOND_BRANCH }
 
@@ -20,6 +21,7 @@ enum TutorialReturn { FIRST_BRANCH, SECOND_BRANCH }
 @onready var character_stage: Control = $CharacterStage
 @onready var character_glow_root: Control = $CharacterStage/CharacterPivot/GlowRoot
 @onready var character_root: Control = $CharacterStage/CharacterPivot/CharacterRoot
+@onready var opening_tentacles: TextureRect = $OpeningTentacles
 @onready var dialogue_bubble: CurrentSpeechBubble = $DialogueUi/CurrentSpeechBubble
 @onready var speaker_label: Label = $DialogueUi/CurrentSpeechBubble/SpeakerLabel
 @onready var dialogue_label: Label = $DialogueUi/CurrentSpeechBubble/MarginContainer/TextLabel
@@ -45,6 +47,10 @@ var _character_texture_cache: Dictionary = {}
 var _shake_tween: Tween
 var _glow_tween: Tween
 var _fade_tween: Tween
+var _tentacles_tween: Tween
+var _interlude_tween: Tween
+var _ending_fade_tween: Tween
+var _interlude_running := false
 var _skip_hover_tween: Tween
 var _pivot_rest_position := Vector2.ZERO
 var _current_character_offset := Vector2.ZERO
@@ -96,7 +102,9 @@ func _input(event: InputEvent) -> void:
 
 func advance_input_handled() -> void:
 	get_viewport().set_input_as_handled()
-	if dialogue_bubble.is_streaming():
+	if _interlude_running:
+		return
+	if dialogue_bubble.visible and dialogue_bubble.is_streaming():
 		dialogue_bubble.finish_dialogue_stream()
 		return
 	_advance_script()
@@ -144,7 +152,7 @@ func _advance_script() -> void:
 				return
 			"game":
 				_transition_requested = true
-				game_requested.emit()
+				_play_ending_fade()
 				return
 		if str(current_entry.get("id", "")) == "r42":
 			_active_branch = _tutorial_return_branch
@@ -163,6 +171,13 @@ func _advance_script() -> void:
 	if entry_variant is Dictionary:
 		var entry: Dictionary = entry_variant
 		_apply_entry(entry)
+
+func _play_ending_fade() -> void:
+	if _ending_fade_tween != null and _ending_fade_tween.is_running():
+		_ending_fade_tween.kill()
+	_ending_fade_tween = create_tween().set_trans(Tween.TRANS_SINE)
+	_ending_fade_tween.tween_property(self, "modulate:a", 0.0, ENDING_FADE_DURATION)
+	_ending_fade_tween.tween_callback(func() -> void: game_requested.emit())
 
 func _load_opening_script() -> void:
 	_entries.clear()
@@ -198,13 +213,52 @@ func _apply_entry(entry: Dictionary) -> void:
 	if bool(entry.get("non_dialogue", false)):
 		_advance_script()
 		return
+	if _interlude_running and not bool(entry.get("auto_interlude", false)) and _interlude_tween != null:
+		_interlude_tween.kill()
 	_reset_effect_state()
 	_apply_background(str(entry.get("background", DEFAULT_BACKGROUND_PATH)))
 	_apply_backdrop_tint(entry.get("backdrop_tint", null))
 	_apply_character(entry.get("character", {}))
-	_apply_dialogue(entry)
+	if bool(entry.get("auto_interlude", false)):
+		_show_entry_choices(entry)
+		_play_tentacle_interlude(str(entry.get("id", "")))
+		return
+	_interlude_running = false
+	dialogue_bubble.modulate.a = 1.0
+	dialogue_bubble.visible = not bool(entry.get("hide_dialogue", false))
+	if dialogue_bubble.visible:
+		_apply_dialogue(entry)
+	_apply_tentacles(str(entry.get("tentacles", "")))
 	_apply_effects(entry.get("effects", []))
 	_show_entry_choices(entry)
+
+func _play_tentacle_interlude(step_id: String) -> void:
+	if _interlude_tween != null and _interlude_tween.is_running():
+		_interlude_tween.kill()
+	_interlude_running = true
+	dialogue_bubble.visible = true
+	dialogue_bubble.finish_dialogue_stream()
+	_interlude_tween = create_tween()
+	_interlude_tween.tween_property(dialogue_bubble, "modulate:a", 0.0, 0.2)
+	_interlude_tween.tween_callback(func() -> void:
+		if _current_step_id() != step_id:
+			return
+		dialogue_bubble.visible = false
+		dialogue_bubble.modulate.a = 1.0
+		_apply_tentacles("show")
+	)
+	_interlude_tween.tween_interval(1.0)
+	_interlude_tween.tween_callback(func() -> void:
+		if _transition_requested or _current_step_id() != step_id:
+			return
+		_interlude_running = false
+		_advance_script()
+	)
+
+func _current_step_id() -> String:
+	if _current_entry_index < 0 or _current_entry_index >= _entries.size():
+		return ""
+	return str((_entries[_current_entry_index] as Dictionary).get("id", ""))
 
 func _find_step_index(step_id: String) -> int:
 	for index in range(_entries.size()):
@@ -279,6 +333,27 @@ func _apply_dialogue(entry: Dictionary) -> void:
 	var speaker_text := str(entry.get("speaker", ""))
 	dialogue_bubble.set_speaker_text(speaker_text)
 	dialogue_bubble.set_dialogue_text(str(entry.get("text", "")))
+
+func _apply_tentacles(cue: String) -> void:
+	if _tentacles_tween != null and _tentacles_tween.is_running():
+		_tentacles_tween.kill()
+	match cue:
+		"show", "fade_in":
+			opening_tentacles.visible = true
+			opening_tentacles.modulate.a = 0.0
+			opening_tentacles.position = Vector2(0.0, 36.0) if cue == "show" else Vector2.ZERO
+			_tentacles_tween = create_tween().set_parallel(true)
+			_tentacles_tween.tween_property(opening_tentacles, "modulate:a", 1.0, 0.45)
+			_tentacles_tween.tween_property(opening_tentacles, "position", Vector2.ZERO, 0.45)
+		"fade_out":
+			if opening_tentacles.visible:
+				_tentacles_tween = create_tween()
+				_tentacles_tween.tween_property(opening_tentacles, "modulate:a", 0.0, 0.45)
+				_tentacles_tween.tween_callback(func() -> void: opening_tentacles.visible = false)
+		_:
+			opening_tentacles.visible = false
+			opening_tentacles.modulate.a = 0.0
+			opening_tentacles.position = Vector2.ZERO
 
 func _apply_character(character_data_variant: Variant) -> void:
 	if not (character_data_variant is Dictionary):
