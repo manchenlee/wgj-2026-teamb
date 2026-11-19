@@ -27,6 +27,7 @@ enum TutorialReturn { FIRST_BRANCH, SECOND_BRANCH }
 @onready var dialogue_label: Label = $DialogueUi/CurrentSpeechBubble/MarginContainer/TextLabel
 @onready var _skip_button_root: Control = $SkipButtonRoot
 @onready var _skip_button: Button = $SkipButtonRoot/SkipButton
+@onready var ending_blackout: ColorRect = $EndingBlackout
 
 var _entries: Array = []
 var _current_entry_index := -1
@@ -175,8 +176,10 @@ func _advance_script() -> void:
 func _play_ending_fade() -> void:
 	if _ending_fade_tween != null and _ending_fade_tween.is_running():
 		_ending_fade_tween.kill()
+	ending_blackout.visible = true
+	ending_blackout.color = Color(0.0, 0.0, 0.0, 0.0)
 	_ending_fade_tween = create_tween().set_trans(Tween.TRANS_SINE)
-	_ending_fade_tween.tween_property(self, "modulate:a", 0.0, ENDING_FADE_DURATION)
+	_ending_fade_tween.tween_property(ending_blackout, "color:a", 1.0, ENDING_FADE_DURATION)
 	_ending_fade_tween.tween_callback(func() -> void: game_requested.emit())
 
 func _load_opening_script() -> void:
@@ -338,6 +341,8 @@ func _apply_tentacles(cue: String) -> void:
 	if _tentacles_tween != null and _tentacles_tween.is_running():
 		_tentacles_tween.kill()
 	match cue:
+		"hold":
+			pass
 		"show", "fade_in":
 			opening_tentacles.visible = true
 			opening_tentacles.modulate.a = 0.0

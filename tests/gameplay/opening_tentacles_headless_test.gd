@@ -8,7 +8,7 @@ func _initialize() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
-	await _check_interlude("r8", "r9", "r10", true)
+	await _check_interlude("r7", "r9", "r8", true)
 	await _check_interlude("r24", "r25", "r26", false)
 	var finale := OPENING_SCENE.instantiate()
 	finale.start_step_id = "r66"
@@ -21,11 +21,12 @@ func _run() -> void:
 	finale.dialogue_bubble.finish_dialogue_stream()
 	finale.advance_input_handled()
 	await create_timer(0.22).timeout
-	_check(finale.modulate.a > 0.0 and finale.modulate.a < 1.0, "Final fade must include the whole opening screen.")
-	_check(finale.opening_tentacles.visible and finale.dialogue_bubble.visible, "Tentacles and dialogue must remain in the shared fade.")
+	_check(finale.ending_blackout.visible and finale.ending_blackout.color.a > 0.0 and finale.ending_blackout.color.a < 1.0, "Final fade must cover the whole opening screen with black.")
+	_check(finale.ending_blackout.z_index > finale.opening_tentacles.z_index and finale.ending_blackout.z_index > finale.get_node("DialogueUi").z_index, "Blackout must cover tentacles and dialogue together.")
+	_check(finale.opening_tentacles.visible and finale.dialogue_bubble.visible and finale.modulate.a == 1.0, "Final fade must keep the opening opaque behind the blackout.")
 	_check(game_requests[0] == 0, "Game must wait for the final fade.")
 	await create_timer(0.3).timeout
-	_check(finale.modulate.a < 0.01 and game_requests[0] == 1, "Game must start after the shared fade.")
+	_check(finale.ending_blackout.color.a > 0.99 and game_requests[0] == 1, "Game must start after the screen reaches black.")
 	finale.queue_free()
 	await process_frame
 	if failures.is_empty():
@@ -57,7 +58,13 @@ func _check_interlude(line_id: String, cue_id: String, next_id: String, check_vi
 	await create_timer(1.05).timeout
 	_check(_step_id(opening) == next_id and opening.dialogue_bubble.visible, "%s must automatically show the next dialogue." % cue_id)
 	await create_timer(0.5).timeout
-	_check(not opening.opening_tentacles.visible, "Tentacles must fade out when %s appears." % next_id)
+	if check_violin:
+		_check(opening.opening_tentacles.visible and opening.opening_tentacles.modulate.a > 0.99, "Tentacles must remain visible during r8.")
+		_check(opening.character_root.position == character_position and opening._base_sprite.texture == character_texture, "Normal violin must stay in place during r8.")
+		opening.advance_input_handled()
+		_check(_step_id(opening) == "r10", "Clicking r8 must start the violin transformation.")
+		await create_timer(0.5).timeout
+	_check(not opening.opening_tentacles.visible, "Tentacles must fade out with the transformation or the second dialogue return.")
 	opening.queue_free()
 	await process_frame
 
