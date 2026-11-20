@@ -51,6 +51,7 @@ func _run() -> void:
 	await _test_rub_timeout_and_failure()
 	await _test_rub_suspend_resume()
 	await _test_rub_force_resolution()
+	await _test_expression_hit_signals()
 	await _test_ordered_progression_and_fast_crossing()
 	await _test_slide_drag_continues_from_unfinished_segment()
 	await _test_slide_resume_from_next_checkpoint()
@@ -107,6 +108,29 @@ func _make_rub_note(lifetime: float = 30.0, required_distance: float = 600.0) ->
 	})
 	root.add_child(note)
 	return note
+
+
+func _test_expression_hit_signals() -> void:
+	var manager := SPOT_MANAGER_SCRIPT.new()
+	manager._active = true
+	var slide := _make_spot()
+	var rub := _make_rub_note()
+	var click := _make_click_note()
+	var counts := {"hits": 0}
+	manager.physiological_spot_hit.connect(func() -> void: counts.hits += 1)
+	manager._on_spot_audio_note_reached(slide)
+	manager._on_spot_audio_motion_valid(rub)
+	manager._on_spot_audio_motion_valid(rub)
+	manager._on_spot_audio_note_reached(click)
+	_assert(counts.hits == 3, "Slide checkpoints and rub motion did not trigger positive hits independently of click audio.")
+	manager._suspended = true
+	manager._on_spot_audio_note_reached(slide)
+	manager._on_spot_audio_motion_valid(rub)
+	_assert(counts.hits == 3, "Suspended notes triggered a positive hit.")
+	slide.queue_free()
+	rub.queue_free()
+	click.queue_free()
+	await process_frame
 
 
 func _mouse_button_event(position: Vector2, pressed: bool, button_index: MouseButton = MOUSE_BUTTON_LEFT) -> InputEventMouseButton:

@@ -121,6 +121,14 @@ func _test_stale_token_and_source_isolation() -> void:
 
 func _test_physiological_spot_paths() -> void:
 	var game = await _create_game()
+	game.spot_manager.physiological_spot_hit.emit()
+	_assert(game.current_expression_state == POSITIVE, "Slide or rub hit did not show positive face.")
+	game._advance_character_expression_reactions(0.4)
+	game.spot_manager.physiological_spot_hit.emit()
+	game._advance_character_expression_reactions(0.4)
+	_assert(game.current_expression_state == POSITIVE, "Repeated slide or rub hit did not refresh positive reaction.")
+	game._advance_character_expression_reactions(0.11)
+	_assert(game.current_expression_state == NEUTRAL, "Slide or rub hit reaction did not return to neutral.")
 	game._on_physiological_spot_completed()
 	_assert(game.current_expression_state == POSITIVE, "Completed spot did not show positive face.")
 	game._advance_character_expression_reactions(0.49)

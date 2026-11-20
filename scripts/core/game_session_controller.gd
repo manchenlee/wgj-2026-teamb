@@ -243,6 +243,7 @@ func _setup_spot_manager() -> void:
 	spot_manager.spot_telemetry_updated.connect(_on_spot_telemetry_updated)
 	spot_manager.physiological_spot_completed.connect(_on_physiological_spot_completed)
 	spot_manager.physiological_spot_failed.connect(_on_physiological_spot_failed)
+	spot_manager.physiological_spot_hit.connect(_on_physiological_spot_hit)
 	_configure_pose_layers()
 
 
@@ -1150,8 +1151,12 @@ func _on_spot_telemetry_updated(telemetry: Dictionary) -> void:
 		debug_overlay.sync_live_readout(get_debug_state())
 
 
-func _on_physiological_spot_completed() -> void:
+func _on_physiological_spot_hit() -> void:
 	_show_timed_character_expression(CharacterExpressionSource.PHYSIOLOGICAL, PhaseCharacterProfileClass.ExpressionState.POSITIVE)
+
+
+func _on_physiological_spot_completed() -> void:
+	_on_physiological_spot_hit()
 	current_combo += 1
 	max_combo = maxi(max_combo, current_combo)
 	status_hud.update_combo(current_combo, true)

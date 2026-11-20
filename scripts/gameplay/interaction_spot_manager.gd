@@ -30,6 +30,7 @@ signal spot_scrub_ended()
 signal spot_telemetry_updated(telemetry: Dictionary)
 signal physiological_spot_completed()
 signal physiological_spot_failed(progress_ratio: float, penalty: float)
+signal physiological_spot_hit()
 signal click_audio_requested(pitch: int)
 signal slide_audio_requested(pitch: int)
 signal rub_audio_motion(source_id: int, pitch: int)
@@ -996,6 +997,7 @@ func _on_spot_audio_note_reached(spot: InteractionNote) -> void:
 		var pitch := pitches[reached_index] if reached_index >= 0 and reached_index < pitches.size() else -1
 		_count_chart_pitch_trigger(spot)
 		slide_audio_requested.emit(pitch)
+		physiological_spot_hit.emit()
 
 
 func _on_spot_audio_motion_valid(spot: InteractionNote) -> void:
@@ -1004,6 +1006,7 @@ func _on_spot_audio_motion_valid(spot: InteractionNote) -> void:
 			_count_chart_pitch_trigger(spot)
 			spot.set_meta("rub_pitch_triggered", true)
 		rub_audio_motion.emit(spot.get_instance_id(), int(spot.get_meta("bound_pitch", -1)))
+		physiological_spot_hit.emit()
 
 
 func _count_chart_pitch_trigger(spot: InteractionNote) -> void:
