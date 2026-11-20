@@ -13,11 +13,11 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	for phase in [1, 4]:
+	for phase in range(1, 5):
 		var profile = POSE_PROFILE.new(phase)
 		_check(profile.get_face_texture_paths().is_empty(), "Merged pose still loads a separate face layer: %d" % phase)
 		_check(profile.get_texture_path("overall_init").ends_with("default.png"),
-			"Shy default art is not used for the starting state: %d" % phase)
+			"Default pose art is not used for the starting state: %d" % phase)
 		var neutral_path: String = "res://assets/art/character/%s/neutral.png" % profile.pose_name
 		_check(ResourceLoader.exists(neutral_path), "Dialogue neutral art is missing: %s" % neutral_path)
 		for expression in [PROFILE.ExpressionState.NEUTRAL, PROFILE.ExpressionState.POSITIVE,
@@ -29,8 +29,6 @@ func _run() -> void:
 	_check(POSE_PROFILE.new(4).get_texture_path("psychological_positive") ==
 		"res://assets/art/character/lying/psychological_positive.png",
 		"Lying psychological reaction does not use its dedicated image.")
-	_check(not POSE_PROFILE.new(2).get_face_texture_paths().is_empty(), "Standing face layers were removed.")
-
 	var game = GAME_SCREEN.instantiate()
 	root.add_child(game)
 	await process_frame
@@ -41,6 +39,20 @@ func _run() -> void:
 	_check(game.background_placeholder.texture == game.character_visual_textures["overall_init"],
 		"Sitting neutral merged image was not displayed.")
 	_check(game.phase_2_face_layer.texture == null, "Sitting face layer is still visible.")
+	_check_expression(game, PROFILE.ExpressionState.POSITIVE, "positive")
+	_check_expression(game, PROFILE.ExpressionState.PSYCHOLOGICAL_POSITIVE, "psychological_positive")
+	_check_expression(game, PROFILE.ExpressionState.NEGATIVE, "negative")
+
+	game.arousal_model.physical = 25.0
+	game._sync_physiological_visual_band()
+	_check(game.active_character_profile.pose_name == "standing", "Phase 2 is not standing.")
+	_check_expression(game, PROFILE.ExpressionState.POSITIVE, "positive")
+	_check_expression(game, PROFILE.ExpressionState.PSYCHOLOGICAL_POSITIVE, "psychological_positive")
+	_check_expression(game, PROFILE.ExpressionState.NEGATIVE, "negative")
+
+	game.arousal_model.physical = 50.0
+	game._sync_physiological_visual_band()
+	_check(game.active_character_profile.pose_name == "prone", "Phase 3 is not prone.")
 	_check_expression(game, PROFILE.ExpressionState.POSITIVE, "positive")
 	_check_expression(game, PROFILE.ExpressionState.PSYCHOLOGICAL_POSITIVE, "psychological_positive")
 	_check_expression(game, PROFILE.ExpressionState.NEGATIVE, "negative")

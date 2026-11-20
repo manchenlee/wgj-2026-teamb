@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://xbny4wp8amen"
-path="res://.godot/imported/face_negative.png-0f4a5f5cd7b94cc2c65e396d8e3faba9.ctex"
+uid="uid://ndltfh2vqq2l"
+path="res://.godot/imported/negative.png-b1db366c4ac9c078b5105d14ff47cd3e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/character/prone/face_negative.png"
-dest_files=["res://.godot/imported/face_negative.png-0f4a5f5cd7b94cc2c65e396d8e3faba9.ctex"]
+source_file="res://assets/art/character/prone/negative.png"
+dest_files=["res://.godot/imported/negative.png-b1db366c4ac9c078b5105d14ff47cd3e.ctex"]
 
 [params]
 

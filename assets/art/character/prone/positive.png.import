@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d2fgt6d00h6e2"
-path="res://.godot/imported/complete.png-e8156f55f2c28358319dd63bb6887946.ctex"
+uid="uid://c3gtui7pfy5xi"
+path="res://.godot/imported/positive.png-3fe3c3e79aa162cf781d14c6002c63f3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/character/standing/complete.png"
-dest_files=["res://.godot/imported/complete.png-e8156f55f2c28358319dd63bb6887946.ctex"]
+source_file="res://assets/art/character/prone/positive.png"
+dest_files=["res://.godot/imported/positive.png-3fe3c3e79aa162cf781d14c6002c63f3.ctex"]
 
 [params]
 

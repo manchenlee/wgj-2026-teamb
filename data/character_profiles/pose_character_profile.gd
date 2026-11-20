@@ -45,31 +45,19 @@ func _init(phase: int = 1) -> void:
 		_:
 			pose_name = "sitting"
 	var root := "res://assets/art/character/%s/" % pose_name
-	var merged_art := pose_name == "sitting" or pose_name == "lying"
-	var expressions: Dictionary
-	var base_textures: Dictionary
-	if merged_art:
-		base_textures = {
-			"draft": root + "default.png",
-			"overall_init": root + "default.png",
-			"positive": root + "positive.png",
-			"psychological_positive": root + "psychological_positive.png",
-			"negative": root + "negative.png",
-		}
-		expressions = {
-			ExpressionState.NEUTRAL: {"base_state_key": "overall_init"},
-			ExpressionState.POSITIVE: {"base_state_key": "positive"},
-			ExpressionState.PSYCHOLOGICAL_POSITIVE: {"base_state_key": "psychological_positive"},
-			ExpressionState.NEGATIVE: {"base_state_key": "negative"},
-		}
-	else:
-		base_textures = {"draft": root + "complete.png", "overall_init": root + "complete.png"}
-		expressions = {
-			ExpressionState.NEUTRAL: {"base_state_key": "overall_init", "face_state_key": "face_default"},
-			ExpressionState.POSITIVE: {"base_state_key": "overall_init", "face_state_key": "face_positive"},
-			ExpressionState.PSYCHOLOGICAL_POSITIVE: {"base_state_key": "overall_init", "face_state_key": "face_psychological_positive"},
-			ExpressionState.NEGATIVE: {"base_state_key": "overall_init", "face_state_key": "face_negative"},
-		}
+	var base_textures: Dictionary = {
+		"draft": root + "default.png",
+		"overall_init": root + "default.png",
+		"positive": root + "positive.png",
+		"psychological_positive": root + "psychological_positive.png",
+		"negative": root + "negative.png",
+	}
+	var expressions: Dictionary = {
+		ExpressionState.NEUTRAL: {"base_state_key": "overall_init"},
+		ExpressionState.POSITIVE: {"base_state_key": "positive"},
+		ExpressionState.PSYCHOLOGICAL_POSITIVE: {"base_state_key": "psychological_positive"},
+		ExpressionState.NEGATIVE: {"base_state_key": "negative"},
+	}
 	var mappings: Dictionary = {}
 	for band in range(4):
 		mappings[band] = expressions.duplicate(true)
@@ -85,15 +73,7 @@ func _init(phase: int = 1) -> void:
 	)
 
 func get_face_texture_paths() -> Dictionary:
-	if pose_name == "sitting" or pose_name == "lying":
-		return {}
-	var root := "res://assets/art/character/%s/" % pose_name
-	return {
-		"face_default": root + "face_default.png",
-		"face_positive": root + "face_positive.png",
-		"face_psychological_positive": root + "face_psychological_positive.png",
-		"face_negative": root + "face_negative.png",
-	}
+	return {}
 
 func get_tail_frame_paths() -> Array[String]:
 	var root := "res://assets/art/character/%s/" % pose_name
