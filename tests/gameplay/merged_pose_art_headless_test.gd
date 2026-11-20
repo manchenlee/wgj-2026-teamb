@@ -18,6 +18,20 @@ func _run() -> void:
 		_check(profile.get_face_texture_paths().is_empty(), "Merged pose still loads a separate face layer: %d" % phase)
 		_check(profile.get_texture_path("overall_init").ends_with("default.png"),
 			"Default pose art is not used for the starting state: %d" % phase)
+		var default_state: Dictionary = profile.resolve_visual_state(0, PROFILE.ExpressionState.NEUTRAL)
+		_check(profile.get_texture_path(default_state.base_state_key) ==
+			"res://assets/art/character/%s/default.png" % profile.pose_name,
+			"Phase %d resolves its default state to another image." % phase)
+		var default_path: String = profile.get_texture_path("overall_init")
+		var imported_image: Image = (load(default_path) as Texture2D).get_image()
+		var source_image: Image = Image.load_from_file(ProjectSettings.globalize_path(default_path))
+		if phase == 2 or phase == 3:
+			var neutral_image: Image = Image.load_from_file(ProjectSettings.globalize_path(
+				"res://assets/art/character/%s/neutral.png" % profile.pose_name))
+			var default_difference := _image_difference(imported_image, source_image)
+			var neutral_difference := _image_difference(imported_image, neutral_image)
+			_check(default_difference < neutral_difference,
+				"Phase %d imports neutral art instead of default art." % phase)
 		var neutral_path: String = "res://assets/art/character/%s/neutral.png" % profile.pose_name
 		_check(ResourceLoader.exists(neutral_path), "Dialogue neutral art is missing: %s" % neutral_path)
 		for expression in [PROFILE.ExpressionState.NEUTRAL, PROFILE.ExpressionState.POSITIVE,
@@ -37,7 +51,9 @@ func _run() -> void:
 	game._sync_character_presentation_phase_for_visual_band(0)
 	_check(game.active_character_profile.pose_name == "sitting", "Phase 1 is not sitting.")
 	_check(game.background_placeholder.texture == game.character_visual_textures["overall_init"],
-		"Sitting neutral merged image was not displayed.")
+		"Sitting default image was not displayed.")
+	_check(game.background_placeholder.texture.resource_path.ends_with("/sitting/default.png"),
+		"Sitting phase did not start with default.png.")
 	_check(game.phase_2_face_layer.texture == null, "Sitting face layer is still visible.")
 	_check_expression(game, PROFILE.ExpressionState.POSITIVE, "positive")
 	_check_expression(game, PROFILE.ExpressionState.PSYCHOLOGICAL_POSITIVE, "psychological_positive")
@@ -46,6 +62,8 @@ func _run() -> void:
 	game.arousal_model.physical = 25.0
 	game._sync_physiological_visual_band()
 	_check(game.active_character_profile.pose_name == "standing", "Phase 2 is not standing.")
+	_check(game.background_placeholder.texture.resource_path.ends_with("/standing/default.png"),
+		"Standing phase did not start with default.png.")
 	_check_expression(game, PROFILE.ExpressionState.POSITIVE, "positive")
 	_check_expression(game, PROFILE.ExpressionState.PSYCHOLOGICAL_POSITIVE, "psychological_positive")
 	_check_expression(game, PROFILE.ExpressionState.NEGATIVE, "negative")
@@ -53,6 +71,8 @@ func _run() -> void:
 	game.arousal_model.physical = 50.0
 	game._sync_physiological_visual_band()
 	_check(game.active_character_profile.pose_name == "prone", "Phase 3 is not prone.")
+	_check(game.background_placeholder.texture.resource_path.ends_with("/prone/default.png"),
+		"Prone phase did not start with default.png.")
 	_check_expression(game, PROFILE.ExpressionState.POSITIVE, "positive")
 	_check_expression(game, PROFILE.ExpressionState.PSYCHOLOGICAL_POSITIVE, "psychological_positive")
 	_check_expression(game, PROFILE.ExpressionState.NEGATIVE, "negative")
@@ -60,6 +80,8 @@ func _run() -> void:
 	game.arousal_model.physical = 80.0
 	game._sync_physiological_visual_band()
 	_check(game.active_character_profile.pose_name == "lying", "Phase 4 is not lying.")
+	_check(game.background_placeholder.texture.resource_path.ends_with("/lying/default.png"),
+		"Lying phase did not start with default.png.")
 	_check_expression(game, PROFILE.ExpressionState.POSITIVE, "positive")
 	_check_expression(game, PROFILE.ExpressionState.PSYCHOLOGICAL_POSITIVE, "psychological_positive")
 	_check_expression(game, PROFILE.ExpressionState.NEGATIVE, "negative")
@@ -91,9 +113,19 @@ func _check_expression(game: Control, expression: int, texture_key: String) -> v
 	_check(game.phase_2_face_layer.texture == null, "Separate face was displayed: %s" % texture_key)
 	game.clear_character_expression(CONTROLLER.CharacterExpressionSource.PSYCHOLOGICAL, token)
 	_check(game.background_placeholder.texture == game.character_visual_textures["overall_init"],
-		"Neutral merged image was not restored: %s" % texture_key)
+		"Default image was not restored: %s" % texture_key)
 
 
 func _check(ok: bool, message: String) -> void:
 	if not ok:
 		_failures.append(message)
+
+
+func _image_difference(left: Image, right: Image) -> float:
+	var difference := 0.0
+	for y in range(0, left.get_height(), 8):
+		for x in range(0, left.get_width(), 8):
+			var a: Color = left.get_pixel(x, y)
+			var b: Color = right.get_pixel(x, y)
+			difference += absf(a.r - b.r) + absf(a.g - b.g) + absf(a.b - b.b) + absf(a.a - b.a)
+	return difference
