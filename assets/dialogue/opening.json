@@ -371,12 +371,12 @@
       "choices_after_safe_word": [
         {
           "id": "tutorial",
-          "text": "開啟教學",
+          "text": "【開啟教學】",
           "next": "r41"
         },
         {
           "id": "start",
-          "text": "開始調音",
+          "text": "【開始調音】",
           "next": "r63"
         }
       ]
@@ -570,12 +570,12 @@
       "choices": [
         {
           "id": "tutorial",
-          "text": "開啟教學",
+          "text": "【開啟教學】",
           "next": "r41"
         },
         {
           "id": "start",
-          "text": "開始調音",
+          "text": "【開始調音】",
           "next": "r63"
         }
       ]
