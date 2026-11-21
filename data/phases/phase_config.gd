@@ -114,7 +114,7 @@ func _init(values: Dictionary = {}) -> void:
 	).duplicate(true)
 	choice_reward_values = values.get(
 		"choice_reward_values",
-		{"good": 10.0, "neutral": 3.0}
+		{"good": 20.0, "neutral": 3.0}
 	).duplicate(true)
 	choice_penalty_values = values.get(
 		"choice_penalty_values",

@@ -46,7 +46,7 @@ func _test_good_and_bad_choice_paths() -> void:
 	game._on_choice_selected("good", "good choice")
 	var good_request: Dictionary = _request_for(game, PSYCHOLOGICAL_SOURCE)
 	_assert(good_request.get("expression") == PSYCHOLOGICAL_POSITIVE, "Good choice did not request psychological POSITIVE.")
-	_assert(game.arousal_model.emotional == initial_emotional + 10.0, "Good choice no longer applies exactly +10 emotional score.")
+	_assert(game.arousal_model.emotional == initial_emotional + 20.0, "Good choice no longer applies exactly +20 emotional score.")
 	_assert(game.character_area.prompt_layer.get_child_count() == heart_count_before + 5, "Good choice did not use the existing five-heart burst path.")
 	_assert(not game.failure_flash.visible, "Good choice unexpectedly used failure feedback.")
 	_assert(game.current_expression_state == PSYCHOLOGICAL_POSITIVE, "Good reaction was not displayed immediately.")
