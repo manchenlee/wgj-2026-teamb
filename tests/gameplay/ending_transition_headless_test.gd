@@ -2,6 +2,7 @@ extends SceneTree
 
 const GAME_SCENE := preload("res://scenes/screens/GameScreen.tscn")
 const GAME_SCRIPT := preload("res://scripts/core/game_session_controller.gd")
+const ENDING_SCENE := preload("res://scenes/screens/EndingScreen.tscn")
 const CONFIG := preload("res://scripts/gameplay/GameConfig.gd")
 
 var _failures: Array[String] = []
@@ -17,6 +18,7 @@ func _run() -> void:
 		await _check_ending(mode, CONFIG.PEAK_DEPLETION_FAILURE_ENDING, 0.0, 0.0)
 		await _check_ending(mode, CONFIG.SAFEWORD_IGNORED_FAILURE_ENDING, -1.0, -1.0)
 	await _check_choice_trigger()
+	await _check_safe_word_ending_presentation()
 	if _failures.is_empty():
 		print("Ending transition headless tests passed.")
 		quit(0)
@@ -55,6 +57,7 @@ func _check_ending(mode: int, ending_type: String, physical: float, emotional: f
 	_assert(game.pending_ending_type == ending_type and game.arousal_model.physical == physical_at_lock,
 		"%s allowed a duplicate trigger or score change." % label)
 	var dialogue_ending: bool = ending_type != CONFIG.PHYSICAL_IMBALANCE_FAILURE_ENDING \
+			and ending_type != CONFIG.SAFEWORD_IGNORED_FAILURE_ENDING \
 			and not (ending_type == CONFIG.SUCCESS_ENDING and mode == GAME_SCRIPT.InteractionMode.PHYSIOLOGICAL)
 	if dialogue_ending:
 		await create_timer(0.9).timeout
@@ -69,7 +72,7 @@ func _check_ending(mode: int, ending_type: String, physical: float, emotional: f
 		if ending_type == CONFIG.PHYSICAL_IMBALANCE_FAILURE_ENDING:
 			_assert(game.resolve_character_visual_state().get("base_state_key", "") == "negative",
 				"%s did not switch to negative art." % label)
-		else:
+		elif ending_type == CONFIG.SUCCESS_ENDING:
 			_assert(game.shooting_tail_active, "%s did not show shooting tail." % label)
 	await create_timer(0.9).timeout
 	_assert(game.phase_transition_overlay.visible, "%s did not fade." % label)
@@ -87,19 +90,35 @@ func _check_choice_trigger() -> void:
 	root.add_child(game)
 	await process_frame
 	game.set_process(false)
-	game.psychological_dialogue_controller.current_entry = {
-		"condition": {"event": "safe_word"},
-		"choice": [{"id": "bad", "effect": "bad_ending"}]
-	}
+	var endings: Array[String] = []
+	game.ending_requested.connect(func(result: String) -> void: endings.append(result))
+	game.psychological_dialogue_controller.current_entry = \
+		game.psychological_dialogue_controller._select_entry(50.0, 50.0, true)
 	game.psychological_dialogue_controller.choice_prompt_pending = true
-	game._on_choice_selected("bad", "Ignore")
+	game._on_choice_selected("option_1", "【繼續調教。】")
 	_assert(game.pending_ending_type == CONFIG.SAFEWORD_IGNORED_FAILURE_ENDING,
 		"Psychological incorrect choice did not lock its ending.")
-	await create_timer(1.0).timeout
-	var history: Array = game.dialogue_panel.get_dialogue_history()
-	_assert(not history.is_empty() and history.back().get("line", "") == "唔……",
-		"Psychological incorrect choice did not show the final line.")
+	_assert(game._has_failed_safe_word_choice, "Wrong safe-word choice was not recorded.")
+	await create_timer(0.7).timeout
+	_assert(endings == [CONFIG.SAFEWORD_IGNORED_FAILURE_ENDING],
+		"Wrong safe-word choice did not enter ending five.")
 	game.queue_free()
+	await process_frame
+
+func _check_safe_word_ending_presentation() -> void:
+	var ending = ENDING_SCENE.instantiate()
+	ending.safe_word = "測試詞"
+	ending.set_result(CONFIG.SAFEWORD_IGNORED_FAILURE_ENDING)
+	root.add_child(ending)
+	_assert(ending.chapter_number_label.text.contains("V"), "Safe-word ending did not show number five.")
+	_assert(ending._background.texture.resource_path.ends_with("end01.png"),
+		"Safe-word ending did not reuse ending one's image.")
+	_assert(ending._novel_screen != null and ending._novel_screen._entries.size() == 9,
+		"Safe-word ending did not load all workbook dialogue lines.")
+	if ending._novel_screen != null and not ending._novel_screen._entries.is_empty():
+		_assert(str(ending._novel_screen._entries[0].get("text", "")).contains("測試詞、測試詞"),
+			"Safe-word ending did not insert the chosen safe word.")
+	ending.queue_free()
 	await process_frame
 
 func _assert(condition: bool, message: String) -> void:

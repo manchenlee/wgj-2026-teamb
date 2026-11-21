@@ -1460,6 +1460,7 @@ func _begin_ending_transition(ending_type: String) -> void:
 	run_active = false
 	_stop_runtime_timers(true)
 	var dialogue_ending := ending_type != Config.PHYSICAL_IMBALANCE_FAILURE_ENDING \
+			and ending_type != Config.SAFEWORD_IGNORED_FAILURE_ENDING \
 			and not (ending_type == Config.SUCCESS_ENDING \
 			and interaction_mode == InteractionMode.PHYSIOLOGICAL)
 	if dialogue_ending:
@@ -1550,6 +1551,7 @@ func _show_standalone_ending(ending_type: String) -> void:
 	if parent == null:
 		return
 	var ending_screen := ENDING_SCENE.instantiate()
+	ending_screen.safe_word = safe_word
 	ending_screen.set_result(ending_type)
 	ending_screen.restart_pressed.connect(_restart_standalone_run)
 	ending_screen.back_to_title_pressed.connect(_return_to_title_standalone)

@@ -92,7 +92,7 @@ func apply_choice(choice_id: String, model) -> Dictionary:
 	if not is_zero_approx(delta_value):
 		model.apply_emotional(delta_value)
 	var ending_type := ""
-	if effect == "bad_ending":
+	if effect == "bad_ending" or (is_safe_word_choice_pending() and is_wrong_choice):
 		ending_type = Config.SAFEWORD_IGNORED_FAILURE_ENDING
 	var response_map := current_entry.get("response", {}) as Dictionary
 	var speaker_map := current_entry.get("response_speakers", {}) as Dictionary

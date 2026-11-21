@@ -514,9 +514,88 @@
       ]
     },
     "safeword_ignored_failure": {
-      "transition_line": "唔……",
       "title": "結局五",
-      "body": "隨著一聲近乎崩裂的聲響，你的觸手纏上了小提琴的每一個支點，生扳硬扯，強行調整到了自己想要的音調。\n小提琴剛開始還會發出刺耳難耐的嘶鳴，隨著你觸手的勁道逐漸增加，反抗的弦鳴也變成了嗚咽的應和。\n終於，在調整完最後一個旋鈕後，小提琴發出了你理想中的，悅耳的哀鳴聲。\n你調教出了你理想的小提琴。\n只有琴聲的小提琴。"
+      "steps": [
+        {
+          "speaker": "小提琴",
+          "text": "……住手！{safe_word}、{safe_word}……！",
+          "source_row": 74,
+          "character": {
+            "base": "res://assets/art/character/sitting/negative.png",
+            "clear_layers": true
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "別這樣嘛！再來一下？再來一下就好……你可以的對不對？",
+          "source_row": 75,
+          "character": {
+            "base": "res://assets/art/character/sitting/negative.png",
+            "clear_layers": true
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "不要……啊啊……",
+          "source_row": 76,
+          "character": {
+            "base": "res://assets/art/character/sitting/negative.png",
+            "clear_layers": true
+          }
+        },
+        {
+          "text": "隨著你撫弄的速度加快、力道加深，他的悲鳴終於從求饒變成嗚咽，從抗拒變成無奈——",
+          "source_row": 77,
+          "character": {
+            "base": "res://assets/art/character/sitting/negative.png",
+            "clear_layers": true
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "……",
+          "source_row": 78,
+          "character": {
+            "base": "res://assets/art/character/sitting/negative.png",
+            "clear_layers": true
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "你聽？這聲音很好聽對不對？你很喜歡啊，剛剛為甚麼要拒絕呢？",
+          "source_row": 79,
+          "character": {
+            "base": "res://assets/art/character/sitting/negative.png",
+            "clear_layers": true
+          }
+        },
+        {
+          "speaker": "小提琴",
+          "text": "…………",
+          "source_row": 80,
+          "character": {
+            "base": "res://assets/art/character/sitting/negative.png",
+            "clear_layers": true
+          }
+        },
+        {
+          "text": "小提琴不再發出刺耳難耐的嘶鳴，轉而變成悅耳的、毫無牴觸的低語。",
+          "source_row": 81,
+          "character": {
+            "base": "res://assets/art/character/sitting/negative.png",
+            "clear_layers": true
+          }
+        },
+        {
+          "speaker": "主角",
+          "text": "完成了呢，我的小提琴。\n只能屬於我的，只有琴聲的小提琴。",
+          "source_row": 82,
+          "character": {
+            "base": "res://assets/art/character/sitting/negative.png",
+            "clear_layers": true
+          }
+        }
+      ]
     }
   }
 }

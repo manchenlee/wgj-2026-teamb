@@ -170,6 +170,7 @@ func _show_game(safe_word: String = Config.SAFE_WORD_DEFAULT, fade_from_opening:
 func _show_ending(ending_type: String) -> void:
 	current_screen_id = Config.SCREEN_ENDING
 	var screen := ENDING_SCENE.instantiate()
+	screen.safe_word = current_safe_word
 	screen.set_result(ending_type)
 	screen.restart_pressed.connect(func() -> void: _show_game(current_safe_word, true))
 	screen.back_to_title_pressed.connect(func() -> void: _show_title(true))

@@ -82,7 +82,7 @@
         {
           "id": "option_1",
           "text": "【繼續調教。】",
-          "effect": "negative"
+          "effect": "bad_ending"
         },
         {
           "id": "option_2",

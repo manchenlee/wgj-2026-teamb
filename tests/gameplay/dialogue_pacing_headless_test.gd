@@ -176,13 +176,9 @@ func _test_choice_timer_and_penalty() -> void:
 	}
 	game.psychological_dialogue_controller.choice_prompt_pending = true
 	game._on_choice_selected("bad", "Continue")
-	_assert(game._has_failed_safe_word_choice, "Wrong safe-word choice did not disable future safe-word dialogue.")
-	for index in range(100):
-		game.psychological_dialogue_timer.stop()
-		game.psychological_dialogue_controller.reset()
-		game._push_next_dialogue_event(0)
-		var condition: Dictionary = game.psychological_dialogue_controller.current_entry.get("condition", {})
-		_assert(condition.get("event", "") != "safe_word", "Safe-word dialogue appeared after a wrong safe-word choice on draw %d." % index)
+	_assert(game._has_failed_safe_word_choice, "Wrong safe-word choice was not recorded.")
+	_assert(game.pending_ending_type == CONFIG.SAFEWORD_IGNORED_FAILURE_ENDING,
+		"Wrong safe-word choice did not immediately lock ending five.")
 	game._reset_run_for_phase_index(0)
 	_assert(not game._has_failed_safe_word_choice, "New run did not restore safe-word eligibility.")
 	game._stop_runtime_timers()

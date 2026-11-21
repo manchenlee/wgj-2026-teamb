@@ -35,7 +35,7 @@ const _BG_BY_TYPE := {
 	"physical_imbalance_failure": preload("res://assets/art/screens/ending/end02.png"),
 	"emotional_imbalance_failure": preload("res://assets/art/screens/ending/end03.png"),
 	"success": preload("res://assets/art/screens/ending/end04.png"),
-	"safeword_ignored_failure": preload("res://assets/art/screens/ending/end05.png"),
+	"safeword_ignored_failure": preload("res://assets/art/screens/ending/end01.png"),
 }
 
 signal restart_pressed
@@ -50,6 +50,7 @@ signal back_to_title_pressed
 @onready var back_to_title_button: Button = get_node_or_null("ChapterTitle/RestartButtons/BackToTitleButton/Button")
 
 var pending_result_type: String = ""
+var safe_word: String = Config.SAFE_WORD_DEFAULT
 var ending_texts_by_type: Dictionary = {}
 var _novel_screen: Control
 var _novel_transitioning: bool = false
@@ -99,8 +100,11 @@ func _apply_result(result_type: String) -> void:
 		var ending_entry: Dictionary = ending_entry_variant
 		var ending_title: String = str(ending_entry.get("title", ""))
 		var ending_body: String = str(ending_entry.get("body", ""))
-		var steps := ending_entry.get("steps", []) as Array
+		var steps := (ending_entry.get("steps", []) as Array).duplicate(true)
 		if not steps.is_empty():
+			for step_variant in steps:
+				var step := step_variant as Dictionary
+				step["text"] = str(step.get("text", "")).replace("{safe_word}", safe_word)
 			heading_label.text = ending_title
 			body_label.visible = false
 			$ChapterTitle/RestartButtons.visible = false
