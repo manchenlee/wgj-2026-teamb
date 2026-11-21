@@ -17,6 +17,8 @@ var _queued_response_speakers: Array = []
 var _data_source_property: String = "psychological_dialogue_data_source"
 var _choices_enabled: bool = true
 var _last_entry_id: String = ""
+var _ordinary_bag: Array[Dictionary] = []
+var _ordinary_pool_ids: Array[String] = []
 
 func _init() -> void:
 	rng.randomize()
@@ -50,6 +52,8 @@ func reset(clear_history: bool = false) -> void:
 	_queued_response_speakers.clear()
 	if clear_history:
 		_last_entry_id = ""
+		_ordinary_bag.clear()
+		_ordinary_pool_ids.clear()
 
 func next_event(physical: float, emotional: float, force_safe_word: bool = false, include_safe_word: bool = false) -> Dictionary:
 	if choice_prompt_pending:
@@ -143,6 +147,8 @@ func has_safe_word_event() -> bool:
 
 func _load_feedback_entries() -> void:
 	entries.clear()
+	_ordinary_bag.clear()
+	_ordinary_pool_ids.clear()
 	var feedback_data_path := _get_feedback_data_path()
 	if feedback_data_path.is_empty():
 		push_warning("Feedback dialogue file path is empty for active phase.")
@@ -179,24 +185,66 @@ func _load_feedback_entries() -> void:
 			entries.append(entry)
 
 func _select_entry(physical: float, emotional: float, force_safe_word: bool = false, include_safe_word: bool = false) -> Dictionary:
-	var matches: Array[Dictionary] = []
+	var selected: Dictionary = {}
 	if force_safe_word:
-		matches = _get_safe_word_entries()
+		selected = _draw_safe_word_entry(_get_safe_word_entries())
 	else:
-		matches = _get_matching_entries(physical, emotional)
+		var ordinary_matches := _get_matching_entries(physical, emotional)
 		if include_safe_word:
-			matches.append_array(_get_safe_word_entries())
-	if matches.is_empty():
+			var safe_matches := _get_safe_word_entries()
+			var safe_alternatives: Array[Dictionary] = []
+			for entry in safe_matches:
+				if str(entry.get("id", "")) != _last_entry_id:
+					safe_alternatives.append(entry)
+			if not safe_alternatives.is_empty():
+				safe_matches = safe_alternatives
+			elif not ordinary_matches.is_empty():
+				safe_matches.clear()
+			var ordinary_weight := ordinary_matches.size()
+			if ordinary_weight > 1 and not _last_entry_id.is_empty():
+				for entry in ordinary_matches:
+					if str(entry.get("id", "")) == _last_entry_id:
+						ordinary_weight -= 1
+						break
+			var total_weight := ordinary_weight + safe_matches.size()
+			if total_weight > 0 and rng.randi_range(0, total_weight - 1) < safe_matches.size():
+				selected = _draw_safe_word_entry(safe_matches)
+		if selected.is_empty():
+			selected = _draw_ordinary_entry(ordinary_matches)
+	if selected.is_empty():
 		return {}
-	var alternatives: Array[Dictionary] = []
-	for entry in matches:
-		if str(entry.get("id", "")) != _last_entry_id:
-			alternatives.append(entry)
-	if not alternatives.is_empty():
-		matches = alternatives
-	var selected := matches[rng.randi_range(0, matches.size() - 1)].duplicate(true)
 	_last_entry_id = str(selected.get("id", ""))
 	return selected
+
+func _draw_safe_word_entry(matches: Array[Dictionary]) -> Dictionary:
+	if matches.is_empty():
+		return {}
+	return matches[rng.randi_range(0, matches.size() - 1)].duplicate(true)
+
+func _draw_ordinary_entry(matches: Array[Dictionary]) -> Dictionary:
+	if matches.is_empty():
+		_ordinary_bag.clear()
+		_ordinary_pool_ids.clear()
+		return {}
+	var pool_ids: Array[String] = []
+	for entry in matches:
+		pool_ids.append(str(entry.get("id", "")))
+	if pool_ids != _ordinary_pool_ids:
+		_ordinary_pool_ids = pool_ids
+		_ordinary_bag.clear()
+	if _ordinary_bag.is_empty():
+		_ordinary_bag.assign(matches)
+		for index in range(_ordinary_bag.size() - 1, 0, -1):
+			var swap_index := rng.randi_range(0, index)
+			var swap_entry := _ordinary_bag[index]
+			_ordinary_bag[index] = _ordinary_bag[swap_index]
+			_ordinary_bag[swap_index] = swap_entry
+		if _ordinary_bag.size() > 1 and str(_ordinary_bag[-1].get("id", "")) == _last_entry_id:
+			var swap_index := rng.randi_range(0, _ordinary_bag.size() - 2)
+			var swap_entry := _ordinary_bag[-1]
+			_ordinary_bag[-1] = _ordinary_bag[swap_index]
+			_ordinary_bag[swap_index] = swap_entry
+	return _ordinary_bag.pop_back().duplicate(true)
 
 func _get_matching_entries(physical: float, emotional: float) -> Array[Dictionary]:
 
