@@ -31,7 +31,7 @@ const SCREEN_TRANSITION_COLOR := Color(0, 0, 0, 1)
 @onready var debug_overlay = $DebugOverlay
 @onready var bg_music: AudioStreamPlayer = $BgMusic
 @onready var screen_transition_overlay: ColorRect = $ScreenTransitionOverlay
-@onready var pause_menu: PauseMenu = $PauseMenu
+@onready var pause_menu: PauseMenu = $PauseLayer/PauseMenu
 
 var current_screen: Control
 var current_screen_id: String = ""

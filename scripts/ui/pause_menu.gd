@@ -18,7 +18,7 @@ func _ready() -> void:
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.keycode == KEY_ESCAPE and event.is_pressed() and not event.is_echo()):
 		return
-	var router := get_parent()
+	var router := get_parent().get_parent()
 	if visible:
 		close()
 	elif router != null and router.current_screen_id == "game":
@@ -32,7 +32,7 @@ func open() -> void:
 		return
 	visible = true
 	_paused_audio.clear()
-	_pause_audio_in(get_parent())
+	_pause_audio_in(get_parent().get_parent())
 	get_tree().paused = true
 	_continue_button.grab_focus()
 

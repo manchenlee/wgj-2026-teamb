@@ -13,6 +13,8 @@ func _run() -> void:
 	await process_frame
 	var menu: PauseMenu = main.pause_menu
 	_assert(not menu.visible, "Pause menu should start hidden.")
+	_assert(menu.get_parent() is CanvasLayer and menu.get_parent().layer > main.debug_overlay.layer,
+		"Pause menu layer must draw above the debug overlay.")
 	main._show_game()
 	await process_frame
 	var first_game: Control = main.current_screen

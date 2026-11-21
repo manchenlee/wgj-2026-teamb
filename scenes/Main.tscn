@@ -33,4 +33,7 @@ color = Color(0, 0, 0, 1)
 
 [node name="DebugOverlay" parent="." instance=ExtResource("2_debug")]
 
-[node name="PauseMenu" parent="." instance=ExtResource("3_pause")]
+[node name="PauseLayer" type="CanvasLayer" parent="."]
+layer = 100
+
+[node name="PauseMenu" parent="PauseLayer" instance=ExtResource("3_pause")]
