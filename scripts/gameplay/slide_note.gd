@@ -7,6 +7,7 @@ const HEART_TEXTURE := preload("res://assets/art/ui/gameplay/img_heart.png")
 const NOTE_LABEL_FONT := preload("res://assets/fonts/ShipporiMincho-Bold.ttf")
 const SLIDE_COLOR := Color("#85CCFFE0")
 const SLIDE_COMPLETED_COLOR := Color("#85CCFFF5")
+const COMPLETED_FADE_DURATION: float = 0.16
 
 var checkpoint_radius: float = 40.0
 var checkpoints: PackedVector2Array = PackedVector2Array()
@@ -20,6 +21,7 @@ var _pointer_was_inside_target: bool = false
 var _mouse_held: bool = false
 var _active_touch_index: int = -1
 var _precision_input_active: bool = false
+var _checkpoint_fade_remaining: PackedFloat32Array = PackedFloat32Array()
 
 
 func _ready() -> void:
@@ -42,7 +44,16 @@ func setup(config: Dictionary) -> void:
 		checkpoints = configured_checkpoints
 	elif configured_checkpoints is Array:
 		checkpoints = PackedVector2Array(configured_checkpoints)
+	_checkpoint_fade_remaining.resize(checkpoints.size())
+	_checkpoint_fade_remaining.fill(0.0)
 	queue_redraw()
+
+
+func _process(delta: float) -> void:
+	super._process(delta)
+	for index in range(_checkpoint_fade_remaining.size()):
+		if _checkpoint_fade_remaining[index] > 0.0:
+			_checkpoint_fade_remaining[index] = maxf(_checkpoint_fade_remaining[index] - delta, 0.0)
 
 
 func get_progress_ratio() -> float:
@@ -109,17 +120,24 @@ func _draw() -> void:
 
 	for index in range(checkpoints.size() - 1):
 		var segment_completed := _armed and index < _next_checkpoint_index - 1
+		var segment_alpha := _checkpoint_alpha(index)
+		if segment_alpha <= 0.0:
+			continue
 		var line_color := SLIDE_COMPLETED_COLOR if segment_completed else Color("#85CCFFB8")
+		line_color.a *= segment_alpha
 		draw_line(checkpoints[index], checkpoints[index + 1], line_color, checkpoint_radius * 2.0, true)
 
 	var target_index := _get_target_index()
 	for index in range(checkpoints.size()):
+		var checkpoint_alpha := _checkpoint_alpha(index)
+		if checkpoint_alpha <= 0.0:
+			continue
 		var is_completed := _armed if index == 0 else _armed and index < _next_checkpoint_index
 		var is_current := index == target_index
 		var fill_color := SLIDE_COMPLETED_COLOR if is_completed else SLIDE_COLOR
 		if is_current:
 			fill_color = SLIDE_COMPLETED_COLOR
-		_draw_note_circle(checkpoints[index], checkpoint_radius, fill_color)
+		_draw_note_circle(checkpoints[index], checkpoint_radius, fill_color, checkpoint_alpha)
 		var font_size := maxi(16, int(round(checkpoint_radius * 0.58)))
 		var label_size := NOTE_LABEL_FONT.get_string_size(
 			"slide", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size
@@ -131,8 +149,15 @@ func _draw() -> void:
 			HORIZONTAL_ALIGNMENT_LEFT,
 			-1.0,
 			font_size,
-			Color.WHITE
+			Color(1.0, 1.0, 1.0, checkpoint_alpha)
 		)
+
+
+func _checkpoint_alpha(index: int) -> float:
+	if not _armed or index >= _next_checkpoint_index:
+		return 1.0
+	return _checkpoint_fade_remaining[index] / COMPLETED_FADE_DURATION
+
 
 func _process_pointer_move(new_pos: Vector2) -> void:
 	if _resolved or _suspended or not is_dragging() or checkpoints.size() < 2:
@@ -175,6 +200,7 @@ func _activate_current_target() -> void:
 	if not _armed:
 		_armed = true
 		_next_checkpoint_index = 1
+		_checkpoint_fade_remaining[0] = COMPLETED_FADE_DURATION
 		audio_note_reached.emit()
 		_restart_lifetime()
 		queue_redraw()
@@ -183,6 +209,7 @@ func _activate_current_target() -> void:
 	if _next_checkpoint_index <= 0 or _next_checkpoint_index >= checkpoints.size():
 		return
 	_next_checkpoint_index += 1
+	_checkpoint_fade_remaining[_next_checkpoint_index - 1] = COMPLETED_FADE_DURATION
 	audio_note_reached.emit()
 	var segment_direction := (checkpoints[_next_checkpoint_index - 1] - checkpoints[_next_checkpoint_index - 2]).normalized()
 	visual_motion.emit(segment_direction, 1.0)
