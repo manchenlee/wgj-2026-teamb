@@ -18,6 +18,7 @@ var _mouse_held: bool = false
 var _active_touch_index: int = -1
 var _has_pointer_sample: bool = false
 var _last_pointer_pos: Vector2 = Vector2.ZERO
+var _pending_motion_distance: float = 0.0
 var _hint_orbit_angle: float = -PI * 0.5
 
 @onready var friction_hint: TextureRect = $FrictionHint
@@ -151,10 +152,14 @@ func _process_pointer_move(new_pos: Vector2) -> void:
 	var movement := new_pos - _last_pointer_pos
 	var raw_distance := movement.length()
 	_last_pointer_pos = new_pos
-	if raw_distance < valid_motion_threshold:
+	_pending_motion_distance += raw_distance
+	if _pending_motion_distance < valid_motion_threshold:
 		return
 	var remaining_distance := maxf(required_scrub_distance - accumulated_scrub_distance, 0.0)
-	var credited_distance := minf(minf(raw_distance, max_delta_per_event), remaining_distance)
+	# Both samples are inside a convex circle, so their entire connecting
+	# segment is valid. A per-event cap discards movement on low frame rates.
+	var credited_distance := minf(_pending_motion_distance, remaining_distance)
+	_pending_motion_distance = 0.0
 	if credited_distance <= 0.0:
 		return
 	accumulated_scrub_distance += credited_distance
@@ -176,11 +181,13 @@ func _is_inside_target(position_to_test: Vector2, hit_margin: float = 0.0) -> bo
 func _set_pointer_sample(position: Vector2) -> void:
 	_has_pointer_sample = true
 	_last_pointer_pos = position
+	_pending_motion_distance = 0.0
 
 
 func _clear_pointer_sample() -> void:
 	_has_pointer_sample = false
 	_last_pointer_pos = Vector2.ZERO
+	_pending_motion_distance = 0.0
 
 
 func _stop_rubbing() -> void:

@@ -149,6 +149,12 @@ func _process_pointer_move(new_pos: Vector2) -> void:
 
 	var previous_pos := _last_pointer_pos
 	_last_pointer_pos = new_pos
+	# A newly selected checkpoint can already contain the pointer when hit
+	# areas overlap. Count that checkpoint on the next drag sample instead of
+	# waiting for the pointer to leave and enter it again.
+	if _pointer_was_inside_target:
+		_activate_current_target()
+		_pointer_was_inside_target = false
 	var last_crossing_fraction := -1.0
 	while not _resolved:
 		var target_index := _get_target_index()

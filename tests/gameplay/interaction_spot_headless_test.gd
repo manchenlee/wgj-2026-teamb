@@ -47,6 +47,7 @@ func _run() -> void:
 	await _test_click_suspend_resume()
 	await _test_click_force_resolution()
 	await _test_rub_input_and_progress()
+	await _test_rub_sample_rate_independence()
 	await _test_rub_completion_and_scoring()
 	await _test_rub_touch_input()
 	await _test_rub_timeout_and_failure()
@@ -54,6 +55,7 @@ func _run() -> void:
 	await _test_rub_force_resolution()
 	await _test_expression_hit_signals()
 	await _test_ordered_progression_and_fast_crossing()
+	await _test_slide_overlapping_hit_areas()
 	await _test_slide_drag_continues_from_unfinished_segment()
 	await _test_slide_resume_from_next_checkpoint()
 	await _test_suspend_resume_requires_fresh_crossing()
@@ -349,25 +351,25 @@ func _test_rub_input_and_progress() -> void:
 	note._gui_input(_mouse_motion_event(center + Vector2(2.0, 0.0)))
 	_assert(absf(note.accumulated_scrub_distance) < 0.001, "Sub-threshold Rub movement added progress.")
 	note._gui_input(_mouse_motion_event(center + Vector2(20.0, 0.0)))
-	_assert(absf(note.accumulated_scrub_distance - 18.0) < 0.001, "Valid Rub movement used the wrong distance.")
+	_assert(absf(note.accumulated_scrub_distance - 20.0) < 0.001, "Valid Rub movement used the wrong distance.")
 	note._gui_input(_mouse_motion_event(center + Vector2(-20.0, 0.0)))
-	_assert(absf(note.accumulated_scrub_distance - 42.0) < 0.001, "Large Rub movement was not capped at 24 px.")
+	_assert(absf(note.accumulated_scrub_distance - 60.0) < 0.001, "Large Rub movement lost valid in-circle distance.")
 
 	note._gui_input(_mouse_motion_event(
 		center + Vector2(note.target_radius + CURSOR_HIT_AREA.RADIUS + 10.0, 0.0)
 	))
 	note._gui_input(_mouse_motion_event(center))
-	_assert(absf(note.accumulated_scrub_distance - 42.0) < 0.001, "Leaving or first re-entering the Rub circle added progress.")
+	_assert(absf(note.accumulated_scrub_distance - 60.0) < 0.001, "Leaving or first re-entering the Rub circle added progress.")
 	note._gui_input(_mouse_motion_event(center + Vector2(10.0, 0.0)))
-	_assert(absf(note.accumulated_scrub_distance - 52.0) < 0.001, "Fresh inside movement after re-entry did not progress.")
-	_assert(absf(counts.delta - 0.52) < 0.001, "RubNote emitted incorrect normalized progress deltas.")
+	_assert(absf(note.accumulated_scrub_distance - 70.0) < 0.001, "Fresh inside movement after re-entry did not progress.")
+	_assert(absf(counts.delta - 0.70) < 0.001, "RubNote emitted incorrect normalized progress deltas.")
 	_assert(normalized_counts.completed == 0, "Rub progress emitted a normalized physiological completion.")
 
 	note._gui_input(_mouse_button_event(center, false))
 	_assert(not note.is_rubbing(), "Primary release did not stop RubNote.")
 	_assert(counts.ended == 1, "RubNote did not emit one interaction-ended signal.")
 	note._gui_input(_mouse_motion_event(center + Vector2(-10.0, 0.0)))
-	_assert(absf(note.accumulated_scrub_distance - 52.0) < 0.001, "Movement after release added Rub progress.")
+	_assert(absf(note.accumulated_scrub_distance - 70.0) < 0.001, "Movement after release added Rub progress.")
 	note.queue_free()
 	await process_frame
 
@@ -379,6 +381,27 @@ func _test_rub_input_and_progress() -> void:
 	_assert(cursor_edge_note.is_rubbing(), "Visible cursor edge did not activate RubNote.")
 	cursor_edge_note._gui_input(_mouse_button_event(cursor_edge, false))
 	cursor_edge_note.queue_free()
+	await process_frame
+
+
+func _test_rub_sample_rate_independence() -> void:
+	var fine_note := _make_rub_note(30.0, 100.0)
+	var center := fine_note.target_center
+	fine_note._gui_input(_mouse_button_event(center, true))
+	for offset in range(1, 11):
+		fine_note._gui_input(_mouse_motion_event(center + Vector2(float(offset), 0.0)))
+	_assert(absf(fine_note.accumulated_scrub_distance - 9.0) < 0.001,
+		"Small mouse samples never accumulated into Rub progress.")
+	fine_note.queue_free()
+	await process_frame
+
+	var coarse_note := _make_rub_note(30.0, 100.0)
+	center = coarse_note.target_center
+	coarse_note._gui_input(_mouse_button_event(center, true))
+	coarse_note._gui_input(_mouse_motion_event(center + Vector2(50.0, 0.0)))
+	_assert(absf(coarse_note.accumulated_scrub_distance - 50.0) < 0.001,
+		"A coarse mouse sample lost valid Rub movement.")
+	coarse_note.queue_free()
 	await process_frame
 
 
@@ -475,8 +498,8 @@ func _test_rub_timeout_and_failure() -> void:
 	await create_timer(0.12).timeout
 	_assert(partial_counts.expired == 1, "Partially rubbed note did not expire once.")
 	_assert(partial_counts.failed == 1, "Partial Rub timeout did not emit one normalized physiological failure.")
-	_assert(absf(partial_counts.ratio - 0.24) < 0.001, "Partial Rub timeout reported incorrect normalized progress.")
-	_assert(absf(partial_model.physical - (40.0 + 0.24 * CONFIG.SPOT_PROGRESS_GAIN_TOTAL - CONFIG.SPOT_EXPIRY_PENALTY_PARTIAL)) < 0.001, "Partial Rub scoring or penalty routing changed unexpectedly.")
+	_assert(absf(partial_counts.ratio - 0.30) < 0.001, "Partial Rub timeout reported incorrect normalized progress.")
+	_assert(absf(partial_model.physical - (40.0 + 0.30 * CONFIG.SPOT_PROGRESS_GAIN_TOTAL - CONFIG.SPOT_EXPIRY_PENALTY_PARTIAL)) < 0.001, "Partial Rub scoring or penalty routing changed unexpectedly.")
 	partial_note.queue_free()
 	await process_frame
 
@@ -654,6 +677,20 @@ func _test_ordered_progression_and_fast_crossing() -> void:
 	_assert(normalized_counts.completed == 1, "Full Slide did not emit exactly one normalized physiological completion.")
 	spot.force_complete()
 	_assert(counts.completed == 1, "Resolved success emitted more than once.")
+	spot.queue_free()
+	await process_frame
+
+
+func _test_slide_overlapping_hit_areas() -> void:
+	var spot := _make_spot()
+	spot.mouse_hit_radius = CURSOR_HIT_AREA.RADIUS
+	var overlapping_start := Vector2(160.0, 100.0)
+	spot._input(_mouse_button_event(overlapping_start, true))
+	_assert(spot.is_armed() and spot.get_next_checkpoint_index() == 1,
+		"Overlapping Slide hit areas did not arm the start checkpoint.")
+	spot._input(_mouse_motion_event(overlapping_start + Vector2(5.0, 0.0)))
+	_assert(spot.get_next_checkpoint_index() == 2,
+		"Slide ignored a checkpoint already under the pointer after arming.")
 	spot.queue_free()
 	await process_frame
 

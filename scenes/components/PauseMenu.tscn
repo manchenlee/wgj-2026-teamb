@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/components/SkipStyleButton.tscn" id="2_button"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/screens/btn.png" id="3_button_art"]
 
 [node name="PauseMenu" type="Control"]
 visible = false
@@ -46,10 +47,31 @@ theme_override_constants/separation = 0
 layout_mode = 2
 button_text = "繼續遊戲"
 
+[node name="SkipVisual" parent="Buttons/ContinueButton" index="0"]
+texture = ExtResource("3_button_art")
+
+[node name="SkipLabel" parent="Buttons/ContinueButton" index="1"]
+offset_left = 12.0
+offset_right = -65.0
+
 [node name="RestartButton" parent="Buttons" instance=ExtResource("2_button")]
 layout_mode = 2
 button_text = "重啟演奏"
 
+[node name="SkipVisual" parent="Buttons/RestartButton" index="0"]
+texture = ExtResource("3_button_art")
+
+[node name="SkipLabel" parent="Buttons/RestartButton" index="1"]
+offset_left = 12.0
+offset_right = -65.0
+
 [node name="ExitButton" parent="Buttons" instance=ExtResource("2_button")]
 layout_mode = 2
 button_text = "離開遊戲"
+
+[node name="SkipVisual" parent="Buttons/ExitButton" index="0"]
+texture = ExtResource("3_button_art")
+
+[node name="SkipLabel" parent="Buttons/ExitButton" index="1"]
+offset_left = 12.0
+offset_right = -65.0
