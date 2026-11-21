@@ -103,7 +103,7 @@ func _test_choice_timer_and_penalty() -> void:
 	_assert(game.dialogue_panel.get_dialogue_history().size() == history_before_timeout, "Timeout repeated the choice prompt in history.")
 	_assert(game._group_gap_active and not game.psychological_dialogue_timer.is_stopped(), "Timeout did not schedule the next dialogue group gap.")
 	_assert(game.choice_timeout_timer.is_stopped() and not countdown.visible, "Timeout left the timer or countdown active.")
-	_assert(game.choice_panel.get_node("TimeoutFeedback").visible, "Ordinary timeout gave no brief feedback.")
+	_assert(game.choice_panel.get_node_or_null("TimeoutFeedback") == null, "Timeout feedback label still exists.")
 	var score_after_timeout: float = game.arousal_model.emotional
 	game._on_choice_timeout()
 	_assert(is_equal_approx(game.arousal_model.emotional, score_after_timeout), "Duplicate timeout applied a second penalty.")

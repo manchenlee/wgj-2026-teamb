@@ -1,8 +1,7 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/choice_panel.gd" id="1_choice"]
 [ext_resource type="PackedScene" path="res://scenes/components/DialogueChoiceButton.tscn" id="2_button"]
-[ext_resource type="FontFile" uid="uid://db5u741tm2yje" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="3_choice_font"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_countdown_track"]
 bg_color = Color(0.19, 0.08, 0.1, 0.96)
@@ -69,25 +68,6 @@ max_value = 1.0
 step = 0.001
 value = 1.0
 show_percentage = false
-
-[node name="TimeoutFeedback" type="Label" parent="."]
-visible = false
-layout_mode = 1
-anchor_left = 1.0
-anchor_top = 0.41
-anchor_right = 1.0
-anchor_bottom = 0.41
-offset_left = -280.0
-offset_top = 0.0
-offset_right = -28.0
-offset_bottom = 24.0
-mouse_filter = 2
-theme_override_colors/font_color = Color(1, 0.72, 0.72, 1)
-theme_override_colors/font_outline_color = Color(0.12, 0.06, 0.08, 1)
-theme_override_constants/outline_size = 1
-theme_override_fonts/font = ExtResource("3_choice_font")
-theme_override_font_sizes/font_size = 17
-horizontal_alignment = 2
 
 [node name="ChoiceButton1" parent="ChoiceContainer" instance=ExtResource("2_button")]
 modulate = Color(0.42, 0.42, 0.42, 1)

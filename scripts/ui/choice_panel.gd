@@ -18,7 +18,6 @@ var choice_label_1: Label = null
 var choice_label_2: Label = null
 @onready var choice_countdown: ProgressBar = $ChoiceContainer/ChoiceCountdown
 @onready var choice_container: Control = $ChoiceContainer
-@onready var timeout_feedback: Label = $TimeoutFeedback
 
 var _choice_data: Array[Dictionary] = []
 var _left_choice_anchors: Array[Control] = []
@@ -32,7 +31,6 @@ var _rng := RandomNumberGenerator.new()
 var _missing_nodes_warning_printed: bool = false
 var _anchor_warning_printed: bool = false
 var _buttons_connected: bool = false
-var _timeout_feedback_tween: Tween = null
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -55,7 +53,6 @@ func set_choice_anchor_groups(left_anchors: Array[Control], right_anchors: Array
 func show_choices(choices: Variant) -> void:
 	if not _bind_choice_nodes():
 		return
-	_hide_timeout_feedback()
 	_placement_version += 1
 	var placement_version := _placement_version
 	_choice_data = _normalize_choices(choices)
@@ -73,7 +70,6 @@ func show_choices(choices: Variant) -> void:
 func clear_choices() -> void:
 	if not _bind_choice_nodes():
 		return
-	_hide_timeout_feedback()
 	_placement_version += 1
 	visible = true
 	_choice_data.clear()
@@ -88,22 +84,6 @@ func set_timeout_progress(progress: float) -> void:
 	if not choice_countdown.visible:
 		return
 	choice_countdown.value = clampf(progress, 0.0, 1.0)
-
-func show_timeout_feedback(penalty: float) -> void:
-	_hide_timeout_feedback()
-	timeout_feedback.text = "未選擇  情感 -%s" % str(penalty).trim_suffix(".0")
-	timeout_feedback.modulate.a = 1.0
-	timeout_feedback.visible = true
-	_timeout_feedback_tween = create_tween()
-	_timeout_feedback_tween.tween_interval(1.2)
-	_timeout_feedback_tween.tween_property(timeout_feedback, "modulate:a", 0.0, 0.25)
-	_timeout_feedback_tween.tween_callback(func() -> void: timeout_feedback.visible = false)
-
-func _hide_timeout_feedback() -> void:
-	if _timeout_feedback_tween != null and _timeout_feedback_tween.is_valid():
-		_timeout_feedback_tween.kill()
-	_timeout_feedback_tween = null
-	timeout_feedback.visible = false
 
 func emit_choice_by_index(index: int) -> void:
 	_emit_choice(index)

@@ -1308,7 +1308,6 @@ func _on_choice_timeout() -> void:
 	if ordinary_choice:
 		var penalty := maxf(0.0, active_phase_config.choice_timeout_emotional_penalty)
 		arousal_model.apply_emotional(-penalty)
-		choice_panel.show_timeout_feedback(penalty)
 	_start_psychological_dialogue_timer(
 		randf_range(Config.PSYCHOLOGICAL_GROUP_GAP_MIN, Config.PSYCHOLOGICAL_GROUP_GAP_MAX), true
 	)
