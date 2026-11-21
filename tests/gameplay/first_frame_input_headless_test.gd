@@ -14,6 +14,15 @@ class FakeAnchorRegion:
 		return Rect2(Vector2(150.0, 150.0), Vector2(650.0, 650.0))
 
 
+class InputObserver:
+	extends Control
+	var mouse_events: int = 0
+
+	func _input(event: InputEvent) -> void:
+		if event is InputEventMouseButton or event is InputEventMouseMotion:
+			mouse_events += 1
+
+
 func _initialize() -> void:
 	call_deferred("_run")
 
@@ -122,6 +131,20 @@ func _run() -> void:
 	root.push_input(_button(Vector2(520.0, 208.0), false), true)
 	_assert(not rub.is_rubbing(), "Rub remained active after mouse release.")
 	rub.queue_free()
+	await process_frame
+
+	var observer := InputObserver.new()
+	root.add_child(observer)
+	var shared_rub := RUB_SCENE.instantiate() as RubNote
+	shared_rub.setup({"target_center": Vector2(108.0, 108.0), "target_radius": 52.0})
+	shared_rub.position = Vector2(400.0, 100.0)
+	observer.add_child(shared_rub)
+	root.push_input(_button(Vector2(508.0, 208.0), true), true)
+	root.push_input(_motion(Vector2(520.0, 208.0)), true)
+	_assert(shared_rub.is_rubbing() and observer.mouse_events == 2,
+		"Rub consumed viewport input before other gameplay listeners received it.")
+	root.push_input(_button(Vector2(520.0, 208.0), false), true)
+	observer.queue_free()
 	await process_frame
 
 	# A later Control claims GUI events while the note remains visible.

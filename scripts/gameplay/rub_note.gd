@@ -2,6 +2,7 @@ class_name RubNote
 extends InteractionNote
 
 const CursorHitAreaClass := preload("res://scripts/gameplay/cursor_hit_area.gd")
+const NoteInputSamplingClass := preload("res://scripts/gameplay/note_input_sampling.gd")
 const HEART_TEXTURE := preload("res://assets/art/ui/gameplay/img_heart.png")
 const HINT_ORBIT_RADIUS: float = 12.0
 const HINT_ORBIT_PERIOD: float = 1.6
@@ -16,6 +17,7 @@ var accumulated_scrub_distance: float = 0.0
 
 var _mouse_held: bool = false
 var _active_touch_index: int = -1
+var _precision_input_active: bool = false
 var _has_pointer_sample: bool = false
 var _last_pointer_pos: Vector2 = Vector2.ZERO
 var _pending_motion_distance: float = 0.0
@@ -67,8 +69,7 @@ func is_rubbing() -> bool:
 func _input(event: InputEvent) -> void:
 	# GUI focus can belong to a sibling Control on the first visible frame.
 	# Match SlideNote's viewport route, then validate against the Rub circle.
-	if _handle_input(event, true):
-		get_viewport().set_input_as_handled()
+	_handle_input(event, true)
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -89,9 +90,13 @@ func _handle_input(event: InputEvent, global_coordinates: bool) -> bool:
 			if _active_touch_index < 0 and _is_inside_target(pointer_position, mouse_hit_radius):
 				_mouse_held = true
 				_set_pointer_sample(pointer_position)
+				NoteInputSamplingClass.acquire()
+				_precision_input_active = true
 				_begin_interaction()
+				queue_redraw()
 				return true
 		elif _mouse_held:
+			_process_pointer_move(pointer_position)
 			_stop_rubbing()
 			return true
 		return false
@@ -106,9 +111,13 @@ func _handle_input(event: InputEvent, global_coordinates: bool) -> bool:
 			if not _mouse_held and _active_touch_index < 0 and _is_inside_target(pointer_position):
 				_active_touch_index = screen_touch.index
 				_set_pointer_sample(pointer_position)
+				NoteInputSamplingClass.acquire()
+				_precision_input_active = true
 				_begin_interaction()
+				queue_redraw()
 				return true
 		elif screen_touch.index == _active_touch_index:
+			_process_pointer_move(pointer_position)
 			_stop_rubbing()
 			return true
 		return false
@@ -120,39 +129,32 @@ func _handle_input(event: InputEvent, global_coordinates: bool) -> bool:
 	return false
 
 
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_MOUSE_EXIT and _mouse_held:
-		_clear_pointer_sample()
-
-
 func _draw() -> void:
 	var progress := get_progress_ratio()
 	_draw_approach_circle()
 	_draw_note_circle(
 		target_center,
 		target_radius,
-		Color(1.0, 0.73, 0.22, lerpf(0.94, 0.76, progress))
+		Color(1.0, 0.87, 0.40, 1.0) if is_rubbing() else Color(1.0, 0.73, 0.22, 0.94)
 	)
+	if is_rubbing():
+		draw_arc(target_center, target_radius + 7.0, 0.0, TAU, 64, Color(1.0, 0.91, 0.48, 0.95), 5.0, true)
+	if progress > 0.0:
+		draw_arc(target_center, target_radius + 7.0, -PI * 0.5,
+			-PI * 0.5 + TAU * progress, 64, Color.WHITE, 7.0, true)
 
 
 func _process_pointer_move(new_pos: Vector2) -> void:
 	if _resolved or _suspended or not is_rubbing():
 		return
 	var hit_margin := mouse_hit_radius if _mouse_held else 0.0
-	if not _is_inside_target(new_pos, hit_margin):
-		_clear_pointer_sample()
-		return
 	if not _has_pointer_sample:
 		_set_pointer_sample(new_pos)
 		return
-	if not _is_inside_target(_last_pointer_pos, hit_margin):
-		_set_pointer_sample(new_pos)
-		return
-
-	var movement := new_pos - _last_pointer_pos
-	var raw_distance := movement.length()
+	var previous_pos := _last_pointer_pos
+	var movement := new_pos - previous_pos
 	_last_pointer_pos = new_pos
-	_pending_motion_distance += raw_distance
+	_pending_motion_distance += _distance_inside_target(previous_pos, new_pos, target_radius + hit_margin)
 	if _pending_motion_distance < valid_motion_threshold:
 		return
 	var remaining_distance := maxf(required_scrub_distance - accumulated_scrub_distance, 0.0)
@@ -171,6 +173,23 @@ func _process_pointer_move(new_pos: Vector2) -> void:
 		_spawn_heart_particle()
 	if accumulated_scrub_distance >= required_scrub_distance:
 		_resolve_completed()
+
+
+func _distance_inside_target(start: Vector2, end: Vector2, radius: float) -> float:
+	var segment := end - start
+	var length_squared := segment.length_squared()
+	if length_squared <= 0.0001:
+		return 0.0
+	var offset := start - target_center
+	var projection := -offset.dot(segment) / length_squared
+	var closest_distance_squared := (offset + segment * projection).length_squared()
+	var radius_squared := radius * radius
+	if closest_distance_squared >= radius_squared:
+		return 0.0
+	var half_span := sqrt((radius_squared - closest_distance_squared) / length_squared)
+	var entry := maxf(0.0, projection - half_span)
+	var exit := minf(1.0, projection + half_span)
+	return maxf(exit - entry, 0.0) * sqrt(length_squared)
 
 
 func _is_inside_target(position_to_test: Vector2, hit_margin: float = 0.0) -> bool:
@@ -193,8 +212,18 @@ func _clear_pointer_sample() -> void:
 func _stop_rubbing() -> void:
 	_mouse_held = false
 	_active_touch_index = -1
+	if _precision_input_active:
+		NoteInputSamplingClass.release()
+		_precision_input_active = false
 	_clear_pointer_sample()
 	_end_interaction()
+	queue_redraw()
+
+
+func _exit_tree() -> void:
+	if _precision_input_active:
+		NoteInputSamplingClass.release()
+		_precision_input_active = false
 
 
 func _spawn_heart_particle() -> void:

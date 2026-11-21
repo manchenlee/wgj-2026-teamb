@@ -58,16 +58,24 @@ func _run() -> void:
 	slide.queue_free()
 	await process_frame
 
+	var release_only := _make_slide(points)
+	release_only._input(_button(points[0], true))
+	release_only._input(_button(points[1], false))
+	_check(release_only.get_next_checkpoint_index() == 2,
+		"Slide lost a checkpoint when mouse release carried the only drag endpoint.")
+	release_only.queue_free()
+	await process_frame
+
 	var cursor_edge := _make_slide(points)
 	cursor_edge.mouse_hit_radius = CURSOR_HIT_AREA.NOTE_HIT_MARGIN
-	cursor_edge._input(_button(points[0] + Vector2(cursor_edge.checkpoint_radius - 1.0, 0.0), true))
-	_check(not cursor_edge.is_dragging(), "Slide accepted a press outside its inset hit area.")
+	cursor_edge._input(_button(points[0] + Vector2(cursor_edge.checkpoint_radius + CURSOR_HIT_AREA.NOTE_HIT_MARGIN + 1.0, 0.0), true))
+	_check(not cursor_edge.is_dragging(), "Slide accepted a press beyond its hit margin.")
 	cursor_edge._input(_button(
 		points[0] + Vector2(cursor_edge.checkpoint_radius + CURSOR_HIT_AREA.NOTE_HIT_MARGIN - 1.0, 0.0),
 		true
 	))
 	_check(cursor_edge.is_dragging() and cursor_edge.is_armed(),
-		"Inset Slide hit area rejected a press near its boundary.")
+		"Slide hit area rejected a press near its visible boundary.")
 	cursor_edge.queue_free()
 	await process_frame
 
@@ -112,18 +120,20 @@ func _run() -> void:
 		Vector2(100, 100), Vector2(200, 100), Vector2(300, 100)
 	]))
 	var concurrent := _make_slide(points)
-	_check(not Input.use_accumulated_input, "Slide did not preserve raw mouse motion events.")
+	_check(Input.use_accumulated_input, "An idle Slide disabled input accumulation.")
 	curved._input(_button(Vector2(100, 100), true))
+	concurrent._input(_button(Vector2(100, 100), true))
+	_check(not Input.use_accumulated_input, "Dragging Slides did not preserve raw mouse motion events.")
 	curved._input(_motion(Vector2(200, 100)))
 	curved._input(_motion(Vector2(100, 200)))
 	_check(curved.get_next_checkpoint_index() == 2,
 		"A checkpoint on a fast curved path was missed despite raw motion samples.")
 	curved.queue_free()
 	await process_frame
-	_check(not Input.use_accumulated_input, "Removing one Slide restored accumulation while another remained.")
+	_check(not Input.use_accumulated_input, "Removing one drag restored accumulation while another remained.")
 	concurrent.queue_free()
 	await process_frame
-	_check(Input.use_accumulated_input, "Removing the final Slide did not restore input accumulation.")
+	_check(Input.use_accumulated_input, "Removing the final drag did not restore input accumulation.")
 	Input.use_accumulated_input = original_accumulation
 
 	if _failures.is_empty():

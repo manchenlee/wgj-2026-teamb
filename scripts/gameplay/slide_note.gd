@@ -2,13 +2,11 @@ class_name SlideNote
 extends InteractionNote
 
 const CursorHitAreaClass := preload("res://scripts/gameplay/cursor_hit_area.gd")
+const NoteInputSamplingClass := preload("res://scripts/gameplay/note_input_sampling.gd")
 const HEART_TEXTURE := preload("res://assets/art/ui/gameplay/img_heart.png")
 const NOTE_LABEL_FONT := preload("res://assets/fonts/ShipporiMincho-Bold.ttf")
 const SLIDE_COLOR := Color("#85CCFFE0")
 const SLIDE_COMPLETED_COLOR := Color("#85CCFFF5")
-
-static var _precision_input_users: int = 0
-static var _previous_accumulated_input: bool = true
 
 var checkpoint_radius: float = 40.0
 var checkpoints: PackedVector2Array = PackedVector2Array()
@@ -21,21 +19,18 @@ var _last_pointer_pos: Vector2 = Vector2.ZERO
 var _pointer_was_inside_target: bool = false
 var _mouse_held: bool = false
 var _active_touch_index: int = -1
+var _precision_input_active: bool = false
 
 
 func _ready() -> void:
-	if _precision_input_users == 0:
-		_previous_accumulated_input = Input.use_accumulated_input
-		Input.use_accumulated_input = false
-	_precision_input_users += 1
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	super._ready()
 
 
 func _exit_tree() -> void:
-	_precision_input_users -= 1
-	if _precision_input_users == 0:
-		Input.use_accumulated_input = _previous_accumulated_input
+	if _precision_input_active:
+		NoteInputSamplingClass.release()
+		_precision_input_active = false
 
 
 func setup(config: Dictionary) -> void:
@@ -81,6 +76,7 @@ func _input(event: InputEvent) -> void:
 				_start_drag(local_position, -1)
 		else:
 			if _mouse_held:
+				_process_pointer_move(local_position)
 				_stop_dragging()
 		return
 	if event is InputEventMouseMotion:
@@ -96,6 +92,7 @@ func _input(event: InputEvent) -> void:
 			if not _mouse_held and _active_touch_index < 0:
 				_start_drag(local_position, screen_touch.index)
 		elif screen_touch.index == _active_touch_index:
+			_process_pointer_move(local_position)
 			_stop_dragging()
 		return
 	if event is InputEventScreenDrag:
@@ -271,6 +268,8 @@ func _start_drag(local_position: Vector2, touch_index: int) -> void:
 		return
 	_mouse_held = touch_index < 0
 	_active_touch_index = touch_index
+	NoteInputSamplingClass.acquire()
+	_precision_input_active = true
 	_has_pointer_sample = true
 	_last_pointer_pos = local_position
 	_pointer_was_inside_target = _is_inside_target(local_position, hit_margin)
@@ -287,6 +286,9 @@ func _start_drag(local_position: Vector2, touch_index: int) -> void:
 func _stop_dragging() -> void:
 	_mouse_held = false
 	_active_touch_index = -1
+	if _precision_input_active:
+		NoteInputSamplingClass.release()
+		_precision_input_active = false
 	_clear_pointer_sample()
 	_end_interaction()
 

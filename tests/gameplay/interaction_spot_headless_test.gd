@@ -48,6 +48,7 @@ func _run() -> void:
 	await _test_click_force_resolution()
 	await _test_rub_input_and_progress()
 	await _test_rub_sample_rate_independence()
+	await _test_rub_swept_boundary_and_release()
 	await _test_rub_completion_and_scoring()
 	await _test_rub_touch_input()
 	await _test_rub_timeout_and_failure()
@@ -203,15 +204,15 @@ func _test_click_input_and_scoring() -> void:
 	var cursor_edge_counts := {"completed": 0}
 	cursor_edge_note.completed.connect(func() -> void: cursor_edge_counts.completed += 1)
 	cursor_edge_note._gui_input(_mouse_button_event(
-		cursor_edge_note.target_center + Vector2(cursor_edge_note.target_radius - 1.0, 0.0), true
+		cursor_edge_note.target_center + Vector2(cursor_edge_note.target_radius + CURSOR_HIT_AREA.NOTE_HIT_MARGIN + 1.0, 0.0), true
 	))
-	_assert(cursor_edge_counts.completed == 0, "ClickNote accepted a press inside the visible edge but outside its inset hit area.")
+	_assert(cursor_edge_counts.completed == 0, "ClickNote accepted a press beyond its hit margin.")
 	cursor_edge_note._gui_input(_mouse_button_event(
 		cursor_edge_note.target_center
 			+ Vector2(cursor_edge_note.target_radius + CURSOR_HIT_AREA.NOTE_HIT_MARGIN - 1.0, 0.0),
 		true
 	))
-	_assert(cursor_edge_counts.completed == 1, "Inset ClickNote hit area rejected a press near its boundary.")
+	_assert(cursor_edge_counts.completed == 1, "ClickNote hit area rejected a press near its visible boundary.")
 	cursor_edge_note.queue_free()
 	await process_frame
 
@@ -326,7 +327,7 @@ func _test_click_force_resolution() -> void:
 
 
 func _test_rub_input_and_progress() -> void:
-	var note := _make_rub_note(30.0, 100.0)
+	var note := _make_rub_note(30.0, 250.0)
 	var manager := SPOT_MANAGER_SCRIPT.new()
 	var normalized_counts := {"completed": 0}
 	manager.physiological_spot_completed.connect(func() -> void: normalized_counts.completed += 1)
@@ -363,30 +364,30 @@ func _test_rub_input_and_progress() -> void:
 		center + Vector2(note.target_radius + 10.0, 0.0)
 	))
 	note._gui_input(_mouse_motion_event(center))
-	_assert(absf(note.accumulated_scrub_distance - 60.0) < 0.001, "Leaving or first re-entering the Rub circle added progress.")
+	_assert(absf(note.accumulated_scrub_distance - 184.0) < 0.001, "Rub crossing lost the in-circle part of a boundary motion.")
 	note._gui_input(_mouse_motion_event(center + Vector2(10.0, 0.0)))
-	_assert(absf(note.accumulated_scrub_distance - 70.0) < 0.001, "Fresh inside movement after re-entry did not progress.")
-	_assert(absf(counts.delta - 0.70) < 0.001, "RubNote emitted incorrect normalized progress deltas.")
+	_assert(absf(note.accumulated_scrub_distance - 194.0) < 0.001, "Fresh inside movement after re-entry did not progress.")
+	_assert(absf(counts.delta - 194.0 / 250.0) < 0.001, "RubNote emitted incorrect normalized progress deltas.")
 	_assert(normalized_counts.completed == 0, "Rub progress emitted a normalized physiological completion.")
 
 	note._gui_input(_mouse_button_event(center, false))
 	_assert(not note.is_rubbing(), "Primary release did not stop RubNote.")
 	_assert(counts.ended == 1, "RubNote did not emit one interaction-ended signal.")
 	note._gui_input(_mouse_motion_event(center + Vector2(-10.0, 0.0)))
-	_assert(absf(note.accumulated_scrub_distance - 70.0) < 0.001, "Movement after release added Rub progress.")
+	_assert(absf(note.accumulated_scrub_distance - 204.0) < 0.001, "Release motion or later hover used the wrong Rub distance.")
 	note.queue_free()
 	await process_frame
 
 	var cursor_edge_note := _make_rub_note()
 	cursor_edge_note.mouse_hit_radius = CURSOR_HIT_AREA.NOTE_HIT_MARGIN
 	cursor_edge_note._gui_input(_mouse_button_event(
-		cursor_edge_note.target_center + Vector2(cursor_edge_note.target_radius - 1.0, 0.0), true
+		cursor_edge_note.target_center + Vector2(cursor_edge_note.target_radius + CURSOR_HIT_AREA.NOTE_HIT_MARGIN + 1.0, 0.0), true
 	))
-	_assert(not cursor_edge_note.is_rubbing(), "RubNote accepted a press outside its inset hit area.")
+	_assert(not cursor_edge_note.is_rubbing(), "RubNote accepted a press beyond its hit margin.")
 	var cursor_edge := cursor_edge_note.target_center \
 		+ Vector2(cursor_edge_note.target_radius + CURSOR_HIT_AREA.NOTE_HIT_MARGIN - 1.0, 0.0)
 	cursor_edge_note._gui_input(_mouse_button_event(cursor_edge, true))
-	_assert(cursor_edge_note.is_rubbing(), "Inset RubNote hit area rejected a press near its boundary.")
+	_assert(cursor_edge_note.is_rubbing(), "RubNote hit area rejected a press near its visible boundary.")
 	cursor_edge_note._gui_input(_mouse_button_event(cursor_edge, false))
 	cursor_edge_note.queue_free()
 	await process_frame
@@ -410,6 +411,23 @@ func _test_rub_sample_rate_independence() -> void:
 	_assert(absf(coarse_note.accumulated_scrub_distance - 50.0) < 0.001,
 		"A coarse mouse sample lost valid Rub movement.")
 	coarse_note.queue_free()
+	await process_frame
+
+
+func _test_rub_swept_boundary_and_release() -> void:
+	var note := _make_rub_note(30.0, 300.0)
+	var center := note.target_center
+	note._gui_input(_mouse_button_event(center, true))
+	note._gui_input(_mouse_motion_event(center + Vector2(100.0, 0.0)))
+	_assert(absf(note.accumulated_scrub_distance - note.target_radius) < 0.001,
+		"Rub dropped motion between the center and its boundary.")
+	note._gui_input(_mouse_motion_event(center + Vector2(-100.0, 0.0)))
+	_assert(absf(note.accumulated_scrub_distance - note.target_radius * 3.0) < 0.001,
+		"Rub missed an in-circle crossing with both samples outside.")
+	note._gui_input(_mouse_button_event(center, false))
+	_assert(absf(note.accumulated_scrub_distance - note.target_radius * 4.0) < 0.001,
+		"Rub missed the final movement carried by mouse release.")
+	note.queue_free()
 	await process_frame
 
 
