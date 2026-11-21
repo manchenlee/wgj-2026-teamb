@@ -15,7 +15,7 @@ func _run() -> void:
 	_test_reading_duration_bounds()
 	await _test_choice_timer_and_penalty()
 	await _test_safe_word_threshold_flow()
-	await _test_manual_and_automatic_dialogue_advance()
+	await _test_manual_dialogue_advance()
 	if _failures.is_empty():
 		print("Dialogue pacing headless tests passed.")
 		quit(0)
@@ -253,7 +253,7 @@ func _test_safe_word_threshold_flow() -> void:
 	game.queue_free()
 	await process_frame
 
-func _test_manual_and_automatic_dialogue_advance() -> void:
+func _test_manual_dialogue_advance() -> void:
 	root.size = Vector2i(1440, 1024)
 	var game = GAME_SCENE.instantiate()
 	root.add_child(game)
@@ -266,16 +266,16 @@ func _test_manual_and_automatic_dialogue_advance() -> void:
 	_prepare_two_line_dialogue(game)
 	await process_frame
 	var first_generation: int = game._reading_step_generation
-	var first_wait: float = game.psychological_dialogue_timer.wait_time
+	_assert(game.psychological_dialogue_timer.is_stopped(), "Ordinary dialogue started an automatic reading timer.")
 	_click_at(Vector2(10.0, 10.0))
 	_assert(game.dialogue_panel.get_dialogue_history().size() == 1, "Outside click advanced dialogue.")
 	_assert(game._reading_step_generation == first_generation, "Outside click consumed the reading step.")
+	bubble.finish_dialogue_stream()
 	_click_at(bubble.global_position + bubble.size * 0.5)
 	_assert(game.dialogue_panel.get_dialogue_history().size() == 2, "Bubble click did not advance immediately.")
 	_assert(game.psychological_dialogue_controller.choice_prompt_pending, "Manual advance skipped the choice prompt.")
 	_assert(game.psychological_dialogue_timer.is_stopped(), "Manual advance left the reading timer active.")
 	_assert(game.choice_timeout_timer.time_left > 0.0, "Manual advance did not start the choice countdown.")
-	_assert(first_wait >= 2.0 and first_wait <= 6.0, "Manual test did not use the configured reading interval.")
 	var history_at_choice: int = game.dialogue_panel.get_dialogue_history().size()
 	_click_at(bubble.global_position + bubble.size * 0.5)
 	_assert(game.dialogue_panel.get_dialogue_history().size() == history_at_choice, "Bubble click dismissed a pending choice.")
@@ -285,18 +285,16 @@ func _test_manual_and_automatic_dialogue_advance() -> void:
 	await process_frame
 	_prepare_two_line_dialogue(game)
 	await process_frame
-	var automatic_generation: int = game._reading_step_generation
-	game.psychological_dialogue_timer.start(0.05)
+	var history_while_waiting: int = game.dialogue_panel.get_dialogue_history().size()
 	await create_timer(0.10).timeout
-	_assert(game.dialogue_panel.get_dialogue_history().size() == 2, "Reading timer did not advance dialogue.")
-	_assert(game.psychological_dialogue_controller.choice_prompt_pending, "Automatic advance skipped the choice prompt.")
-	game._on_psychological_dialogue_timer_timeout(automatic_generation)
-	_assert(game.dialogue_panel.get_dialogue_history().size() == 2, "Stale timeout advanced a choice prompt.")
+	_assert(game.dialogue_panel.get_dialogue_history().size() == history_while_waiting, "Ordinary dialogue advanced without a click.")
+	_assert(not game.psychological_dialogue_controller.choice_prompt_pending, "Waiting opened a choice without player input.")
 
 	await process_frame
 	_prepare_two_line_dialogue(game)
 	await process_frame
 	var race_generation: int = game._reading_step_generation
+	bubble.finish_dialogue_stream()
 	_click_at(bubble.global_position + bubble.size * 0.5)
 	game._on_psychological_dialogue_timer_timeout(race_generation)
 	_assert(game.dialogue_panel.get_dialogue_history().size() == 2, "Click followed by timeout skipped dialogue.")
@@ -307,6 +305,7 @@ func _test_manual_and_automatic_dialogue_advance() -> void:
 	await process_frame
 	race_generation = game._reading_step_generation
 	game._on_psychological_dialogue_timer_timeout(race_generation)
+	bubble.finish_dialogue_stream()
 	_click_at(bubble.global_position + bubble.size * 0.5)
 	_assert(game.dialogue_panel.get_dialogue_history().size() == 2, "Timeout followed by click skipped dialogue.")
 	_assert(game.psychological_dialogue_controller.choice_prompt_pending, "Timeout/click race lost the choice prompt.")
@@ -314,10 +313,12 @@ func _test_manual_and_automatic_dialogue_advance() -> void:
 	await process_frame
 	_prepare_two_line_dialogue(game, ["First line", "Second line", "Third line"])
 	await process_frame
+	bubble.finish_dialogue_stream()
 	_click_at(bubble.global_position + bubble.size * 0.5)
 	_click_at(bubble.global_position + bubble.size * 0.5)
 	_assert(game.dialogue_panel.get_dialogue_history().size() == 2, "Two clicks in one frame skipped the newly displayed line.")
 	await process_frame
+	bubble.finish_dialogue_stream()
 	_click_at(bubble.global_position + bubble.size * 0.5)
 	_assert(game.dialogue_panel.get_dialogue_history().size() == 3, "A later click did not advance the new line.")
 

@@ -1217,7 +1217,8 @@ func _show_pending_safe_word_after_spot(preserve_note_audio: bool = false) -> vo
 # ---------------------------------------------------------------------------
 
 func _on_psychological_dialogue_timer_timeout(generation: int) -> void:
-	_advance_psychological_dialogue(generation)
+	if _group_gap_active:
+		_advance_psychological_dialogue(generation)
 
 func _on_dialogue_bubble_advance_requested() -> void:
 	if not pending_ending_type.is_empty():
@@ -1386,14 +1387,17 @@ func _dialogue_speaker_type(authored_speaker: String) -> String:
 			return "unassigned"
 
 func _schedule_next_dialogue_message(mode: InteractionMode, displayed_text: String = "") -> void:
-	var wait_time := active_phase_config.reading_duration_for_text(displayed_text)
 	if mode == InteractionMode.PSYCHOLOGICAL:
-		wait_time = maxf(wait_time, dialogue_panel.current_speech_bubble.get_stream_duration() + 0.5)
-		_start_psychological_dialogue_timer(wait_time, false)
+		_wait_for_psychological_dialogue_click()
 		return
+	var wait_time := active_phase_config.reading_duration_for_text(displayed_text)
 	var timer := _get_dialogue_timer(mode)
 	timer.start(wait_time)
 	timer.set_paused(interaction_mode != mode)
+
+func _wait_for_psychological_dialogue_click() -> void:
+	_invalidate_reading_step()
+	_reading_step_active = true
 
 func _start_psychological_dialogue_timer(wait_time: float, group_gap: bool) -> void:
 	_invalidate_reading_step()

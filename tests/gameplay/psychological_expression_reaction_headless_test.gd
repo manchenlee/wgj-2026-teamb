@@ -77,11 +77,11 @@ func _test_reaction_duration_and_mode_switch() -> void:
 	_prepare_choice(game, "positive", ["one of several authored response options", "another option"])
 	game._on_choice_selected("good", "good choice")
 	_assert(game.current_expression_state == PSYCHOLOGICAL_POSITIVE, "Positive request was not active while the response line was displayed.")
-	_assert(not game.psychological_dialogue_timer.is_stopped(), "Post-choice round-completion timer was not scheduled.")
+	_assert(game.psychological_dialogue_timer.is_stopped(), "Post-choice response started an automatic reading timer.")
 
 	game.set_interaction_mode(PHYSIOLOGICAL_MODE)
 	_assert(game.current_expression_state == PSYCHOLOGICAL_POSITIVE, "Mode switch cleared the psychological reaction.")
-	_assert(game.psychological_dialogue_timer.paused, "Psychological dialogue timer did not pause in physiological mode.")
+	_assert(game.psychological_dialogue_timer.is_stopped(), "Mode switch started a psychological dialogue timer.")
 	game._advance_character_expression_reactions(0.49)
 	_assert(game.current_expression_state == PSYCHOLOGICAL_POSITIVE, "Psychological reaction ended before 0.5 seconds.")
 	game._advance_character_expression_reactions(0.02)
