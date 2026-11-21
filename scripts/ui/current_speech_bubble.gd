@@ -66,6 +66,11 @@ func get_stream_duration() -> float:
 		return 0.0
 	return float(text_label.get_total_character_count()) / STREAM_CHARACTERS_PER_SECOND
 
+func get_remaining_stream_duration() -> float:
+	if not is_streaming():
+		return 0.0
+	return maxf(0.0, get_stream_duration() - _stream_progress / STREAM_CHARACTERS_PER_SECOND)
+
 func set_speaker_text(speaker_text: String) -> void:
 	if is_node_ready():
 		speaker_label.text = speaker_text

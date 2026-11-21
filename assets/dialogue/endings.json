@@ -1,6 +1,7 @@
 {
   "entries": {
     "peak_depletion_failure": {
+      "transition_line": "唔……",
       "title": "結局一",
       "steps": [
         {
@@ -112,6 +113,7 @@
       ]
     },
     "physical_imbalance_failure": {
+      "transition_line": "唔……",
       "title": "結局二",
       "steps": [
         {
@@ -239,6 +241,7 @@
       ]
     },
     "emotional_imbalance_failure": {
+      "transition_line": "唔……",
       "title": "結局三",
       "steps": [
         {
@@ -383,6 +386,7 @@
       ]
     },
     "success": {
+      "transition_line": "啊！……",
       "title": "結局四",
       "steps": [
         {
@@ -510,6 +514,7 @@
       ]
     },
     "safeword_ignored_failure": {
+      "transition_line": "唔……",
       "title": "結局五",
       "body": "隨著一聲近乎崩裂的聲響，你的觸手纏上了小提琴的每一個支點，生扳硬扯，強行調整到了自己想要的音調。\n小提琴剛開始還會發出刺耳難耐的嘶鳴，隨著你觸手的勁道逐漸增加，反抗的弦鳴也變成了嗚咽的應和。\n終於，在調整完最後一個旋鈕後，小提琴發出了你理想中的，悅耳的哀鳴聲。\n你調教出了你理想的小提琴。\n只有琴聲的小提琴。"
     }

@@ -13,6 +13,7 @@ const EndingEvaluatorClass := preload("res://scripts/gameplay/ending_evaluator.g
 const InteractionSpotManagerClass := preload("res://scripts/gameplay/interaction_spot_manager.gd")
 const ViolinSamplePlayerClass := preload("res://scripts/gameplay/violin_sample_player.gd")
 const ENDING_SCENE := preload("res://scenes/screens/EndingScreen.tscn")
+const ENDING_TEXTS_PATH := "res://assets/dialogue/endings.json"
 const GAME_SCENE := preload("res://scenes/screens/GameScreen.tscn")
 const TITLE_SCENE := preload("res://scenes/screens/TitleScreen.tscn")
 
@@ -116,6 +117,11 @@ var _presentation_prefetch_pending: Dictionary = {}
 var _presentation_prefetch_ready: Dictionary = {}
 var _presentation_prefetch_failed_paths: Dictionary = {}
 var ending_transition_started: bool = false
+var pending_ending_type: String = ""
+var _ending_transition_tween: Tween
+const ENDING_LINE_HOLD_SECONDS: float = 0.8
+const ENDING_FADE_SECONDS: float = 0.55
+const ENDING_SAFE_POINT_MAX_SECONDS: float = 0.65
 var has_left_overall_init_visual: bool = false
 var phase_sequence: Array = []
 var active_phase_index: int = 0
@@ -922,7 +928,7 @@ func _sync_physiological_visual_band(emit_crossing: bool = true) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if Engine.is_editor_hint() or not run_active:
+	if Engine.is_editor_hint() or not run_active or not pending_ending_type.is_empty():
 		return
 	if event.is_action_pressed("toggle_interaction_mode"):
 		get_viewport().set_input_as_handled()
@@ -943,6 +949,8 @@ func _on_dialogue_choice_input(index: int) -> void:
 	choice_panel.emit_choice_by_index(index)
 
 func toggle_interaction_mode() -> void:
+	if not pending_ending_type.is_empty():
+		return
 	var next_mode := InteractionMode.PHYSIOLOGICAL
 	if interaction_mode == InteractionMode.PHYSIOLOGICAL:
 		next_mode = InteractionMode.PSYCHOLOGICAL
@@ -950,6 +958,8 @@ func toggle_interaction_mode() -> void:
 
 
 func set_interaction_mode(next_mode: InteractionMode) -> void:
+	if not pending_ending_type.is_empty():
+		return
 	_set_interaction_mode(next_mode)
 
 
@@ -970,7 +980,7 @@ func _set_interaction_mode(next_mode: InteractionMode, force_sync: bool = false,
 	var entering_psychological_mode := interaction_mode != next_mode \
 			and next_mode == InteractionMode.PSYCHOLOGICAL
 	interaction_mode = next_mode
-	if entering_psychological_mode:
+	if entering_psychological_mode and pending_ending_type.is_empty():
 		_start_new_psychological_dialogue()
 	_sync_interaction_mode_state(preserve_note_audio)
 	interaction_mode_changed.emit(interaction_mode)
@@ -997,7 +1007,7 @@ func _sync_interaction_mode_state(preserve_note_audio: bool = false) -> void:
 			spot_manager.suspend(not preserve_note_audio)
 		else:
 			spot_manager.resume()
-	if psychological_active:
+	if psychological_active and pending_ending_type.is_empty():
 		_restore_or_initialize_active_dialogue()
 
 # ---------------------------------------------------------------------------
@@ -1051,6 +1061,11 @@ func _reset_run_for_phase_index(phase_index: int) -> void:
 	max_combo = 0
 	run_active = true
 	ending_transition_started = false
+	pending_ending_type = ""
+	if _ending_transition_tween != null:
+		_ending_transition_tween.kill()
+		_ending_transition_tween = null
+	phase_transition_overlay.visible = false
 	has_left_overall_init_visual = false
 	has_switched_to_game_bgm = false
 	last_requested_bgm_key = ""
@@ -1092,6 +1107,8 @@ func _next_chart_run_seed() -> int:
 # ---------------------------------------------------------------------------
 
 func apply_debug_values(value: float) -> void:
+	if not pending_ending_type.is_empty():
+		return
 	arousal_model.physical = value
 	arousal_model.emotional = value
 	arousal_model.peak = value
@@ -1101,15 +1118,15 @@ func force_ending(ending_type: String) -> void:
 	_begin_ending_transition(ending_type)
 
 func force_spawn_spot() -> void:
-	if spot_manager != null:
+	if spot_manager != null and pending_ending_type.is_empty():
 		spot_manager.force_spawn_spot()
 
 func force_complete_spot() -> void:
-	if spot_manager != null:
+	if spot_manager != null and pending_ending_type.is_empty():
 		spot_manager.force_complete_spot()
 
 func force_expire_spot() -> void:
-	if spot_manager != null:
+	if spot_manager != null and pending_ending_type.is_empty():
 		spot_manager.force_expire_spot()
 
 func get_debug_state() -> Dictionary:
@@ -1145,6 +1162,8 @@ func _on_spot_scrub_ended() -> void:
 		choice_timeout_timer.set_paused(interaction_mode != InteractionMode.PSYCHOLOGICAL)
 
 func _on_spot_telemetry_updated(telemetry: Dictionary) -> void:
+	if not pending_ending_type.is_empty():
+		return
 	_last_spot_telemetry = telemetry
 	_track_safe_word_threshold()
 	if debug_overlay != null:
@@ -1152,10 +1171,14 @@ func _on_spot_telemetry_updated(telemetry: Dictionary) -> void:
 
 
 func _on_physiological_spot_hit() -> void:
+	if not pending_ending_type.is_empty():
+		return
 	_show_timed_character_expression(CharacterExpressionSource.PHYSIOLOGICAL, PhaseCharacterProfileClass.ExpressionState.POSITIVE)
 
 
 func _on_physiological_spot_completed() -> void:
+	if not pending_ending_type.is_empty():
+		return
 	_on_physiological_spot_hit()
 	current_combo += 1
 	max_combo = maxi(max_combo, current_combo)
@@ -1164,6 +1187,8 @@ func _on_physiological_spot_completed() -> void:
 
 
 func _on_physiological_spot_failed(_progress_ratio: float, _penalty: float) -> void:
+	if not pending_ending_type.is_empty():
+		return
 	_show_timed_character_expression(CharacterExpressionSource.PHYSIOLOGICAL, PhaseCharacterProfileClass.ExpressionState.NEGATIVE)
 	current_combo = 0
 	status_hud.update_combo(current_combo)
@@ -1193,6 +1218,8 @@ func _on_psychological_dialogue_timer_timeout(generation: int) -> void:
 	_advance_psychological_dialogue(generation)
 
 func _on_dialogue_bubble_advance_requested() -> void:
+	if not pending_ending_type.is_empty():
+		return
 	if not dialogue_panel.current_speech_bubble.is_visible_in_tree():
 		return
 	if dialogue_panel.current_speech_bubble.is_streaming():
@@ -1230,7 +1257,8 @@ func _on_physiological_dialogue_timer_timeout() -> void:
 	physiological_dialogue_timer.stop()
 
 func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
-	if interaction_mode != InteractionMode.PSYCHOLOGICAL or not _has_pending_psychological_choice():
+	if not run_active or not pending_ending_type.is_empty() \
+			or interaction_mode != InteractionMode.PSYCHOLOGICAL or not _has_pending_psychological_choice():
 		return
 	choice_timeout_timer.stop()
 	dialogue_panel.append_history(choice_text, "player")
@@ -1265,7 +1293,7 @@ func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 	_update_presentation()
 
 func _on_choice_timeout() -> void:
-	if not run_active or interaction_mode != InteractionMode.PSYCHOLOGICAL \
+	if not run_active or not pending_ending_type.is_empty() or interaction_mode != InteractionMode.PSYCHOLOGICAL \
 			or not _has_pending_psychological_choice():
 		return
 	var ordinary_choice := not psychological_dialogue_controller.is_safe_word_choice_pending()
@@ -1285,7 +1313,7 @@ func _on_choice_timeout() -> void:
 	_update_presentation()
 
 func _push_next_dialogue_event(mode: InteractionMode) -> void:
-	if interaction_mode != mode or mode == InteractionMode.PHYSIOLOGICAL:
+	if not pending_ending_type.is_empty() or interaction_mode != mode or mode == InteractionMode.PHYSIOLOGICAL:
 		return
 	_invalidate_reading_step()
 	var controller: DialogueChoiceController = _get_dialogue_controller(mode)
@@ -1408,47 +1436,107 @@ func _has_pending_psychological_choice() -> bool:
 # ---------------------------------------------------------------------------
 
 func _check_ending() -> void:
-	if ending_transition_started:
+	if ending_transition_started or not pending_ending_type.is_empty():
 		return
 	var ending_type := EndingEvaluatorClass.evaluate(arousal_model)
 	if ending_type.is_empty():
 		return
-	if _safe_word_pending or _first_safe_word_dialogue_active:
+	# Keep the existing safeword priority for score peaks. Depletion must still
+	# resolve immediately, including while its dialogue is on screen.
+	if ending_type != Config.PEAK_DEPLETION_FAILURE_ENDING \
+			and (_safe_word_pending or _first_safe_word_dialogue_active):
 		if _safe_word_pending and interaction_mode == InteractionMode.PHYSIOLOGICAL:
 			_set_interaction_mode(InteractionMode.PSYCHOLOGICAL)
 		return
 	_begin_ending_transition(ending_type)
 
 func _begin_ending_transition(ending_type: String) -> void:
-	if ending_transition_started:
+	if ending_transition_started or not pending_ending_type.is_empty() or ending_type.is_empty():
 		return
+	# Lock the evaluated result before any timer, input, or visual callback can run.
+	pending_ending_type = ending_type
 	ending_transition_started = true
-	_stop_runtime_timers(true)
 	run_active = false
-	_update_character_visual_state(ending_type)
-	if current_presentation_phase == 4 and roundi(Config.clamp_value(arousal_model.physical)) == 100 \
-			and ending_type in [Config.SUCCESS_ENDING, Config.PHYSICAL_IMBALANCE_FAILURE_ENDING]:
+	_stop_runtime_timers(true)
+	var dialogue_ending := ending_type != Config.PHYSICAL_IMBALANCE_FAILURE_ENDING \
+			and not (ending_type == Config.SUCCESS_ENDING \
+			and interaction_mode == InteractionMode.PHYSIOLOGICAL)
+	if dialogue_ending:
+		var safe_point_delay := 0.0
+		if interaction_mode == InteractionMode.PSYCHOLOGICAL and dialogue_panel.visible \
+				and dialogue_panel.current_speech_bubble.visible:
+			safe_point_delay = minf(
+				dialogue_panel.current_speech_bubble.get_remaining_stream_duration(),
+				ENDING_SAFE_POINT_MAX_SECONDS
+			)
+		_ending_transition_tween = create_tween()
+		_ending_transition_tween.tween_interval(safe_point_delay + 0.1)
+		_ending_transition_tween.tween_callback(_show_pending_ending_line)
+		return
+	if ending_type == Config.PHYSICAL_IMBALANCE_FAILURE_ENDING:
+		# Keep the existing expression mapping and its negative artwork.
+		request_character_expression(CharacterExpressionSource.COMPATIBILITY,
+			PhaseCharacterProfileClass.ExpressionState.NEGATIVE)
+		_ending_transition_tween = create_tween()
+		_ending_transition_tween.tween_interval(0.45)
+		_ending_transition_tween.tween_callback(_play_ending_transition_fade.bind(ending_type))
+		return
+	if current_presentation_phase == 4 and roundi(Config.clamp_value(arousal_model.physical)) == 100:
 		set_shooting_tail_active(true)
-		var hold_tween := create_tween()
-		hold_tween.tween_interval(ENDING_SHOOTING_TAIL_HOLD_SECONDS)
-		hold_tween.tween_callback(func() -> void: _play_ending_transition_fade(ending_type, Color.WHITE))
+		_ending_transition_tween = create_tween()
+		_ending_transition_tween.tween_interval(ENDING_SHOOTING_TAIL_HOLD_SECONDS)
+		_ending_transition_tween.tween_callback(_play_ending_transition_fade.bind(ending_type))
 		return
 	_play_ending_transition_fade(ending_type)
 
-func _play_ending_transition_fade(ending_type: String, fade_color: Color = Color.BLACK) -> void:
+func _show_pending_ending_line() -> void:
+	if pending_ending_type.is_empty():
+		return
+	if interaction_mode == InteractionMode.PHYSIOLOGICAL:
+		# This is the same forced switch used by the physiological-50 safeword.
+		_set_interaction_mode(InteractionMode.PSYCHOLOGICAL)
+	var bubble: CurrentSpeechBubble = dialogue_panel.current_speech_bubble
+	if bubble.is_streaming():
+		bubble.finish_dialogue_stream()
+	choice_panel.clear_choices()
+	var line := _get_ending_transition_line(pending_ending_type)
+	dialogue_panel.append_history(line, "companion")
+	bubble.finish_dialogue_stream()
+	_ending_transition_tween = create_tween()
+	_ending_transition_tween.tween_interval(ENDING_LINE_HOLD_SECONDS)
+	_ending_transition_tween.tween_callback(_play_ending_transition_fade.bind(pending_ending_type))
+
+func _get_ending_transition_line(ending_type: String) -> String:
+	var file := FileAccess.open(ENDING_TEXTS_PATH, FileAccess.READ)
+	if file != null:
+		var parsed: Variant = JSON.parse_string(file.get_as_text())
+		if parsed is Dictionary:
+			var entries: Dictionary = parsed.get("entries", {})
+			var entry: Dictionary = entries.get(ending_type, {})
+			var line := String(entry.get("transition_line", ""))
+			if not line.is_empty():
+				return line
+	return "啊！……" if ending_type == Config.SUCCESS_ENDING else "唔……"
+
+func _play_ending_transition_fade(ending_type: String) -> void:
+	if pending_ending_type != ending_type:
+		return
 	if phase_transition_overlay == null:
 		_request_ending_transition(ending_type)
 		return
+	var fade_color := Color.WHITE if ending_type == Config.SUCCESS_ENDING else Color.BLACK
 	var overlay_start_color := Color(fade_color.r, fade_color.g, fade_color.b, 0.0)
 	var opaque_color := Color(fade_color.r, fade_color.g, fade_color.b, 1.0)
 	phase_transition_overlay.color = overlay_start_color
 	phase_transition_overlay.visible = true
-	var tween := create_tween()
-	tween.tween_property(phase_transition_overlay, "color", opaque_color, 1.0)
-	tween.tween_interval(1.0)
-	tween.tween_callback(func() -> void: _request_ending_transition(ending_type))
+	_ending_transition_tween = create_tween()
+	_ending_transition_tween.tween_property(phase_transition_overlay, "color", opaque_color, ENDING_FADE_SECONDS)
+	_ending_transition_tween.tween_callback(_request_ending_transition.bind(ending_type))
 
 func _request_ending_transition(ending_type: String) -> void:
+	if pending_ending_type != ending_type:
+		return
+	pending_ending_type = ""
 	if ending_requested.get_connections().size() > 0:
 		ending_requested.emit(ending_type)
 		return
