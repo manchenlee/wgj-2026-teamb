@@ -77,6 +77,7 @@ var _telemetry_incremental_gain: float = 0.0
 var _telemetry_completion_bonus: float = 0.0
 var _telemetry_physical_at_session_start: float = 0.0
 var _telemetry_penalty: float = 0.0
+var _last_progress_telemetry_frame: int = -1
 
 
 func _init() -> void:
@@ -717,17 +718,6 @@ func _spawn_note_type(requested_note_type: int = -1, chart_event: Dictionary = {
 
 	_prompt_layer.add_child(spot)
 	_active_spots.append(spot)
-
-	print_debug(
-		"InteractionSpotManager: spawned %s anchor='%s' start=%s bounds=%s radius=%.0f active=%d" % [
-			_note_type_name(note_type),
-			anchor_id,
-			str(local_center),
-			str(_bounds_rect),
-			radius,
-			_active_spots.size()
-		]
-	)
 	return "spawned"
 
 
@@ -1005,8 +995,8 @@ func _on_spot_audio_motion_valid(spot: InteractionNote) -> void:
 		if not bool(spot.get_meta("rub_pitch_triggered", false)):
 			_count_chart_pitch_trigger(spot)
 			spot.set_meta("rub_pitch_triggered", true)
+			physiological_spot_hit.emit()
 		rub_audio_motion.emit(spot.get_instance_id(), int(spot.get_meta("bound_pitch", -1)))
-		physiological_spot_hit.emit()
 
 
 func _count_chart_pitch_trigger(spot: InteractionNote) -> void:
@@ -1025,7 +1015,12 @@ func _on_spot_progressed(progress_delta: float, _spot: InteractionNote) -> void:
 	_arousal_model.apply_physical(gain)
 	_arousal_model.refresh_physical_activity()
 	_telemetry_incremental_gain += gain
-	_emit_telemetry()
+	# Raw mouse motion can arrive many times in one rendered frame. Keep score
+	# changes exact, but rebuild UI telemetry only once for that frame.
+	var frame := Engine.get_process_frames()
+	if frame != _last_progress_telemetry_frame:
+		_last_progress_telemetry_frame = frame
+		_emit_telemetry()
 
 
 func _on_spot_completed(spot: InteractionNote) -> void:
@@ -1140,6 +1135,7 @@ func _telemetry_reset() -> void:
 	_telemetry_completion_bonus = 0.0
 	_telemetry_physical_at_session_start = 0.0
 	_telemetry_penalty = 0.0
+	_last_progress_telemetry_frame = -1
 
 
 func _emit_telemetry() -> void:

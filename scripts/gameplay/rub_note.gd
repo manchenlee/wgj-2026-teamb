@@ -2,7 +2,6 @@ class_name RubNote
 extends InteractionNote
 
 const CursorHitAreaClass := preload("res://scripts/gameplay/cursor_hit_area.gd")
-const NoteInputSamplingClass := preload("res://scripts/gameplay/note_input_sampling.gd")
 const HEART_TEXTURE := preload("res://assets/art/ui/gameplay/img_heart.png")
 const HINT_ORBIT_RADIUS: float = 12.0
 const HINT_ORBIT_PERIOD: float = 1.6
@@ -17,11 +16,11 @@ var accumulated_scrub_distance: float = 0.0
 
 var _mouse_held: bool = false
 var _active_touch_index: int = -1
-var _precision_input_active: bool = false
 var _has_pointer_sample: bool = false
 var _last_pointer_pos: Vector2 = Vector2.ZERO
 var _pending_motion_distance: float = 0.0
 var _hint_orbit_angle: float = -PI * 0.5
+var _last_feedback_frame: int = -1
 
 @onready var friction_hint: TextureRect = $FrictionHint
 
@@ -87,11 +86,14 @@ func _handle_input(event: InputEvent, global_coordinates: bool) -> bool:
 			return false
 		var pointer_position := _to_local_pointer_position(mouse_button.position) if global_coordinates else mouse_button.position
 		if mouse_button.pressed:
+			# A new press proves an earlier release was lost (for example after
+			# leaving the window). Do not leave the old drag blocking this one.
+			if _mouse_held:
+				_stop_rubbing()
 			if _active_touch_index < 0 and _is_inside_target(pointer_position, mouse_hit_radius):
 				_mouse_held = true
+				_last_feedback_frame = -1
 				_set_pointer_sample(pointer_position)
-				NoteInputSamplingClass.acquire()
-				_precision_input_active = true
 				_begin_interaction()
 				queue_redraw()
 				return true
@@ -110,9 +112,8 @@ func _handle_input(event: InputEvent, global_coordinates: bool) -> bool:
 		if screen_touch.pressed:
 			if not _mouse_held and _active_touch_index < 0 and _is_inside_target(pointer_position):
 				_active_touch_index = screen_touch.index
+				_last_feedback_frame = -1
 				_set_pointer_sample(pointer_position)
-				NoteInputSamplingClass.acquire()
-				_precision_input_active = true
 				_begin_interaction()
 				queue_redraw()
 				return true
@@ -130,18 +131,12 @@ func _handle_input(event: InputEvent, global_coordinates: bool) -> bool:
 
 
 func _draw() -> void:
-	var progress := get_progress_ratio()
 	_draw_approach_circle()
 	_draw_note_circle(
 		target_center,
 		target_radius,
 		Color(1.0, 0.87, 0.40, 1.0) if is_rubbing() else Color(1.0, 0.73, 0.22, 0.94)
 	)
-	if is_rubbing():
-		draw_arc(target_center, target_radius + 7.0, 0.0, TAU, 64, Color(1.0, 0.91, 0.48, 0.95), 5.0, true)
-	if progress > 0.0:
-		draw_arc(target_center, target_radius + 7.0, -PI * 0.5,
-			-PI * 0.5 + TAU * progress, 64, Color.WHITE, 7.0, true)
 
 
 func _process_pointer_move(new_pos: Vector2) -> void:
@@ -166,7 +161,10 @@ func _process_pointer_move(new_pos: Vector2) -> void:
 		return
 	accumulated_scrub_distance += credited_distance
 	audio_motion_valid.emit()
-	visual_motion.emit(movement.normalized(), credited_distance / maxf(max_delta_per_event, 0.001))
+	var frame := Engine.get_process_frames()
+	if frame != _last_feedback_frame:
+		_last_feedback_frame = frame
+		visual_motion.emit(movement.normalized(), credited_distance / maxf(max_delta_per_event, 0.001))
 	progressed.emit(credited_distance / maxf(required_scrub_distance, 0.001))
 	queue_redraw()
 	if fmod(accumulated_scrub_distance, 60.0) < credited_distance:
@@ -212,18 +210,14 @@ func _clear_pointer_sample() -> void:
 func _stop_rubbing() -> void:
 	_mouse_held = false
 	_active_touch_index = -1
-	if _precision_input_active:
-		NoteInputSamplingClass.release()
-		_precision_input_active = false
 	_clear_pointer_sample()
 	_end_interaction()
 	queue_redraw()
 
 
-func _exit_tree() -> void:
-	if _precision_input_active:
-		NoteInputSamplingClass.release()
-		_precision_input_active = false
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_WINDOW_FOCUS_OUT and is_rubbing():
+		_stop_rubbing()
 
 
 func _spawn_heart_particle() -> void:

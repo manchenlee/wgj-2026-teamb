@@ -35,6 +35,11 @@ func _exit_tree() -> void:
 		_precision_input_active = false
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_WINDOW_FOCUS_OUT and is_dragging():
+		_stop_dragging()
+
+
 func setup(config: Dictionary) -> void:
 	super.setup(config)
 	checkpoint_radius = float(config.get("checkpoint_radius", 40.0))
@@ -83,6 +88,8 @@ func _input(event: InputEvent) -> void:
 			return
 		var local_position := _to_local_pointer_position(mouse_button.position)
 		if mouse_button.pressed:
+			if _mouse_held:
+				_stop_dragging()
 			if _active_touch_index < 0:
 				_start_drag(local_position, -1)
 		else:

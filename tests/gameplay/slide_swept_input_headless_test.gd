@@ -79,6 +79,14 @@ func _run() -> void:
 	cursor_edge.queue_free()
 	await process_frame
 
+	var missed_release := _make_slide(points)
+	missed_release._input(_button(points[0], true))
+	missed_release._input(_button(points[1], true))
+	_check(missed_release.get_next_checkpoint_index() == 2,
+		"A new press could not resume Slide after a lost mouse release.")
+	missed_release.queue_free()
+	await process_frame
+
 	var reverse := _make_slide(points)
 	reverse._input(_button(points[0], true))
 	reverse._input(_motion(Vector2(350, 100)))

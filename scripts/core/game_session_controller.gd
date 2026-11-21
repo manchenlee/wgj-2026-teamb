@@ -691,8 +691,11 @@ func _update_phase_specific_visual_layers(
 func _apply_phase_layer_texture(layer: TextureRect, next_texture: Texture2D) -> void:
 	if layer == null:
 		return
-	layer.texture = next_texture
-	layer.visible = next_texture != null
+	if layer.texture != next_texture:
+		layer.texture = next_texture
+	var should_show := next_texture != null
+	if layer.visible != should_show:
+		layer.visible = should_show
 
 func _get_phase_layer_texture(layer_key: String) -> Texture2D:
 	if character_layer_textures.has(layer_key):
@@ -1189,7 +1192,7 @@ func _on_spot_telemetry_updated(telemetry: Dictionary) -> void:
 		return
 	_last_spot_telemetry = telemetry
 	_track_safe_word_threshold()
-	if debug_overlay != null:
+	if debug_overlay != null and debug_overlay.visible:
 		debug_overlay.sync_live_readout(get_debug_state())
 
 
@@ -1635,7 +1638,7 @@ func _update_presentation() -> void:
 	)
 	_update_score_warning_state()
 	_update_phase_debug_label()
-	if debug_overlay != null:
+	if debug_overlay != null and debug_overlay.visible:
 		debug_overlay.sync_live_readout(get_debug_state())
 
 

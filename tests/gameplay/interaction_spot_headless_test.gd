@@ -129,11 +129,11 @@ func _test_expression_hit_signals() -> void:
 	manager._on_spot_audio_motion_valid(rub)
 	manager._on_spot_audio_motion_valid(rub)
 	manager._on_spot_audio_note_reached(click)
-	_assert(counts.hits == 3, "Slide checkpoints and rub motion did not trigger positive hits independently of click audio.")
+	_assert(counts.hits == 2, "Slide checkpoints and the first rub motion did not trigger positive hits independently of click audio.")
 	manager._suspended = true
 	manager._on_spot_audio_note_reached(slide)
 	manager._on_spot_audio_motion_valid(rub)
-	_assert(counts.hits == 3, "Suspended notes triggered a positive hit.")
+	_assert(counts.hits == 2, "Suspended notes triggered a positive hit.")
 	slide.queue_free()
 	rub.queue_free()
 	click.queue_free()
@@ -350,8 +350,11 @@ func _test_rub_input_and_progress() -> void:
 	_assert(not note.is_rubbing(), "Outside press, secondary click, or movement started RubNote.")
 	_assert(absf(note.get_progress_ratio()) < 0.001, "Movement without an active Rub press added progress.")
 
+	var initial_input_accumulation := Input.use_accumulated_input
 	note._gui_input(_mouse_button_event(center, true))
 	_assert(note.is_rubbing(), "Primary press inside did not start RubNote.")
+	_assert(Input.use_accumulated_input == initial_input_accumulation,
+		"Rub disabled Godot's mouse event accumulation during a drag.")
 	_assert(counts.started == 1, "RubNote did not emit one interaction-started signal.")
 	note._gui_input(_mouse_motion_event(center + Vector2(2.0, 0.0)))
 	_assert(absf(note.accumulated_scrub_distance) < 0.001, "Sub-threshold Rub movement added progress.")
@@ -390,6 +393,17 @@ func _test_rub_input_and_progress() -> void:
 	_assert(cursor_edge_note.is_rubbing(), "RubNote hit area rejected a press near its visible boundary.")
 	cursor_edge_note._gui_input(_mouse_button_event(cursor_edge, false))
 	cursor_edge_note.queue_free()
+	await process_frame
+
+	var missed_release_note := _make_rub_note()
+	var restart_count := [0]
+	missed_release_note.interaction_started.connect(func() -> void: restart_count[0] += 1)
+	missed_release_note._gui_input(_mouse_button_event(missed_release_note.target_center, true))
+	missed_release_note._gui_input(_mouse_button_event(missed_release_note.target_center, true))
+	_assert(missed_release_note.is_rubbing() and restart_count[0] == 2,
+		"A new press could not restart Rub after a lost mouse release.")
+	missed_release_note._gui_input(_mouse_button_event(missed_release_note.target_center, false))
+	missed_release_note.queue_free()
 	await process_frame
 
 
