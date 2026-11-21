@@ -13,7 +13,7 @@ const BGM_DEFAULT := preload("res://assets/audio/bgm/default.mp3")
 const BGM_GAMEPLAY := preload("res://assets/audio/bgm/piano_gameplay.ogg")
 const BGM_ENDING := preload("res://assets/audio/bgm/ending.mp3")
 const TENTACLE_CURSOR := preload("res://assets/art/ui/gameplay/img_tentacle.png")
-# Keep the native cursor and its gameplay hit area on the same design scale.
+# Keep the native cursor at its original design size; hit radius is tuned separately.
 const TENTACLE_CURSOR_SIZE := Vector2i(
 	int(CursorHitAreaClass.DIAMETER), int(CursorHitAreaClass.DIAMETER)
 )
