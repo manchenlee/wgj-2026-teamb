@@ -1,8 +1,11 @@
 class_name ClickNote
 extends InteractionNote
 
+const CursorHitAreaClass := preload("res://scripts/gameplay/cursor_hit_area.gd")
+
 var target_center: Vector2 = Vector2(84.0, 84.0)
 var target_radius: float = 40.0
+var mouse_hit_radius: float = CursorHitAreaClass.RADIUS
 
 
 func _ready() -> void:
@@ -14,6 +17,7 @@ func setup(config: Dictionary) -> void:
 	super.setup(config)
 	target_center = config.get("target_center", Vector2(84.0, 84.0)) as Vector2
 	target_radius = float(config.get("target_radius", 40.0))
+	mouse_hit_radius = float(config.get("mouse_hit_radius", CursorHitAreaClass.RADIUS))
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -21,15 +25,17 @@ func _gui_input(event: InputEvent) -> void:
 		return
 	var press_position := Vector2.ZERO
 	var is_primary_press := false
+	var hit_radius := target_radius
 	if event is InputEventMouseButton:
 		var mouse_button := event as InputEventMouseButton
 		is_primary_press = mouse_button.button_index == MOUSE_BUTTON_LEFT and mouse_button.pressed
 		press_position = mouse_button.position
+		hit_radius += mouse_hit_radius
 	elif event is InputEventScreenTouch:
 		var screen_touch := event as InputEventScreenTouch
 		is_primary_press = screen_touch.pressed
 		press_position = screen_touch.position
-	if not is_primary_press or press_position.distance_to(target_center) > target_radius:
+	if not is_primary_press or press_position.distance_to(target_center) > hit_radius:
 		return
 	accept_event()
 	_begin_interaction()

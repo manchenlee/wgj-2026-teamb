@@ -1,6 +1,7 @@
 extends SceneTree
 
 const SLIDE_SCENE := preload("res://scenes/components/SlideNote.tscn")
+const CURSOR_HIT_AREA := preload("res://scripts/gameplay/cursor_hit_area.gd")
 
 var _failures: Array[String] = []
 
@@ -31,7 +32,12 @@ func _check(condition: bool, message: String) -> void:
 
 func _make_slide(points: PackedVector2Array, radius: float = 20.0) -> SlideNote:
 	var slide := SLIDE_SCENE.instantiate() as SlideNote
-	slide.setup({"checkpoints": points, "checkpoint_radius": radius, "spot_lifetime": 30.0})
+	slide.setup({
+		"checkpoints": points,
+		"checkpoint_radius": radius,
+		"mouse_hit_radius": 0.0,
+		"spot_lifetime": 30.0,
+	})
 	root.add_child(slide)
 	return slide
 
@@ -50,6 +56,17 @@ func _run() -> void:
 	_check(slide._resolved and counts.progress == 3 and counts.audio == 4 and counts.completed == 1,
 		"A single low-frequency motion did not register all three ordered swept crossings.")
 	slide.queue_free()
+	await process_frame
+
+	var cursor_edge := _make_slide(points)
+	cursor_edge.mouse_hit_radius = CURSOR_HIT_AREA.RADIUS
+	cursor_edge._input(_button(
+		points[0] + Vector2(cursor_edge.checkpoint_radius + CURSOR_HIT_AREA.RADIUS - 1.0, 0.0),
+		true
+	))
+	_check(cursor_edge.is_dragging() and cursor_edge.is_armed(),
+		"Visible cursor edge did not activate the first Slide checkpoint.")
+	cursor_edge.queue_free()
 	await process_frame
 
 	var reverse := _make_slide(points)

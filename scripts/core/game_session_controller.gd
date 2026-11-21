@@ -1249,7 +1249,7 @@ func _advance_psychological_dialogue(generation: int) -> void:
 		dialogue_panel.hide_current_line()
 		_clear_dialogue_expression()
 		_start_psychological_dialogue_timer(
-			randf_range(Config.PSYCHOLOGICAL_GROUP_GAP_MIN, Config.PSYCHOLOGICAL_GROUP_GAP_MAX), true
+			Config.PSYCHOLOGICAL_GROUP_GAP_SECONDS, true
 		)
 	else:
 		_push_next_dialogue_event(InteractionMode.PSYCHOLOGICAL)
@@ -1313,7 +1313,7 @@ func _on_choice_timeout() -> void:
 		var penalty := maxf(0.0, active_phase_config.choice_timeout_emotional_penalty)
 		arousal_model.apply_emotional(-penalty)
 	_start_psychological_dialogue_timer(
-		randf_range(Config.PSYCHOLOGICAL_GROUP_GAP_MIN, Config.PSYCHOLOGICAL_GROUP_GAP_MAX), true
+		Config.PSYCHOLOGICAL_GROUP_GAP_SECONDS, true
 	)
 	_update_presentation()
 

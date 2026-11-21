@@ -4,6 +4,7 @@ const SLIDE_NOTE_SCENE := preload("res://scenes/components/SlideNote.tscn")
 const CLICK_NOTE_SCENE := preload("res://scenes/components/ClickNote.tscn")
 const RUB_NOTE_SCENE := preload("res://scenes/components/RubNote.tscn")
 const SPOT_MANAGER_SCRIPT := preload("res://scripts/gameplay/interaction_spot_manager.gd")
+const CURSOR_HIT_AREA := preload("res://scripts/gameplay/cursor_hit_area.gd")
 const PHASE_CONFIG_SCRIPT := preload("res://data/phases/phase_config.gd")
 const CONFIG := preload("res://scripts/gameplay/GameConfig.gd")
 var test_points := PackedVector2Array([
@@ -79,6 +80,7 @@ func _make_spot(lifetime: float = 30.0) -> SlideNote:
 	spot.setup({
 		"spot_lifetime": lifetime,
 		"checkpoint_radius": 40.0,
+		"mouse_hit_radius": 0.0,
 		"checkpoints": test_points,
 	})
 	root.add_child(spot)
@@ -91,6 +93,7 @@ func _make_click_note(lifetime: float = 30.0) -> ClickNote:
 		"spot_lifetime": lifetime,
 		"target_center": Vector2(84.0, 84.0),
 		"target_radius": 40.0,
+		"mouse_hit_radius": 0.0,
 	})
 	root.add_child(note)
 	return note
@@ -105,6 +108,7 @@ func _make_rub_note(lifetime: float = 30.0, required_distance: float = 600.0) ->
 		"max_delta_per_event": 24.0,
 		"target_center": Vector2(108.0, 108.0),
 		"target_radius": 52.0,
+		"mouse_hit_radius": 0.0,
 	})
 	root.add_child(note)
 	return note
@@ -175,7 +179,10 @@ func _test_click_input_and_scoring() -> void:
 	motion.position = note.target_center
 	note._gui_input(motion)
 	note._gui_input(_mouse_button_event(note.target_center, false))
-	note._gui_input(_mouse_button_event(note.target_center + Vector2(note.target_radius + 1.0, 0.0), true))
+	note._gui_input(_mouse_button_event(
+		note.target_center + Vector2(note.target_radius + CURSOR_HIT_AREA.RADIUS + 1.0, 0.0),
+		true
+	))
 	note._gui_input(_mouse_button_event(note.target_center, true, MOUSE_BUTTON_RIGHT))
 	_assert(counts.completed == 0, "Movement, release, outside click, or secondary click completed ClickNote.")
 
@@ -187,6 +194,19 @@ func _test_click_input_and_scoring() -> void:
 	note.force_expire()
 	_assert(counts.completed == 1, "ClickNote resolved again after successful input.")
 	note.queue_free()
+	await process_frame
+
+	var cursor_edge_note := _make_click_note()
+	cursor_edge_note.mouse_hit_radius = CURSOR_HIT_AREA.RADIUS
+	var cursor_edge_counts := {"completed": 0}
+	cursor_edge_note.completed.connect(func() -> void: cursor_edge_counts.completed += 1)
+	cursor_edge_note._gui_input(_mouse_button_event(
+		cursor_edge_note.target_center
+			+ Vector2(cursor_edge_note.target_radius + CURSOR_HIT_AREA.RADIUS - 1.0, 0.0),
+		true
+	))
+	_assert(cursor_edge_counts.completed == 1, "Visible cursor edge did not activate ClickNote.")
+	cursor_edge_note.queue_free()
 	await process_frame
 
 	var scoring_note := _make_click_note()
@@ -315,7 +335,9 @@ func _test_rub_input_and_progress() -> void:
 	var center := note.target_center
 
 	note._gui_input(_mouse_motion_event(center + Vector2(10.0, 0.0)))
-	note._gui_input(_mouse_button_event(center + Vector2(note.target_radius + 1.0, 0.0), true))
+	note._gui_input(_mouse_button_event(
+		center + Vector2(note.target_radius + CURSOR_HIT_AREA.RADIUS + 1.0, 0.0), true
+	))
 	note._gui_input(_mouse_motion_event(center))
 	note._gui_input(_mouse_button_event(center, true, MOUSE_BUTTON_RIGHT))
 	_assert(not note.is_rubbing(), "Outside press, secondary click, or movement started RubNote.")
@@ -331,7 +353,9 @@ func _test_rub_input_and_progress() -> void:
 	note._gui_input(_mouse_motion_event(center + Vector2(-20.0, 0.0)))
 	_assert(absf(note.accumulated_scrub_distance - 42.0) < 0.001, "Large Rub movement was not capped at 24 px.")
 
-	note._gui_input(_mouse_motion_event(center + Vector2(note.target_radius + 10.0, 0.0)))
+	note._gui_input(_mouse_motion_event(
+		center + Vector2(note.target_radius + CURSOR_HIT_AREA.RADIUS + 10.0, 0.0)
+	))
 	note._gui_input(_mouse_motion_event(center))
 	_assert(absf(note.accumulated_scrub_distance - 42.0) < 0.001, "Leaving or first re-entering the Rub circle added progress.")
 	note._gui_input(_mouse_motion_event(center + Vector2(10.0, 0.0)))
@@ -345,6 +369,16 @@ func _test_rub_input_and_progress() -> void:
 	note._gui_input(_mouse_motion_event(center + Vector2(-10.0, 0.0)))
 	_assert(absf(note.accumulated_scrub_distance - 52.0) < 0.001, "Movement after release added Rub progress.")
 	note.queue_free()
+	await process_frame
+
+	var cursor_edge_note := _make_rub_note()
+	cursor_edge_note.mouse_hit_radius = CURSOR_HIT_AREA.RADIUS
+	var cursor_edge := cursor_edge_note.target_center \
+		+ Vector2(cursor_edge_note.target_radius + CURSOR_HIT_AREA.RADIUS - 1.0, 0.0)
+	cursor_edge_note._gui_input(_mouse_button_event(cursor_edge, true))
+	_assert(cursor_edge_note.is_rubbing(), "Visible cursor edge did not activate RubNote.")
+	cursor_edge_note._gui_input(_mouse_button_event(cursor_edge, false))
+	cursor_edge_note.queue_free()
 	await process_frame
 
 

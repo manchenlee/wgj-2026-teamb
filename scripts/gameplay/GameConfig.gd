@@ -15,8 +15,7 @@ const LOW_SCORE_WARNING_THRESHOLD: float = 20.0
 const SCORE_IMBALANCE_WARNING_THRESHOLD: float = 10.0
 
 # Shared dialogue defaults.
-const PSYCHOLOGICAL_GROUP_GAP_MIN: float = 0.5
-const PSYCHOLOGICAL_GROUP_GAP_MAX: float = 1.5
+const PSYCHOLOGICAL_GROUP_GAP_SECONDS: float = 1.5
 const FEEDBACK_MESSAGE_TEXT: String = "……"
 const RESPONSE_BUTTON_TEXT: String = "……"
 const SAFE_WORD_DEFAULT: String = "紅色"

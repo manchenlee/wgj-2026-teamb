@@ -1,6 +1,7 @@
 class_name RubNote
 extends InteractionNote
 
+const CursorHitAreaClass := preload("res://scripts/gameplay/cursor_hit_area.gd")
 const HEART_TEXTURE := preload("res://assets/art/ui/gameplay/img_heart.png")
 const HINT_ORBIT_RADIUS: float = 12.0
 const HINT_ORBIT_PERIOD: float = 1.6
@@ -10,6 +11,7 @@ var valid_motion_threshold: float = 3.0
 var max_delta_per_event: float = 24.0
 var target_center: Vector2 = Vector2(212.0, 212.0)
 var target_radius: float = 104.0
+var mouse_hit_radius: float = CursorHitAreaClass.RADIUS
 var accumulated_scrub_distance: float = 0.0
 
 var _mouse_held: bool = false
@@ -36,6 +38,7 @@ func setup(config: Dictionary) -> void:
 	max_delta_per_event = float(config.get("max_delta_per_event", 24.0))
 	target_center = config.get("target_center", Vector2(212.0, 212.0)) as Vector2
 	target_radius = float(config.get("target_radius", 104.0))
+	mouse_hit_radius = float(config.get("mouse_hit_radius", CursorHitAreaClass.RADIUS))
 	if is_node_ready():
 		friction_hint.size = Vector2.ONE * target_radius * 0.95
 		_update_friction_hint_position()
@@ -82,7 +85,7 @@ func _handle_input(event: InputEvent, global_coordinates: bool) -> bool:
 			return false
 		var pointer_position := _to_local_pointer_position(mouse_button.position) if global_coordinates else mouse_button.position
 		if mouse_button.pressed:
-			if _active_touch_index < 0 and _is_inside_target(pointer_position):
+			if _active_touch_index < 0 and _is_inside_target(pointer_position, mouse_hit_radius):
 				_mouse_held = true
 				_set_pointer_sample(pointer_position)
 				_begin_interaction()
@@ -134,13 +137,14 @@ func _draw() -> void:
 func _process_pointer_move(new_pos: Vector2) -> void:
 	if _resolved or _suspended or not is_rubbing():
 		return
-	if not _is_inside_target(new_pos):
+	var hit_margin := mouse_hit_radius if _mouse_held else 0.0
+	if not _is_inside_target(new_pos, hit_margin):
 		_clear_pointer_sample()
 		return
 	if not _has_pointer_sample:
 		_set_pointer_sample(new_pos)
 		return
-	if not _is_inside_target(_last_pointer_pos):
+	if not _is_inside_target(_last_pointer_pos, hit_margin):
 		_set_pointer_sample(new_pos)
 		return
 
@@ -164,8 +168,9 @@ func _process_pointer_move(new_pos: Vector2) -> void:
 		_resolve_completed()
 
 
-func _is_inside_target(position_to_test: Vector2) -> bool:
-	return position_to_test.distance_squared_to(target_center) <= target_radius * target_radius
+func _is_inside_target(position_to_test: Vector2, hit_margin: float = 0.0) -> bool:
+	var hit_radius := target_radius + hit_margin
+	return position_to_test.distance_squared_to(target_center) <= hit_radius * hit_radius
 
 
 func _set_pointer_sample(position: Vector2) -> void:

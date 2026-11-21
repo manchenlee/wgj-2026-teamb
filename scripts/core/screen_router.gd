@@ -1,6 +1,7 @@
 extends Control
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
+const CursorHitAreaClass := preload("res://scripts/gameplay/cursor_hit_area.gd")
 const TITLE_SCENE := preload("res://scenes/screens/TitleScreen.tscn")
 const WARNING_SCENE := preload("res://scenes/screens/WarningScreen.tscn")
 const OPENING_SCENE := preload("res://scenes/screens/OpeningScreen.tscn")
@@ -12,9 +13,10 @@ const BGM_DEFAULT := preload("res://assets/audio/bgm/default.mp3")
 const BGM_GAMEPLAY := preload("res://assets/audio/bgm/piano_gameplay.ogg")
 const BGM_ENDING := preload("res://assets/audio/bgm/ending.mp3")
 const TENTACLE_CURSOR := preload("res://assets/art/ui/gameplay/img_tentacle.png")
-# Match the 52 px gameplay checkpoint radius so the cursor and notes keep the
-# same visual scale as the viewport stretches across different window sizes.
-const TENTACLE_CURSOR_SIZE := Vector2i(104, 104)
+# Keep the native cursor and its gameplay hit area on the same design scale.
+const TENTACLE_CURSOR_SIZE := Vector2i(
+	int(CursorHitAreaClass.DIAMETER), int(CursorHitAreaClass.DIAMETER)
+)
 const MAX_CURSOR_SIZE := 256
 const BGM_TARGET_VOLUME_DB := -6.0
 const BGM_SILENT_VOLUME_DB := -40.0

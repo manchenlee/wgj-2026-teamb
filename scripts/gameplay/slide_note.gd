@@ -1,6 +1,7 @@
 class_name SlideNote
 extends InteractionNote
 
+const CursorHitAreaClass := preload("res://scripts/gameplay/cursor_hit_area.gd")
 const HEART_TEXTURE := preload("res://assets/art/ui/gameplay/img_heart.png")
 const NOTE_LABEL_FONT := preload("res://assets/fonts/ShipporiMincho-Bold.ttf")
 const SLIDE_COLOR := Color("#85CCFFE0")
@@ -11,6 +12,7 @@ static var _previous_accumulated_input: bool = true
 
 var checkpoint_radius: float = 40.0
 var checkpoints: PackedVector2Array = PackedVector2Array()
+var mouse_hit_radius: float = CursorHitAreaClass.RADIUS
 
 var _next_checkpoint_index: int = 0
 var _armed: bool = false
@@ -39,6 +41,7 @@ func _exit_tree() -> void:
 func setup(config: Dictionary) -> void:
 	super.setup(config)
 	checkpoint_radius = float(config.get("checkpoint_radius", 40.0))
+	mouse_hit_radius = float(config.get("mouse_hit_radius", CursorHitAreaClass.RADIUS))
 	var configured_checkpoints: Variant = config.get("checkpoints", PackedVector2Array())
 	if configured_checkpoints is PackedVector2Array:
 		checkpoints = configured_checkpoints
@@ -137,10 +140,11 @@ func _draw() -> void:
 func _process_pointer_move(new_pos: Vector2) -> void:
 	if _resolved or _suspended or not is_dragging() or checkpoints.size() < 2:
 		return
+	var hit_margin := mouse_hit_radius if _mouse_held else 0.0
 	if not _has_pointer_sample:
 		_has_pointer_sample = true
 		_last_pointer_pos = new_pos
-		_pointer_was_inside_target = _is_inside_target(new_pos)
+		_pointer_was_inside_target = _is_inside_target(new_pos, hit_margin)
 		return
 
 	var previous_pos := _last_pointer_pos
@@ -151,7 +155,7 @@ func _process_pointer_move(new_pos: Vector2) -> void:
 		if target_index < 0 or target_index >= checkpoints.size():
 			break
 		var crossing_fraction := _segment_circle_entry_fraction(
-			previous_pos, new_pos, checkpoints[target_index], checkpoint_radius
+			previous_pos, new_pos, checkpoints[target_index], checkpoint_radius + hit_margin
 		)
 		if _pointer_was_inside_target or crossing_fraction < 0.0 \
 				or crossing_fraction < last_crossing_fraction:
@@ -160,7 +164,7 @@ func _process_pointer_move(new_pos: Vector2) -> void:
 		_activate_current_target()
 		# The next target must be entered after this one on the same motion segment.
 		_pointer_was_inside_target = false
-	_pointer_was_inside_target = _is_inside_target(new_pos)
+	_pointer_was_inside_target = _is_inside_target(new_pos, hit_margin)
 
 
 func _activate_current_target() -> void:
@@ -210,11 +214,12 @@ func _get_approach_color() -> Color:
 	return SLIDE_COMPLETED_COLOR
 
 
-func _is_inside_target(position_to_test: Vector2) -> bool:
+func _is_inside_target(position_to_test: Vector2, hit_margin: float = 0.0) -> bool:
 	var target_index := _get_target_index()
 	if target_index < 0 or target_index >= checkpoints.size():
 		return false
-	return position_to_test.distance_squared_to(checkpoints[target_index]) <= checkpoint_radius * checkpoint_radius
+	var hit_radius := checkpoint_radius + hit_margin
+	return position_to_test.distance_squared_to(checkpoints[target_index]) <= hit_radius * hit_radius
 
 
 func _segment_circle_entry_fraction(
@@ -255,21 +260,22 @@ func _on_resumed() -> void:
 
 
 func _start_drag(local_position: Vector2, touch_index: int) -> void:
-	if is_dragging() or checkpoints.is_empty() or not _is_inside_drag_start(local_position):
+	var hit_margin := mouse_hit_radius if touch_index < 0 else 0.0
+	if is_dragging() or checkpoints.is_empty() or not _is_inside_drag_start(local_position, hit_margin):
 		return
 	_mouse_held = touch_index < 0
 	_active_touch_index = touch_index
 	_has_pointer_sample = true
 	_last_pointer_pos = local_position
-	_pointer_was_inside_target = _is_inside_target(local_position)
+	_pointer_was_inside_target = _is_inside_target(local_position, hit_margin)
 	_begin_interaction()
 	if not _armed:
 		_activate_current_target()
-		_pointer_was_inside_target = _is_inside_target(local_position)
+		_pointer_was_inside_target = _is_inside_target(local_position, hit_margin)
 	elif _pointer_was_inside_target:
 		# Pressing the next unvisited checkpoint resumes at that checkpoint.
 		_activate_current_target()
-		_pointer_was_inside_target = _is_inside_target(local_position)
+		_pointer_was_inside_target = _is_inside_target(local_position, hit_margin)
 
 
 func _stop_dragging() -> void:
@@ -279,9 +285,10 @@ func _stop_dragging() -> void:
 	_end_interaction()
 
 
-func _is_inside_drag_start(position_to_test: Vector2) -> bool:
+func _is_inside_drag_start(position_to_test: Vector2, hit_margin: float = 0.0) -> bool:
+	var hit_radius := checkpoint_radius + hit_margin
 	if not _armed:
-		return position_to_test.distance_squared_to(checkpoints[0]) <= checkpoint_radius * checkpoint_radius
+		return position_to_test.distance_squared_to(checkpoints[0]) <= hit_radius * hit_radius
 	if _next_checkpoint_index <= 0 or _next_checkpoint_index >= checkpoints.size():
 		return false
 	# A released drag can resume anywhere on the unfinished segment.
@@ -290,10 +297,10 @@ func _is_inside_drag_start(position_to_test: Vector2) -> bool:
 	var segment := segment_end - segment_start
 	var segment_length_squared := segment.length_squared()
 	if segment_length_squared <= 0.0001:
-		return position_to_test.distance_squared_to(segment_start) <= checkpoint_radius * checkpoint_radius
+		return position_to_test.distance_squared_to(segment_start) <= hit_radius * hit_radius
 	var projection := clampf((position_to_test - segment_start).dot(segment) / segment_length_squared, 0.0, 1.0)
 	var closest_point := segment_start + segment * projection
-	return position_to_test.distance_squared_to(closest_point) <= checkpoint_radius * checkpoint_radius
+	return position_to_test.distance_squared_to(closest_point) <= hit_radius * hit_radius
 
 
 func _to_local_pointer_position(global_position: Vector2) -> Vector2:

@@ -95,7 +95,7 @@ func _run() -> void:
 	})
 	outside_slide.position = Vector2(400.0, 100.0)
 	root.add_child(outside_slide)
-	root.push_input(_button(Vector2(420.0, 200.0), true), true)
+	root.push_input(_button(Vector2(400.0, 200.0), true), true)
 	var outside_motion := _motion(Vector2(620.0, 200.0))
 	outside_motion.relative = Vector2(200.0, 0.0)
 	root.push_input(outside_motion, true)
