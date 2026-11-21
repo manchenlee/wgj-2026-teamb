@@ -106,7 +106,6 @@ assets/audio/bgm/{scene_or_mood}_loop.mp3
 ```text
 assets/audio/bgm/default.mp3
 assets/audio/bgm/ending.mp3
-assets/audio/bgm/overall_high.mp3
 ```
 
 SFX：

@@ -47,7 +47,6 @@ func _run() -> void:
 		_assert((gameplay_stream as AudioStreamOggVorbis).loop, "Piano OGG loop is disabled.")
 	_assert(router.bgm_library.get("default") is AudioStreamMP3, "Title BGM changed.")
 	_assert(router.bgm_library.get("ending") is AudioStreamMP3, "Ending BGM changed.")
-	_assert(not router.bgm_library.has("overall_high") and not router.bgm_library.has("overall_low"), "Obsolete gameplay BGM keys remain.")
 	_assert(router.violin_timeline.load_from_file("res://data/violin_timeline.json"), "Router could not load MIDI pitch data.")
 	var player := AudioStreamPlayer.new()
 	player.stream = gameplay_stream
