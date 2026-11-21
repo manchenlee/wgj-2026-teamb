@@ -41,15 +41,17 @@ func _test_branches_and_tutorial_returns() -> void:
 	root.add_child(opening)
 	await process_frame
 	_advance_to(opening, "r37")
-	_check(_choice_labels(opening) == ["先了解我們等等要做什麼", "有很重要的事情要先說好……"], "First branch choices are incorrect.")
+	_check(_choice_labels(opening) == ["開啟教學", "安全詞設定"], "First branch choices are incorrect.")
 	_press_choice(opening, 0)
+	_check(_step_id(opening) == "r41" and opening.speaker_label.text == "主角" and opening.dialogue_label.text == "先了解我們等等要做什麼", "Tutorial choice did not begin with the protagonist's line.")
+	opening._advance_script()
 	_check(_step_id(opening) == "r42" and opening.dialogue_label.text == "<待補教學圖>", "First tutorial placeholder is missing.")
 	opening._advance_script()
 	await process_frame
-	_check(_step_id(opening) == "r37" and _choice_labels(opening) == ["先了解我們等等要做什麼", "有很重要的事情要先說好……"], "First tutorial did not return to first branch.")
+	_check(_step_id(opening) == "r37" and _choice_labels(opening) == ["開啟教學", "安全詞設定"], "First tutorial did not return to first branch.")
 	_check(not opening.safe_word_completed, "Tutorial marked safety-word setup complete.")
 	_press_choice(opening, 1)
-	_check(_step_id(opening) == "r46" and opening.dialogue_label.text == opening._entries[opening._current_entry_index].text, "Safety-word choice displayed its instruction marker instead of the first dialogue line.")
+	_check(_step_id(opening) == "r45" and opening.speaker_label.text == "主角" and opening.dialogue_label.text == "有很重要的事情要先說好……", "Safety-word choice did not begin with the protagonist's line.")
 	_advance_to(opening, "r56")
 	var requests := [0]
 	opening.safe_word_requested.connect(func() -> void: requests[0] += 1)
@@ -65,15 +67,17 @@ func _test_branches_and_tutorial_returns() -> void:
 	root.add_child(resumed)
 	await process_frame
 	_advance_to(resumed, "r37")
-	_check(_choice_labels(resumed) == ["先了解我們等等要做什麼", "話都說完的話，我們就開始吧"], "Second branch choices are incorrect.")
+	_check(_choice_labels(resumed) == ["開啟教學", "開始調音"], "Second branch choices are incorrect.")
 	_press_choice(resumed, 0)
+	_check(_step_id(resumed) == "r41" and resumed.speaker_label.text == "主角" and resumed.dialogue_label.text == "先了解我們等等要做什麼", "Second tutorial choice did not begin with the protagonist's line.")
+	resumed._advance_script()
 	_check(_step_id(resumed) == "r42" and resumed.dialogue_label.text == "<待補教學圖>", "Second tutorial placeholder is missing.")
 	resumed._advance_script()
 	await process_frame
-	_check(_step_id(resumed) == "r37" and _choice_labels(resumed) == ["先了解我們等等要做什麼", "話都說完的話，我們就開始吧"], "Second tutorial did not return to second branch.")
+	_check(_step_id(resumed) == "r37" and _choice_labels(resumed) == ["開啟教學", "開始調音"], "Second tutorial did not return to second branch.")
 	_check(resumed.safe_word_completed, "Tutorial lost completed safety-word state.")
 	_press_choice(resumed, 1)
-	_check(_step_id(resumed) == "r64" and resumed.dialogue_label.text == resumed._entries[resumed._current_entry_index].text, "Start Game choice displayed its instruction marker instead of the first dialogue line.")
+	_check(_step_id(resumed) == "r63" and resumed.speaker_label.text == "主角" and resumed.dialogue_label.text == "話都說完的話，我們就開始吧", "Start Game choice did not begin with the protagonist's line.")
 	_advance_to(resumed, "r66")
 	var game_requests := [0]
 	resumed.game_requested.connect(func() -> void: game_requests[0] += 1)

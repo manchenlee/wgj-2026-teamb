@@ -359,27 +359,34 @@
       "choices": [
         {
           "id": "tutorial",
-          "text": "先了解我們等等要做什麼",
-          "next": "r42"
+          "text": "開啟教學",
+          "next": "r41"
         },
         {
           "id": "safe_word",
-          "text": "有很重要的事情要先說好……",
+          "text": "安全詞設定",
           "next": "r45"
         }
       ],
       "choices_after_safe_word": [
         {
           "id": "tutorial",
-          "text": "先了解我們等等要做什麼",
-          "next": "r42"
+          "text": "開啟教學",
+          "next": "r41"
         },
         {
           "id": "start",
-          "text": "話都說完的話，我們就開始吧",
+          "text": "開始調音",
           "next": "r63"
         }
       ]
+    },
+    {
+      "id": "r41",
+      "speaker": "主角",
+      "text": "先了解我們等等要做什麼吧！",
+      "source_row": 41,
+      "next": "r42"
     },
     {
       "id": "r42",
@@ -396,7 +403,7 @@
     {
       "id": "r45",
       "speaker": "主角",
-      "non_dialogue": true,
+      "text": "有很重要的事情要先說好……",
       "source_row": 45,
       "character": {
         "base": "res://assets/art/character/opening/{expression}.png",
@@ -563,19 +570,20 @@
       "choices": [
         {
           "id": "tutorial",
-          "text": "先了解我們等等要做什麼",
-          "next": "r42"
+          "text": "開啟教學",
+          "next": "r41"
         },
         {
           "id": "start",
-          "text": "話都說完的話，我們就開始吧",
+          "text": "開始調音",
           "next": "r63"
         }
       ]
     },
     {
       "id": "r63",
-      "non_dialogue": true,
+      "speaker": "主角",
+      "text": "話都說完的話，我們就開始吧。",
       "source_row": 63,
       "character": {
         "base": "res://assets/art/character/opening/{expression}.png",
