@@ -12,7 +12,9 @@ const BGM_DEFAULT := preload("res://assets/audio/bgm/default.mp3")
 const BGM_GAMEPLAY := preload("res://assets/audio/bgm/piano_gameplay.ogg")
 const BGM_ENDING := preload("res://assets/audio/bgm/ending.mp3")
 const TENTACLE_CURSOR := preload("res://assets/art/ui/gameplay/img_tentacle.png")
-const TENTACLE_CURSOR_SIZE := Vector2i(192, 192)
+# Match the 52 px gameplay checkpoint radius so the cursor and notes keep the
+# same visual scale as the viewport stretches across different window sizes.
+const TENTACLE_CURSOR_SIZE := Vector2i(104, 104)
 const MAX_CURSOR_SIZE := 256
 const BGM_TARGET_VOLUME_DB := -6.0
 const BGM_SILENT_VOLUME_DB := -40.0
@@ -45,6 +47,7 @@ var _current_cursor_size := Vector2i.ZERO
 
 func _ready() -> void:
 	get_window().size_changed.connect(_update_mouse_cursor)
+	get_window().dpi_changed.connect(_update_mouse_cursor)
 	_update_mouse_cursor()
 	_setup_bgm_players()
 	_setup_bgm_library()
@@ -266,7 +269,14 @@ func _exit_tree() -> void:
 
 func _update_mouse_cursor() -> void:
 	var stretch_scale := get_viewport().get_stretch_transform().get_scale()
-	var cursor_scale: float = minf(stretch_scale.x, stretch_scale.y)
+	# Native cursors use logical display points on HiDPI screens, while the
+	# viewport stretch is measured in render pixels. Remove the OS display scale
+	# so macOS does not apply the Retina factor to the cursor a second time.
+	var display_scale := maxf(
+		DisplayServer.screen_get_scale(DisplayServer.SCREEN_OF_MAIN_WINDOW),
+		1.0
+	)
+	var cursor_scale: float = minf(stretch_scale.x, stretch_scale.y) / display_scale
 	var cursor_size := Vector2i(
 		clampi(roundi(TENTACLE_CURSOR_SIZE.x * cursor_scale), 1, MAX_CURSOR_SIZE),
 		clampi(roundi(TENTACLE_CURSOR_SIZE.y * cursor_scale), 1, MAX_CURSOR_SIZE)
