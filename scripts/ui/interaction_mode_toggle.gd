@@ -90,12 +90,10 @@ func _on_toggle_button_pressed() -> void:
 	toggle_requested.emit()
 
 func _on_talk_button_pressed() -> void:
-	if _interaction_mode != PSYCHOLOGICAL_MODE:
-		toggle_requested.emit()
+	toggle_requested.emit()
 
 func _on_music_button_pressed() -> void:
-	if _interaction_mode != PHYSIOLOGICAL_MODE:
-		toggle_requested.emit()
+	toggle_requested.emit()
 
 
 func _sync_presentation() -> void:
@@ -108,6 +106,7 @@ func _sync_presentation() -> void:
 			else "切換至調音模式（Q）"
 		)
 	if talk_button != null:
+		talk_button.visible = _interaction_mode == PSYCHOLOGICAL_MODE
 		talk_button.texture_normal = TALK_WARNING if _is_warning_for(PSYCHOLOGICAL_MODE) else (
 			TALK_CLICKED if _interaction_mode == PSYCHOLOGICAL_MODE else TALK_UNCLICKED
 		)
@@ -116,6 +115,7 @@ func _sync_presentation() -> void:
 		talk_button.modulate = Color.WHITE
 		talk_button.scale = Vector2.ONE
 	if music_button != null:
+		music_button.visible = _interaction_mode == PHYSIOLOGICAL_MODE
 		music_button.texture_normal = MUSIC_WARNING if _is_warning_for(PHYSIOLOGICAL_MODE) else (
 			MUSIC_CLICKED if _interaction_mode == PHYSIOLOGICAL_MODE else MUSIC_UNCLICKED
 		)

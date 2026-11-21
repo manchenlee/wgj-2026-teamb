@@ -22,11 +22,12 @@ corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 
 [node name="InteractionModeToggle" type="Control"]
-custom_minimum_size = Vector2(160, 326)
+custom_minimum_size = Vector2(160, 176)
 mouse_filter = 2
 script = ExtResource("1_toggle")
 
 [node name="TalkButton" type="TextureButton" parent="."]
+visible = false
 layout_mode = 0
 offset_left = 6.0
 offset_right = 154.0
@@ -43,9 +44,8 @@ tooltip_text = "對話模式"
 [node name="MusicButton" type="TextureButton" parent="."]
 layout_mode = 0
 offset_left = 6.0
-offset_top = 148.0
 offset_right = 154.0
-offset_bottom = 296.0
+offset_bottom = 148.0
 focus_mode = 0
 mouse_default_cursor_shape = 2
 texture_normal = ExtResource("6_music_unclicked")
@@ -73,9 +73,9 @@ text = "對話"
 [node name="ShortcutGroup" type="Control" parent="."]
 layout_mode = 0
 offset_left = 60.0
-offset_top = 298.0
+offset_top = 148.0
 offset_right = 100.0
-offset_bottom = 326.0
+offset_bottom = 176.0
 mouse_filter = 2
 
 [node name="ShortcutLabel" type="Button" parent="ShortcutGroup"]
