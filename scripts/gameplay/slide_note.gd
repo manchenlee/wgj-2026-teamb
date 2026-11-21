@@ -12,7 +12,7 @@ static var _previous_accumulated_input: bool = true
 
 var checkpoint_radius: float = 40.0
 var checkpoints: PackedVector2Array = PackedVector2Array()
-var mouse_hit_radius: float = CursorHitAreaClass.RADIUS
+var mouse_hit_radius: float = CursorHitAreaClass.NOTE_HIT_MARGIN
 
 var _next_checkpoint_index: int = 0
 var _armed: bool = false
@@ -41,7 +41,7 @@ func _exit_tree() -> void:
 func setup(config: Dictionary) -> void:
 	super.setup(config)
 	checkpoint_radius = float(config.get("checkpoint_radius", 40.0))
-	mouse_hit_radius = float(config.get("mouse_hit_radius", CursorHitAreaClass.RADIUS))
+	mouse_hit_radius = float(config.get("mouse_hit_radius", CursorHitAreaClass.NOTE_HIT_MARGIN))
 	var configured_checkpoints: Variant = config.get("checkpoints", PackedVector2Array())
 	if configured_checkpoints is PackedVector2Array:
 		checkpoints = configured_checkpoints

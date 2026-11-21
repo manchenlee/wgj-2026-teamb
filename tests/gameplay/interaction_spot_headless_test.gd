@@ -182,7 +182,7 @@ func _test_click_input_and_scoring() -> void:
 	note._gui_input(motion)
 	note._gui_input(_mouse_button_event(note.target_center, false))
 	note._gui_input(_mouse_button_event(
-		note.target_center + Vector2(note.target_radius + CURSOR_HIT_AREA.RADIUS + 1.0, 0.0),
+		note.target_center + Vector2(note.target_radius + 1.0, 0.0),
 		true
 	))
 	note._gui_input(_mouse_button_event(note.target_center, true, MOUSE_BUTTON_RIGHT))
@@ -199,15 +199,19 @@ func _test_click_input_and_scoring() -> void:
 	await process_frame
 
 	var cursor_edge_note := _make_click_note()
-	cursor_edge_note.mouse_hit_radius = CURSOR_HIT_AREA.RADIUS
+	cursor_edge_note.mouse_hit_radius = CURSOR_HIT_AREA.NOTE_HIT_MARGIN
 	var cursor_edge_counts := {"completed": 0}
 	cursor_edge_note.completed.connect(func() -> void: cursor_edge_counts.completed += 1)
 	cursor_edge_note._gui_input(_mouse_button_event(
+		cursor_edge_note.target_center + Vector2(cursor_edge_note.target_radius - 1.0, 0.0), true
+	))
+	_assert(cursor_edge_counts.completed == 0, "ClickNote accepted a press inside the visible edge but outside its inset hit area.")
+	cursor_edge_note._gui_input(_mouse_button_event(
 		cursor_edge_note.target_center
-			+ Vector2(cursor_edge_note.target_radius + CURSOR_HIT_AREA.RADIUS - 1.0, 0.0),
+			+ Vector2(cursor_edge_note.target_radius + CURSOR_HIT_AREA.NOTE_HIT_MARGIN - 1.0, 0.0),
 		true
 	))
-	_assert(cursor_edge_counts.completed == 1, "Visible cursor edge did not activate ClickNote.")
+	_assert(cursor_edge_counts.completed == 1, "Inset ClickNote hit area rejected a press near its boundary.")
 	cursor_edge_note.queue_free()
 	await process_frame
 
@@ -338,7 +342,7 @@ func _test_rub_input_and_progress() -> void:
 
 	note._gui_input(_mouse_motion_event(center + Vector2(10.0, 0.0)))
 	note._gui_input(_mouse_button_event(
-		center + Vector2(note.target_radius + CURSOR_HIT_AREA.RADIUS + 1.0, 0.0), true
+		center + Vector2(note.target_radius + 1.0, 0.0), true
 	))
 	note._gui_input(_mouse_motion_event(center))
 	note._gui_input(_mouse_button_event(center, true, MOUSE_BUTTON_RIGHT))
@@ -356,7 +360,7 @@ func _test_rub_input_and_progress() -> void:
 	_assert(absf(note.accumulated_scrub_distance - 60.0) < 0.001, "Large Rub movement lost valid in-circle distance.")
 
 	note._gui_input(_mouse_motion_event(
-		center + Vector2(note.target_radius + CURSOR_HIT_AREA.RADIUS + 10.0, 0.0)
+		center + Vector2(note.target_radius + 10.0, 0.0)
 	))
 	note._gui_input(_mouse_motion_event(center))
 	_assert(absf(note.accumulated_scrub_distance - 60.0) < 0.001, "Leaving or first re-entering the Rub circle added progress.")
@@ -374,11 +378,15 @@ func _test_rub_input_and_progress() -> void:
 	await process_frame
 
 	var cursor_edge_note := _make_rub_note()
-	cursor_edge_note.mouse_hit_radius = CURSOR_HIT_AREA.RADIUS
+	cursor_edge_note.mouse_hit_radius = CURSOR_HIT_AREA.NOTE_HIT_MARGIN
+	cursor_edge_note._gui_input(_mouse_button_event(
+		cursor_edge_note.target_center + Vector2(cursor_edge_note.target_radius - 1.0, 0.0), true
+	))
+	_assert(not cursor_edge_note.is_rubbing(), "RubNote accepted a press outside its inset hit area.")
 	var cursor_edge := cursor_edge_note.target_center \
-		+ Vector2(cursor_edge_note.target_radius + CURSOR_HIT_AREA.RADIUS - 1.0, 0.0)
+		+ Vector2(cursor_edge_note.target_radius + CURSOR_HIT_AREA.NOTE_HIT_MARGIN - 1.0, 0.0)
 	cursor_edge_note._gui_input(_mouse_button_event(cursor_edge, true))
-	_assert(cursor_edge_note.is_rubbing(), "Visible cursor edge did not activate RubNote.")
+	_assert(cursor_edge_note.is_rubbing(), "Inset RubNote hit area rejected a press near its boundary.")
 	cursor_edge_note._gui_input(_mouse_button_event(cursor_edge, false))
 	cursor_edge_note.queue_free()
 	await process_frame
@@ -683,7 +691,7 @@ func _test_ordered_progression_and_fast_crossing() -> void:
 
 func _test_slide_overlapping_hit_areas() -> void:
 	var spot := _make_spot()
-	spot.mouse_hit_radius = CURSOR_HIT_AREA.RADIUS
+	spot.mouse_hit_radius = 21.0
 	var overlapping_start := Vector2(160.0, 100.0)
 	spot._input(_mouse_button_event(overlapping_start, true))
 	_assert(spot.is_armed() and spot.get_next_checkpoint_index() == 1,

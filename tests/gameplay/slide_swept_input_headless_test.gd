@@ -59,13 +59,15 @@ func _run() -> void:
 	await process_frame
 
 	var cursor_edge := _make_slide(points)
-	cursor_edge.mouse_hit_radius = CURSOR_HIT_AREA.RADIUS
+	cursor_edge.mouse_hit_radius = CURSOR_HIT_AREA.NOTE_HIT_MARGIN
+	cursor_edge._input(_button(points[0] + Vector2(cursor_edge.checkpoint_radius - 1.0, 0.0), true))
+	_check(not cursor_edge.is_dragging(), "Slide accepted a press outside its inset hit area.")
 	cursor_edge._input(_button(
-		points[0] + Vector2(cursor_edge.checkpoint_radius + CURSOR_HIT_AREA.RADIUS - 1.0, 0.0),
+		points[0] + Vector2(cursor_edge.checkpoint_radius + CURSOR_HIT_AREA.NOTE_HIT_MARGIN - 1.0, 0.0),
 		true
 	))
 	_check(cursor_edge.is_dragging() and cursor_edge.is_armed(),
-		"Visible cursor edge did not activate the first Slide checkpoint.")
+		"Inset Slide hit area rejected a press near its boundary.")
 	cursor_edge.queue_free()
 	await process_frame
 

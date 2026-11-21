@@ -11,7 +11,7 @@ var valid_motion_threshold: float = 3.0
 var max_delta_per_event: float = 24.0
 var target_center: Vector2 = Vector2(212.0, 212.0)
 var target_radius: float = 104.0
-var mouse_hit_radius: float = CursorHitAreaClass.RADIUS
+var mouse_hit_radius: float = CursorHitAreaClass.NOTE_HIT_MARGIN
 var accumulated_scrub_distance: float = 0.0
 
 var _mouse_held: bool = false
@@ -39,7 +39,7 @@ func setup(config: Dictionary) -> void:
 	max_delta_per_event = float(config.get("max_delta_per_event", 24.0))
 	target_center = config.get("target_center", Vector2(212.0, 212.0)) as Vector2
 	target_radius = float(config.get("target_radius", 104.0))
-	mouse_hit_radius = float(config.get("mouse_hit_radius", CursorHitAreaClass.RADIUS))
+	mouse_hit_radius = float(config.get("mouse_hit_radius", CursorHitAreaClass.NOTE_HIT_MARGIN))
 	if is_node_ready():
 		friction_hint.size = Vector2.ONE * target_radius * 0.95
 		_update_friction_hint_position()

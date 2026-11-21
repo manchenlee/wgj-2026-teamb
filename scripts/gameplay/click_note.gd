@@ -5,7 +5,7 @@ const CursorHitAreaClass := preload("res://scripts/gameplay/cursor_hit_area.gd")
 
 var target_center: Vector2 = Vector2(84.0, 84.0)
 var target_radius: float = 40.0
-var mouse_hit_radius: float = CursorHitAreaClass.RADIUS
+var mouse_hit_radius: float = CursorHitAreaClass.NOTE_HIT_MARGIN
 
 
 func _ready() -> void:
@@ -17,7 +17,7 @@ func setup(config: Dictionary) -> void:
 	super.setup(config)
 	target_center = config.get("target_center", Vector2(84.0, 84.0)) as Vector2
 	target_radius = float(config.get("target_radius", 40.0))
-	mouse_hit_radius = float(config.get("mouse_hit_radius", CursorHitAreaClass.RADIUS))
+	mouse_hit_radius = float(config.get("mouse_hit_radius", CursorHitAreaClass.NOTE_HIT_MARGIN))
 
 
 func _gui_input(event: InputEvent) -> void:
