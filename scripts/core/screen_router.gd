@@ -177,6 +177,7 @@ func _show_game(safe_word: String = Config.SAFE_WORD_DEFAULT, fade_from_opening:
 
 func _restart_game_from_pause() -> void:
 	pause_menu.close()
+	_reset_run_bgm_positions()
 	_restart_current_bgm()
 	_show_game(current_safe_word)
 
@@ -198,9 +199,10 @@ func _show_ending(ending_type: String) -> void:
 	var screen := ENDING_SCENE.instantiate()
 	screen.safe_word = current_safe_word
 	screen.set_result(ending_type)
-	screen.restart_pressed.connect(func() -> void: _show_game(current_safe_word, true))
-	screen.back_to_title_pressed.connect(func() -> void: _show_title(true))
+	screen.restart_pressed.connect(_replay_from_ending)
+	screen.back_to_title_pressed.connect(_return_to_title_from_ending)
 	_swap_screen_with_fade_in(screen, Color.WHITE if ending_type == Config.SUCCESS_ENDING else Color.BLACK)
+	bgm_playback_positions["ending"] = 0.0
 	_play_bgm("ending", true)
 	debug_overlay.sync_live_readout({
 		"screen": "%s:%s" % [Config.SCREEN_ENDING, ending_type],
@@ -214,6 +216,18 @@ func _show_ending(ending_type: String) -> void:
 		"spot_penalty": "-",
 		"spot_net": "-"
 	})
+
+func _replay_from_ending() -> void:
+	_reset_run_bgm_positions()
+	_show_game(current_safe_word, true)
+
+func _return_to_title_from_ending() -> void:
+	_reset_run_bgm_positions()
+	_show_title(true)
+
+func _reset_run_bgm_positions() -> void:
+	for track_key in bgm_playback_positions.keys():
+		bgm_playback_positions[track_key] = 0.0
 
 func _swap_screen(next_screen: Control, fade_to_black: bool = false) -> void:
 	if screen_transition_tween != null:
