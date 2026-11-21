@@ -22,7 +22,7 @@ const WARNING_SCALE_MAX: float = 1.08
 @onready var talk_button: TextureButton = $TalkButton
 @onready var music_button: TextureButton = $MusicButton
 
-var _interaction_mode: int = PSYCHOLOGICAL_MODE
+var _interaction_mode: int = PHYSIOLOGICAL_MODE
 var _imbalance_warning_active: bool = false
 var _lower_score_mode: int = -1
 var _warning_pulse_time: float = 0.0

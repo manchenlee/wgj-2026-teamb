@@ -131,7 +131,7 @@ var active_character_profile = null
 var pose_profiles: Dictionary = {}
 var has_switched_to_game_bgm: bool = false
 var last_requested_bgm_key: String = ""
-var interaction_mode: InteractionMode = InteractionMode.PSYCHOLOGICAL
+var interaction_mode: InteractionMode = InteractionMode.PHYSIOLOGICAL
 var current_visual_band: int = -1
 var current_presentation_phase: int = 1
 var shooting_tail_active: bool = false
@@ -929,6 +929,28 @@ func _sync_physiological_visual_band(emit_crossing: bool = true) -> void:
 	)
 
 
+func _input(event: InputEvent) -> void:
+	if Engine.is_editor_hint() or not run_active or not pending_ending_type.is_empty() \
+			or interaction_mode != InteractionMode.PSYCHOLOGICAL:
+		return
+	if not (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT \
+			and event.pressed):
+		return
+	var bubble: CurrentSpeechBubble = dialogue_panel.current_speech_bubble
+	if not bubble.is_visible_in_tree() or (not bubble.is_streaming() \
+			and (not _reading_step_active or _group_gap_active \
+			or _has_pending_psychological_choice())):
+		return
+	var click_position: Vector2 = event.position
+	for button: BaseButton in [interaction_mode_toggle.talk_button,
+			interaction_mode_toggle.music_button, interaction_mode_toggle.toggle_button,
+			phase_skip_button]:
+		if button.is_visible_in_tree() and button.get_global_rect().has_point(click_position):
+			return
+	get_viewport().set_input_as_handled()
+	_on_dialogue_bubble_advance_requested()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if Engine.is_editor_hint() or not run_active or not pending_ending_type.is_empty():
 		return
@@ -1071,7 +1093,7 @@ func _reset_run_for_phase_index(phase_index: int) -> void:
 	has_left_overall_init_visual = false
 	has_switched_to_game_bgm = false
 	last_requested_bgm_key = ""
-	interaction_mode = InteractionMode.PSYCHOLOGICAL
+	interaction_mode = InteractionMode.PHYSIOLOGICAL
 	_last_spot_telemetry = {}
 	_stop_runtime_timers()
 	if spot_manager != null:
@@ -1086,7 +1108,6 @@ func _reset_run_for_phase_index(phase_index: int) -> void:
 		overlay_animator.play_idle()
 	if breathing_controller != null and breathing_controller.has_method("start_breathing"):
 		breathing_controller.start_breathing()
-	_push_next_dialogue_event(InteractionMode.PSYCHOLOGICAL)
 	if spot_manager != null:
 		spot_manager.start()
 	_set_interaction_mode(interaction_mode, true)
@@ -1221,9 +1242,7 @@ func _on_psychological_dialogue_timer_timeout(generation: int) -> void:
 		_advance_psychological_dialogue(generation)
 
 func _on_dialogue_bubble_advance_requested() -> void:
-	if not pending_ending_type.is_empty():
-		return
-	if not dialogue_panel.current_speech_bubble.is_visible_in_tree():
+	if not pending_ending_type.is_empty() or _group_gap_active:
 		return
 	if dialogue_panel.current_speech_bubble.is_streaming():
 		dialogue_panel.current_speech_bubble.finish_dialogue_stream()
