@@ -14,6 +14,7 @@ var safe_word: String = Config.SAFE_WORD_DEFAULT
 var current_line: String = ""
 var _queued_response_lines: Array = []
 var _queued_response_speakers: Array = []
+var _queued_response_expressions: Array = []
 var _data_source_property: String = "psychological_dialogue_data_source"
 var _choices_enabled: bool = true
 var _last_entry_id: String = ""
@@ -50,6 +51,7 @@ func reset(clear_history: bool = false) -> void:
 	current_line = ""
 	_queued_response_lines.clear()
 	_queued_response_speakers.clear()
+	_queued_response_expressions.clear()
 	if clear_history:
 		_last_entry_id = ""
 		_ordinary_bag.clear()
@@ -61,7 +63,8 @@ func next_event(physical: float, emotional: float, force_safe_word: bool = false
 	if not _queued_response_lines.is_empty():
 		current_line = _format_text(str(_queued_response_lines.pop_front()))
 		var queued_speaker := str(_queued_response_speakers.pop_front()) if not _queued_response_speakers.is_empty() else ""
-		return {"text": current_line, "speaker": queued_speaker}
+		var queued_expression := str(_queued_response_expressions.pop_front()) if not _queued_response_expressions.is_empty() else ""
+		return {"text": current_line, "speaker": queued_speaker, "expression": queued_expression}
 	if current_entry.is_empty():
 		current_entry = _select_entry(physical, emotional, force_safe_word, include_safe_word)
 		current_feedback_index = -1
@@ -96,16 +99,21 @@ func apply_choice(choice_id: String, model) -> Dictionary:
 		ending_type = Config.SAFEWORD_IGNORED_FAILURE_ENDING
 	var response_map := current_entry.get("response", {}) as Dictionary
 	var speaker_map := current_entry.get("response_speakers", {}) as Dictionary
+	var expression_map := current_entry.get("response_expressions", {}) as Dictionary
 	var authored_responses := response_map.get(choice_id, []) as Array
 	var authored_speakers := speaker_map.get(choice_id, []) as Array
+	var authored_expressions := expression_map.get(choice_id, []) as Array
 	var reply := ""
 	var reply_speaker := ""
+	var reply_expression := ""
 	if not authored_responses.is_empty():
 		reply = _format_text(str(authored_responses[0]))
 		reply_speaker = str(authored_speakers[0]) if not authored_speakers.is_empty() and authored_speakers[0] is String else ""
+		reply_expression = str(authored_expressions[0]) if not authored_expressions.is_empty() and authored_expressions[0] is String else ""
 		for index in range(1, authored_responses.size()):
 			_queued_response_lines.append(authored_responses[index])
 			_queued_response_speakers.append(authored_speakers[index] if index < authored_speakers.size() and authored_speakers[index] is String else "")
+			_queued_response_expressions.append(authored_expressions[index] if index < authored_expressions.size() and authored_expressions[index] is String else "")
 	else:
 		reply = _get_choice_response(choice_id, current_entry, ending_type.is_empty())
 	current_line = reply
@@ -116,6 +124,7 @@ func apply_choice(choice_id: String, model) -> Dictionary:
 	return {
 		"reply": reply,
 		"reply_speaker": reply_speaker,
+		"reply_expression": reply_expression,
 		"delta": delta_value,
 		"ending_type": ending_type,
 		"choice_effect": effect,
@@ -299,17 +308,26 @@ func _build_next_prompt(entry: Dictionary) -> Dictionary:
 
 	current_feedback_index = mini(current_feedback_index + 1, feedback_lines.size() - 1)
 	var is_last_feedback_line := current_feedback_index >= feedback_lines.size() - 1
+	var speaker := _get_current_feedback_speaker(entry)
+	var expression := _get_current_feedback_expression(entry)
 	var choices: Array[Dictionary] = []
 	if is_last_feedback_line:
 		choices = _build_choices(entry)
 	if choices.is_empty() and is_last_feedback_line:
 		var terminal_text := _get_current_feedback_line(entry)
 		_clear_current_sequence()
-		return {"text": terminal_text, "speaker": _get_current_feedback_speaker(entry)}
+		return {"text": terminal_text, "speaker": speaker, "expression": expression}
 	if choices.is_empty():
-		return {"text": _get_current_feedback_line(entry), "speaker": _get_current_feedback_speaker(entry)}
+		return {"text": _get_current_feedback_line(entry), "speaker": speaker, "expression": expression}
 	choice_prompt_pending = true
-	return {"text": _get_current_feedback_line(entry), "speaker": _get_current_feedback_speaker(entry), "choices": choices}
+	return {"text": _get_current_feedback_line(entry), "speaker": speaker, "expression": expression, "choices": choices}
+
+func _get_current_feedback_expression(entry: Dictionary) -> String:
+	var expressions := entry.get("feedback_expressions", []) as Array
+	if current_feedback_index >= 0 and current_feedback_index < expressions.size():
+		var expression: Variant = expressions[current_feedback_index]
+		return str(expression) if expression is String else ""
+	return ""
 
 func _get_current_feedback_speaker(entry: Dictionary) -> String:
 	var speakers := entry.get("feedback_speakers", []) as Array

@@ -38,6 +38,7 @@ enum CharacterExpressionSource {
 	PHYSIOLOGICAL,
 	PSYCHOLOGICAL,
 	COMPATIBILITY,
+	DIALOGUE,
 }
 
 @export var show_layout_debug_bounds: bool = false
@@ -149,6 +150,7 @@ var character_expression_conflict: bool = false
 var _character_expression_requests: Dictionary = {}
 var _timed_character_expression_requests: Dictionary = {}
 var _next_character_expression_token: int = 0
+var _dialogue_expression_token: int = 0
 var _resolved_character_alignment_offset: Vector2 = Vector2.ZERO
 var physical_low_warning_active: bool = false
 var emotional_low_warning_active: bool = false
@@ -715,7 +717,7 @@ func set_character_expression_state(expression: int) -> void:
 	var next_expression := clampi(
 		expression,
 		PhaseCharacterProfileClass.ExpressionState.NEUTRAL,
-		PhaseCharacterProfileClass.ExpressionState.PSYCHOLOGICAL_POSITIVE
+		PhaseCharacterProfileClass.ExpressionState.NEUTRAL_FACE
 	)
 	var compatibility_source := CharacterExpressionSource.COMPATIBILITY
 	if next_expression == PhaseCharacterProfileClass.ExpressionState.NEUTRAL:
@@ -740,7 +742,7 @@ func request_character_expression(source: CharacterExpressionSource, expression:
 		"expression": clampi(
 			expression,
 			PhaseCharacterProfileClass.ExpressionState.NEUTRAL,
-			PhaseCharacterProfileClass.ExpressionState.PSYCHOLOGICAL_POSITIVE
+			PhaseCharacterProfileClass.ExpressionState.NEUTRAL_FACE
 		),
 	}
 	_refresh_requested_character_expression()
@@ -1245,6 +1247,7 @@ func _advance_psychological_dialogue(generation: int) -> void:
 		_push_next_dialogue_event(InteractionMode.PSYCHOLOGICAL)
 	elif psychological_dialogue_controller.is_group_complete():
 		dialogue_panel.hide_current_line()
+		_clear_dialogue_expression()
 		_start_psychological_dialogue_timer(
 			randf_range(Config.PSYCHOLOGICAL_GROUP_GAP_MIN, Config.PSYCHOLOGICAL_GROUP_GAP_MAX), true
 		)
@@ -1277,6 +1280,7 @@ func _on_choice_selected(choice_quality: String, choice_text: String) -> void:
 		PhaseCharacterProfileClass.ExpressionState.NEGATIVE if is_wrong_choice \
 		else PhaseCharacterProfileClass.ExpressionState.PSYCHOLOGICAL_POSITIVE
 	)
+	_apply_dialogue_expression(str(outcome.get("reply_expression", "")))
 	if is_wrong_choice:
 		_play_failure_flash()
 	else:
@@ -1340,6 +1344,7 @@ func _push_next_dialogue_event(mode: InteractionMode) -> void:
 		push_warning("Physiological dialogue attempted to expose choices; choices were ignored.")
 		prompt.erase("choices")
 	var prompt_text := str(prompt.get("text", Config.FEEDBACK_MESSAGE_TEXT))
+	_apply_dialogue_expression(str(prompt.get("expression", "")))
 	var speaker_type := _dialogue_speaker_type(str(prompt.get("speaker", "")))
 	if mode == InteractionMode.PSYCHOLOGICAL and prompt.has("choices"):
 		dialogue_panel.hide_prompt()
@@ -1355,6 +1360,21 @@ func _push_next_dialogue_event(mode: InteractionMode) -> void:
 			choice_panel.clear_choices()
 			choice_timeout_timer.stop()
 		_schedule_next_dialogue_message(mode, prompt_text)
+
+func _apply_dialogue_expression(authored_expression: String) -> void:
+	if authored_expression.is_empty():
+		return
+	var expression: int = PhaseCharacterProfileClass.expression_from_dialogue_label(authored_expression)
+	if expression < 0:
+		push_warning("Unknown dialogue expression: %s" % authored_expression)
+		return
+	_dialogue_expression_token = request_character_expression(CharacterExpressionSource.DIALOGUE, expression)
+
+func _clear_dialogue_expression() -> void:
+	if _dialogue_expression_token == 0:
+		return
+	clear_character_expression(CharacterExpressionSource.DIALOGUE, _dialogue_expression_token)
+	_dialogue_expression_token = 0
 
 func _dialogue_speaker_type(authored_speaker: String) -> String:
 	match authored_speaker:
@@ -1396,6 +1416,7 @@ func _invalidate_reading_step() -> void:
 
 func _start_new_psychological_dialogue() -> void:
 	psychological_dialogue_timer.stop()
+	_clear_dialogue_expression()
 	choice_timeout_timer.stop()
 	psychological_dialogue_controller.reset()
 	if dialogue_panel != null:

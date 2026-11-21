@@ -51,12 +51,24 @@ func _init(phase: int = 1) -> void:
 		"positive": root + "positive.png",
 		"psychological_positive": root + "psychological_positive.png",
 		"negative": root + "negative.png",
+		"look_away": root + "look_away.png",
+		"neutral": root + "neutral.png",
+		"neutral_talking": root + ("neutral_talking.png" if pose_name in ["sitting", "lying"] else "neutral.png"),
+		"smile": root + "smile.png",
+		"surprised_highlight": root + "surprised_highlight.png",
+		"surprised_no_highlight": root + "surprised_no_highlight.png",
 	}
 	var expressions: Dictionary = {
 		ExpressionState.NEUTRAL: {"base_state_key": "overall_init"},
 		ExpressionState.POSITIVE: {"base_state_key": "positive"},
 		ExpressionState.PSYCHOLOGICAL_POSITIVE: {"base_state_key": "psychological_positive"},
 		ExpressionState.NEGATIVE: {"base_state_key": "negative"},
+		ExpressionState.LOOK_AWAY: {"base_state_key": "look_away"},
+		ExpressionState.NEUTRAL_TALKING: {"base_state_key": "neutral_talking"},
+		ExpressionState.SMILE: {"base_state_key": "smile"},
+		ExpressionState.SURPRISED_HIGHLIGHT: {"base_state_key": "surprised_highlight"},
+		ExpressionState.SURPRISED_NO_HIGHLIGHT: {"base_state_key": "surprised_no_highlight"},
+		ExpressionState.NEUTRAL_FACE: {"base_state_key": "neutral"},
 	}
 	var mappings: Dictionary = {}
 	for band in range(4):

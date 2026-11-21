@@ -10,6 +10,7 @@ const PSYCHOLOGICAL_SOURCE := CONTROLLER_SCRIPT.CharacterExpressionSource.PSYCHO
 const PHYSIOLOGICAL_SOURCE := CONTROLLER_SCRIPT.CharacterExpressionSource.PHYSIOLOGICAL
 const NEUTRAL := PROFILE_SCRIPT.ExpressionState.NEUTRAL
 const POSITIVE := PROFILE_SCRIPT.ExpressionState.POSITIVE
+const PSYCHOLOGICAL_POSITIVE := PROFILE_SCRIPT.ExpressionState.PSYCHOLOGICAL_POSITIVE
 const NEGATIVE := PROFILE_SCRIPT.ExpressionState.NEGATIVE
 
 var _failures: Array[String] = []
@@ -44,11 +45,11 @@ func _test_good_and_bad_choice_paths() -> void:
 	_prepare_choice(game, "positive", ["positive reply one", "positive reply two"])
 	game._on_choice_selected("good", "good choice")
 	var good_request: Dictionary = _request_for(game, PSYCHOLOGICAL_SOURCE)
-	_assert(good_request.get("expression") == POSITIVE, "Good choice did not request psychological POSITIVE.")
+	_assert(good_request.get("expression") == PSYCHOLOGICAL_POSITIVE, "Good choice did not request psychological POSITIVE.")
 	_assert(game.arousal_model.emotional == initial_emotional + 10.0, "Good choice no longer applies exactly +10 emotional score.")
 	_assert(game.character_area.prompt_layer.get_child_count() == heart_count_before + 5, "Good choice did not use the existing five-heart burst path.")
 	_assert(not game.failure_flash.visible, "Good choice unexpectedly used failure feedback.")
-	_assert(game.current_expression_state == POSITIVE, "Good reaction was not displayed immediately.")
+	_assert(game.current_expression_state == PSYCHOLOGICAL_POSITIVE, "Good reaction was not displayed immediately.")
 	_assert(game.psychological_dialogue_controller.current_feedback_index == -1, "Choice response incorrectly remained in the pre-choice feedback sequence.")
 	_assert(game.arousal_model.physical == initial_physical and game.current_visual_band == initial_band, "Good expression request changed physical score or visual band.")
 	_assert(game.active_phase_index == initial_phase, "Good expression request changed gameplay config.")
@@ -75,20 +76,19 @@ func _test_reaction_duration_and_mode_switch() -> void:
 	var game = await _create_game()
 	_prepare_choice(game, "positive", ["one of several authored response options", "another option"])
 	game._on_choice_selected("good", "good choice")
-	_assert(game.current_expression_state == POSITIVE, "Positive request was not active while the response line was displayed.")
+	_assert(game.current_expression_state == PSYCHOLOGICAL_POSITIVE, "Positive request was not active while the response line was displayed.")
 	_assert(not game.psychological_dialogue_timer.is_stopped(), "Post-choice round-completion timer was not scheduled.")
 
 	game.set_interaction_mode(PHYSIOLOGICAL_MODE)
-	_assert(game.current_expression_state == POSITIVE, "Mode switch cleared the psychological reaction.")
+	_assert(game.current_expression_state == PSYCHOLOGICAL_POSITIVE, "Mode switch cleared the psychological reaction.")
 	_assert(game.psychological_dialogue_timer.paused, "Psychological dialogue timer did not pause in physiological mode.")
 	game._advance_character_expression_reactions(0.49)
-	_assert(game.current_expression_state == POSITIVE, "Psychological reaction ended before 0.5 seconds.")
+	_assert(game.current_expression_state == PSYCHOLOGICAL_POSITIVE, "Psychological reaction ended before 0.5 seconds.")
 	game._advance_character_expression_reactions(0.02)
 	_assert(game.current_expression_state == NEUTRAL, "Psychological reaction did not return to neutral after 0.5 seconds.")
 
 	game.set_interaction_mode(PSYCHOLOGICAL_MODE)
 	_assert(not game.get_character_expression_request_state().requests.has(PSYCHOLOGICAL_SOURCE), "Returning to psychological mode retained the previous dialogue reaction.")
-	_assert(game.current_expression_state == NEUTRAL, "A new psychological dialogue did not begin neutral.")
 	_assert(not game.psychological_dialogue_controller.current_line.is_empty(), "A new psychological dialogue did not produce an opening line.")
 	_assert(game.dialogue_panel.get_dialogue_history().size() == 1, "A new psychological dialogue did not replace the previous history with one opening line.")
 	game.queue_free()
@@ -148,6 +148,7 @@ func _create_game():
 	root.add_child(game)
 	await process_frame
 	game.set_interaction_mode(PSYCHOLOGICAL_MODE)
+	game._clear_dialogue_expression()
 	return game
 
 

@@ -6,7 +6,37 @@ enum ExpressionState {
 	POSITIVE,
 	NEGATIVE,
 	PSYCHOLOGICAL_POSITIVE,
+	LOOK_AWAY,
+	NEUTRAL_TALKING,
+	SMILE,
+	SURPRISED_HIGHLIGHT,
+	SURPRISED_NO_HIGHLIGHT,
+	NEUTRAL_FACE,
 }
+
+static func expression_from_dialogue_label(label: String) -> int:
+	match label:
+		"生氣":
+			return ExpressionState.NEGATIVE
+		"別開眼", "別開眼睛":
+			return ExpressionState.LOOK_AWAY
+		"無表情":
+			return ExpressionState.NEUTRAL_FACE
+		"說話":
+			return ExpressionState.NEUTRAL_TALKING
+		"微笑":
+			return ExpressionState.SMILE
+		"驚訝(高光", "驚訝(高光)", "驚訝(有高光":
+			return ExpressionState.SURPRISED_HIGHLIGHT
+		"驚訝(無高光":
+			return ExpressionState.SURPRISED_NO_HIGHLIGHT
+		"害羞":
+			return ExpressionState.NEUTRAL
+		"心理開心":
+			return ExpressionState.PSYCHOLOGICAL_POSITIVE
+		"生理開心":
+			return ExpressionState.POSITIVE
+	return -1
 
 var profile_id: String
 var base_state_textures: Dictionary

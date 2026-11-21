@@ -61,6 +61,28 @@
           "小提琴",
           null
         ]
+      },
+      "feedback_expressions": [
+        "生氣",
+        null,
+        "別開眼"
+      ],
+      "response_expressions": {
+        "option_1": [
+          "生氣",
+          null
+        ],
+        "option_2": [
+          "驚訝(高光",
+          null,
+          "別開眼",
+          null,
+          "無表情",
+          null,
+          "別開眼睛",
+          "說話",
+          null
+        ]
       }
     },
     {
@@ -123,6 +145,28 @@
           "小提琴",
           null
         ]
+      },
+      "feedback_expressions": [
+        "驚訝(高光",
+        null,
+        null
+      ],
+      "response_expressions": {
+        "option_1": [
+          "生氣",
+          null
+        ],
+        "option_2": [
+          "無表情",
+          "說話",
+          null,
+          "說話",
+          null,
+          null,
+          null,
+          "驚訝(高光",
+          null
+        ]
       }
     },
     {
@@ -172,6 +216,22 @@
           "小提琴",
           "主角",
           "小提琴",
+          null
+        ]
+      },
+      "feedback_expressions": [
+        "害羞",
+        null
+      ],
+      "response_expressions": {
+        "option_1": [
+          "害羞",
+          null
+        ],
+        "option_2": [
+          "驚訝(高光)",
+          null,
+          "別開眼",
           null
         ]
       }
@@ -235,6 +295,28 @@
           "小提琴",
           "主角",
           "小提琴",
+          null
+        ]
+      },
+      "feedback_expressions": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "response_expressions": {
+        "option_1": [
+          "別開眼",
+          null,
+          "驚訝(高光",
+          null,
+          "別開眼",
+          null
+        ],
+        "option_2": [
+          "說話",
+          null,
+          "無表情",
           null
         ]
       }
@@ -330,6 +412,43 @@
           "小提琴",
           null
         ]
+      },
+      "feedback_expressions": [
+        null,
+        null,
+        null,
+        "心理開心",
+        null,
+        "心理開心"
+      ],
+      "response_expressions": {
+        "option_1": [
+          null,
+          "驚訝(無高光",
+          null,
+          "生氣",
+          null,
+          null,
+          "別開眼",
+          null,
+          null
+        ],
+        "option_2": [
+          "驚訝(無高光",
+          null,
+          "別開眼",
+          null,
+          "說話",
+          null,
+          "別開眼",
+          "驚訝(有高光",
+          null,
+          "驚訝(有高光",
+          null,
+          null,
+          "微笑",
+          null
+        ]
       }
     },
     {
@@ -413,6 +532,38 @@
           "主角",
           "小提琴"
         ]
+      },
+      "feedback_expressions": [
+        "生氣",
+        null,
+        null,
+        "驚訝(高光"
+      ],
+      "response_expressions": {
+        "option_1": [
+          "別開眼",
+          null,
+          null,
+          "驚訝(高光",
+          "別開眼",
+          null,
+          "生氣",
+          null
+        ],
+        "option_2": [
+          "別開眼",
+          null,
+          null,
+          "說話",
+          null,
+          null,
+          "說話",
+          null,
+          null,
+          "別開眼",
+          null,
+          "說話"
+        ]
       }
     },
     {
@@ -476,6 +627,29 @@
           "主角",
           "主角",
           "小提琴",
+          null
+        ]
+      },
+      "feedback_expressions": [
+        "生氣",
+        null
+      ],
+      "response_expressions": {
+        "option_1": [
+          "驚訝(無高光",
+          null,
+          null
+        ],
+        "option_2": [
+          "害羞",
+          null,
+          null,
+          "說話",
+          null,
+          "驚訝(無高光",
+          null,
+          null,
+          "害羞",
           null
         ]
       }
@@ -553,6 +727,34 @@
           "主角",
           null
         ]
+      },
+      "feedback_expressions": [
+        "生氣",
+        null,
+        "生氣"
+      ],
+      "response_expressions": {
+        "option_1": [
+          "驚訝(無高光",
+          null,
+          null,
+          "驚訝(無高光",
+          null,
+          "別開眼",
+          null
+        ],
+        "option_2": [
+          "生氣",
+          null,
+          "別開眼睛",
+          "說話",
+          null,
+          null,
+          null,
+          "說話",
+          null,
+          null
+        ]
       }
     },
     {
@@ -616,6 +818,29 @@
           "主角",
           "主角",
           "小提琴",
+          null
+        ]
+      },
+      "feedback_expressions": [
+        "生氣",
+        null
+      ],
+      "response_expressions": {
+        "option_1": [
+          "驚訝(無高光",
+          null,
+          null,
+          null,
+          "別開眼睛",
+          null
+        ],
+        "option_2": [
+          "驚訝(高光",
+          null,
+          "說話",
+          null,
+          null,
+          "別開眼睛",
           null
         ]
       }
@@ -686,6 +911,31 @@
           "主角",
           "小提琴",
           "主角"
+        ]
+      },
+      "feedback_expressions": [
+        "生理開心",
+        null
+      ],
+      "response_expressions": {
+        "option_1": [
+          "驚訝(無高光",
+          null,
+          null,
+          "別開眼",
+          null
+        ],
+        "option_2": [
+          "生理開心",
+          null,
+          "別開眼睛",
+          null,
+          "驚訝(高光",
+          null,
+          "說話",
+          null,
+          "別開眼睛",
+          null
         ]
       }
     }
