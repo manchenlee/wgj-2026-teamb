@@ -31,6 +31,7 @@ const SCREEN_TRANSITION_COLOR := Color(0, 0, 0, 1)
 @onready var debug_overlay = $DebugOverlay
 @onready var bg_music: AudioStreamPlayer = $BgMusic
 @onready var screen_transition_overlay: ColorRect = $ScreenTransitionOverlay
+@onready var pause_menu: PauseMenu = $PauseMenu
 
 var current_screen: Control
 var current_screen_id: String = ""
@@ -63,6 +64,8 @@ func _ready() -> void:
 	debug_overlay.force_spawn_spot_requested.connect(_force_spawn_spot)
 	debug_overlay.force_complete_spot_requested.connect(_force_complete_spot)
 	debug_overlay.force_expire_spot_requested.connect(_force_expire_spot)
+	pause_menu.restart_requested.connect(_restart_game_from_pause)
+	pause_menu.exit_requested.connect(get_tree().quit)
 	if screen_transition_overlay != null:
 		screen_transition_overlay.visible = false
 		screen_transition_overlay.color = Color(
@@ -171,6 +174,24 @@ func _show_game(safe_word: String = Config.SAFE_WORD_DEFAULT, fade_from_opening:
 	screen.debug_overlay = debug_overlay
 	_swap_screen(screen, fade_from_opening)
 	debug_overlay.sync_live_readout(screen.get_debug_state())
+
+func _restart_game_from_pause() -> void:
+	pause_menu.close()
+	_restart_current_bgm()
+	_show_game(current_safe_word)
+
+func _restart_current_bgm() -> void:
+	var track_key := current_bgm_key
+	if bgm_tween != null:
+		bgm_tween.kill()
+		bgm_tween = null
+	bg_music.stop()
+	bg_music_secondary.stop()
+	if track_key.is_empty():
+		return
+	bgm_playback_positions[track_key] = 0.0
+	current_bgm_key = ""
+	_play_bgm(track_key, false)
 
 func _show_ending(ending_type: String) -> void:
 	current_screen_id = Config.SCREEN_ENDING

@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/core/screen_router.gd" id="1_router"]
 [ext_resource type="PackedScene" path="res://scenes/components/DebugOverlay.tscn" id="2_debug"]
+[ext_resource type="PackedScene" path="res://scenes/components/PauseMenu.tscn" id="3_pause"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -31,3 +32,5 @@ mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
 [node name="DebugOverlay" parent="." instance=ExtResource("2_debug")]
+
+[node name="PauseMenu" parent="." instance=ExtResource("3_pause")]

@@ -72,11 +72,11 @@ const RUB_TARGET_RADIUS: float = 80.0
 
 # Total incremental Physical Arousal earned across all checkpoints.
 # Applied by InteractionSpotManager from normalized checkpoint progress.
-# Three completed checkpoints grant +1.0 incremental in total.
-const SPOT_PROGRESS_GAIN_TOTAL: float = 1.0
+# Three completed checkpoints grant +0.5 incremental in total.
+const SPOT_PROGRESS_GAIN_TOTAL: float = 0.5
 
 # Extra Physical Arousal bonus on sequence completion.
-const SPOT_COMPLETION_BONUS: float = 2.0
+const SPOT_COMPLETION_BONUS: float = 1.0
 
 # Penalty when spot expires essentially ignored (progress_ratio < 0.1).
 const SPOT_EXPIRY_PENALTY_IGNORED: float = 2.5

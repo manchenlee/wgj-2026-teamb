@@ -1,0 +1,55 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/components/SkipStyleButton.tscn" id="2_button"]
+
+[node name="PauseMenu" type="Control"]
+visible = false
+process_mode = 3
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_script")
+
+[node name="DimBackground" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+color = Color(0, 0, 0, 0.7)
+
+[node name="Buttons" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -110.0
+offset_top = -165.0
+offset_right = 110.0
+offset_bottom = 165.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 0
+
+[node name="ContinueButton" parent="Buttons" instance=ExtResource("2_button")]
+layout_mode = 2
+button_text = "繼續遊戲"
+
+[node name="RestartButton" parent="Buttons" instance=ExtResource("2_button")]
+layout_mode = 2
+button_text = "重啟演奏"
+
+[node name="ExitButton" parent="Buttons" instance=ExtResource("2_button")]
+layout_mode = 2
+button_text = "離開遊戲"
