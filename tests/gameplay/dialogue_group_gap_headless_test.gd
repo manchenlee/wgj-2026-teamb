@@ -39,8 +39,8 @@ func _run() -> void:
 	elif not is_equal_approx(last_wait, last_base):
 		push_error("The final line did not receive its usual reading time.")
 		quit(1)
-	elif group_gap < 0.5 or group_gap > 2.0:
-		push_error("Completed dialogue group gap is outside 0.5 to 2 seconds.")
+	elif group_gap < 0.5 or group_gap > 1.5:
+		push_error("Completed dialogue group gap is outside 0.5 to 1.5 seconds.")
 		quit(1)
 	elif not bubble_hidden or not bubble_restored or not next_group_started:
 		push_error("The bubble did not hide during the group gap and reappear afterward.")

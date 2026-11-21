@@ -1460,7 +1460,6 @@ func _begin_ending_transition(ending_type: String) -> void:
 	run_active = false
 	_stop_runtime_timers(true)
 	var dialogue_ending := ending_type != Config.PHYSICAL_IMBALANCE_FAILURE_ENDING \
-			and ending_type != Config.SAFEWORD_IGNORED_FAILURE_ENDING \
 			and not (ending_type == Config.SUCCESS_ENDING \
 			and interaction_mode == InteractionMode.PHYSIOLOGICAL)
 	if dialogue_ending:

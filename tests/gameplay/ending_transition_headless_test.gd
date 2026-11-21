@@ -57,7 +57,6 @@ func _check_ending(mode: int, ending_type: String, physical: float, emotional: f
 	_assert(game.pending_ending_type == ending_type and game.arousal_model.physical == physical_at_lock,
 		"%s allowed a duplicate trigger or score change." % label)
 	var dialogue_ending: bool = ending_type != CONFIG.PHYSICAL_IMBALANCE_FAILURE_ENDING \
-			and ending_type != CONFIG.SAFEWORD_IGNORED_FAILURE_ENDING \
 			and not (ending_type == CONFIG.SUCCESS_ENDING and mode == GAME_SCRIPT.InteractionMode.PHYSIOLOGICAL)
 	if dialogue_ending:
 		await create_timer(0.9).timeout
@@ -99,7 +98,11 @@ func _check_choice_trigger() -> void:
 	_assert(game.pending_ending_type == CONFIG.SAFEWORD_IGNORED_FAILURE_ENDING,
 		"Psychological incorrect choice did not lock its ending.")
 	_assert(game._has_failed_safe_word_choice, "Wrong safe-word choice was not recorded.")
-	await create_timer(0.7).timeout
+	await create_timer(0.9).timeout
+	var history: Array = game.dialogue_panel.get_dialogue_history()
+	_assert(not history.is_empty() and history.back().get("line", "") == "唔……",
+		"Wrong safe-word choice did not show its transition line.")
+	await create_timer(1.4).timeout
 	_assert(endings == [CONFIG.SAFEWORD_IGNORED_FAILURE_ENDING],
 		"Wrong safe-word choice did not enter ending five.")
 	game.queue_free()
