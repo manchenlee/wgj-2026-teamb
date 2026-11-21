@@ -173,8 +173,6 @@ func _ready() -> void:
 	physiological_dialogue_controller.configure("physiological_dialogue_data_source", false)
 	_build_phase_sequence()
 	_apply_phase_by_index(_get_initial_phase_index())
-	for phase in range(1, PHYSIOLOGICAL_VISUAL_BAND_COUNT + 1):
-		_begin_character_presentation_prefetch(phase)
 	_update_character_visual_state()
 	_apply_overlay_motion_set()
 	_bind_breathing_targets()
@@ -901,6 +899,10 @@ func _sync_character_presentation_phase_for_visual_band(visual_band: int) -> boo
 	if spot_manager != null:
 		spot_manager.restore_active_note_global_positions(active_note_positions)
 		spot_manager.remove_notes_outside_interaction_mask()
+	# Load only the next pose ahead of time. Requesting every later pose here
+	# starts dozens of texture loads while the first notes are appearing.
+	if next_phase < PHYSIOLOGICAL_VISUAL_BAND_COUNT:
+		_begin_character_presentation_prefetch(next_phase + 1)
 	return true
 
 
