@@ -122,15 +122,6 @@ func apply_choice(choice_id: String, model) -> Dictionary:
 		"is_wrong_choice": is_wrong_choice
 	}
 
-func get_timeout_reply() -> String:
-	var reply := _get_current_feedback_line(current_entry)
-	current_line = reply
-	current_prompt = {}
-	current_entry = {}
-	current_feedback_index = -1
-	choice_prompt_pending = false
-	return reply
-
 func get_current_line() -> String:
 	return current_line
 

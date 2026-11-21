@@ -1302,14 +1302,16 @@ func _on_choice_timeout() -> void:
 	choice_timeout_timer.stop()
 	dialogue_panel.hide_prompt()
 	choice_panel.clear_choices()
+	dialogue_panel.hide_current_line()
 	character_area.show_ignored_reaction()
-	var reply_text := psychological_dialogue_controller.get_timeout_reply()
+	psychological_dialogue_controller.reset()
 	if ordinary_choice:
 		var penalty := maxf(0.0, active_phase_config.choice_timeout_emotional_penalty)
 		arousal_model.apply_emotional(-penalty)
 		choice_panel.show_timeout_feedback(penalty)
-	dialogue_panel.append_history(reply_text, "companion")
-	_schedule_next_dialogue_message(InteractionMode.PSYCHOLOGICAL, reply_text)
+	_start_psychological_dialogue_timer(
+		randf_range(Config.PSYCHOLOGICAL_GROUP_GAP_MIN, Config.PSYCHOLOGICAL_GROUP_GAP_MAX), true
+	)
 	_update_presentation()
 
 func _push_next_dialogue_event(mode: InteractionMode) -> void:

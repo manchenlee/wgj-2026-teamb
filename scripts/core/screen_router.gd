@@ -18,6 +18,7 @@ const BGM_TARGET_VOLUME_DB := -6.0
 const BGM_SILENT_VOLUME_DB := -40.0
 const BGM_CROSSFADE_DURATION := 1.0
 const SCREEN_TRANSITION_DURATION := 0.3
+const ENDING_FADE_IN_DURATION := 0.55
 const SCREEN_TRANSITION_COLOR := Color(0, 0, 0, 1)
 
 @export var midi_rest_default_open_string_pitch: int = 69
@@ -172,7 +173,7 @@ func _show_ending(ending_type: String) -> void:
 	screen.set_result(ending_type)
 	screen.restart_pressed.connect(func() -> void: _show_game(current_safe_word, true))
 	screen.back_to_title_pressed.connect(func() -> void: _show_title(true))
-	_swap_screen(screen)
+	_swap_screen_with_fade_in(screen, Color.WHITE if ending_type == Config.SUCCESS_ENDING else Color.BLACK)
 	_play_bgm("ending", true)
 	debug_overlay.sync_live_readout({
 		"screen": "%s:%s" % [Config.SCREEN_ENDING, ending_type],
@@ -222,6 +223,27 @@ func _swap_screen(next_screen: Control, fade_to_black: bool = false) -> void:
 		"color:a",
 		0.0,
 		SCREEN_TRANSITION_DURATION
+	)
+	screen_transition_tween.tween_callback(func() -> void:
+		screen_transition_overlay.visible = false
+		screen_transition_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		screen_transition_tween = null
+	)
+
+func _swap_screen_with_fade_in(next_screen: Control, fade_color: Color) -> void:
+	if screen_transition_tween != null:
+		screen_transition_tween.kill()
+		screen_transition_tween = null
+	if screen_transition_overlay == null:
+		_swap_screen_immediately(next_screen)
+		return
+	screen_transition_overlay.color = Color(fade_color.r, fade_color.g, fade_color.b, 1.0)
+	screen_transition_overlay.visible = true
+	screen_transition_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_swap_screen_immediately(next_screen)
+	screen_transition_tween = create_tween().set_trans(Tween.TRANS_SINE)
+	screen_transition_tween.tween_property(
+		screen_transition_overlay, "color:a", 0.0, ENDING_FADE_IN_DURATION
 	)
 	screen_transition_tween.tween_callback(func() -> void:
 		screen_transition_overlay.visible = false

@@ -92,10 +92,16 @@ func _test_choice_timer_and_penalty() -> void:
 	_assert(absf(countdown.value - game.choice_timeout_timer.time_left / game.choice_timeout_timer.wait_time) <= 0.02, "Countdown diverged from the authoritative timer.")
 	game.choice_timeout_timer.set_paused(false)
 	var emotional_before_timeout: float = game.arousal_model.emotional
+	var history_before_timeout: int = game.dialogue_panel.get_dialogue_history().size()
 	game._on_choice_timeout()
 	_assert(is_equal_approx(game.arousal_model.emotional, emotional_before_timeout - 2.0), "Ordinary timeout did not apply exactly two emotional points.")
 	_assert(not game._has_failed_safe_word_choice, "Choice timeout disabled safe-word dialogue.")
 	_assert(not game.psychological_dialogue_controller.choice_prompt_pending, "Timeout retained a pending choice.")
+	_assert(game.psychological_dialogue_controller.is_group_complete(), "Timeout did not end the dialogue group.")
+	_assert(game.psychological_dialogue_controller.get_current_line().is_empty(), "Timeout retained the choice prompt as the current line.")
+	_assert(not game.dialogue_panel.current_speech_bubble.visible, "Timeout did not hide the dialogue bubble.")
+	_assert(game.dialogue_panel.get_dialogue_history().size() == history_before_timeout, "Timeout repeated the choice prompt in history.")
+	_assert(game._group_gap_active and not game.psychological_dialogue_timer.is_stopped(), "Timeout did not schedule the next dialogue group gap.")
 	_assert(game.choice_timeout_timer.is_stopped() and not countdown.visible, "Timeout left the timer or countdown active.")
 	_assert(game.choice_panel.get_node("TimeoutFeedback").visible, "Ordinary timeout gave no brief feedback.")
 	var score_after_timeout: float = game.arousal_model.emotional
