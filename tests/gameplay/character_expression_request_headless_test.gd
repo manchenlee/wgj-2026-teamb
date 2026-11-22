@@ -30,6 +30,20 @@ func _run() -> void:
     _check(game.current_expression_state == PROFILE.ExpressionState.NEUTRAL, "Physiology crossing changed expression.")
     game.reset_run()
     _check(game.current_expression_state == PROFILE.ExpressionState.NEUTRAL, "New run did not reset expression.")
+    game.set_interaction_mode(CONTROLLER.InteractionMode.PSYCHOLOGICAL)
+    game._dialogue_expression_token = game.request_character_expression(
+        CONTROLLER.CharacterExpressionSource.DIALOGUE, PROFILE.ExpressionState.NEUTRAL_FACE
+    )
+    game.set_interaction_mode(CONTROLLER.InteractionMode.PHYSIOLOGICAL)
+    _check(game.current_expression_state == PROFILE.ExpressionState.NEUTRAL,
+        "Leaving dialogue mode kept its expression active.")
+    game.arousal_model.physical = 75.0
+    game._sync_physiological_visual_band()
+    _check(game.active_character_profile.pose_name == "lying", "Test did not reach lying pose.")
+    _check(game.resolve_character_visual_state().base_state_key == "overall_init",
+        "Lying did not use its default expression after dialogue mode ended.")
+    _check(game.background_placeholder.texture == game.character_visual_textures["overall_init"],
+        "Lying did not display default.png after dialogue mode ended.")
     game.queue_free()
     await process_frame
     if _failures.is_empty():

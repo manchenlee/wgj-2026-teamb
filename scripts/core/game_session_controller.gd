@@ -998,6 +998,8 @@ func _set_interaction_mode(next_mode: InteractionMode, force_sync: bool = false,
 		_safe_word_pending = true
 	if interaction_mode != next_mode:
 		_invalidate_reading_step()
+		if next_mode == InteractionMode.PHYSIOLOGICAL:
+			_clear_dialogue_expression()
 	var entering_psychological_mode := interaction_mode != next_mode \
 			and next_mode == InteractionMode.PSYCHOLOGICAL
 	interaction_mode = next_mode
