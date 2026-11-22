@@ -17,7 +17,11 @@ var _next_token: int = 1
 
 
 func _ready() -> void:
-	if soundfont_path.is_empty() or not FileAccess.file_exists(soundfont_path):
+	if soundfont_path.is_empty():
+		push_warning("Violin SF2 path is empty; using procedural fallback")
+		return
+	if not FileAccess.file_exists(soundfont_path):
+		push_warning("Violin SF2 file is missing: %s; using procedural fallback" % soundfont_path)
 		return
 	var result := Sf2Reader.read_file(soundfont_path)
 	if not result.ok:
