@@ -23,7 +23,6 @@ enum TutorialReturn { FIRST_BRANCH, SECOND_BRANCH }
 @onready var character_root: Control = $CharacterStage/CharacterPivot/CharacterRoot
 @onready var opening_tentacles: TextureRect = $OpeningTentacles
 @onready var clothes_rustle: AudioStreamPlayer = $ClothesRustle
-@onready var package_arrival: AudioStreamPlayer = $PackageArrival
 @onready var dialogue_bubble: CurrentSpeechBubble = $DialogueUi/CurrentSpeechBubble
 @onready var speaker_label: Label = $DialogueUi/CurrentSpeechBubble/SpeakerLabel
 @onready var dialogue_label: Label = $DialogueUi/CurrentSpeechBubble/MarginContainer/TextLabel
@@ -241,8 +240,6 @@ func _apply_entry(entry: Dictionary) -> void:
 	dialogue_bubble.visible = not bool(entry.get("hide_dialogue", false))
 	if dialogue_bubble.visible:
 		_apply_dialogue(entry)
-	if str(entry.get("id", "")) == "r2":
-		package_arrival.play()
 	_apply_tentacles(str(entry.get("tentacles", "")))
 	_apply_effects(entry.get("effects", []))
 	_show_entry_choices(entry)
