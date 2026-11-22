@@ -59,7 +59,7 @@ offset_top = 24.0
 offset_right = 252.0
 offset_bottom = 450.0
 mouse_filter = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = -6
 
 [node name="ChapterNumber" type="Label" parent="ChapterTitle"]
 layout_mode = 2
@@ -71,6 +71,10 @@ theme_override_constants/outline_size = 5
 theme_override_fonts/font = ExtResource("8_chapter_regular")
 theme_override_font_sizes/font_size = 25
 
+[node name="NumberHeadingSpace" type="Control" parent="ChapterTitle"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 36)
+
 [node name="HeadingLabel" type="Label" parent="ChapterTitle"]
 layout_mode = 2
 text = "結局四"
@@ -81,6 +85,10 @@ theme_override_constants/outline_size = 9
 theme_override_fonts/font = ExtResource("9_chapter_bold")
 theme_override_font_sizes/font_size = 52
 
+[node name="HeadingDiamondSpace" type="Control" parent="ChapterTitle"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 36)
+
 [node name="ChapterDiamond" type="Label" parent="ChapterTitle"]
 layout_mode = 2
 text = "◆"
@@ -90,6 +98,10 @@ theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
 theme_override_constants/outline_size = 5
 theme_override_fonts/font = ExtResource("8_chapter_regular")
 theme_override_font_sizes/font_size = 16
+
+[node name="DiamondButtonSpace" type="Control" parent="ChapterTitle"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 20)
 
 [node name="RestartButtons" type="VBoxContainer" parent="ChapterTitle"]
 layout_mode = 2
