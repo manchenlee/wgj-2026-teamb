@@ -142,7 +142,7 @@ JSON 內部 key 也優先使用 `snake_case`，並讓檔名對應內容用途。
 字型若是外部原始檔，可保留原字型名稱，方便追蹤授權與來源：
 
 ```text
-assets/fonts/ShipporiMincho-Regular.ttf
+assets/fonts/GenRyuMin2TW-B.otf
 ```
 
 專案自製 theme resource 使用 `snake_case`：
