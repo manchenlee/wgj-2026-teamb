@@ -19,7 +19,7 @@ const PSYCHOLOGICAL_GROUP_GAP_SECONDS: float = 1.5
 const FEEDBACK_MESSAGE_TEXT: String = "……"
 const RESPONSE_BUTTON_TEXT: String = "……"
 const SAFE_WORD_DEFAULT: String = "紅色"
-const SAFE_WORD_MAX_LENGTH: int = 16
+const SAFE_WORD_MAX_LENGTH: int = 10
 
 static func normalize_safe_word(value: String) -> String:
 	var cleaned := ""
