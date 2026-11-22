@@ -7,6 +7,7 @@ const HEART_TEXTURE := preload("res://assets/art/ui/gameplay/img_heart.png")
 const NOTE_LABEL_FONT := preload("res://assets/fonts/GenRyuMin2TW-B.otf")
 const SLIDE_COLOR := Color("#85CCFFE0")
 const SLIDE_COMPLETED_COLOR := Color("#85CCFFF5")
+const HEAD_NOTE_ACCENT := Color("#DC4DBB")
 const COMPLETED_FADE_DURATION: float = 0.16
 
 var checkpoint_radius: float = 40.0
@@ -130,8 +131,8 @@ func _draw() -> void:
 		var segment_alpha := _checkpoint_alpha(index)
 		if segment_alpha <= 0.0:
 			continue
-		var line_color := SLIDE_COMPLETED_COLOR if segment_completed else Color("#85CCFFB8")
-		line_color.a *= segment_alpha
+		var line_color := SLIDE_COMPLETED_COLOR if segment_completed else SLIDE_COLOR
+		line_color.a = 0.5 * segment_alpha
 		draw_line(checkpoints[index], checkpoints[index + 1], line_color, checkpoint_radius * 2.0, true)
 
 	var target_index := _get_target_index()
@@ -144,7 +145,8 @@ func _draw() -> void:
 		var fill_color := SLIDE_COMPLETED_COLOR if is_completed else SLIDE_COLOR
 		if is_current:
 			fill_color = SLIDE_COMPLETED_COLOR
-		_draw_note_circle(checkpoints[index], checkpoint_radius, fill_color, checkpoint_alpha)
+		var accent_color := HEAD_NOTE_ACCENT if index == target_index else Color.WHITE
+		_draw_note_circle(checkpoints[index], checkpoint_radius, fill_color, checkpoint_alpha, accent_color)
 		var font_size := maxi(16, int(round(checkpoint_radius * 0.58)))
 		var label_size := NOTE_LABEL_FONT.get_string_size(
 			"slide", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size
@@ -156,7 +158,7 @@ func _draw() -> void:
 			HORIZONTAL_ALIGNMENT_LEFT,
 			-1.0,
 			font_size,
-			Color(1.0, 1.0, 1.0, checkpoint_alpha)
+			Color(accent_color.r, accent_color.g, accent_color.b, checkpoint_alpha)
 		)
 
 

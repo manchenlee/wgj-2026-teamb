@@ -115,11 +115,11 @@ func _draw_approach_circle() -> void:
 	)
 
 
-func _draw_note_circle(center: Vector2, radius: float, fill_color: Color, visual_alpha: float = 1.0) -> void:
-	# The bloom inherits the note color; only the fine rim remains white.
+func _draw_note_circle(center: Vector2, radius: float, fill_color: Color, visual_alpha: float = 1.0, rim_color: Color = Color.WHITE) -> void:
+	# The bloom inherits the note color; the fine rim can use a separate accent.
 	_draw_continuous_ring_glow(center, radius, 14.0, fill_color, 0.38 * visual_alpha)
 	draw_circle(center, radius, Color(fill_color.r, fill_color.g, fill_color.b, fill_color.a * visual_alpha))
-	draw_arc(center, radius, 0.0, TAU, 64, Color(1.0, 1.0, 1.0, 0.96 * visual_alpha), 2.5, true)
+	draw_arc(center, radius, 0.0, TAU, 64, Color(rim_color.r, rim_color.g, rim_color.b, 0.96 * visual_alpha), 2.5, true)
 
 
 func _draw_continuous_ring_glow(
