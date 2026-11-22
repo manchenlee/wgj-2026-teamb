@@ -7,6 +7,8 @@ const CHOICE_ENABLED_MODULATE := Color(1.0, 1.0, 1.0, 1.0)
 const CHOICE_DISABLED_MODULATE := Color(0.42, 0.42, 0.42, 1.0)
 const CHOICE_WIDTH := 720.0
 const CHOICE_SIDE_MARGIN := 28.0
+const CHOICE_ART_LEFT_INSET := 29.0
+const CHOICE_ART_RIGHT_INSET := 32.0
 const REQUIRED_ANCHORS_PER_SIDE := 4
 
 @export var use_fixed_choice_anchor_seed: bool = false
@@ -97,6 +99,9 @@ func _fit_choice_width() -> void:
 	var right_offset := minf(500.0, size.x * 0.5 - CHOICE_SIDE_MARGIN)
 	choice_container.offset_right = right_offset
 	choice_container.offset_left = right_offset - target_width
+	var art_scale := target_width / CHOICE_WIDTH
+	choice_countdown.offset_left = CHOICE_ART_LEFT_INSET * art_scale
+	choice_countdown.offset_right = -CHOICE_ART_RIGHT_INSET * art_scale
 	for button in [choice_button_1, choice_button_2]:
 		button.custom_minimum_size.x = target_width
 
