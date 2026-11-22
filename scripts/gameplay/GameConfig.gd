@@ -72,8 +72,8 @@ const RUB_TARGET_RADIUS: float = 80.0
 
 # Total incremental Physical Arousal earned across all checkpoints.
 # Applied by InteractionSpotManager from normalized checkpoint progress.
-# Three completed checkpoints grant +0.5 incremental in total.
-const SPOT_PROGRESS_GAIN_TOTAL: float = 0.5
+# Three completed checkpoints grant +1.0 incremental in total.
+const SPOT_PROGRESS_GAIN_TOTAL: float = 1.0
 
 # Extra Physical Arousal bonus on sequence completion.
 const SPOT_COMPLETION_BONUS: float = 1.0
@@ -176,8 +176,8 @@ const SUCCESS_ENDING: String = "success"
 const PEAK_DEPLETION_FAILURE_ENDING: String = "peak_depletion_failure"
 const PHYSICAL_IMBALANCE_FAILURE_ENDING: String = "physical_imbalance_failure"
 const EMOTIONAL_IMBALANCE_FAILURE_ENDING: String = "emotional_imbalance_failure"
-const PHYSICAL_FAILURE_ENDING: String = PEAK_DEPLETION_FAILURE_ENDING
-const EMOTIONAL_FAILURE_ENDING: String = PEAK_DEPLETION_FAILURE_ENDING
+const PHYSICAL_FAILURE_ENDING: String = PHYSICAL_IMBALANCE_FAILURE_ENDING
+const EMOTIONAL_FAILURE_ENDING: String = EMOTIONAL_IMBALANCE_FAILURE_ENDING
 const SAFEWORD_IGNORED_FAILURE_ENDING: String = "safeword_ignored_failure"
 
 const SCREEN_TITLE: String = "title"
