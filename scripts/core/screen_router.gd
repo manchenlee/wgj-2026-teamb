@@ -172,8 +172,24 @@ func _show_game(safe_word: String = Config.SAFE_WORD_DEFAULT, fade_from_opening:
 	screen.ending_requested.connect(_show_ending)
 	screen.bgm_requested.connect(_on_game_bgm_requested)
 	screen.debug_overlay = debug_overlay
-	_swap_screen(screen, fade_from_opening)
+	if fade_from_opening and current_screen_id == Config.SCREEN_GAME and current_screen != null:
+		_crossfade_opening_to_game(screen)
+	else:
+		_swap_screen(screen)
 	debug_overlay.sync_live_readout(screen.get_debug_state())
+
+func _crossfade_opening_to_game(game_screen: Control) -> void:
+	var opening_screen := current_screen
+	current_screen = game_screen
+	game_screen.modulate.a = 0.0
+	game_screen.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	screen_container.add_child(game_screen)
+	var transition := create_tween().set_trans(Tween.TRANS_SINE)
+	transition.tween_property(game_screen, "modulate:a", 1.0, 1.4)
+	transition.tween_callback(func() -> void:
+		game_screen.mouse_filter = Control.MOUSE_FILTER_STOP
+		opening_screen.queue_free()
+	)
 
 func _restart_game_from_pause() -> void:
 	pause_menu.close()

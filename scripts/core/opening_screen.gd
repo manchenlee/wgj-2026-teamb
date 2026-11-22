@@ -13,6 +13,8 @@ const CHOICE_BUTTON_SCENE := preload("res://scenes/components/DialogueChoiceButt
 const CHOICE_BUTTON_WIDTH := 720.0
 const CHOICE_HORIZONTAL_INSETS := 144.0
 const ENDING_FADE_DURATION := 0.45
+const POSE_FADE_DURATION := 1.1
+const GAME_POSE_FADE_DURATION := 1.4
 
 enum TutorialReturn { FIRST_BRANCH, SECOND_BRANCH }
 
@@ -57,6 +59,8 @@ var _pivot_rest_position := Vector2.ZERO
 var _current_character_offset := Vector2.ZERO
 var _current_character_scale := Vector2.ONE
 var _current_expression: String = DEFAULT_OPENING_EXPRESSION
+var _background_faded := false
+var _pose_transition_complete := false
 var _skip_button_base_scale := Vector2.ONE
 
 func _ready() -> void:
@@ -154,6 +158,10 @@ func _advance_script() -> void:
 				_transition_requested = true
 				safe_word_requested.emit()
 				return
+			"pose_transition":
+				if not _pose_transition_complete:
+					_play_pose_interlude(str(current_entry.get("id", "")))
+					return
 			"game":
 				_request_game_transition()
 				return
@@ -179,6 +187,9 @@ func _request_game_transition() -> void:
 	if _transition_requested:
 		return
 	_transition_requested = true
+	if _background_faded:
+		_fade_to_game_pose()
+		return
 	if _ending_fade_tween != null and _ending_fade_tween.is_running():
 		_ending_fade_tween.kill()
 	ending_blackout.visible = true
@@ -186,6 +197,20 @@ func _request_game_transition() -> void:
 	_ending_fade_tween = create_tween().set_trans(Tween.TRANS_SINE)
 	_ending_fade_tween.tween_property(ending_blackout, "color:a", 1.0, ENDING_FADE_DURATION)
 	_ending_fade_tween.tween_callback(func() -> void: game_requested.emit())
+
+func _fade_to_game_pose() -> void:
+	_interlude_running = true
+	if dialogue_bubble.visible:
+		dialogue_bubble.finish_dialogue_stream()
+	var old_texture := _base_sprite.texture
+	var old_sprite := _make_transition_sprite(old_texture)
+	_apply_base_character("res://assets/art/character/sitting/default.png")
+	_base_sprite.modulate.a = 0.0
+	var transition := create_tween().set_trans(Tween.TRANS_SINE).set_parallel(true)
+	transition.tween_property(dialogue_bubble, "modulate:a", 0.0, 0.35)
+	transition.tween_property(_base_sprite, "modulate:a", 1.0, GAME_POSE_FADE_DURATION)
+	transition.tween_property(old_sprite, "modulate:a", 0.0, GAME_POSE_FADE_DURATION)
+	game_requested.emit()
 
 func _load_opening_script() -> void:
 	_entries.clear()
@@ -227,6 +252,11 @@ func _apply_entry(entry: Dictionary) -> void:
 	_apply_background(str(entry.get("background", DEFAULT_BACKGROUND_PATH)))
 	_apply_backdrop_tint(entry.get("backdrop_tint", null))
 	_apply_character(entry.get("character", {}))
+	if bool(entry.get("fade_background", false)):
+		_background_faded = true
+		var background_tween := create_tween().set_trans(Tween.TRANS_SINE).set_parallel(true)
+		background_tween.tween_property(background, "modulate:a", 0.0, 0.7)
+		background_tween.tween_property(backdrop_tint, "modulate:a", 0.0, 0.7)
 	if bool(entry.get("auto_interlude", false)):
 		_show_entry_choices(entry)
 		_play_tentacle_interlude(str(entry.get("id", "")))
@@ -239,6 +269,36 @@ func _apply_entry(entry: Dictionary) -> void:
 	_apply_tentacles(str(entry.get("tentacles", "")))
 	_apply_effects(entry.get("effects", []))
 	_show_entry_choices(entry)
+
+func _play_pose_interlude(step_id: String) -> void:
+	_interlude_running = true
+	dialogue_bubble.finish_dialogue_stream()
+	var old_texture := _base_sprite.texture
+	var old_sprite := _make_transition_sprite(old_texture)
+	_apply_base_character("res://assets/art/character/sitting/%s.png" % _current_expression)
+	_apply_layers([{"id": "tail", "path": "res://assets/art/character/sitting/tail_2.png"}])
+	_base_sprite.modulate.a = 0.0
+	var tail_sprite := _layer_sprites["tail"] as TextureRect
+	tail_sprite.modulate.a = 0.0
+	_apply_tentacles("fade_out")
+	var transition := create_tween().set_trans(Tween.TRANS_SINE).set_parallel(true)
+	transition.tween_property(dialogue_bubble, "modulate:a", 0.0, 0.25)
+	transition.tween_property(_base_sprite, "modulate:a", 1.0, POSE_FADE_DURATION)
+	transition.tween_property(tail_sprite, "modulate:a", 1.0, POSE_FADE_DURATION)
+	transition.tween_property(old_sprite, "modulate:a", 0.0, POSE_FADE_DURATION)
+	transition.chain().tween_callback(func() -> void:
+		old_sprite.queue_free()
+		if _current_step_id() == step_id and not _transition_requested:
+			_pose_transition_complete = true
+			_interlude_running = false
+			_advance_script()
+	)
+
+func _make_transition_sprite(texture: Texture2D) -> TextureRect:
+	var sprite := _create_stage_sprite("transition_pose")
+	sprite.texture = texture
+	sprite.z_index = 1
+	return sprite
 
 func _play_tentacle_interlude(step_id: String) -> void:
 	if _interlude_tween != null and _interlude_tween.is_running():
@@ -338,7 +398,8 @@ func _apply_backdrop_tint(tint_value: Variant) -> void:
 	backdrop_tint.color = _parse_color(tint_value, Color(0.05, 0.03, 0.05, 0.36))
 
 func _apply_dialogue(entry: Dictionary) -> void:
-	var speaker_text := str(entry.get("speaker", ""))
+	var speaker_value: Variant = entry.get("speaker", null)
+	var speaker_text := "" if speaker_value == null else str(speaker_value)
 	dialogue_bubble.set_speaker_text(speaker_text)
 	dialogue_bubble.set_dialogue_text(str(entry.get("text", "")))
 
@@ -347,7 +408,9 @@ func _apply_tentacles(cue: String) -> void:
 		_tentacles_tween.kill()
 	match cue:
 		"hold":
-			pass
+			if opening_tentacles.visible:
+				opening_tentacles.modulate.a = 1.0
+				opening_tentacles.position = Vector2.ZERO
 		"show", "fade_in":
 			opening_tentacles.visible = true
 			opening_tentacles.modulate.a = 0.0

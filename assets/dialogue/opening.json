@@ -29,7 +29,10 @@
       "source_row": 6,
       "character": {
         "base": "res://assets/art/character/normal_violin.png",
-        "offset": [150, 0]
+        "offset": [
+          150,
+          0
+        ]
       }
     },
     {
@@ -40,7 +43,10 @@
       "next": "r9",
       "character": {
         "base": "res://assets/art/character/normal_violin.png",
-        "offset": [150, 0]
+        "offset": [
+          150,
+          0
+        ]
       }
     },
     {
@@ -52,7 +58,10 @@
       "tentacles": "hold",
       "character": {
         "base": "res://assets/art/character/normal_violin.png",
-        "offset": [150, 0]
+        "offset": [
+          150,
+          0
+        ]
       }
     },
     {
@@ -62,7 +71,10 @@
       "next": "r8",
       "character": {
         "base": "res://assets/art/character/normal_violin.png",
-        "offset": [150, 0]
+        "offset": [
+          150,
+          0
+        ]
       }
     },
     {
@@ -621,7 +633,47 @@
         "base": "res://assets/art/character/opening/{expression}.png",
         "clear_layers": false
       },
-      "tentacles": "fade_in",
+      "tentacles": "fade_in"
+    },
+    {
+      "id": "r67",
+      "speaker": "主角",
+      "text": "那首先，你先把衣服給……呃，好啦，我自己來就是了。",
+      "source_row": 3,
+      "character": {
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "clear_layers": false
+      },
+      "fade_background": true,
+      "tentacles": "hold"
+    },
+    {
+      "id": "r68",
+      "speaker": null,
+      "text": "【他仍舊沉默不語，你鼓起勇氣，伸手輕撫過那銀白色的襯衣——】",
+      "source_row": 4,
+      "character": {
+        "base": "res://assets/art/character/opening/{expression}.png",
+        "clear_layers": false
+      },
+      "action": "pose_transition",
+      "tentacles": "hold"
+    },
+    {
+      "id": "r69",
+      "speaker": "主角",
+      "text": "好了，我要開始囉——",
+      "source_row": 6,
+      "character": {
+        "base": "res://assets/art/character/sitting/{expression}.png",
+        "clear_layers": true,
+        "layers": [
+          {
+            "id": "tail",
+            "path": "res://assets/art/character/sitting/tail_2.png"
+          }
+        ]
+      },
       "action": "game"
     }
   ]
