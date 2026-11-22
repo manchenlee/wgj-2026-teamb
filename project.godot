@@ -13,7 +13,9 @@ config_version=5
 config/name="wgj-2026-teamb"
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
-config/icon="res://icon.svg"
+config/icon="res://assets/art/ui/icon.png"
+config/windows_native_icon="res://assets/art/ui/icon.ico"
+config/macos_native_icon="res://assets/art/ui/icon.icns"
 
 [display]
 
