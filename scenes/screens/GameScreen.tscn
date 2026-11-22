@@ -4,7 +4,6 @@
 [ext_resource type="PackedScene" path="res://scenes/components/CharacterArea.tscn" id="2_character"]
 [ext_resource type="Texture2D" path="res://assets/art/character/sitting/default.png" id="2_pbayp"]
 [ext_resource type="PackedScene" path="res://scenes/components/StatusHUD.tscn" id="4_hud"]
-[ext_resource type="Script" uid="uid://y4sw51emkoug" path="res://scripts/presentation/central_arousal_visualization.gd" id="5_vis"]
 [ext_resource type="Script" uid="uid://d3bshm1tk5r8n" path="res://scripts/ui/TwoFrameOverlayAnimator.gd" id="6_overlay"]
 [ext_resource type="Script" uid="uid://7lsklnfonwr6" path="res://scripts/ui/LocalizedMeshBreathing.gd" id="7_breathing"]
 [ext_resource type="Script" uid="uid://d24toufu83pxy" path="res://scripts/ui/conversation_viewport.gd" id="8_conversation"]
@@ -268,28 +267,6 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0.18, 0.48, 0.9, 0.18)
-
-[node name="CentralArousalVisualization" type="Control" parent="CharacterAlignmentRoot/MainCharacterArea" unique_id=401470020]
-visible = false
-z_index = 1
-z_as_relative = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-script = ExtResource("5_vis")
-character_placeholder_path = NodePath("../CharacterArea/CharacterVisualAnchor/CharacterPlaceholder")
-
-[node name="PeakIndicator" type="Label" parent="CharacterAlignmentRoot/MainCharacterArea/CentralArousalVisualization" unique_id=1128361418]
-visible = false
-z_index = 4
-z_as_relative = false
-layout_mode = 0
-theme_override_colors/font_color = Color(0.12, 0.12, 0.16, 1)
-text = "Peak 0"
 
 [node name="CharacterArea" parent="CharacterAlignmentRoot/MainCharacterArea" unique_id=806207715 instance=ExtResource("2_character")]
 z_index = 4

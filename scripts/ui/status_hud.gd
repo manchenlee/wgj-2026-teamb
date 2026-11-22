@@ -7,13 +7,6 @@ const WARNING_MODULATE_MIN := Color(1.0, 0.72, 0.68, 1.0)
 const WARNING_MODULATE_MAX := Color(1.0, 1.0, 1.0, 1.0)
 const WARNING_PULSE_SPEED: float = 4.0
 
-@onready var heart_value_label: Label = $ArousalMeter/HeartValueLabel
-@onready var arousal_fill_bar: TextureRect = $ArousalMeter/ArousalFillBar
-@onready var treble_clef: TextureRect = $ArousalMeter/TrebleClef
-@onready var fill_start_marker: Control = $ArousalMeter/FillStartMarker
-@onready var fill_end_marker: Control = $ArousalMeter/FillEndMarker
-@onready var note_center_guide: Control = $ArousalMeter/NoteCenterGuide
-@onready var legacy_arousal_meter: Control = $ArousalMeter
 @onready var physical_value_label: Label = $NumericScores/PhysicalScore/Value
 @onready var emotional_value_label: Label = $NumericScores/EmotionalScore/Value
 @onready var combo_label: Label = $ComboLabel
@@ -27,8 +20,6 @@ const WARNING_PULSE_SPEED: float = 4.0
 @onready var emotional_fill: ColorRect = $EmotionalBar/Track/Fill
 @onready var emotional_bar_value: Label = $EmotionalBar/Value
 
-@export var show_legacy_meter: bool = false
-
 var _overall_arousal_value: float = 0.0
 var _physical_value: float = 0.0
 var _emotional_value: float = 0.0
@@ -40,7 +31,6 @@ var _combo_value: int = 0
 var _physical_mode_active: bool = true
 
 func _ready() -> void:
-	legacy_arousal_meter.visible = show_legacy_meter
 	_apply_overall_arousal_value(_overall_arousal_value)
 	_apply_score_bars()
 	set_process(false)
@@ -64,7 +54,6 @@ func update_values(physical: float, emotional: float, overall_arousal: float) ->
 	emotional_value_label.text = str(int(round(_emotional_value)))
 	_apply_score_bars()
 	_overall_arousal_value = Config.clamp_value(overall_arousal)
-	heart_value_label.text = str(int(round(_overall_arousal_value)))
 	peak_value_label.text = "%d/100" % int(round(_overall_arousal_value))
 	_apply_overall_arousal_value(_overall_arousal_value)
 
@@ -119,26 +108,11 @@ func is_emotional_low_warning_active() -> bool:
 	return _emotional_low_warning_active
 
 
-func set_legacy_meter_visible(legacy_visible: bool) -> void:
-	show_legacy_meter = legacy_visible
-	if is_node_ready():
-		legacy_arousal_meter.visible = legacy_visible
-
 func _apply_overall_arousal_value(overall_arousal: float) -> void:
 	if not is_node_ready():
 		return
 	var fill_ratio := Config.clamp_value(overall_arousal) / Config.MAX_VALUE
 	reference_fill.size.x = reference_track.size.x * fill_ratio
-	var fill_start := fill_start_marker.position
-	var fill_end := fill_end_marker.position
-	var fill_width := maxf(fill_end.x - fill_start.x, 0.0)
-	var note_center_x := fill_start.x + (fill_width * fill_ratio)
-
-	arousal_fill_bar.position = fill_start
-	arousal_fill_bar.size.x = maxf(note_center_x - fill_start.x, 0.0)
-	treble_clef.position.x = note_center_x - treble_clef.pivot_offset.x
-
-
 func _apply_score_bars() -> void:
 	if not is_node_ready():
 		return

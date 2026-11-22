@@ -43,7 +43,6 @@ enum CharacterExpressionSource {
 
 @export var show_layout_debug_bounds: bool = false
 @export var show_phase2_editor_reference: bool = true
-@export var show_legacy_arousal_visualization: bool = false
 @export var debug_start_phase_id: String = ""
 @export var safe_word: String = Config.SAFE_WORD_DEFAULT
 @export var violin_pizzicato_sample: AudioStream
@@ -74,7 +73,6 @@ enum CharacterExpressionSource {
 @onready var speech_bubble_anchor: Control = $CharacterAlignmentRoot/MainCharacterArea/SpeechBubbleAnchor
 @onready var left_choice_anchor_root: Control = $CharacterAlignmentRoot/MainCharacterArea/ChoiceAnchorRegion/LeftChoiceAnchors
 @onready var right_choice_anchor_root: Control = $CharacterAlignmentRoot/MainCharacterArea/ChoiceAnchorRegion/RightChoiceAnchors
-@onready var arousal_visualization = $CharacterAlignmentRoot/MainCharacterArea/CentralArousalVisualization
 @onready var dialogue_panel = $ConversationViewport
 @onready var choice_panel: ChoicePanel = %ChoicePanel
 @onready var status_hud: StatusHUD = %StatusHUD
@@ -182,7 +180,6 @@ func _ready() -> void:
 		_get_choice_anchor_children(right_choice_anchor_root)
 	)
 	_update_layout_debug_regions()
-	arousal_visualization.visible = show_legacy_arousal_visualization
 
 	if Engine.is_editor_hint():
 		set_process(false)
@@ -992,11 +989,6 @@ func set_interaction_mode(next_mode: InteractionMode) -> void:
 	_set_interaction_mode(next_mode)
 
 
-func set_legacy_arousal_visualization_visible(legacy_visible: bool) -> void:
-	show_legacy_arousal_visualization = legacy_visible
-	if arousal_visualization != null:
-		arousal_visualization.visible = legacy_visible
-
 func _set_interaction_mode(next_mode: InteractionMode, force_sync: bool = false, preserve_note_audio: bool = false) -> void:
 	if interaction_mode == next_mode and not force_sync:
 		return
@@ -1635,7 +1627,6 @@ func _update_presentation() -> void:
 	_update_character_visual_state()
 	_update_bgm_state()
 	character_area.update_emotion_state(arousal_model.get_emotion_state())
-	arousal_visualization.set_values(arousal_model.physical, arousal_model.emotional, arousal_model.peak)
 	status_hud.update_values(
 		arousal_model.physical,
 		arousal_model.emotional,

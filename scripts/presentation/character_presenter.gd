@@ -2,10 +2,7 @@ class_name CharacterPresenter
 extends Control
 
 const Config := preload("res://scripts/gameplay/GameConfig.gd")
-const DIRECTION_TEXTURE_PATH := "res://assets/art/ui/direction.png"
 const METALLIC_SHEEN_SHADER := preload("res://scripts/ui/metallic_sheen_2d.gdshader")
-const DIRECTION_ALPHA_THRESHOLD := 0.02
-const DIRECTION_CROP_MARGIN := 0
 const DIRECTION_ICON_PADDING := 12.0
 const TIMER_RING_TEXTURE_SIZE := 256
 const TIMER_RING_BASE_PHASE_STEP := 0.73
@@ -72,7 +69,6 @@ var _prompt_ring_progress_cache: Dictionary = {}
 var _current_prompt_id: int = -1
 var _prompt_bounds_rect := Rect2()
 var _direction_texture: Texture2D
-var _direction_texture_warning_emitted := false
 var _body_visual_anchor: Control
 var _body_rest_position := Vector2.ZERO
 var _body_offset := Vector2.ZERO
@@ -197,75 +193,9 @@ func _update_body_motion(delta: float) -> void:
 		_motion_offset = Vector2.ZERO
 
 func _get_direction_texture() -> Texture2D:
-	if _direction_texture != null:
-		return _direction_texture
-
-	if ResourceLoader.exists(DIRECTION_TEXTURE_PATH):
-		var imported_texture := load(DIRECTION_TEXTURE_PATH) as Texture2D
-		if imported_texture != null:
-			var imported_image := imported_texture.get_image()
-			if imported_image != null and not imported_image.is_empty():
-				_direction_texture = ImageTexture.create_from_image(_prepare_direction_image(imported_image))
-				return _direction_texture
-
-	var absolute_path := ProjectSettings.globalize_path(DIRECTION_TEXTURE_PATH)
-	if FileAccess.file_exists(absolute_path):
-		var image := Image.load_from_file(absolute_path)
-		if image != null and not image.is_empty():
-			_direction_texture = ImageTexture.create_from_image(_prepare_direction_image(image))
-			return _direction_texture
-
-	if not _direction_texture_warning_emitted:
-		_direction_texture_warning_emitted = true
-		push_warning(
-			"Direction arrow texture failed to load from %s. Falling back to generated arrow." % DIRECTION_TEXTURE_PATH
-		)
-	_direction_texture = _create_fallback_direction_texture()
+	if _direction_texture == null:
+		_direction_texture = _create_fallback_direction_texture()
 	return _direction_texture
-
-func _prepare_direction_image(source_image: Image) -> Image:
-	var image := source_image.duplicate()
-	if image.get_format() != Image.FORMAT_RGBA8:
-		image.convert(Image.FORMAT_RGBA8)
-
-	var crop_rect := _find_direction_alpha_bounds(image)
-	if crop_rect.size.x <= 0 or crop_rect.size.y <= 0:
-		return image
-
-	var cropped: Image = image.get_region(crop_rect)
-	for y in range(cropped.get_height()):
-		for x in range(cropped.get_width()):
-			var pixel := cropped.get_pixel(x, y)
-			if pixel.a <= DIRECTION_ALPHA_THRESHOLD:
-				cropped.set_pixel(x, y, Color(0.0, 0.0, 0.0, 0.0))
-			else:
-				cropped.set_pixel(x, y, Color(1.0, 1.0, 1.0, pixel.a))
-	return cropped
-
-func _find_direction_alpha_bounds(image: Image) -> Rect2i:
-	var width := image.get_width()
-	var height := image.get_height()
-	var min_x := width
-	var min_y := height
-	var max_x := -1
-	var max_y := -1
-
-	for y in range(height):
-		for x in range(width):
-			if image.get_pixel(x, y).a > DIRECTION_ALPHA_THRESHOLD:
-				min_x = min(min_x, x)
-				min_y = min(min_y, y)
-				max_x = max(max_x, x)
-				max_y = max(max_y, y)
-
-	if max_x < min_x or max_y < min_y:
-		return Rect2i()
-
-	min_x = max(0, min_x - DIRECTION_CROP_MARGIN)
-	min_y = max(0, min_y - DIRECTION_CROP_MARGIN)
-	max_x = min(width - 1, max_x + DIRECTION_CROP_MARGIN)
-	max_y = min(height - 1, max_y + DIRECTION_CROP_MARGIN)
-	return Rect2i(min_x, min_y, (max_x - min_x) + 1, (max_y - min_y) + 1)
 
 func _create_fallback_direction_texture() -> Texture2D:
 	var image := Image.create(64, 64, false, Image.FORMAT_RGBA8)

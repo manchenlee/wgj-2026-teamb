@@ -117,13 +117,13 @@ func _show_opening() -> void:
 	_swap_screen(screen)
 	_play_bgm("default", false)
 
-func _show_opening_safe_word(transition: ScreenTransition = ScreenTransition.CONTENT_BLACKOUT) -> void:
+func _show_opening_safe_word() -> void:
 	if current_screen_id != Config.SCREEN_OPENING:
 		return
 	current_screen_id = Config.SCREEN_SAFE_WORD
 	var screen := SAFE_WORD_SCENE.instantiate()
 	screen.continue_pressed.connect(_resume_opening_after_safe_word)
-	_swap_screen(screen, transition, STORY_TRANSITION_DURATION)
+	_swap_screen(screen)
 
 func _resume_opening_after_safe_word(safe_word: String) -> void:
 	if current_screen_id != Config.SCREEN_SAFE_WORD:
@@ -146,7 +146,7 @@ func _on_opening_skip() -> void:
 	if safe_word_completed:
 		_show_game(current_safe_word, true)
 	else:
-		_show_opening_safe_word(ScreenTransition.IMMEDIATE)
+		_show_opening_safe_word()
 
 func _show_safe_word() -> void:
 	current_screen_id = Config.SCREEN_SAFE_WORD
