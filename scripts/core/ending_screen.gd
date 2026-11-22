@@ -55,6 +55,9 @@ var ending_texts_by_type: Dictionary = {}
 var _novel_screen: Control
 var _novel_transitioning: bool = false
 
+func is_ending_novel_active() -> bool:
+	return _novel_screen != null and is_instance_valid(_novel_screen)
+
 func _ready() -> void:
 	ending_texts_by_type = _load_ending_texts()
 

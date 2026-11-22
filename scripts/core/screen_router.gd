@@ -65,7 +65,6 @@ func _ready() -> void:
 	debug_overlay.force_spawn_spot_requested.connect(_force_spawn_spot)
 	debug_overlay.force_complete_spot_requested.connect(_force_complete_spot)
 	debug_overlay.force_expire_spot_requested.connect(_force_expire_spot)
-	pause_menu.restart_requested.connect(_restart_game_from_pause)
 	pause_menu.exit_requested.connect(get_tree().quit)
 	if screen_transition_overlay != null:
 		screen_transition_overlay.visible = false
@@ -207,24 +206,13 @@ func _fade_opening_to_screen(next_screen: Control) -> void:
 		screen_transition_tween = null
 	)
 
-func _restart_game_from_pause() -> void:
-	pause_menu.close()
-	_reset_run_bgm_positions()
-	_restart_current_bgm()
-	_show_game(current_safe_word)
-
-func _restart_current_bgm() -> void:
-	var track_key := current_bgm_key
-	if bgm_tween != null:
-		bgm_tween.kill()
-		bgm_tween = null
-	bg_music.stop()
-	bg_music_secondary.stop()
-	if track_key.is_empty():
-		return
-	bgm_playback_positions[track_key] = 0.0
-	current_bgm_key = ""
-	_play_bgm(track_key, false)
+func can_open_pause_menu() -> bool:
+	if current_screen_id == Config.SCREEN_GAME or current_screen_id == Config.SCREEN_OPENING:
+		return true
+	return current_screen_id == Config.SCREEN_ENDING \
+		and current_screen != null \
+		and current_screen.has_method("is_ending_novel_active") \
+		and current_screen.is_ending_novel_active()
 
 func _show_ending(ending_type: String) -> void:
 	current_screen_id = Config.SCREEN_ENDING

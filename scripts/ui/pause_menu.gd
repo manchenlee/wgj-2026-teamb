@@ -1,18 +1,15 @@
 class_name PauseMenu
 extends Control
 
-signal restart_requested
 signal exit_requested
 
 @onready var _continue_button: Button = $Buttons/ContinueButton/Button
-@onready var _restart_button: Button = $Buttons/RestartButton/Button
 @onready var _exit_button: Button = $Buttons/ExitButton/Button
 
 var _paused_audio: Array[AudioStreamPlayer] = []
 
 func _ready() -> void:
 	_continue_button.pressed.connect(close)
-	_restart_button.pressed.connect(func() -> void: restart_requested.emit())
 	_exit_button.pressed.connect(func() -> void: exit_requested.emit())
 
 func _input(event: InputEvent) -> void:
@@ -21,7 +18,7 @@ func _input(event: InputEvent) -> void:
 	var router := get_parent().get_parent()
 	if visible:
 		close()
-	elif router != null and router.current_screen_id == "game":
+	elif router != null and router.can_open_pause_menu():
 		open()
 	else:
 		return

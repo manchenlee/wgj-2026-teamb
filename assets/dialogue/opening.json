@@ -371,12 +371,12 @@
       "choices": [
         {
           "id": "tutorial",
-          "text": "開啟教學",
+          "text": "【開啟教學】",
           "next": "r41"
         },
         {
           "id": "safe_word",
-          "text": "安全詞設定",
+          "text": "【安全詞設定】",
           "next": "r45"
         }
       ],
