@@ -665,7 +665,7 @@
       "text": "好了，我要開始囉——",
       "source_row": 6,
       "character": {
-        "base": "res://assets/art/character/sitting/{expression}.png",
+        "base": "res://assets/art/character/sitting/surprised_no_highlight.png",
         "clear_layers": true,
         "layers": [
           {

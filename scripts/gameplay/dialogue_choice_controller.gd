@@ -79,7 +79,7 @@ func apply_choice(choice_id: String, model) -> Dictionary:
 	var delta_value := 0.0
 	match effect:
 		"positive":
-			delta_value = float(_get_choice_reward_values().get("good", 15.0))
+			delta_value = float(_get_choice_reward_values().get("good", 20.0))
 		"negative":
 			delta_value = -float(_get_choice_penalty_values().get("bad", 5.0))
 		"bad_ending":
@@ -87,7 +87,7 @@ func apply_choice(choice_id: String, model) -> Dictionary:
 		_:
 			match choice_id:
 				"good":
-					delta_value = float(_get_choice_reward_values().get("good", 15.0))
+					delta_value = float(_get_choice_reward_values().get("good", 20.0))
 				"neutral":
 					delta_value = float(_get_choice_reward_values().get("neutral", 3.0))
 				"bad":
@@ -417,7 +417,7 @@ func _get_feedback_data_path() -> String:
 	return String(_get_phase_value(_data_source_property, ""))
 
 func _get_choice_reward_values() -> Dictionary:
-	return _get_phase_value("choice_reward_values", {"good": 15.0, "neutral": 3.0})
+	return _get_phase_value("choice_reward_values", {"good": 20.0, "neutral": 3.0})
 
 func _get_choice_penalty_values() -> Dictionary:
 	return _get_phase_value("choice_penalty_values", {"bad": 5.0})

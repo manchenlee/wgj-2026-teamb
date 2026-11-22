@@ -73,7 +73,7 @@ func _init(values: Dictionary = {}) -> void:
 	starting_physical_value = float(values.get("starting_physical_value", 10.0))
 	starting_emotional_value = float(values.get("starting_emotional_value", 10.0))
 	starting_peak_value = float(values.get("starting_peak_value", 0.0))
-	physical_decay_rate = float(values.get("physical_decay_rate", 0.4))
+	physical_decay_rate = float(values.get("physical_decay_rate", 0.3))
 	emotional_decay_rate = float(values.get("emotional_decay_rate", 0.2))
 	physical_activity_grace_seconds = float(values.get("physical_activity_grace_seconds", 2.8))
 	emotional_activity_grace_seconds = float(values.get("emotional_activity_grace_seconds", 2.8))
@@ -114,7 +114,7 @@ func _init(values: Dictionary = {}) -> void:
 	).duplicate(true)
 	choice_reward_values = values.get(
 		"choice_reward_values",
-		{"good": 15.0, "neutral": 3.0}
+		{"good": 20.0, "neutral": 3.0}
 	).duplicate(true)
 	choice_penalty_values = values.get(
 		"choice_penalty_values",

@@ -250,7 +250,7 @@ func _play_pose_interlude(step_id: String) -> void:
 	clothes_rustle.play()
 	var old_texture := _base_sprite.texture
 	var old_sprite := _make_transition_sprite(old_texture)
-	_apply_base_character("res://assets/art/character/sitting/%s.png" % _current_expression)
+	_apply_base_character("res://assets/art/character/sitting/surprised_no_highlight.png")
 	_apply_layers([{"id": "tail", "path": "res://assets/art/character/sitting/tail_2.png"}])
 	_base_sprite.modulate.a = 0.0
 	var tail_sprite := _layer_sprites["tail"] as TextureRect
