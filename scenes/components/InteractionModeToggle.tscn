@@ -7,7 +7,7 @@
 [ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/btn_music_clicked.png" id="5_music_clicked"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/btn_music_unclicked.png" id="6_music_unclicked"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/btn_music_warning.png" id="7_music_warning"]
-[ext_resource type="FontFile" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="8_bold"]
+[ext_resource type="FontFile" path="res://assets/fonts/GenRyuMin2TW-B.otf" id="8_bold"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_key_normal"]
 bg_color = Color(0.91, 0.92, 0.96, 0.16)

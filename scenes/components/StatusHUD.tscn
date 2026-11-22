@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/ui/status_hud.gd" id="1_hud"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/img_score.png" id="6_score"]
-[ext_resource type="FontFile" path="res://assets/fonts/ShipporiMincho-ExtraBold.ttf" id="7_combo_font"]
-[ext_resource type="FontFile" path="res://assets/fonts/ShipporiMincho-Regular.ttf" id="7_score_font"]
+[ext_resource type="FontFile" path="res://assets/fonts/GenRyuMin2TW-B.otf" id="7_combo_font"]
+[ext_resource type="FontFile" path="res://assets/fonts/GenRyuMin2TW-B.otf" id="7_score_font"]
 [ext_resource type="Shader" path="res://scripts/ui/combo_text_gradient.gdshader" id="8_combo_gradient"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/img_bodyscore.png" id="9_body_score"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/gameplay/img_heartscore.png" id="10_heart_score"]

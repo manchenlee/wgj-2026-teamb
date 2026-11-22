@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cb6d1m2m1bqs8" path="res://scripts/core/safe_word_screen.gd" id="1_safe_word"]
 [ext_resource type="Texture2D" uid="uid://dc7csqq8gypo5" path="res://assets/art/background/curtain.jpg" id="2_curtain"]
-[ext_resource type="FontFile" uid="uid://db5u741tm2yje" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="4_bold"]
+[ext_resource type="FontFile" path="res://assets/fonts/GenRyuMin2TW-B.otf" id="4_bold"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_modal"]
 bg_color = Color(0.22, 0.07, 0.11, 0.98)

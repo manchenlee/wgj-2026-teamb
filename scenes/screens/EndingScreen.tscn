@@ -7,8 +7,8 @@
 [ext_resource type="Texture2D" path="res://assets/art/screens/ending/end04.png" id="5_end04"]
 [ext_resource type="Texture2D" path="res://assets/art/screens/ending/end05.png" id="6_end05"]
 [ext_resource type="PackedScene" path="res://scenes/components/SkipStyleButton.tscn" id="7_skip_style"]
-[ext_resource type="FontFile" path="res://assets/fonts/ShipporiMincho-Regular.ttf" id="8_chapter_regular"]
-[ext_resource type="FontFile" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="9_chapter_bold"]
+[ext_resource type="FontFile" path="res://assets/fonts/GenRyuMin2TW-B.otf" id="8_chapter_regular"]
+[ext_resource type="FontFile" path="res://assets/fonts/GenRyuMin2TW-B.otf" id="9_chapter_bold"]
 
 [node name="EndingScreen" type="Control"]
 layout_mode = 3

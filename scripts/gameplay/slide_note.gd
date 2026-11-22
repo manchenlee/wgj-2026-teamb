@@ -4,7 +4,7 @@ extends InteractionNote
 const CursorHitAreaClass := preload("res://scripts/gameplay/cursor_hit_area.gd")
 const NoteInputSamplingClass := preload("res://scripts/gameplay/note_input_sampling.gd")
 const HEART_TEXTURE := preload("res://assets/art/ui/gameplay/img_heart.png")
-const NOTE_LABEL_FONT := preload("res://assets/fonts/ShipporiMincho-Bold.ttf")
+const NOTE_LABEL_FONT := preload("res://assets/fonts/GenRyuMin2TW-B.otf")
 const SLIDE_COLOR := Color("#85CCFFE0")
 const SLIDE_COMPLETED_COLOR := Color("#85CCFFF5")
 const COMPLETED_FADE_DURATION: float = 0.16

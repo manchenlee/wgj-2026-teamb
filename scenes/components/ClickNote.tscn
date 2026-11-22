@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" path="res://scenes/components/InteractionNote.tscn" id="1_note"]
 [ext_resource type="Script" path="res://scripts/gameplay/click_note.gd" id="2_click"]
-[ext_resource type="FontFile" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="3_font"]
+[ext_resource type="FontFile" path="res://assets/fonts/GenRyuMin2TW-B.otf" id="3_font"]
 
 [node name="ClickNote" instance=ExtResource("1_note")]
 custom_minimum_size = Vector2(168, 168)
