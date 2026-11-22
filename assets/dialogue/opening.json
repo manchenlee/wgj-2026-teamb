@@ -371,7 +371,7 @@
       "choices": [
         {
           "id": "tutorial",
-          "text": "【開啟教學】",
+          "text": "【進入教學】",
           "next": "r41"
         },
         {
@@ -383,7 +383,7 @@
       "choices_after_safe_word": [
         {
           "id": "tutorial",
-          "text": "【開啟教學】",
+          "text": "【進入教學】",
           "next": "r41"
         },
         {
@@ -582,7 +582,7 @@
       "choices": [
         {
           "id": "tutorial",
-          "text": "【開啟教學】",
+          "text": "【進入教學】",
           "next": "r41"
         },
         {

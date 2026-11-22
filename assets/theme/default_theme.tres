@@ -5,3 +5,4 @@
 [resource]
 default_font = ExtResource("1_regular")
 default_font_size = 20
+Label/constants/line_spacing = 15
