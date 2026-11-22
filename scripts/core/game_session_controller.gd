@@ -942,9 +942,9 @@ func _input(event: InputEvent) -> void:
 			and event.pressed):
 		return
 	var bubble: CurrentSpeechBubble = dialogue_panel.current_speech_bubble
-	if not bubble.is_visible_in_tree() or (not bubble.is_streaming() \
-			and (not _reading_step_active or _group_gap_active \
-			or _has_pending_psychological_choice())):
+	if not _group_gap_active and (not bubble.is_visible_in_tree() \
+			or (not bubble.is_streaming() \
+			and (not _reading_step_active or _has_pending_psychological_choice()))):
 		return
 	var click_position: Vector2 = event.position
 	for button: BaseButton in [interaction_mode_toggle.talk_button,
@@ -1247,7 +1247,10 @@ func _on_psychological_dialogue_timer_timeout(generation: int) -> void:
 		_advance_psychological_dialogue(generation)
 
 func _on_dialogue_bubble_advance_requested() -> void:
-	if not pending_ending_type.is_empty() or _group_gap_active:
+	if not pending_ending_type.is_empty():
+		return
+	if _group_gap_active:
+		_advance_psychological_dialogue(_reading_step_generation)
 		return
 	if dialogue_panel.current_speech_bubble.is_streaming():
 		dialogue_panel.current_speech_bubble.finish_dialogue_stream()

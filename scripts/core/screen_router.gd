@@ -22,9 +22,11 @@ const BGM_TARGET_VOLUME_DB := -6.0
 const BGM_SILENT_VOLUME_DB := -40.0
 const BGM_CROSSFADE_DURATION := 1.0
 const SCREEN_TRANSITION_DURATION := 0.3
-const OPENING_TO_GAME_FADE_DURATION := 0.8
+const STORY_TRANSITION_DURATION := 0.8
 const ENDING_FADE_IN_DURATION := 0.55
 const SCREEN_TRANSITION_COLOR := Color(0, 0, 0, 1)
+
+enum ScreenTransition { IMMEDIATE, BLACKOUT, CONTENT_BLACKOUT }
 
 @export var midi_rest_default_open_string_pitch: int = 69
 
@@ -90,7 +92,7 @@ func _show_title(fade_from_ending: bool = false) -> void:
 	screen.start_pressed.connect(_show_warning)
 	screen.skip_pressed.connect(_show_safe_word)
 	screen.debug_requested.connect(func() -> void: debug_overlay.visible = true)
-	_swap_screen(screen, fade_from_ending)
+	_swap_screen(screen, ScreenTransition.BLACKOUT if fade_from_ending else ScreenTransition.IMMEDIATE)
 	if fade_from_ending:
 		bgm_playback_positions["default"] = 0.0
 	_play_bgm("default", fade_from_ending)
@@ -115,13 +117,13 @@ func _show_opening() -> void:
 	_swap_screen(screen)
 	_play_bgm("default", false)
 
-func _show_opening_safe_word() -> void:
+func _show_opening_safe_word(transition: ScreenTransition = ScreenTransition.CONTENT_BLACKOUT) -> void:
 	if current_screen_id != Config.SCREEN_OPENING:
 		return
 	current_screen_id = Config.SCREEN_SAFE_WORD
 	var screen := SAFE_WORD_SCENE.instantiate()
 	screen.continue_pressed.connect(_resume_opening_after_safe_word)
-	_fade_opening_to_screen(screen)
+	_swap_screen(screen, transition, STORY_TRANSITION_DURATION)
 
 func _resume_opening_after_safe_word(safe_word: String) -> void:
 	if current_screen_id != Config.SCREEN_SAFE_WORD:
@@ -144,7 +146,7 @@ func _on_opening_skip() -> void:
 	if safe_word_completed:
 		_show_game(current_safe_word, true)
 	else:
-		_show_opening_safe_word()
+		_show_opening_safe_word(ScreenTransition.IMMEDIATE)
 
 func _show_safe_word() -> void:
 	current_screen_id = Config.SCREEN_SAFE_WORD
@@ -172,38 +174,11 @@ func _show_game(safe_word: String = Config.SAFE_WORD_DEFAULT, fade_from_opening:
 	screen.ending_requested.connect(_show_ending)
 	screen.bgm_requested.connect(_on_game_bgm_requested)
 	screen.debug_overlay = debug_overlay
-	if fade_from_opening and current_screen_id == Config.SCREEN_GAME and current_screen != null:
-		_fade_opening_to_screen(screen)
-	else:
-		_swap_screen(screen)
-		debug_overlay.sync_live_readout(screen.get_debug_state())
-
-func _fade_opening_to_screen(next_screen: Control) -> void:
-	if screen_transition_tween != null:
-		screen_transition_tween.kill()
-	var opening_screen := current_screen
-	screen_transition_overlay.visible = true
-	screen_transition_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	screen_transition_overlay.color = Color(0.0, 0.0, 0.0, 0.0)
-	screen_transition_tween = create_tween().set_trans(Tween.TRANS_SINE)
-	screen_transition_tween.tween_property(
-		screen_transition_overlay, "color:a", 1.0, OPENING_TO_GAME_FADE_DURATION
-	)
-	screen_transition_tween.parallel().tween_property(
-		opening_screen, "modulate:a", 0.0, OPENING_TO_GAME_FADE_DURATION
-	)
-	screen_transition_tween.tween_callback(func() -> void:
-		_swap_screen_immediately(next_screen)
-		if current_screen_id == Config.SCREEN_GAME:
-			debug_overlay.sync_live_readout(next_screen.get_debug_state())
-	)
-	screen_transition_tween.tween_property(
-		screen_transition_overlay, "color:a", 0.0, OPENING_TO_GAME_FADE_DURATION
-	)
-	screen_transition_tween.tween_callback(func() -> void:
-		screen_transition_overlay.visible = false
-		screen_transition_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		screen_transition_tween = null
+	screen.ready.connect(func() -> void: debug_overlay.sync_live_readout(screen.get_debug_state()))
+	_swap_screen(
+		screen,
+		ScreenTransition.CONTENT_BLACKOUT if fade_from_opening else ScreenTransition.IMMEDIATE,
+		STORY_TRANSITION_DURATION
 	)
 
 func can_open_pause_menu() -> bool:
@@ -249,11 +224,15 @@ func _reset_run_bgm_positions() -> void:
 	for track_key in bgm_playback_positions.keys():
 		bgm_playback_positions[track_key] = 0.0
 
-func _swap_screen(next_screen: Control, fade_to_black: bool = false) -> void:
+func _swap_screen(
+	next_screen: Control,
+	transition: ScreenTransition = ScreenTransition.IMMEDIATE,
+	duration: float = SCREEN_TRANSITION_DURATION
+) -> void:
 	if screen_transition_tween != null:
 		screen_transition_tween.kill()
 		screen_transition_tween = null
-	if not fade_to_black or current_screen == null or screen_transition_overlay == null:
+	if transition == ScreenTransition.IMMEDIATE or current_screen == null or screen_transition_overlay == null:
 		if screen_transition_overlay != null:
 			screen_transition_overlay.visible = false
 			screen_transition_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -274,8 +253,10 @@ func _swap_screen(next_screen: Control, fade_to_black: bool = false) -> void:
 		screen_transition_overlay,
 		"color:a",
 		1.0,
-		SCREEN_TRANSITION_DURATION
+		duration
 	)
+	if transition == ScreenTransition.CONTENT_BLACKOUT:
+		screen_transition_tween.parallel().tween_property(current_screen, "modulate:a", 0.0, duration)
 	screen_transition_tween.tween_callback(func() -> void:
 		_swap_screen_immediately(next_screen)
 	)
@@ -283,7 +264,7 @@ func _swap_screen(next_screen: Control, fade_to_black: bool = false) -> void:
 		screen_transition_overlay,
 		"color:a",
 		0.0,
-		SCREEN_TRANSITION_DURATION
+		duration
 	)
 	screen_transition_tween.tween_callback(func() -> void:
 		screen_transition_overlay.visible = false
@@ -314,6 +295,7 @@ func _swap_screen_with_fade_in(next_screen: Control, fade_color: Color) -> void:
 
 func _swap_screen_immediately(next_screen: Control) -> void:
 	if current_screen != null:
+		current_screen.hide()
 		current_screen.queue_free()
 	current_screen = next_screen
 	screen_container.add_child(current_screen)
