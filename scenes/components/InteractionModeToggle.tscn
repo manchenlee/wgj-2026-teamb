@@ -27,14 +27,13 @@ mouse_filter = 2
 script = ExtResource("1_toggle")
 
 [node name="TalkButton" type="TextureButton" parent="."]
-visible = false
 layout_mode = 0
 offset_left = 6.0
 offset_right = 154.0
 offset_bottom = 148.0
 focus_mode = 0
 mouse_default_cursor_shape = 2
-texture_normal = ExtResource("2_talk_clicked")
+texture_normal = ExtResource("3_talk_unclicked")
 texture_hover = ExtResource("2_talk_clicked")
 texture_pressed = ExtResource("2_talk_clicked")
 ignore_texture_size = true
@@ -42,6 +41,7 @@ stretch_mode = 0
 tooltip_text = "對話模式"
 
 [node name="MusicButton" type="TextureButton" parent="."]
+visible = false
 layout_mode = 0
 offset_left = 6.0
 offset_right = 154.0

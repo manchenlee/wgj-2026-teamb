@@ -53,11 +53,11 @@ func _run() -> void:
 		game.physical_low_warning_active and game.emotional_low_warning_active,
 		"Both scores at 20 did not report both low warnings."
 	)
-	_set_scores_and_sync(game, 50.0, 31.0)
-	_assert(not game.imbalance_warning_active, "Difference 19 incorrectly activated imbalance.")
+	_set_scores_and_sync(game, 50.0, 40.0)
+	_assert(not game.imbalance_warning_active, "Difference at the threshold incorrectly activated imbalance.")
 
-	_set_scores_and_sync(game, 50.0, 30.0)
-	_assert(game.imbalance_warning_active, "Difference 20 did not activate imbalance.")
+	_set_scores_and_sync(game, 50.0, 39.0)
+	_assert(game.imbalance_warning_active, "Difference above the threshold did not activate imbalance.")
 	_assert(game.lower_score_mode == PSYCHOLOGICAL_MODE, "Emotional-lower imbalance did not identify PSYCHOLOGICAL.")
 	var imbalance_entry_events: int = event_counts.imbalance
 	_set_scores_and_sync(game, 55.0, 30.0)
@@ -73,8 +73,8 @@ func _run() -> void:
 	_assert(game.lower_score_mode == -1, "Cleared imbalance retained a lower-mode state.")
 	_set_scores_and_sync(game, 50.0, 30.0)
 	_assert(game.imbalance_warning_active, "Imbalance did not re-enter for the clear-boundary test.")
-	_set_scores_and_sync(game, 49.0, 30.0)
-	_assert(not game.imbalance_warning_active, "Returning to difference 19 did not clear imbalance.")
+	_set_scores_and_sync(game, 40.0, 30.0)
+	_assert(not game.imbalance_warning_active, "Returning to the threshold did not clear imbalance.")
 
 	game.queue_free()
 	await process_frame

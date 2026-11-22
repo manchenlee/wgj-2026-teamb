@@ -26,23 +26,31 @@ func _run() -> void:
 	q_event.pressed = true
 
 	_check(game.interaction_mode == PHYSIOLOGICAL_MODE, "Game did not begin in physiological mode.")
-	_check(music_button.visible and not talk_button.visible, "Physiological mode must show only tuning UI.")
+	_check(talk_button.visible and not music_button.visible, "Physiological mode must show the psychological switch UI.")
+	_check(talk_button.texture_normal == InteractionModeToggle.TALK_UNCLICKED, "Psychological switch must use its normal art without a warning.")
 	_check(music_button.position == talk_button.position, "Mode UI buttons must share one slot.")
-	_check(shortcut_group.visible and hint_position.y >= music_button.size.y, "Q hint must remain below the mode UI.")
+	_check(shortcut_group.visible and hint_position.y >= talk_button.size.y, "Q hint must remain below the mode UI.")
+	mode_toggle.set_imbalance_warning(true, PSYCHOLOGICAL_MODE)
+	_check(talk_button.texture_normal == InteractionModeToggle.TALK_WARNING and mode_toggle.is_processing(), "Lower psychological side must show a blinking warning.")
+	mode_toggle.set_imbalance_warning(true, PHYSIOLOGICAL_MODE)
+	_check(talk_button.texture_normal == InteractionModeToggle.TALK_UNCLICKED and not mode_toggle.is_processing(), "Warning for the active mode must not affect the opposite icon.")
 
 	game._unhandled_input(q_event)
 	_check(game.interaction_mode == PSYCHOLOGICAL_MODE, "Q did not switch to dialogue mode.")
-	_check(talk_button.visible and not music_button.visible, "Psychological mode must show only dialogue UI.")
+	_check(music_button.visible and not talk_button.visible, "Psychological mode must show the physiological switch UI.")
+	_check(music_button.texture_normal == InteractionModeToggle.MUSIC_WARNING and mode_toggle.is_processing(), "Lower physiological side must show a blinking warning after switching.")
 	_check(shortcut_group.visible and shortcut_group.position == hint_position, "Q hint changed after Q input.")
-
-	talk_button.emit_signal("pressed")
-	_check(game.interaction_mode == PHYSIOLOGICAL_MODE, "Clicking dialogue UI did not switch to tuning mode.")
-	_check(music_button.visible and not talk_button.visible, "Click did not restore only tuning UI.")
-	_check(shortcut_group.visible and shortcut_group.position == hint_position, "Q hint changed after clicking.")
+	mode_toggle.set_imbalance_warning(false, -1)
+	_check(music_button.texture_normal == InteractionModeToggle.MUSIC_UNCLICKED and not mode_toggle.is_processing(), "Clearing imbalance must restore the normal physiological art.")
 
 	music_button.emit_signal("pressed")
-	_check(game.interaction_mode == PSYCHOLOGICAL_MODE, "Clicking tuning UI did not switch to dialogue mode.")
-	_check(talk_button.visible and not music_button.visible, "Click did not restore only dialogue UI.")
+	_check(game.interaction_mode == PHYSIOLOGICAL_MODE, "Clicking physiological UI did not switch to physiological mode.")
+	_check(talk_button.visible and not music_button.visible, "Click did not restore the psychological switch UI.")
+	_check(shortcut_group.visible and shortcut_group.position == hint_position, "Q hint changed after clicking.")
+
+	talk_button.emit_signal("pressed")
+	_check(game.interaction_mode == PSYCHOLOGICAL_MODE, "Clicking psychological UI did not switch to psychological mode.")
+	_check(music_button.visible and not talk_button.visible, "Click did not restore the physiological switch UI.")
 
 	game.queue_free()
 	await process_frame

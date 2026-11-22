@@ -22,6 +22,7 @@ const BGM_TARGET_VOLUME_DB := -6.0
 const BGM_SILENT_VOLUME_DB := -40.0
 const BGM_CROSSFADE_DURATION := 1.0
 const SCREEN_TRANSITION_DURATION := 0.3
+const OPENING_TO_GAME_FADE_DURATION := 0.8
 const ENDING_FADE_IN_DURATION := 0.55
 const SCREEN_TRANSITION_COLOR := Color(0, 0, 0, 1)
 
@@ -121,7 +122,7 @@ func _show_opening_safe_word() -> void:
 	current_screen_id = Config.SCREEN_SAFE_WORD
 	var screen := SAFE_WORD_SCENE.instantiate()
 	screen.continue_pressed.connect(_resume_opening_after_safe_word)
-	_swap_screen(screen)
+	_fade_opening_to_screen(screen)
 
 func _resume_opening_after_safe_word(safe_word: String) -> void:
 	if current_screen_id != Config.SCREEN_SAFE_WORD:
@@ -173,22 +174,37 @@ func _show_game(safe_word: String = Config.SAFE_WORD_DEFAULT, fade_from_opening:
 	screen.bgm_requested.connect(_on_game_bgm_requested)
 	screen.debug_overlay = debug_overlay
 	if fade_from_opening and current_screen_id == Config.SCREEN_GAME and current_screen != null:
-		_crossfade_opening_to_game(screen)
+		_fade_opening_to_screen(screen)
 	else:
 		_swap_screen(screen)
-	debug_overlay.sync_live_readout(screen.get_debug_state())
+		debug_overlay.sync_live_readout(screen.get_debug_state())
 
-func _crossfade_opening_to_game(game_screen: Control) -> void:
+func _fade_opening_to_screen(next_screen: Control) -> void:
+	if screen_transition_tween != null:
+		screen_transition_tween.kill()
 	var opening_screen := current_screen
-	current_screen = game_screen
-	game_screen.modulate.a = 0.0
-	game_screen.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	screen_container.add_child(game_screen)
-	var transition := create_tween().set_trans(Tween.TRANS_SINE)
-	transition.tween_property(game_screen, "modulate:a", 1.0, 1.4)
-	transition.tween_callback(func() -> void:
-		game_screen.mouse_filter = Control.MOUSE_FILTER_STOP
-		opening_screen.queue_free()
+	screen_transition_overlay.visible = true
+	screen_transition_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	screen_transition_overlay.color = Color(0.0, 0.0, 0.0, 0.0)
+	screen_transition_tween = create_tween().set_trans(Tween.TRANS_SINE)
+	screen_transition_tween.tween_property(
+		screen_transition_overlay, "color:a", 1.0, OPENING_TO_GAME_FADE_DURATION
+	)
+	screen_transition_tween.parallel().tween_property(
+		opening_screen, "modulate:a", 0.0, OPENING_TO_GAME_FADE_DURATION
+	)
+	screen_transition_tween.tween_callback(func() -> void:
+		_swap_screen_immediately(next_screen)
+		if current_screen_id == Config.SCREEN_GAME:
+			debug_overlay.sync_live_readout(next_screen.get_debug_state())
+	)
+	screen_transition_tween.tween_property(
+		screen_transition_overlay, "color:a", 0.0, OPENING_TO_GAME_FADE_DURATION
+	)
+	screen_transition_tween.tween_callback(func() -> void:
+		screen_transition_overlay.visible = false
+		screen_transition_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		screen_transition_tween = null
 	)
 
 func _restart_game_from_pause() -> void:

@@ -12,9 +12,7 @@ const DEFAULT_OPENING_EXPRESSION := "neutral"
 const CHOICE_BUTTON_SCENE := preload("res://scenes/components/DialogueChoiceButton.tscn")
 const CHOICE_BUTTON_WIDTH := 720.0
 const CHOICE_HORIZONTAL_INSETS := 144.0
-const ENDING_FADE_DURATION := 0.45
 const POSE_FADE_DURATION := 1.1
-const GAME_POSE_FADE_DURATION := 1.4
 
 enum TutorialReturn { FIRST_BRANCH, SECOND_BRANCH }
 
@@ -31,7 +29,6 @@ enum TutorialReturn { FIRST_BRANCH, SECOND_BRANCH }
 @onready var dialogue_label: Label = $DialogueUi/CurrentSpeechBubble/MarginContainer/TextLabel
 @onready var _skip_button_root: Control = $SkipButtonRoot
 @onready var _skip_button: Button = $SkipButtonRoot/SkipButton
-@onready var ending_blackout: ColorRect = $EndingBlackout
 
 var _entries: Array = []
 var _current_entry_index := -1
@@ -54,7 +51,6 @@ var _glow_tween: Tween
 var _fade_tween: Tween
 var _tentacles_tween: Tween
 var _interlude_tween: Tween
-var _ending_fade_tween: Tween
 var _interlude_running := false
 var _skip_hover_tween: Tween
 var _pivot_rest_position := Vector2.ZERO
@@ -189,29 +185,6 @@ func _request_game_transition() -> void:
 	if _transition_requested:
 		return
 	_transition_requested = true
-	if _background_faded:
-		_fade_to_game_pose()
-		return
-	if _ending_fade_tween != null and _ending_fade_tween.is_running():
-		_ending_fade_tween.kill()
-	ending_blackout.visible = true
-	ending_blackout.color = Color(0.0, 0.0, 0.0, 0.0)
-	_ending_fade_tween = create_tween().set_trans(Tween.TRANS_SINE)
-	_ending_fade_tween.tween_property(ending_blackout, "color:a", 1.0, ENDING_FADE_DURATION)
-	_ending_fade_tween.tween_callback(func() -> void: game_requested.emit())
-
-func _fade_to_game_pose() -> void:
-	_interlude_running = true
-	if dialogue_bubble.visible:
-		dialogue_bubble.finish_dialogue_stream()
-	var old_texture := _base_sprite.texture
-	var old_sprite := _make_transition_sprite(old_texture)
-	_apply_base_character("res://assets/art/character/sitting/default.png")
-	_base_sprite.modulate.a = 0.0
-	var transition := create_tween().set_trans(Tween.TRANS_SINE).set_parallel(true)
-	transition.tween_property(dialogue_bubble, "modulate:a", 0.0, 0.35)
-	transition.tween_property(_base_sprite, "modulate:a", 1.0, GAME_POSE_FADE_DURATION)
-	transition.tween_property(old_sprite, "modulate:a", 0.0, GAME_POSE_FADE_DURATION)
 	game_requested.emit()
 
 func _load_opening_script() -> void:

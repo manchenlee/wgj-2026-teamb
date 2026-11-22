@@ -35,7 +35,6 @@ func _ready() -> void:
 	talk_button.pivot_offset = talk_button.size * 0.5
 	music_button.pivot_offset = music_button.size * 0.5
 	_sync_presentation()
-	set_process(false)
 
 
 func _process(delta: float) -> void:
@@ -106,23 +105,20 @@ func _sync_presentation() -> void:
 			else "切換至調音模式（Q）"
 		)
 	if talk_button != null:
-		talk_button.visible = _interaction_mode == PSYCHOLOGICAL_MODE
-		talk_button.texture_normal = TALK_WARNING if _is_warning_for(PSYCHOLOGICAL_MODE) else (
-			TALK_CLICKED if _interaction_mode == PSYCHOLOGICAL_MODE else TALK_UNCLICKED
-		)
+		talk_button.visible = _interaction_mode == PHYSIOLOGICAL_MODE
+		talk_button.texture_normal = TALK_WARNING if _is_warning_for(PSYCHOLOGICAL_MODE) else TALK_UNCLICKED
 		talk_button.texture_hover = TALK_CLICKED
 		talk_button.texture_pressed = TALK_CLICKED
 		talk_button.modulate = Color.WHITE
 		talk_button.scale = Vector2.ONE
 	if music_button != null:
-		music_button.visible = _interaction_mode == PHYSIOLOGICAL_MODE
-		music_button.texture_normal = MUSIC_WARNING if _is_warning_for(PHYSIOLOGICAL_MODE) else (
-			MUSIC_CLICKED if _interaction_mode == PHYSIOLOGICAL_MODE else MUSIC_UNCLICKED
-		)
+		music_button.visible = _interaction_mode == PSYCHOLOGICAL_MODE
+		music_button.texture_normal = MUSIC_WARNING if _is_warning_for(PHYSIOLOGICAL_MODE) else MUSIC_UNCLICKED
 		music_button.texture_hover = MUSIC_CLICKED
 		music_button.texture_pressed = MUSIC_CLICKED
 		music_button.modulate = Color.WHITE
 		music_button.scale = Vector2.ONE
+	set_process(_imbalance_warning_active and _lower_score_mode != _interaction_mode)
 
 func _is_warning_for(mode: int) -> bool:
-	return _imbalance_warning_active and _lower_score_mode == mode
+	return _imbalance_warning_active and _lower_score_mode == mode and mode != _interaction_mode

@@ -1666,7 +1666,7 @@ func _update_score_warning_state() -> void:
 
 	var difference: float = absf(arousal_model.physical - arousal_model.emotional)
 	var next_imbalance_active: bool = (
-		difference >= Config.SCORE_IMBALANCE_WARNING_THRESHOLD
+		difference > Config.SCORE_IMBALANCE_WARNING_THRESHOLD
 		and not is_equal_approx(arousal_model.physical, arousal_model.emotional)
 	)
 	var next_lower_mode: int = -1
