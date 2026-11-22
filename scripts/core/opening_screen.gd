@@ -24,6 +24,7 @@ enum TutorialReturn { FIRST_BRANCH, SECOND_BRANCH }
 @onready var character_glow_root: Control = $CharacterStage/CharacterPivot/GlowRoot
 @onready var character_root: Control = $CharacterStage/CharacterPivot/CharacterRoot
 @onready var opening_tentacles: TextureRect = $OpeningTentacles
+@onready var clothes_rustle: AudioStreamPlayer = $ClothesRustle
 @onready var dialogue_bubble: CurrentSpeechBubble = $DialogueUi/CurrentSpeechBubble
 @onready var speaker_label: Label = $DialogueUi/CurrentSpeechBubble/SpeakerLabel
 @onready var dialogue_label: Label = $DialogueUi/CurrentSpeechBubble/MarginContainer/TextLabel
@@ -273,6 +274,7 @@ func _apply_entry(entry: Dictionary) -> void:
 func _play_pose_interlude(step_id: String) -> void:
 	_interlude_running = true
 	dialogue_bubble.finish_dialogue_stream()
+	clothes_rustle.play()
 	var old_texture := _base_sprite.texture
 	var old_sprite := _make_transition_sprite(old_texture)
 	_apply_base_character("res://assets/art/character/sitting/%s.png" % _current_expression)

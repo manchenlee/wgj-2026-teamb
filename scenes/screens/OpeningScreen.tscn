@@ -6,6 +6,7 @@
 [ext_resource type="FontFile" uid="uid://db5u741tm2yje" path="res://assets/fonts/ShipporiMincho-Bold.ttf" id="4_bold"]
 [ext_resource type="PackedScene" path="res://scenes/components/CurrentSpeechBubble.tscn" id="5_speech_bubble"]
 [ext_resource type="Texture2D" uid="uid://unatgfy0oinw" path="res://assets/art/tentacles/opening_tentacles.png" id="6_tentacles"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/clothes_rustle.mp3" id="7_clothes_rustle"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_skip"]
 
@@ -100,6 +101,9 @@ mouse_filter = 2
 texture = ExtResource("6_tentacles")
 expand_mode = 1
 stretch_mode = 6
+
+[node name="ClothesRustle" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("7_clothes_rustle")
 
 [node name="DialogueUi" type="Control" parent="."]
 z_index = 2
