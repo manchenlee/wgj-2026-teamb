@@ -26,10 +26,10 @@ script = ExtResource("1_toggle")
 
 [node name="TalkButton" type="TextureButton" parent="."]
 layout_mode = 0
-offset_left = 19.0
+offset_left = 42.5
 offset_top = 130.0
-offset_right = 113.0
-offset_bottom = 224.0
+offset_right = 89.5
+offset_bottom = 177.0
 focus_mode = 0
 mouse_default_cursor_shape = 2
 texture_normal = ExtResource("3_talk_icon")
@@ -42,10 +42,10 @@ tooltip_text = "對話模式"
 [node name="WarningBadge" type="TextureRect" parent="TalkButton"]
 visible = false
 layout_mode = 0
-offset_left = 54.0
-offset_top = 2.0
-offset_right = 82.0
-offset_bottom = 30.0
+offset_left = 31.0
+offset_top = -3.0
+offset_right = 45.0
+offset_bottom = 11.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
@@ -67,10 +67,10 @@ tooltip_text = "調音模式"
 [node name="WarningBadge" type="TextureRect" parent="MusicButton"]
 visible = false
 layout_mode = 0
-offset_left = 54.0
-offset_top = 2.0
-offset_right = 82.0
-offset_bottom = 30.0
+offset_left = 31.0
+offset_top = -3.0
+offset_right = 45.0
+offset_bottom = 11.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5

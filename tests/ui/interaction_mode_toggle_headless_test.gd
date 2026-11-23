@@ -31,6 +31,7 @@ func _run() -> void:
 	_check(game.interaction_mode == PHYSIOLOGICAL_MODE, "Game did not begin in physiological mode.")
 	_check(talk_button.visible and music_button.visible, "Both carousel modes must remain visible.")
 	_check(music_button.size.x > talk_button.size.x and music_button.position.y < talk_button.position.y, "Physiological mode must be the large upper item.")
+	_check(is_equal_approx(talk_button.size.x, 47.0) and is_equal_approx(talk_button.size.y, 47.0), "Inactive dialogue icon must be twice its previous width and height.")
 	_check(talk_button.texture_normal == InteractionModeToggle.TALK_ICON and music_button.texture_normal == InteractionModeToggle.MUSIC_CLICKED, "Inactive dialogue must show the new icon while active tuning keeps its labeled art.")
 	_check(not talk_warning_badge.visible and not music_warning_badge.visible, "Warning badges must start hidden.")
 	_check(shortcut_group.visible and not mode_toggle.has_node("ShortcutGroup/SwitchHint"), "The old arrow hint must be removed.")
@@ -48,6 +49,7 @@ func _run() -> void:
 	_check(music_button.texture_normal == InteractionModeToggle.MUSIC_ICON and music_warning_badge.visible and mode_toggle.is_processing(), "Lower inactive tuning must show its icon and retain the warning badge after switching.")
 	await create_timer(InteractionModeToggle.SLIDE_DURATION + 0.05).timeout
 	_check(talk_button.size.x > music_button.size.x and talk_button.position.y < music_button.position.y, "Q did not slide dialogue into the large upper slot.")
+	_check(music_button.size == InteractionModeToggle.INACTIVE_SIZE, "Inactive tuning icon must use the same doubled slot.")
 	_check_q_layout(shortcut_group, talk_button, music_button)
 	_check(shortcut_group.visible and shortcut_group.position == hint_position, "Q hint changed after Q input.")
 	mode_toggle.set_imbalance_warning(false, -1)
@@ -92,6 +94,7 @@ func _check_q_layout(q_hint: Control, active_icon: TextureButton, inactive_icon:
 	var inactive_top: float = inactive_icon.position.y
 	var q_center: Vector2 = q_hint.position + q_hint.size * 0.5
 	_check(inactive_top - active_bottom <= 12.0 and inactive_top > active_bottom, "Mode diamonds must have a compact vertical gap.")
-	_check(q_hint.size.x >= 52.0 and q_hint.size.x < inactive_icon.size.x, "Q diamond must be visible but smaller than the inactive icon.")
+	_check(q_hint.size.x >= 52.0, "Q diamond must remain visible.")
+	_check(is_equal_approx(inactive_icon.position.x + inactive_icon.size.x * 0.5, active_icon.position.x + active_icon.size.x * 0.5), "Inactive icon must remain horizontally aligned with the active icon.")
 	_check(is_equal_approx(q_center.y, (active_bottom + inactive_top) * 0.5), "Q diamond must align with the vertical gap midpoint.")
 	_check(q_center.x > active_icon.position.x + active_icon.size.x, "Q diamond must sit to the right of the facing mode corners.")

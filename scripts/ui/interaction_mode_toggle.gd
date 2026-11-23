@@ -19,8 +19,8 @@ const WARNING_SCALE_MAX: float = 1.08
 const SLIDE_DURATION: float = 0.28
 const ACTIVE_POSITION := Vector2(6.0, 0.0)
 const ACTIVE_SIZE := Vector2(120.0, 120.0)
-const INACTIVE_POSITION := Vector2(19.0, 130.0)
-const INACTIVE_SIZE := Vector2(94.0, 94.0)
+const INACTIVE_POSITION := Vector2(42.5, 130.0)
+const INACTIVE_SIZE := Vector2(47.0, 47.0)
 const WARNING_BADGE_REGION := Rect2(118.0, 24.0, 46.0, 50.0)
 
 @onready var toggle_button: Button = $ToggleButton
