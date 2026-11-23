@@ -23,6 +23,7 @@ func _run() -> void:
 	var music_warning_badge: TextureRect = mode_toggle.music_warning_badge
 	var shortcut_group: Control = mode_toggle.get_node("ShortcutGroup")
 	var q_diamond: Panel = mode_toggle.get_node("ShortcutGroup/ShortcutLabel")
+	var q_letter: Label = mode_toggle.get_node("ShortcutGroup/KeyLetter")
 	var hint_position := shortcut_group.position
 	var q_event := InputEventAction.new()
 	q_event.action = &"toggle_interaction_mode"
@@ -31,11 +32,12 @@ func _run() -> void:
 	_check(game.interaction_mode == PHYSIOLOGICAL_MODE, "Game did not begin in physiological mode.")
 	_check(talk_button.visible and music_button.visible, "Both carousel modes must remain visible.")
 	_check(music_button.size.x > talk_button.size.x and music_button.position.y < talk_button.position.y, "Physiological mode must be the large upper item.")
-	_check(is_equal_approx(talk_button.size.x, 47.0) and is_equal_approx(talk_button.size.y, 47.0), "Inactive dialogue icon must be twice its previous width and height.")
+	_check(talk_button.size.is_equal_approx(Vector2(56.4, 56.4)) and music_button.size.is_equal_approx(Vector2(144.0, 144.0)), "Both mode icons must use their enlarged dimensions.")
 	_check(talk_button.texture_normal == InteractionModeToggle.TALK_ICON and music_button.texture_normal == InteractionModeToggle.MUSIC_CLICKED, "Inactive dialogue must show the new icon while active tuning keeps its labeled art.")
 	_check(not talk_warning_badge.visible and not music_warning_badge.visible, "Warning badges must start hidden.")
 	_check(shortcut_group.visible and not mode_toggle.has_node("ShortcutGroup/SwitchHint"), "The old arrow hint must be removed.")
 	_check(is_equal_approx(q_diamond.rotation, PI / 4.0), "Q key indicator must be diamond shaped.")
+	_check(shortcut_group.size.is_equal_approx(Vector2(43.2, 43.2)) and q_letter.get_theme_font_size("font_size") == 17, "Q hint must use its enlarged dimensions and font size.")
 	_check_q_layout(shortcut_group, music_button, talk_button)
 	mode_toggle.set_imbalance_warning(true, PSYCHOLOGICAL_MODE)
 	_check(talk_button.texture_normal == InteractionModeToggle.TALK_ICON and talk_warning_badge.visible and mode_toggle.is_processing(), "Lower inactive dialogue must keep its icon and show the blinking badge.")
@@ -49,7 +51,7 @@ func _run() -> void:
 	_check(music_button.texture_normal == InteractionModeToggle.MUSIC_ICON and music_warning_badge.visible and mode_toggle.is_processing(), "Lower inactive tuning must show its icon and retain the warning badge after switching.")
 	await create_timer(InteractionModeToggle.SLIDE_DURATION + 0.05).timeout
 	_check(talk_button.size.x > music_button.size.x and talk_button.position.y < music_button.position.y, "Q did not slide dialogue into the large upper slot.")
-	_check(music_button.size == InteractionModeToggle.INACTIVE_SIZE, "Inactive tuning icon must use the same doubled slot.")
+	_check(music_button.size.is_equal_approx(InteractionModeToggle.INACTIVE_SIZE), "Inactive tuning icon must use the enlarged inactive slot.")
 	_check_q_layout(shortcut_group, talk_button, music_button)
 	_check(shortcut_group.visible and shortcut_group.position == hint_position, "Q hint changed after Q input.")
 	mode_toggle.set_imbalance_warning(false, -1)
@@ -93,8 +95,9 @@ func _check_q_layout(q_hint: Control, active_icon: TextureButton, inactive_icon:
 	var active_bottom: float = active_icon.position.y + active_icon.size.y
 	var inactive_top: float = inactive_icon.position.y
 	var q_center: Vector2 = q_hint.position + q_hint.size * 0.5
-	_check(inactive_top - active_bottom <= 12.0 and inactive_top > active_bottom, "Mode diamonds must have a compact vertical gap.")
-	_check(q_hint.size.x >= 52.0, "Q diamond must remain visible.")
+	_check(inactive_top - active_bottom <= 7.2 and inactive_top > active_bottom, "Mode diamonds must have a compact vertical gap without overlapping.")
+	_check(q_hint.size.is_equal_approx(Vector2(43.2, 43.2)), "Q diamond must keep its enlarged dimensions.")
 	_check(is_equal_approx(inactive_icon.position.x + inactive_icon.size.x * 0.5, active_icon.position.x + active_icon.size.x * 0.5), "Inactive icon must remain horizontally aligned with the active icon.")
 	_check(is_equal_approx(q_center.y, (active_bottom + inactive_top) * 0.5), "Q diamond must align with the vertical gap midpoint.")
-	_check(q_center.x > active_icon.position.x + active_icon.size.x, "Q diamond must sit to the right of the facing mode corners.")
+	_check(q_center.x > inactive_icon.position.x + inactive_icon.size.x and q_center.x < active_icon.position.x + active_icon.size.x, "Q diamond must sit in the right-side inner gap between the mode icons.")
+	_check(q_hint.position.x > inactive_icon.position.x + inactive_icon.size.x, "Q diamond must not overlap the inactive icon.")

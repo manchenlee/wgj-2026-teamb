@@ -950,8 +950,8 @@ z_index = 3
 layout_mode = 0
 offset_left = 24.0
 offset_top = 220.0
-offset_right = 182.0
-offset_bottom = 444.0
+offset_right = 213.6
+offset_bottom = 436.0
 mouse_filter = 2
 
 [node name="ModeToggleStack" type="VBoxContainer" parent="HudLayer/ModeToggleArea"]
